@@ -16,14 +16,7 @@
 
 all: compile
 
-#version     ?=  0.0.1
-executable   ?=  nova
-#org         ?=  kris-nova
-#authorname  ?=  Kris Nóva
-#authoremail ?=  kris@nivenly.com
-#license     ?=  MIT
-#year        ?=  2022
-#copyright   ?=  Copyright (c) $(year)
+executable   ?=  aurae
 
 compile: ## Compile for the local architecture ⚙
 	@cargo build --release
@@ -31,7 +24,7 @@ compile: ## Compile for the local architecture ⚙
 install: ## Install the program to /usr/bin 🎉
 	@echo "Installing..."
 	@cargo install --path .
-	cp -v ./target/release/$(executable) /usr/bin/$(executable)
+	cp -v ./target/release/$(executable) /bin/$(executable)
 
 #test: clean compile install ## 🤓 Run go tests
 #	@echo "Testing..."
