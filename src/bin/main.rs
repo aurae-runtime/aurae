@@ -21,8 +21,8 @@
  */
 
 use rhai::{Engine, EvalAltResult, Position};
-
 use std::{env, fs::File, io::Read, path::Path, process::exit};
+use aurae::core::version::VERSION;
 
 fn eprint_error(input: &str, mut err: EvalAltResult) {
     fn eprint_line(lines: &[&str], pos: Position, err_msg: &str) {
@@ -55,6 +55,7 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
 
 fn main() {
     let mut contents = String::new();
+    println!("{}", VERSION);
 
     for filename in env::args().skip(1) {
         let filename = match Path::new(&filename).canonicalize() {
@@ -71,6 +72,10 @@ fn main() {
 
         // Initialize scripting engine
         let mut engine = Engine::new();
+
+        // Load core engine components
+        //engine.register_fn("add", crate::aurae::meta::add());
+
 
         #[cfg(not(feature = "no_optimize"))]
         engine.set_optimization_level(rhai::OptimizationLevel::Simple);
