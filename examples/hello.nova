@@ -1,9 +1,6 @@
 #!/bin/aurae
 
-fn banner(){
-    print("--------------------");
-    print("Aurae.");
-    print("--------------------");
-}
+// src/core/meta.rs
+// pub fn about()
+about();
 
-banner();

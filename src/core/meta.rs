@@ -14,4 +14,8 @@
  *                                                                           *
 \*===========================================================================*/
 
-pub const VERSION: &str = "versionstring1.2.3.a.b.c";
+pub const TITLE: &str = "Aurae. A distributed system's kernel.";
+
+pub fn about() {
+    println!("{}", TITLE);
+}

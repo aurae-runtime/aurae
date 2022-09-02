@@ -1,0 +1,24 @@
+#!/bin/aurae
+
+domain("nova") {
+
+    run(hack) {
+        name   = "namevalue"
+        foo    = "bar"
+        beeps  = "boops"
+    }
+
+    run(hack) {
+        name   = "anothername"
+        foo    = "bar"
+        beeps  = "boops"
+    }
+
+    keepalive(hack) {
+        name   = "anothername"
+        foo    = "bar"
+        beeps  = "boops"
+    }
+
+}
+
