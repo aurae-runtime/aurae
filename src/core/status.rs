@@ -28,21 +28,7 @@
  *                                                                            *
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-pub mod core;
 
-use rhai::{Engine};
-use crate::core::meta::*;
-use crate::core::status::*;
-
-pub fn register_stdlib(mut engine: Engine) -> Engine {
-
-
-    engine.register_fn("about", about);
-    engine.register_fn("status", status);
-
-
-    return engine;
+pub fn status() {
+    println!("Aurae Status: TODO");
 }
-
-
-
