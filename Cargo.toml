@@ -1,3 +1,4 @@
+
 [package]
 name = "aurae"
 version = "0.1.0"
@@ -24,4 +25,3 @@ rhai = "1.9.1"
 
 [build-dependencies]
 tonic-build = "0.8"
-

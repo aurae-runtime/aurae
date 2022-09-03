@@ -1,18 +1,32 @@
-/*===========================================================================*\
- *           MIT License Copyright (c) 2022 Kris Nóva <kris@nivenly.com>     *
- *                                                                           *
- *                ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓                *
- *                ┃   ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗   ┃                *
- *                ┃   ████╗  ██║██╔═████╗██║   ██║██╔══██╗  ┃                *
- *                ┃   ██╔██╗ ██║██║██╔██║██║   ██║███████║  ┃                *
- *                ┃   ██║╚██╗██║████╔╝██║╚██╗ ██╔╝██╔══██║  ┃                *
- *                ┃   ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║  ┃                *
- *                ┃   ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝  ┃                *
- *                ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛                *
- *                                                                           *
- *                       This machine kills fascists.                        *
- *                                                                           *
-\*===========================================================================*/
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ *\
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *                                                                            *
+ *                ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓              *
+ *                ┃  █████╗ ██╗   ██╗██████╗  █████╗ ███████╗  ┃              *
+ *                ┃  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ ┃              *
+ *                ┃  ███████║██║   ██║██████╔╝███████║█████╗   ┃              *
+ *                ┃  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   ┃              *
+ *                ┃  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ ┃              *
+ *                ┃  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ┃              *
+ *                ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *                                                                             *
+ *                                                                            *
+\* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 pub mod pb {
     tonic::include_proto!("proto.echo");
@@ -68,7 +82,7 @@ impl pb::echo_server::Echo for EchoServer {
         req: Request<EchoRequest>,
     ) -> EchoResult<Self::ServerStreamingEchoStream> {
         println!("EchoServer::server_streaming_echo");
-        println!("\tclient connected from: {:?}", req.remote_addr());
+        println!("	client connected from: {:?}", req.remote_addr());
 
         // creating infinite stream with requested message
         let repeat = std::iter::repeat(EchoResponse {
@@ -91,7 +105,7 @@ impl pb::echo_server::Echo for EchoServer {
                     }
                 }
             }
-            println!("\tclient disconnected");
+            println!("	client disconnected");
         });
 
         let output_stream = ReceiverStream::new(rx);
@@ -134,7 +148,7 @@ impl pb::echo_server::Echo for EchoServer {
                             if io_err.kind() == ErrorKind::BrokenPipe {
                                 // here you can handle special case when client
                                 // disconnected in unexpected way
-                                eprintln!("\tclient disconnected: broken pipe");
+                                eprintln!("	client disconnected: broken pipe");
                                 break;
                             }
                         }
@@ -146,7 +160,7 @@ impl pb::echo_server::Echo for EchoServer {
                     }
                 }
             }
-            println!("\tstream ended");
+            println!("	stream ended");
         });
 
         // echo just write the same data that was received

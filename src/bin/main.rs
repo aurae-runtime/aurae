@@ -1,28 +1,36 @@
-/*===========================================================================*\
- *           MIT License Copyright (c) 2022 Kris Nóva <kris@nivenly.com>     *
- *                                                                           *
- *                ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓                *
- *                ┃   ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗   ┃                *
- *                ┃   ████╗  ██║██╔═████╗██║   ██║██╔══██╗  ┃                *
- *                ┃   ██╔██╗ ██║██║██╔██║██║   ██║███████║  ┃                *
- *                ┃   ██║╚██╗██║████╔╝██║╚██╗ ██╔╝██╔══██║  ┃                *
- *                ┃   ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║  ┃                *
- *                ┃   ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝  ┃                *
- *                ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛                *
- *                                                                           *
- *                       This machine kills fascists.                        *
- *                                                                           *
-\*===========================================================================*/
-/*
- * SPDX-License-Identifier: MIT, Apache 2.0
- * File originally forked from: https://github.com/rhaiscript/rhai
- * All attribution goes to the original authors. Apache 2.0 and MIT
- * license preservation from the rhai project where applicable.
- */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ *\
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *                                                                            *
+ *                ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓              *
+ *                ┃  █████╗ ██╗   ██╗██████╗  █████╗ ███████╗  ┃              *
+ *                ┃  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ ┃              *
+ *                ┃  ███████║██║   ██║██████╔╝███████║█████╗   ┃              *
+ *                ┃  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   ┃              *
+ *                ┃  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ ┃              *
+ *                ┃  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ┃              *
+ *                ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *                                                                             *
+ *                                                                            *
+\* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
+use aurae::core::meta::*;
 use rhai::{Engine, EvalAltResult, Position};
 use std::{env, fs::File, io::Read, path::Path, process::exit};
-use aurae::core::meta::*;
 
 fn eprint_error(input: &str, mut err: EvalAltResult) {
     fn eprint_line(lines: &[&str], pos: Position, err_msg: &str) {
@@ -59,7 +67,11 @@ fn main() {
     for filename in env::args().skip(1) {
         let filename = match Path::new(&filename).canonicalize() {
             Err(err) => {
-                eprintln!("Error script file path: {}\n{}", filename, err);
+                eprintln!(
+                    "Error script file path: {}
+{}",
+                    filename, err
+                );
                 exit(1);
             }
             Ok(f) => match f.strip_prefix(std::env::current_dir().unwrap().canonicalize().unwrap())
@@ -75,14 +87,14 @@ fn main() {
         // Load core engine components
         engine.register_fn("about", about);
 
-
         #[cfg(not(feature = "no_optimize"))]
         engine.set_optimization_level(rhai::OptimizationLevel::Simple);
 
         let mut f = match File::open(&filename) {
             Err(err) => {
                 eprintln!(
-                    "Error reading script file: {}\n{}",
+                    "Error reading script file: {}
+{}",
                     filename.to_string_lossy(),
                     err
                 );
@@ -95,7 +107,8 @@ fn main() {
 
         if let Err(err) = f.read_to_string(&mut contents) {
             eprintln!(
-                "Error reading script file: {}\n{}",
+                "Error reading script file: {}
+{}",
                 filename.to_string_lossy(),
                 err
             );
