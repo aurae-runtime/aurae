@@ -29,3 +29,16 @@
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 pub mod core;
+
+use rhai::{Engine};
+use crate::core::meta::*;
+
+// Define and map the standard library
+pub fn register_stdlib(mut engine: Engine) -> Engine {
+    engine.register_fn("about", about);
+
+    return engine;
+}
+
+
+

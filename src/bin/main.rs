@@ -28,7 +28,7 @@
  *                                                                            *
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-use aurae::core::meta::*;
+use aurae::*;
 use rhai::{Engine, EvalAltResult, Position};
 use std::{env, fs::File, io::Read, path::Path, process::exit};
 
@@ -84,11 +84,11 @@ fn main() {
         // Initialize scripting engine
         let mut engine = Engine::new();
 
-        // Load core engine components
-        engine.register_fn("about", about);
-
         #[cfg(not(feature = "no_optimize"))]
         engine.set_optimization_level(rhai::OptimizationLevel::Simple);
+
+        // Load core engine components
+        engine = register_stdlib(engine);
 
         let mut f = match File::open(&filename) {
             Err(err) => {
