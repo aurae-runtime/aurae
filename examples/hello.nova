@@ -1,6 +1,0 @@
-#!/bin/aurae
-
-// src/core/meta.rs
-// pub fn about()
-about();
-
