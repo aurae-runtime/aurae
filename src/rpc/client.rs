@@ -29,7 +29,7 @@
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 pub mod pb {
-    tonic::include_proto!("proto.echo");
+    tonic::include_proto!("v1.echo");
 }
 
 use futures::stream::Stream;

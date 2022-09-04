@@ -4,15 +4,16 @@ Aurae is a distributed systems runtime written in Rust. This particular project 
 
 #### What it is.
 
-The `aurae` tool is a command line shell, that is processed by a backing daemon called `auraed`. The shell is interpretted at runtime and works like a regular old Linux style programming langauge.
+The `aurae` tool is a command line shell, that is processed by a backing daemon called `auraed`. The shell is interpreted at runtime and works like a regular old Linux style programming langauge.
 
 ```
 #!/bin/aurae
 
-print("Hello welcome to Auare");
-about();
-connect("/var/run/auare.sock");
-status();
+print("----------------------");
+print("Hello, welcome to Auare");
+print("----------------------");
+
+
 ```
 
 #### What it does.
