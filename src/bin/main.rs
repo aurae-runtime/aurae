@@ -90,6 +90,9 @@ fn main() {
         // Load core engine components
         engine = register_stdlib(engine);
 
+        // Aurae runtime dependencies
+        connect_aurae_sock(Path::new("/var/run/aurae.sock"), Path::new("~/.ssh/id_rsa"));
+
         let mut f = match File::open(&filename) {
             Err(err) => {
                 eprintln!(
