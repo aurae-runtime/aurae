@@ -28,8 +28,8 @@
  *                                                                            *
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-pub const TITLE: &str = "Aurae. A distributed system's kernel.";
+pub mod client;
 
 pub fn about() {
-    println!("{}", TITLE);
+    println!("{}", "Aurae. Distributed Runtime.");
 }

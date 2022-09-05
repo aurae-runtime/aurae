@@ -28,16 +28,18 @@
  *                                                                            *
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-pub mod core;
-use crate::core::meta::*;
-use crate::core::status::*;
+pub mod builtin;
+
+use crate::builtin::client::*;
+use crate::builtin::*;
 
 use rhai::{Engine};
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
 
     engine.register_fn("about", about);
-    engine.register_fn("status", status);
+    engine.register_fn("connect", connect);
+
 
     return engine;
 }

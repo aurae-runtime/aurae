@@ -87,7 +87,7 @@ fn main() {
         #[cfg(not(feature = "no_optimize"))]
         engine.set_optimization_level(rhai::OptimizationLevel::Simple);
 
-        // Load core engine components
+        // Load builtin engine components
         engine = register_stdlib(engine);
 
         let mut f = match File::open(&filename) {

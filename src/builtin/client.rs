@@ -28,7 +28,6 @@
  *                                                                            *
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-
-pub fn status() {
-    println!("Aurae Status: TODO");
+pub fn connect() {
+    println!("{}", "Connect. Distributed Runtime.");
 }
