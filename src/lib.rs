@@ -33,7 +33,6 @@ use crate::core::meta::*;
 use crate::core::status::*;
 
 use rhai::{Engine};
-use std::path::Path;
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
 
