@@ -29,10 +29,10 @@
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 pub mod core;
-
-use rhai::{Engine};
 use crate::core::meta::*;
 use crate::core::status::*;
+
+use rhai::{Engine};
 use std::path::Path;
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
@@ -43,9 +43,5 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
     return engine;
 }
 
-pub fn connect_aurae_sock(sock: &Path, key: &Path)  {
-    println!("Socket: {}", sock.display());
-    println!("Key   : {}", key.display());
-}
 
 
