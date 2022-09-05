@@ -37,8 +37,12 @@ use rhai::{Engine};
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
 
-    engine.register_fn("about", about);
-    engine.register_fn("connect", connect);
+    engine
+        .register_fn("about", about)
+        .register_fn("connect", connect)
+        .register_type_with_name::<AuraeClient>("AuraeClient")
+        .register_fn("new", AuraeClient::new)
+        .register_fn("runtime", AuraeClient::runtime);
 
 
     return engine;

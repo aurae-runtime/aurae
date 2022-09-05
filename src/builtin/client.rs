@@ -28,6 +28,20 @@
  *                                                                            *
 \* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-pub fn connect() {
-    println!("{}", "Connect. Distributed Runtime.");
+#[derive(Debug, Clone)]
+pub struct AuraeClient {
+}
+
+impl AuraeClient {
+    pub fn new() -> Self {
+        Self {}
+    }
+    pub fn runtime(&mut self) {
+    }
+    pub fn observe(&mut self) {
+    }
+}
+
+pub fn connect() -> AuraeClient {
+    return AuraeClient{};
 }
