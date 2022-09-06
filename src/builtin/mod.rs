@@ -51,9 +51,11 @@ const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 
 
 pub fn about() {
+    println!("\n");
     println!("Aurae. Distributed Runtime.");
     println!("Authors: {}", AUTHORS);
     version();
+    println!("\n");
 }
 
 pub fn version() {
