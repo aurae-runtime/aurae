@@ -21,5 +21,6 @@ mypod.env("PASSWORD", aurae.secret("nova_password"));
 mypod.env("VERBOSE", false);
 
 runtime.run(mypod);
+mypod.json();
 
 ```
