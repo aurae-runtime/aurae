@@ -1,6 +1,6 @@
 # Aurae
 
-Aurae is a turing complete scripting language for platform and application teams. Think of it like TypeScript for platforms like Kubernetes.
+Aurae is a turing complete scripting language for platform and application teams. Think of it like TypeScript for platforms similar to Kubernetes.
 
 Use this executable as a runtime alternative to YAML.
 
