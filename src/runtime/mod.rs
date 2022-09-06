@@ -28,29 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub mod builtin;
-pub mod runtime;
-pub mod observe;
+#[derive(Debug, Clone)]
+pub struct Runtime {
 
-use crate::builtin::client::*;
-use crate::builtin::*;
-
-use rhai::{Engine};
-
-pub fn register_stdlib(mut engine: Engine) -> Engine {
-
-    engine
-        .register_fn("about", about)
-        .register_fn("version", version)
-        .register_fn("connect", connect)
-        .register_type_with_name::<AuraeClient>("AuraeClient")
-        .register_fn("new", AuraeClient::new)
-        .register_fn("observe", AuraeClient::observe)
-        .register_fn("runtime", AuraeClient::runtime);
-
-
-    return engine;
 }
-
-
-

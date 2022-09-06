@@ -28,17 +28,24 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::runtime::*;
+use crate::observe::*;
+
+
 #[derive(Debug, Clone)]
 pub struct AuraeClient {
+
 }
 
 impl AuraeClient {
     pub fn new() -> Self {
         Self {}
     }
-    pub fn runtime(&mut self) {
+    pub fn runtime(&mut self) -> Runtime {
+        Runtime{}
     }
-    pub fn observe(&mut self) {
+    pub fn observe(&mut self) -> Observe {
+        Observe{}
     }
 }
 
