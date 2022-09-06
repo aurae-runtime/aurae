@@ -39,6 +39,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
 
     engine
         .register_fn("about", about)
+        .register_fn("version", version)
         .register_fn("connect", connect)
         .register_type_with_name::<AuraeClient>("AuraeClient")
         .register_fn("new", AuraeClient::new)
