@@ -11,7 +11,8 @@ Use this executable as a runtime alternative to YAML.
 let aurae = connect();
 let runtime = aurae.runtime();
 
-mypod = pod("nginx");
+mypod = pod("myexamplepod");
+mypod.image("nginx:latest");
 mypod.label("key", "value");
 mypod.expose(8080);
 mypod.expose(8081);
