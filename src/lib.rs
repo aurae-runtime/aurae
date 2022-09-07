@@ -37,6 +37,7 @@ use crate::builtin::*;
 
 use rhai::{Engine};
 
+
 pub fn register_stdlib(mut engine: Engine) -> Engine {
 
     engine
@@ -46,8 +47,8 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_type_with_name::<AuraeClient>("AuraeClient")
         .register_fn("new", AuraeClient::new)
         .register_fn("observe", AuraeClient::observe)
+        .register_fn("info", AuraeClient::info)
         .register_fn("runtime", AuraeClient::runtime);
-
 
     return engine;
 }

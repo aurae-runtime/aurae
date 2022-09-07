@@ -40,18 +40,10 @@ name = "aurae"
 path = "src/bin/main.rs"
 
 [dependencies]
-#clap = "3.2.16"
-#log = "0.4.17"
-#multi_log = "0.1.2"
-#simplelog = "0.12.0"
-#syslog = "6.0.1"
-#tonic = "0.8"
-#prost = "0.11"
-#tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
-#futures = "0.3.23"
-#tokio-stream = "0.1.9"
-#h2 = "0.3.13"
 rhai = "1.9.1"
+tonic = { version = "0.8", features = ["tls"] }
+tokio-stream = { version = "0.1", features = ["net"] }
+tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
 
 [build-dependencies]
 tonic-build = "0.8"

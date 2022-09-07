@@ -29,6 +29,13 @@
 \* -------------------------------------------------------------------------- */
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    //tonic_build::compile_protos("v1/echo.v1")?;
+    tonic_build::configure().compile(
+        &[
+            "../api/v1/meta.proto",
+            "../api/v1/runtime.proto",
+            "../api/v1/observe.proto",
+        ],
+        &["../api/v1"],
+    )?;
     Ok(())
 }
