@@ -1,26 +1,37 @@
 # Aurae
 
-Aurae is a turing complete scripting language for platform and application teams. Think of it like TypeScript for platforms similar to Kubernetes.
-
-Use this executable as a runtime alternative to YAML.
-
-### Run a Pod with Aurae
+Aurae is a turing complete scripting language and shell built for the enterprise. Think of it like TypeScript for infrastructure platforms.
 
 ```TypeScript
+#!/usr/bin/env aurae
+
+let helloContainer = container();
+helloContainer.image("busybox");
+
+
+let helloPod = pod();
+helloPod.env("key", "value");
+helloPod.env("foo", "bar");
+helloPod.expose(80);
+helloPod.expose(8080);
+
+helloPod.add(helloContainer);
 
 let aurae = connect();
 let runtime = aurae.runtime();
-
-mypod = pod("myexamplepod");
-mypod.image("nginx:latest");
-mypod.label("key", "value");
-mypod.expose(8080);
-mypod.expose(8081);
-mypod.env("USERNAME", "nova");
-mypod.env("PASSWORD", aurae.secret("nova_password"));
-mypod.env("VERBOSE", false);
-
-runtime.run(mypod);
-mypod.json();
+runtime.run(helloPod);
 
 ```
+
+### The Aurae Standard Library 
+
+The ASL or Aurae Standard Library is composed of pillars of functionality called **subsystems**.
+Aurae Subsystems resemble Linux subsystems and Kubernetes resource types.
+ 
+ - Runtime
+ - Schedule
+ - Observe
+ - Secret
+ - Route
+ - Mount
+ 
