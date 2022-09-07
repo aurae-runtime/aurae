@@ -2,6 +2,8 @@
 
 Aurae is a turing complete scripting language and shell built for the enterprise. Think of it like TypeScript for infrastructure platforms.
 
+Aurae executes functions over gRPC against a daemon called `auraed` which is memory safe runtime of the project. The daemons can be networked together to form a mesh.
+
 ```TypeScript
 #!/usr/bin/env aurae
 
