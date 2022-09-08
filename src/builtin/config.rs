@@ -28,65 +28,55 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::config::*;
-use crate::observe::*;
-use crate::runtime::*;
-use tokio::net::UnixStream;
-use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
-use tonic::transport::{Endpoint, Uri};
-use tower::service_fn;
+use serde::Deserialize;
+use std::error::Error;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::PathBuf;
+use toml;
 
-#[derive(Debug, Clone)]
-pub struct AuraeClient {}
-
-impl AuraeClient {
-    pub fn new() -> Self {
-        Self {}
-    }
-    async fn client_connect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let res = default_config()?;
-
-        // TODO @kris-nova
-        // TODO We need to populate the AuraeClient{} with connection details so aurae.info(); works
-        let server_root_ca_cert = tokio::fs::read(res.auth.ca_crt).await?;
-        let server_root_ca_cert = Certificate::from_pem(server_root_ca_cert);
-        let client_cert = tokio::fs::read(res.auth.client_crt).await?;
-        let client_key = tokio::fs::read(res.auth.client_key).await?;
-        let client_identity = Identity::from_pem(client_cert, client_key);
-
-        let tls = ClientTlsConfig::new()
-            .domain_name("localhost")
-            .ca_certificate(server_root_ca_cert)
-            .identity(client_identity);
-
-        // TODO We need to call Unix domain socket: https://github.com/hyperium/tonic/blob/master/examples/src/uds/client.rs
-        // TODO we need to pass "tls" to the unix domain socket connection
-        let channel = Endpoint::try_from("")?
-            .connect_with_connector(service_fn(|_: Uri| {
-                let path = "/var/run/aurae.sock"; // TODO vendor from auraed
-                UnixStream::connect(path)
-            }))
-            .await?;
-
-        Ok(())
-    }
-    pub fn runtime(&mut self) -> Runtime {
-        Runtime {}
-    }
-    pub fn observe(&mut self) -> Observe {
-        Observe {}
-    }
-    pub fn info(&mut self) {
-        println!("Connection details")
-    }
+#[derive(Debug, Clone, Deserialize)]
+pub struct AuraeConfig {
+    pub auth: Auth,
 }
 
-pub fn connect() -> AuraeClient {
-    let mut client = AuraeClient {};
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    let result = rt.block_on(client.client_connect());
-    if let Err(e) = result {
-        eprintln!("Unable to connect: {:?}", e)
+// #[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Debug, Clone, Deserialize)]
+pub struct Auth {
+    // Root CA
+    pub ca_crt: String,
+
+    pub client_crt: String,
+    pub client_key: String,
+}
+
+pub fn default_config() -> Result<AuraeConfig, Box<dyn Error>> {
+    // ${HOME}/.aura/default.config.toml
+    let res = parse_aurae_config("~/.aurae/config".into());
+    if res.is_ok() {
+        return res;
     }
-    client
+
+    // /etc/aurae/default.config.toml
+    let res = parse_aurae_config("/etc/aurae/config".into());
+    if res.is_ok() {
+        return res;
+    }
+
+    // /var/lib/aurae/default.config.toml
+    let res = parse_aurae_config("/var/lib/aurae/config".into());
+    if res.is_ok() {
+        return res;
+    }
+
+    Err("Unable to load default AuraeConfig".into())
+}
+
+pub fn parse_aurae_config(path: String) -> Result<AuraeConfig, Box<dyn Error>> {
+    let mut config_toml = String::new();
+    let mut file = File::open(&path)?;
+
+    file.read_to_string(&mut config_toml)?;
+
+    Ok(toml::from_str(&config_toml)?)
 }

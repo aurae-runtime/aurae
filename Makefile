@@ -33,7 +33,7 @@ all: compile
 executable   ?=  aurae
 
 compile: ## Compile for the local architecture ⚙
-	@cargo build --release
+	@cargo build
 
 install: ## Install the program to /bin 🎉
 	@echo "Installing..."

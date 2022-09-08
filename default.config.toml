@@ -24,29 +24,12 @@
 #   distributed under the License is distributed on an "AS IS" BASIS,          #
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
 #   See the License for the specific language governing permissions and        #
-#   limitations under the License.                                             #                                                                             #
+#   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
-[package]
-name = "aurae"
-version = "0.1.0"
-edition = "2021"
-authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[[bin]]
-name = "aurae"
-path = "src/bin/main.rs"
-
-[dependencies]
-rhai = "1.9.1"
-tonic = { version = "0.8", features = ["tls"] }
-tokio-stream = { version = "0.1", features = ["net"] }
-tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
-toml = "0.5.9"
-serde = { version = "1.0.144", features = ["derive"] }
-tower = "0.4.13"
-
-[build-dependencies]
-tonic-build = "0.8"
+# TODO Remove "nova" from default config
+[auth]
+ca_crt = "/etc/aurae/pki/ca.crt.pem"
+client_crt = "/etc/aurae/pki/_signed.client.nova.crt.pem"
+client_key = "/etc/aurae/pki/client.nova.key.pem"

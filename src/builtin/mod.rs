@@ -29,6 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 pub mod client;
+pub mod config;
 
 // Cargo passes environmental variables to the compiler.
 // We can access meta data from Cargo.toml directly here.

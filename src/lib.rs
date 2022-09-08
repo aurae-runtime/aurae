@@ -37,7 +37,6 @@ use crate::builtin::*;
 
 use rhai::{Engine};
 
-
 pub fn register_stdlib(mut engine: Engine) -> Engine {
 
     engine
