@@ -28,17 +28,22 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+// Issue tracking: https://github.com/rust-lang/rust/issues/85410
+// Here we need to build an abstract socket from a SocketAddr until
+// tokio supports abstract sockets natively
+#![feature(unix_socket_abstract)]
+use std::os::unix::net::SocketAddr;
+
 pub mod builtin;
-pub mod runtime;
 pub mod observe;
+pub mod runtime;
 
 use crate::builtin::client::*;
 use crate::builtin::*;
 
-use rhai::{Engine};
+use rhai::Engine;
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
-
     engine
         .register_fn("about", about)
         .register_fn("version", version)
@@ -51,6 +56,3 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
 
     return engine;
 }
-
-
-

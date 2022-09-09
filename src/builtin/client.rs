@@ -28,10 +28,18 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+// Issue tracking: https://github.com/rust-lang/rust/issues/85410
+// Here we need to build an abstract socket from a SocketAddr until
+// tokio supports abstract sockets natively
+#![feature(unix_socket_abstract)]
+use std::os::unix::net::SocketAddr;
+
 use crate::config::*;
 use crate::observe::*;
 use crate::runtime::*;
+use tokio::net::UnixListener;
 use tokio::net::UnixStream;
+use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tonic::transport::{Endpoint, Uri};
 use tower::service_fn;
@@ -59,13 +67,19 @@ impl AuraeClient {
             .ca_certificate(server_root_ca_cert)
             .identity(client_identity);
 
+        // Aurae leverages Unix Abstract Sockets
+        // Read more about Abstract Sockets: https://man7.org/linux/man-pages/man7/unix.7.html
+        // TODO Consider this: https://docs.rs/nix/latest/nix/sys/socket/struct.UnixAddr.html#method.new_abstract
+
+        let addr = SocketAddr::from_abstract_namespace(b"aurae")?; // Linux only
+        let stream = std::os::unix::net::UnixStream::bind_addr(&addr)?;
+
         // TODO We need to call Unix domain socket: https://github.com/hyperium/tonic/blob/master/examples/src/uds/client.rs
         // TODO we need to pass "tls" to the unix domain socket connection
+
         let channel = Endpoint::try_from("")?
-            .connect_with_connector(service_fn(|_: Uri| {
-                let path = "/var/run/aurae.sock"; // TODO vendor from auraed
-                UnixStream::connect(path)
-            }))
+            .tls_config(tls)?
+            .connect_with_connector(service_fn(|_: Uri| UnixStream::from_std(stream)))
             .await?;
 
         Ok(())

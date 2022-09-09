@@ -50,7 +50,6 @@ pub mod config;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 
-
 pub fn about() {
     println!("\n");
     println!("Aurae. Distributed Runtime.");
