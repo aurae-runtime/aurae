@@ -28,7 +28,6 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
-# TODO Remove "nova" from default config
 [auth]
 ca_crt = "/etc/aurae/pki/ca.crt.pem"
 client_crt = "/etc/aurae/pki/_signed.client.nova.crt.pem"

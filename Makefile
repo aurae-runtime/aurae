@@ -31,32 +31,24 @@
 all: compile
 
 executable   ?=  aurae
+cargo        =   cargo +nightly
 
 compile: ## Compile for the local architecture ⚙
-	@cargo build
+	@$(cargo) build --debug
 
-install: ## Install the program to /bin 🎉
+install:  ## Build and install (debug) 🎉
 	@echo "Installing..."
-	@cargo install --path .
+	@$(cargo) install --debug --path .
 
-#test: clean compile install ## 🤓 Run go tests
-#	@echo "Testing..."
-#	go test -v ./...
+release: ## Build and install (release) 🎉
+	@echo "Installing..."
+	@$(cargo) install --path .
 
 clean: ## Clean your artifacts 🧼
 	@echo "Cleaning..."
 	@cargo clean
 	@rm -rvf target/*
 	@rm -rvf $(executable)
-
-#.PHONY: release
-#release: ## Make the binaries for headers-check GitHub release 📦
-#	mkdir -p release
-#	GOOS="linux" GOARCH="amd64" go build -ldflags "-X 'github.com/$(org)/$(target).Version=$(version)'" -o release/$(target)-linux-amd64 bin/*.go
-#	GOOS="linux" GOARCH="arm" go build -ldflags "-X 'github.com/$(org)/$(target).Version=$(version)'" -o release/$(target)-linux-arm bin/*.go
-#	GOOS="linux" GOARCH="arm64" go build -ldflags "-X 'github.com/$(org)/$(target).Version=$(version)'" -o release/$(target)-linux-arm64 bin/*.go
-#	GOOS="linux" GOARCH="386" go build -ldflags "-X 'github.com/$(org)/$(target).Version=$(version)'" -o release/$(target)-linux-386 bin/*.go
-#	GOOS="darwin" GOARCH="amd64" go build -ldflags "-X 'github.com/$(org)/$(target).Version=$(version)'" -o release/$(target)-darwin-amd64 bin/*.go
 
 .PHONY: help
 help:  ## 🤔 Show help messages for make targets
