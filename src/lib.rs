@@ -32,7 +32,6 @@
 // Here we need to build an abstract socket from a SocketAddr until
 // tokio supports abstract sockets natively
 #![feature(unix_socket_abstract)]
-use std::os::unix::net::SocketAddr;
 
 pub mod builtin;
 pub mod observe;

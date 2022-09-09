@@ -28,15 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-// Issue tracking: https://github.com/rust-lang/rust/issues/85410
-// Here we need to build an abstract socket from a SocketAddr until
-// tokio supports abstract sockets natively
-#![feature(unix_socket_abstract)]
-use std::os::unix::net::SocketAddr;
-
 use crate::config::*;
 use crate::observe::*;
 use crate::runtime::*;
+use std::os::unix::net::SocketAddr;
 use tokio::net::UnixListener;
 use tokio::net::UnixStream;
 use tokio_stream::wrappers::UnixListenerStream;
@@ -72,7 +67,7 @@ impl AuraeClient {
         // TODO Consider this: https://docs.rs/nix/latest/nix/sys/socket/struct.UnixAddr.html#method.new_abstract
 
         let addr = SocketAddr::from_abstract_namespace(b"aurae")?; // Linux only
-        let stream = std::os::unix::net::UnixStream::bind_addr(&addr)?;
+        let stream = std::os::unix::net::UnixStream::connect_addr(&addr)?;
 
         // TODO We need to call Unix domain socket: https://github.com/hyperium/tonic/blob/master/examples/src/uds/client.rs
         // TODO we need to pass "tls" to the unix domain socket connection
