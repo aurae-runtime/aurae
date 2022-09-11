@@ -72,7 +72,7 @@ impl AuraeClient {
         // TODO we need to pass "tls" to the unix domain socket connection
         // TODO b"aurae" needs to be in a global definition along with auraed
 
-        let channel = Endpoint::try_from("https://ignored")?
+        let channel = Endpoint::try_from("hxxps://ignored")?
             .tls_config(tls)?
             .connect_with_connector(service_fn(|_: Uri| async move {
                 UnixStream::from_std(std::os::unix::net::UnixStream::connect_addr(
