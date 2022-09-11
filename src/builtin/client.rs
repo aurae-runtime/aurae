@@ -81,7 +81,7 @@ impl AuraeClient {
             }))
             .await?;
 
-        self.channel = Some(channel.clone());
+        self.channel = Some(channel);
 
         Ok(())
     }
