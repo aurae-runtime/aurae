@@ -27,6 +27,7 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+#![allow(unused_imports)]
 
 use crate::config::*;
 use crate::observe::*;
@@ -40,11 +41,13 @@ use tonic::transport::{Endpoint, Uri};
 use tower::service_fn;
 
 #[derive(Debug, Clone)]
-pub struct AuraeClient {}
+pub struct AuraeClient {
+    pub channel: Option<Channel>,
+}
 
 impl AuraeClient {
     pub fn new() -> Self {
-        Self {}
+        Self { channel: None }
     }
     async fn client_connect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let res = default_config()?;
@@ -65,17 +68,20 @@ impl AuraeClient {
         // Aurae leverages Unix Abstract Sockets
         // Read more about Abstract Sockets: https://man7.org/linux/man-pages/man7/unix.7.html
         // TODO Consider this: https://docs.rs/nix/latest/nix/sys/socket/struct.UnixAddr.html#method.new_abstract
-
-        let addr = SocketAddr::from_abstract_namespace(b"aurae")?; // Linux only
-        let stream = std::os::unix::net::UnixStream::connect_addr(&addr)?;
-
         // TODO We need to call Unix domain socket: https://github.com/hyperium/tonic/blob/master/examples/src/uds/client.rs
         // TODO we need to pass "tls" to the unix domain socket connection
+        // TODO b"aurae" needs to be in a global definition along with auraed
 
-        let channel = Endpoint::try_from("")?
+        let channel = Endpoint::try_from("https://ignored")?
             .tls_config(tls)?
-            .connect_with_connector(service_fn(|_: Uri| UnixStream::from_std(stream)))
+            .connect_with_connector(service_fn(|_: Uri| async move {
+                UnixStream::from_std(std::os::unix::net::UnixStream::connect_addr(
+                    &SocketAddr::from_abstract_namespace(b"aurae")?,
+                )?)
+            }))
             .await?;
+
+        self.channel = Some(channel.clone());
 
         Ok(())
     }
@@ -91,7 +97,7 @@ impl AuraeClient {
 }
 
 pub fn connect() -> AuraeClient {
-    let mut client = AuraeClient {};
+    let mut client = AuraeClient { channel: None };
     let rt = tokio::runtime::Runtime::new().unwrap();
     let result = rt.block_on(client.client_connect());
     if let Err(e) = result {
