@@ -45,6 +45,8 @@ pub struct AuraeClient {
     pub channel: Option<Channel>,
 }
 
+const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
+
 impl AuraeClient {
     pub fn new() -> Self {
         Self { channel: None }
@@ -72,12 +74,13 @@ impl AuraeClient {
         // TODO we need to pass "tls" to the unix domain socket connection
         // TODO b"aurae" needs to be in a global definition along with auraed
 
-        let channel = Endpoint::try_from("hxxps://ignored")?
+        let channel = Endpoint::try_from(KNOWN_IGNORED_SOCKET_ADDR)?
             .tls_config(tls)?
-            .connect_with_connector(service_fn(|_: Uri| async move {
-                UnixStream::from_std(std::os::unix::net::UnixStream::connect_addr(
-                    &SocketAddr::from_abstract_namespace(b"aurae")?,
-                )?)
+            .connect_with_connector(service_fn(|_: Uri| {
+                let path = "/var/run/aurae/aurae.sock";
+
+                // Connect to a Uds socket
+                UnixStream::connect(path)
             }))
             .await?;
 
@@ -96,12 +99,17 @@ impl AuraeClient {
     }
 }
 
+use std::process;
+
+const EXIT_CONNECT_FAILURE: i32 = 1;
+
 pub fn connect() -> AuraeClient {
     let mut client = AuraeClient { channel: None };
     let rt = tokio::runtime::Runtime::new().unwrap();
     let result = rt.block_on(client.client_connect());
     if let Err(e) = result {
-        eprintln!("Unable to connect: {:?}", e)
+        eprintln!("Unable to connect: {:?}", e);
+        process::exit(EXIT_CONNECT_FAILURE);
     }
     client
 }

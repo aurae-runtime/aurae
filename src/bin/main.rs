@@ -132,6 +132,7 @@ fn main() {
         {
             let filename = filename.to_string_lossy();
 
+            println!("HERE");
             eprintln!("{:=<1$}", "", filename.len());
             eprintln!("{}", filename);
             eprintln!("{:=<1$}", "", filename.len());
