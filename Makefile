@@ -48,7 +48,7 @@ cleanapi: ## Download the api to the local directory [v1]
 compile: ## Compile for the local architecture ⚙
 	@$(cargo) build
 
-install:  api ## Build and install (debug) 🎉
+install: ## Build and install (debug) 🎉
 	@echo "Installing..."
 	@$(cargo) install --debug --path .
 

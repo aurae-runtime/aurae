@@ -28,7 +28,14 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use std::process::Command;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Makefile
+    // make api
+    Command::new("make").args(&["api"]).status().unwrap();
+
+    // gRPC
     tonic_build::configure().compile(
         &[
             "api/v1/meta.proto",
