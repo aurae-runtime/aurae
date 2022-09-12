@@ -72,11 +72,9 @@ impl AuraeClient {
 
         let channel = Endpoint::try_from(KNOWN_IGNORED_SOCKET_ADDR)?
             .tls_config(tls)?
-            .connect_with_connector(service_fn(|_: Uri| {
-                let path = "/var/run/aurae/aurae.sock";
-
+            .connect_with_connector(service_fn(move |_: Uri| {
                 // Connect to a Uds socket
-                UnixStream::connect(path)
+                UnixStream::connect(res.system.socket.clone())
             }))
             .await?;
 

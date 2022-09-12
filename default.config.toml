@@ -32,3 +32,6 @@
 ca_crt = "/etc/aurae/pki/ca.crt.pem"
 client_crt = "/etc/aurae/pki/_signed.client.nova.crt.pem"
 client_key = "/etc/aurae/pki/client.nova.key.pem"
+
+[system]
+socket = "/var/run/aurae/aurae.sock"

@@ -38,6 +38,13 @@ use toml;
 #[derive(Debug, Clone, Deserialize)]
 pub struct AuraeConfig {
     pub auth: Auth,
+    pub system: System,
+}
+
+// #[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Debug, Clone, Deserialize)]
+pub struct System {
+    pub socket: String,
 }
 
 // #[derive(RustcEncodable, RustcDecodable, Debug)]
