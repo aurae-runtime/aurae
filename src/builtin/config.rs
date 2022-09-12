@@ -59,12 +59,16 @@ pub struct Auth {
 
 pub fn default_config() -> Result<AuraeConfig, Box<dyn Error>> {
     // ${HOME}/.aura/default.config.toml
-    let res = parse_aurae_config("~/.aurae/config".into());
+    let home = std::env::var("HOME").unwrap();
+    let path = format!("{}/.aurae/config", home);
+    //println!("Checking: {}", path);
+    let res = parse_aurae_config(path);
     if res.is_ok() {
         return res;
     }
 
     // /etc/aurae/default.config.toml
+    //println!("Checking: {}", "/etc/aurae/config");
     let res = parse_aurae_config("/etc/aurae/config".into());
     if res.is_ok() {
         return res;

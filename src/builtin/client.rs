@@ -57,8 +57,8 @@ impl AuraeClient {
     async fn client_connect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let res = default_config()?;
 
-        // TODO @kris-nova
-        // TODO We need to populate the AuraeClient{} with connection details so aurae.info(); works
+        // TODO We need to discover how to create more beautiful error messages
+
         let server_root_ca_cert = tokio::fs::read(res.auth.ca_crt).await?;
         let server_root_ca_cert = Certificate::from_pem(server_root_ca_cert);
         let client_cert = tokio::fs::read(res.auth.client_crt).await?;

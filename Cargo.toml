@@ -48,6 +48,7 @@ toml = "0.5.9"
 serde = { version = "1.0.144", features = ["derive"] }
 tower = "0.4.13"
 auraed = { git = 'https://github.com/aurae-runtime/auraed', branch = 'main' }
+home = "0.5.3"
 
 [build-dependencies]
 tonic-build = "0.8"
