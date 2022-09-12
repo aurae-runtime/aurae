@@ -45,6 +45,9 @@ pub struct AuraeClient {
     pub channel: Option<Channel>,
 }
 
+// We must define a known address that will under no circumstance resolve.
+// This is intended to never be used, however in the off-chance some code
+// tries to leverage this later, we set it to a known faulty value.
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
 impl AuraeClient {
@@ -66,13 +69,6 @@ impl AuraeClient {
             .domain_name("localhost")
             .ca_certificate(server_root_ca_cert)
             .identity(client_identity);
-
-        // Aurae leverages Unix Abstract Sockets
-        // Read more about Abstract Sockets: https://man7.org/linux/man-pages/man7/unix.7.html
-        // TODO Consider this: https://docs.rs/nix/latest/nix/sys/socket/struct.UnixAddr.html#method.new_abstract
-        // TODO We need to call Unix domain socket: https://github.com/hyperium/tonic/blob/master/examples/src/uds/client.rs
-        // TODO we need to pass "tls" to the unix domain socket connection
-        // TODO b"aurae" needs to be in a global definition along with auraed
 
         let channel = Endpoint::try_from(KNOWN_IGNORED_SOCKET_ADDR)?
             .tls_config(tls)?
