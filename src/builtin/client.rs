@@ -32,6 +32,7 @@
 use crate::config::*;
 use crate::observe::*;
 use crate::runtime::*;
+use anyhow::{Context, Result};
 use std::os::unix::net::SocketAddr;
 use tokio::net::UnixListener;
 use tokio::net::UnixStream;
@@ -57,12 +58,20 @@ impl AuraeClient {
     async fn client_connect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let res = default_config()?;
 
-        // TODO We need to discover how to create more beautiful error messages
+        let server_root_ca_cert = tokio::fs::read(res.auth.ca_crt)
+            .await
+            .with_context(|| "could not read ca crt")?;
 
-        let server_root_ca_cert = tokio::fs::read(res.auth.ca_crt).await?;
         let server_root_ca_cert = Certificate::from_pem(server_root_ca_cert);
-        let client_cert = tokio::fs::read(res.auth.client_crt).await?;
-        let client_key = tokio::fs::read(res.auth.client_key).await?;
+
+        let client_cert = tokio::fs::read(res.auth.client_crt)
+            .await
+            .with_context(|| "could not read client crt")?;
+
+        let client_key = tokio::fs::read(&res.auth.client_key)
+            .await
+            .with_context(|| "could not read client key")?;
+
         let client_identity = Identity::from_pem(client_cert, client_key);
 
         let tls = ClientTlsConfig::new()
@@ -76,7 +85,8 @@ impl AuraeClient {
                 // Connect to a Uds socket
                 UnixStream::connect(res.system.socket.clone())
             }))
-            .await?;
+            .await
+            .with_context(|| "could not access auraed system socket")?;
 
         self.channel = Some(channel);
 
@@ -102,7 +112,7 @@ pub fn connect() -> AuraeClient {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let result = rt.block_on(client.client_connect());
     if let Err(e) = result {
-        eprintln!("Unable to connect: {:?}", e);
+        eprintln!("Unable to connect to Auraed: {:?}", e);
         process::exit(EXIT_CONNECT_FAILURE);
     }
     client

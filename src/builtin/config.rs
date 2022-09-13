@@ -28,11 +28,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
-// use std::path::PathBuf;
 use toml;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -80,14 +80,15 @@ pub fn default_config() -> Result<AuraeConfig, Box<dyn Error>> {
         return res;
     }
 
-    Err("Unable to load default AuraeConfig".into())
+    Err("unable to find config file".into())
 }
 
 pub fn parse_aurae_config(path: String) -> Result<AuraeConfig, Box<dyn Error>> {
     let mut config_toml = String::new();
     let mut file = File::open(&path)?;
 
-    file.read_to_string(&mut config_toml)?;
+    file.read_to_string(&mut config_toml)
+        .with_context(|| "could not read AuraeConfig toml")?;
 
     Ok(toml::from_str(&config_toml)?)
 }
