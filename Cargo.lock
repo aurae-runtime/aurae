@@ -67,6 +67,7 @@ dependencies = [
 name = "aurae"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "auraed",
  "home",
  "rhai",
