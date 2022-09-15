@@ -75,7 +75,7 @@ impl AuraeClient {
         let client_identity = Identity::from_pem(client_cert, client_key);
 
         let tls = ClientTlsConfig::new()
-            .domain_name("localhost")
+            .domain_name("client.nova.unsafe.aurae.io")
             .ca_certificate(server_root_ca_cert)
             .identity(client_identity);
 
