@@ -41,7 +41,7 @@ path = "src/bin/main.rs"
 
 [dependencies]
 rhai = "1.9.1"
-tonic = { version = "0.8", features = ["tls"] }
+tonic = { version = "0.8", features = ["tls", "tls-roots"] }
 tokio-stream = { version = "0.1", features = ["net"] }
 tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
 toml = "0.5.9"

@@ -31,8 +31,7 @@
 
 # Client Cert Material
 [auth]
-#ca_crt = "~/.aurae/pki/ca.crt.pem"
-ca_crt = "~/.aurae/pki/_signed.server.crt"
+ca_crt = "~/.aurae/pki/ca.crt.pem"
 client_crt = "~/.aurae/pki/_signed.client.nova.crt"
 client_key = "~/.aurae/pki/client.nova.key"
 
