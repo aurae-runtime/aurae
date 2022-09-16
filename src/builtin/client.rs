@@ -40,10 +40,12 @@ use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tonic::transport::{Endpoint, Uri};
 use tower::service_fn;
+use x509_certificate::certificate::*;
 
 #[derive(Debug, Clone)]
 pub struct AuraeClient {
     pub channel: Option<Channel>,
+    certmaterial: Option<Vec<u8>>,
 }
 
 // We must define a known address that will under no circumstance resolve.
@@ -53,7 +55,10 @@ const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
 impl AuraeClient {
     pub fn new() -> Self {
-        Self { channel: None }
+        Self {
+            channel: None,
+            certmaterial: None,
+        }
     }
     async fn client_connect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let res = default_config()?;
@@ -64,7 +69,7 @@ impl AuraeClient {
 
         let server_root_ca_cert = Certificate::from_pem(server_root_ca_cert);
 
-        let client_cert = tokio::fs::read(res.auth.client_crt)
+        let client_cert = tokio::fs::read(res.auth.client_crt.clone())
             .await
             .with_context(|| "could not read client crt")?;
 
@@ -72,7 +77,7 @@ impl AuraeClient {
             .await
             .with_context(|| "could not read client key")?;
 
-        let client_identity = Identity::from_pem(client_cert, client_key);
+        let client_identity = Identity::from_pem(client_cert.clone(), client_key.clone());
 
         let tls = ClientTlsConfig::new()
             .domain_name("server.unsafe.aurae.io")
@@ -88,8 +93,11 @@ impl AuraeClient {
             .await
             .with_context(|| "unable to connect auraed system socket")?;
 
+        // We are connected, cache our details
         self.channel = Some(channel);
 
+        // Move the raw material to the heap
+        self.certmaterial = Some(client_cert.clone());
         Ok(())
     }
     pub fn runtime(&mut self) -> Runtime {
@@ -98,8 +106,22 @@ impl AuraeClient {
     pub fn observe(&mut self) -> Observe {
         Observe {}
     }
+
     pub fn info(&mut self) {
-        println!("Connection details")
+        if let Some(cm) = &self.certmaterial {
+            let res = X509Certificate::from_pem(cm);
+            match res {
+                Ok(info) => {
+                    println!("Identity Name : {}", info.subject_common_name().unwrap());
+                    println!("Issuer Name   : {}", info.issuer_common_name().unwrap());
+                    println!("Fingerprint   : {:?}", info.sha256_fingerprint().unwrap());
+                    println!("Key Algorithm : {}", info.key_algorithm().unwrap());
+                }
+                _ => println!("DISCONNECTED: unable to parse x509"),
+            }
+        } else {
+            println!("DISCONNECTED: missing cert material");
+        }
     }
 }
 
@@ -108,7 +130,10 @@ use std::process;
 const EXIT_CONNECT_FAILURE: i32 = 1;
 
 pub fn connect() -> AuraeClient {
-    let mut client = AuraeClient { channel: None };
+    let mut client = AuraeClient {
+        channel: None,
+        certmaterial: None,
+    };
     let rt = tokio::runtime::Runtime::new().unwrap();
     let result = rt.block_on(client.client_connect());
     if let Err(e) = result {

@@ -50,6 +50,7 @@ tower = "0.4.13"
 auraed = { git = 'https://github.com/aurae-runtime/auraed', branch = 'main' }
 home = "0.5.3"
 anyhow = "1.0"
+x509-certificate = "0.14.0"
 
 [build-dependencies]
 tonic-build = "0.8"
