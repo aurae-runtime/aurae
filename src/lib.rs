@@ -31,7 +31,6 @@
 // Issue tracking: https://github.com/rust-lang/rust/issues/85410
 // Here we need to build an abstract socket from a SocketAddr until
 // tokio supports abstract sockets natively
-#![feature(unix_socket_abstract)]
 
 pub mod builtin;
 pub mod observe;
