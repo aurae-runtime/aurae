@@ -75,18 +75,18 @@ impl AuraeClient {
         let client_identity = Identity::from_pem(client_cert, client_key);
 
         let tls = ClientTlsConfig::new()
-            .domain_name("client.nova.unsafe.aurae.io")
+            // .domain_name("client.nova.unsafe.aurae.io")
             .ca_certificate(server_root_ca_cert)
             .identity(client_identity);
 
-        let channel = Endpoint::try_from(KNOWN_IGNORED_SOCKET_ADDR)?
+        let channel = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
             .tls_config(tls)?
             .connect_with_connector(service_fn(move |_: Uri| {
                 // Connect to a Uds socket
                 UnixStream::connect(res.system.socket.clone())
             }))
             .await
-            .with_context(|| "could not access auraed system socket")?;
+            .with_context(|| "unable to connect auraed system socket")?;
 
         self.channel = Some(channel);
 
