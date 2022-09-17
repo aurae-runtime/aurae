@@ -47,7 +47,6 @@ tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
 toml = "0.5.9"
 serde = { version = "1.0.144", features = ["derive"] }
 tower = "0.4.13"
-auraed = { git = 'https://github.com/aurae-runtime/auraed', branch = 'main' }
 home = "0.5.3"
 anyhow = "1.0"
 x509-certificate = "0.14.0"
