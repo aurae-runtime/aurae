@@ -31,7 +31,7 @@
 all: install
 
 executable   ?=  aurae
-cargo        =   cargo
+cargo         =  cargo
 apibranch     =  main
 
 .PHONY: api
