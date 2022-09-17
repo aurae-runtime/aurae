@@ -20,6 +20,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
+      - name: Checkout the aurae api
+        run: git clone https://github.com/aurae-runtime/api ../api
       - name: Build
         run: cargo build --verbose
       - name: Run tests
