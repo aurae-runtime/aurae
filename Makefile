@@ -37,12 +37,14 @@ compile: ## Compile for the local architecture ⚙
 	@$(cargo) build
 
 install: ## Build and install (debug) 🎉
-	@echo "Installing..."
 	@$(cargo) install --debug --path .
 
 release: ## Build and install (release) 🎉
-	@echo "Installing..."
 	@$(cargo) install --path .
+
+test: ## Run the tests
+	@$(cargo) test                # Tidy output
+	#@$(cargo) test -- --nocapture # Full output
 
 clean: cleanapi ## Clean your artifacts 🧼
 	@echo "Cleaning..."

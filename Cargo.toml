@@ -40,7 +40,7 @@ name = "aurae"
 path = "src/bin/main.rs"
 
 [dependencies]
-rhai = "1.9.1"
+rhai = { version = "1.9.1", features = ["metadata"] }
 tonic = { version = "0.8", features = ["tls"] }
 tokio-stream = { version = "0.1", features = ["net"] }
 tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
