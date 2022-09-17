@@ -67,6 +67,6 @@ mod tests {
     }
     #[test]
     fn test_break() {
-        assert!(0 == 0)
+        assert!(1 == 1)
     }
 }
