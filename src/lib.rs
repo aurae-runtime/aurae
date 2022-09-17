@@ -65,4 +65,8 @@ mod tests {
         let sigs = engine.gen_fn_signatures(true);
         println!("{:?}", sigs);
     }
+    #[test]
+    fn test_break() {
+        assert!(0 == 1)
+    }
 }
