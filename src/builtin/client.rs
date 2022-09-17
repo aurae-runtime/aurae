@@ -27,18 +27,14 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-#![allow(unused_imports)]
 
 use crate::config::*;
 use crate::observe::*;
 use crate::runtime::*;
 use anyhow::{Context, Result};
-use std::os::unix::net::SocketAddr;
-use tokio::net::UnixListener;
 use tokio::net::UnixStream;
-use tokio_stream::wrappers::UnixListenerStream;
+use tonic::transport::Uri;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
-use tonic::transport::{Endpoint, Uri};
 use tower::service_fn;
 use x509_certificate::certificate::*;
 

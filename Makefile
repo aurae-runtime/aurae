@@ -31,30 +31,20 @@
 all: install
 
 executable   ?=  aurae
-cargo        =   cargo
-apibranch     =  main
-
-.PHONY: api
-api: ## Download the api to the local directory [v1]
-	@if [ ! -d api/.repo ]; then git clone https://github.com/aurae-runtime/api.git api/.repo; fi
-	cd api/.repo && git checkout $(apibranch) && git pull origin $(apibranch)
-	@cd api/.repo
-	cp -rv api/.repo/v* api # Move all versions [v*] up
-
-cleanapi: ## Download the api to the local directory [v1]
-	@rm -rvf api/.repo
-	@rm -rvf api/*
+cargo         =  cargo
 
 compile: ## Compile for the local architecture ⚙
 	@$(cargo) build
 
 install: ## Build and install (debug) 🎉
-	@echo "Installing..."
 	@$(cargo) install --debug --path .
 
 release: ## Build and install (release) 🎉
-	@echo "Installing..."
 	@$(cargo) install --path .
+
+test: ## Run the tests
+	@$(cargo) test                # Tidy output
+	#@$(cargo) test -- --nocapture # Full output
 
 clean: cleanapi ## Clean your artifacts 🧼
 	@echo "Cleaning..."

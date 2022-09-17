@@ -35,11 +35,10 @@
 pub mod builtin;
 pub mod observe;
 pub mod runtime;
+use rhai::Engine;
 
 use crate::builtin::client::*;
 use crate::builtin::*;
-
-use rhai::Engine;
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
     engine
@@ -53,4 +52,17 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_fn("runtime", AuraeClient::runtime);
 
     return engine;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_engine() {
+        let mut engine = Engine::new();
+        engine = register_stdlib(engine);
+        let sigs = engine.gen_fn_signatures(true);
+        println!("{:?}", sigs);
+    }
 }
