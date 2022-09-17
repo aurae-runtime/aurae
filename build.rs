@@ -28,21 +28,20 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use std::process::Command;
+//use std::process::Command;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Makefile
-    // make api
-    Command::new("make").args(&["api"]).status().unwrap();
+    // Example running "make command" during the build
+    //Command::new("make").args(&["command"]).status().unwrap();
 
     // gRPC
     tonic_build::configure().compile(
         &[
-            "api/v1/meta.proto",
-            "api/v1/runtime.proto",
-            "api/v1/observe.proto",
+            "../api/v1/meta.proto",
+            "../api/v1/runtime.proto",
+            "../api/v1/observe.proto",
         ],
-        &["api/v1"],
+        &["../api/v1"],
     )?;
     Ok(())
 }
