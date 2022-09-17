@@ -32,12 +32,12 @@ all: install
 
 executable   ?=  aurae
 cargo        =   cargo
-apibranch     =  main
+branch       ?=  main
 
 .PHONY: api
 api: ## Download the api to the local directory [v1]
 	@if [ ! -d api/.repo ]; then git clone https://github.com/aurae-runtime/api.git api/.repo; fi
-	cd api/.repo && git checkout $(apibranch) && git pull origin $(apibranch)
+	cd api/.repo && git checkout $(branch) && git pull origin $(branch)
 	@cd api/.repo
 	cp -rv api/.repo/v* api # Move all versions [v*] up
 
