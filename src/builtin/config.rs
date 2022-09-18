@@ -28,9 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::Deserialize;
-use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use toml;
@@ -57,7 +56,7 @@ pub struct Auth {
     pub client_key: String,
 }
 
-pub fn default_config() -> Result<AuraeConfig, Box<dyn Error>> {
+pub fn default_config() -> Result<AuraeConfig> {
     // ${HOME}/.aura/default.config.toml
     let home = std::env::var("HOME").unwrap();
     let path = format!("{}/.aurae/config", home);
@@ -80,10 +79,10 @@ pub fn default_config() -> Result<AuraeConfig, Box<dyn Error>> {
         return res;
     }
 
-    Err("unable to find config file".into())
+    Err(anyhow!("unable to find config file"))
 }
 
-pub fn parse_aurae_config(path: String) -> Result<AuraeConfig, Box<dyn Error>> {
+pub fn parse_aurae_config(path: String) -> Result<AuraeConfig> {
     let mut config_toml = String::new();
     let mut file = File::open(&path)?;
 

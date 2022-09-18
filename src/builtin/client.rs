@@ -32,6 +32,7 @@ use crate::config::*;
 use crate::observe::*;
 use crate::runtime::*;
 use anyhow::{Context, Result};
+use std::process;
 use tokio::net::UnixStream;
 use tonic::transport::Uri;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
@@ -54,9 +55,7 @@ impl AuraeClient {
         Self::default()
     }
 
-    async fn client_connect(
-        &mut self,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn client_connect(&mut self) -> Result<()> {
         let res = default_config()?;
 
         let server_root_ca_cert = tokio::fs::read(res.auth.ca_crt)
@@ -135,8 +134,6 @@ impl AuraeClient {
         }
     }
 }
-
-use std::process;
 
 const EXIT_CONNECT_FAILURE: i32 = 1;
 
