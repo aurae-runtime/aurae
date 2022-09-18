@@ -38,7 +38,7 @@ use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tower::service_fn;
 use x509_certificate::certificate::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AuraeClient {
     pub channel: Option<Channel>,
     certmaterial: Option<Vec<u8>>,
@@ -51,12 +51,12 @@ const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
 impl AuraeClient {
     pub fn new() -> Self {
-        Self {
-            channel: None,
-            certmaterial: None,
-        }
+        Self::default()
     }
-    async fn client_connect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+
+    async fn client_connect(
+        &mut self,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let res = default_config()?;
 
         let server_root_ca_cert = tokio::fs::read(res.auth.ca_crt)
@@ -73,7 +73,8 @@ impl AuraeClient {
             .await
             .with_context(|| "could not read client key")?;
 
-        let client_identity = Identity::from_pem(client_cert.clone(), client_key.clone());
+        let client_identity =
+            Identity::from_pem(client_cert.clone(), client_key.clone());
 
         let tls = ClientTlsConfig::new()
             .domain_name("server.unsafe.aurae.io")
@@ -96,9 +97,11 @@ impl AuraeClient {
         self.certmaterial = Some(client_cert.clone());
         Ok(())
     }
+
     pub fn runtime(&mut self) -> Runtime {
         Runtime {}
     }
+
     pub fn observe(&mut self) -> Observe {
         Observe {}
     }
@@ -108,10 +111,22 @@ impl AuraeClient {
             let res = X509Certificate::from_pem(cm);
             match res {
                 Ok(info) => {
-                    println!("Identity Name : {}", info.subject_common_name().unwrap());
-                    println!("Issuer Name   : {}", info.issuer_common_name().unwrap());
-                    println!("Fingerprint   : {:?}", info.sha256_fingerprint().unwrap());
-                    println!("Key Algorithm : {}", info.key_algorithm().unwrap());
+                    println!(
+                        "Identity Name : {}",
+                        info.subject_common_name().unwrap()
+                    );
+                    println!(
+                        "Issuer Name   : {}",
+                        info.issuer_common_name().unwrap()
+                    );
+                    println!(
+                        "Fingerprint   : {:?}",
+                        info.sha256_fingerprint().unwrap()
+                    );
+                    println!(
+                        "Key Algorithm : {}",
+                        info.key_algorithm().unwrap()
+                    );
                 }
                 _ => println!("DISCONNECTED: unable to parse x509"),
             }
@@ -126,10 +141,7 @@ use std::process;
 const EXIT_CONNECT_FAILURE: i32 = 1;
 
 pub fn connect() -> AuraeClient {
-    let mut client = AuraeClient {
-        channel: None,
-        certmaterial: None,
-    };
+    let mut client = AuraeClient::default();
     let rt = tokio::runtime::Runtime::new().unwrap();
     let result = rt.block_on(client.client_connect());
     if let Err(e) = result {
