@@ -2,9 +2,17 @@
 
 Aurae is a Turing complete platform infrastructure language.
 
-### Compile and Install
+## Build
 
-To compile `aurae` by itself check out this repository and use the Makefile.
+We suggest building the project from the higher order [environment](https://github.com/aurae-runtime/environment) repository.
+
+```
+git clone git@github.com:aurae-runtime/environment.git
+cd environment
+make submodules pki config all
+```
+
+Alternatively it is possible to build `aurae` by itself check out this repository and use the Makefile.
 
 ```bash
 make # Will compile and install Aurae using Cargo.
@@ -17,31 +25,22 @@ cargo build
 cargo install --path .
 ```
 
-### Connecting to Auraed
+## Aurae Scripts
 
-After `aurae` is compiled and installed to your local `$PATH` you can begin writing scripts to interface with [auraed](https://github.com/aurae-runtime/auraed).
-
-First generate self-signed TLS certificates for the local daemon and your client to use.
-
-```bash 
-sudo -E make pki config # Generate TLS material and install to /etc and your $HOME directory
-```
-
-You should now see secret material installed in two locations.
-
- - /etc/aurae/pki
- - $HOME/.aurae/pki
-
-And a TOML config file located in
-
- - $HOME/.aurae/config
+Aurae has a TypeScript-like programming language that interfaces directly with the rest of the system.
 
 Start and run [auraed](https://github.com/aurae-runtime/auraed) and you can begin writing scripts.
 
 ```typescript
 #!/usr/bin/env aurae
+
+// Connect and authenticate with a local Daemon
 let aurae = connect();
 aurae.info();
+
+// Get the status of the daemon
+let observe = aurae.obsever()
+observe.status()
 ```
 ### Architecture 
 
