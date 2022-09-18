@@ -2,6 +2,8 @@
 
 Aurae is a Turing complete platform infrastructure language.
 
+⚠️ Early Active Development ⚠️
+
 ## Build
 
 We suggest building the project from the higher order [environment](https://github.com/aurae-runtime/environment) repository.
