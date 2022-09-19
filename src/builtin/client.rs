@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::builtin::X509Certificate;
 use crate::config::*;
 use crate::observe::*;
 use crate::runtime::*;
@@ -37,7 +38,6 @@ use tokio::net::UnixStream;
 use tonic::transport::Uri;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tower::service_fn;
-use x509_certificate::certificate::*;
 
 #[derive(Debug, Clone, Default)]
 pub struct AuraeClient {
@@ -107,27 +107,11 @@ impl AuraeClient {
 
     pub fn info(&mut self) {
         if let Some(cm) = &self.certmaterial {
-            let res = X509Certificate::from_pem(cm);
-            match res {
-                Ok(info) => {
-                    println!(
-                        "Identity Name : {}",
-                        info.subject_common_name().unwrap()
-                    );
-                    println!(
-                        "Issuer Name   : {}",
-                        info.issuer_common_name().unwrap()
-                    );
-                    println!(
-                        "Fingerprint   : {:?}",
-                        info.sha256_fingerprint().unwrap()
-                    );
-                    println!(
-                        "Key Algorithm : {}",
-                        info.key_algorithm().unwrap()
-                    );
+            match X509Certificate::from_pem(cm) {
+                Ok(cert) => {
+                    println!("{:#?}", cert);
                 }
-                _ => println!("DISCONNECTED: unable to parse x509"),
+                Err(_) => println!("DISCONNECTED: unable to parse x509"),
             }
         } else {
             println!("DISCONNECTED: missing cert material");
