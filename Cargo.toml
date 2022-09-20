@@ -49,7 +49,14 @@ serde = { version = "1.0.144", features = ["derive"] }
 tower = "0.4.13"
 home = "0.5.3"
 anyhow = "1.0"
-x509-certificate = "0.14.0"
+x509-parser = "0.14.0"
+rustls-pemfile = "1.0.1"
+if_chain = "1.0.2"
+time = "0.3.14"
+oid-registry = "0.6.0"
 
 [build-dependencies]
 tonic-build = "0.8"
+
+[dev-dependencies]
+openssl = "0.10.41"
