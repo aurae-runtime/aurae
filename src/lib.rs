@@ -51,7 +51,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_fn("info", AuraeClient::info)
         .register_fn("runtime", AuraeClient::runtime);
 
-    return engine;
+    engine
 }
 
 #[cfg(test)]

@@ -28,6 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+#![warn(clippy::unwrap_used)]
+
 use aurae::*;
 use rhai::{Engine, EvalAltResult, Position};
 use std::{env, fs::File, io::Read, path::Path, process::exit};
@@ -74,8 +76,9 @@ fn main() {
                 );
                 exit(1);
             }
-            Ok(f) => match f.strip_prefix(std::env::current_dir().unwrap().canonicalize().unwrap())
-            {
+            Ok(f) => match f.strip_prefix(
+                std::env::current_dir().unwrap().canonicalize().unwrap(),
+            ) {
                 Ok(f) => f.into(),
                 _ => f,
             },
