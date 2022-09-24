@@ -1,6 +1,12 @@
 # Aurae
 
-Aurae is a Turing complete platform infrastructure language.
+Aurae is a simplified distributed systems daemon aimed at providing composable and multi tenant distributed systems.
+
+The project aims at targetting the same space as the Kubernetes Kubelet, and Systemd.
+
+This repository is the Turing complete client binary, that can be optionally used for quick and easy access to the core APIs.
+
+---
 
 ⚠️ Early Active Development ⚠️
 
