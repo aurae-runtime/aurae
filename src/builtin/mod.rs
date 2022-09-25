@@ -31,9 +31,6 @@
 pub mod client;
 pub mod codes;
 pub mod config;
-mod x509_certificate;
-
-use x509_certificate::X509Certificate;
 
 //mod x509_certificate;
 //use x509_certificate::X509Certificate;
