@@ -29,10 +29,14 @@
 \* -------------------------------------------------------------------------- */
 
 pub mod client;
+pub mod codes;
 pub mod config;
 mod x509_certificate;
 
 use x509_certificate::X509Certificate;
+
+//mod x509_certificate;
+//use x509_certificate::X509Certificate;
 
 // Cargo passes environmental variables to the compiler.
 // We can access meta data from Cargo.toml directly here.

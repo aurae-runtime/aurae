@@ -28,7 +28,56 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+tonic::include_proto!("observe");
+tonic::include_proto!("meta");
+
+use crate::codes::*;
+use crate::meta;
+use crate::new_client;
+use crate::observe::observe_client::ObserveClient;
+
+use std::process;
+
 #[derive(Debug, Clone)]
-pub struct Observe {
-    
+pub struct Observe {}
+
+impl Observe {
+    pub fn new() -> Self {
+        Self {}
+    }
+    pub fn status(&mut self) {
+        match tokio::runtime::Runtime::new() {
+            Ok(rt) => {
+                let client = rt.block_on(new_client());
+                match client {
+                    Ok(ch) => {
+                        let mut client = ObserveClient::new(ch.channel);
+                        let mut meta = Vec::new();
+                        meta.push(meta::AuraeMeta {
+                            code: 0,
+                            message: "".into(),
+                        });
+                        let request =
+                            tonic::Request::new(StatusRequest { meta });
+                        let res = rt.block_on(client.status(request));
+                        match res {
+                            Ok(status) => println!("{:?}", status),
+                            Err(e) => {
+                                eprintln!("Unable to get status: {:?}", e);
+                                process::exit(EXIT_REQUEST_FAILURE);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Unable to get status: {:?}", e);
+                        process::exit(EXIT_CONNECT_FAILURE);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Unable to get status: {:?}", e);
+                process::exit(EXIT_RUNTIME_ERROR);
+            }
+        }
+    }
 }

@@ -74,8 +74,9 @@ fn main() {
                 );
                 exit(1);
             }
-            Ok(f) => match f.strip_prefix(std::env::current_dir().unwrap().canonicalize().unwrap())
-            {
+            Ok(f) => match f.strip_prefix(
+                std::env::current_dir().unwrap().canonicalize().unwrap(),
+            ) {
                 Ok(f) => f.into(),
                 _ => f,
             },
@@ -132,7 +133,6 @@ fn main() {
         {
             let filename = filename.to_string_lossy();
 
-            println!("HERE");
             eprintln!("{:=<1$}", "", filename.len());
             eprintln!("{}", filename);
             eprintln!("{:=<1$}", "", filename.len());
