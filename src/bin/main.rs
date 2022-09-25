@@ -28,6 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+#![warn(clippy::unwrap_used)]
+
 use aurae::*;
 use rhai::{Engine, EvalAltResult, Position};
 use std::{env, fs::File, io::Read, path::Path, process::exit};

@@ -66,7 +66,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         // Version
         .register_fn("version", version);
 
-    return engine;
+    engine
 }
 
 #[cfg(test)]
