@@ -46,7 +46,7 @@ test: ## Run the tests
 	@$(cargo) test                # Tidy output
 	#@$(cargo) test -- --nocapture # Full output
 
-clean: cleanapi ## Clean your artifacts 🧼
+clean: ## Clean your artifacts 🧼
 	@echo "Cleaning..."
 	@cargo clean
 	@rm -rvf target/*

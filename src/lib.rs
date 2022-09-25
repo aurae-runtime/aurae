@@ -33,23 +33,38 @@
 // tokio supports abstract sockets natively
 
 pub mod builtin;
+pub mod meta;
 pub mod observe;
-pub mod runtime;
+// pub mod runtime;
 use rhai::Engine;
 
 use crate::builtin::client::*;
 use crate::builtin::*;
+use crate::observe::*;
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
     engine
+        //
+        // Top Level Commands
         .register_fn("about", about)
-        .register_fn("version", version)
-        .register_fn("connect", connect) // Exit on Failure
+        .register_fn("connect", connect)
+        //
+        // Client
         .register_type_with_name::<AuraeClient>("AuraeClient")
         .register_fn("new", AuraeClient::new)
-        .register_fn("observe", AuraeClient::observe)
         .register_fn("info", AuraeClient::info)
-        .register_fn("runtime", AuraeClient::runtime);
+        //
+        // Runtime
+        //.register_fn("runtime", AuraeClient::runtime)
+        //
+        // Observe
+        .register_type_with_name::<Observe>("Observe")
+        .register_fn("observe", AuraeClient::observe)
+        .register_fn("new", Observe::new)
+        .register_fn("status", Observe::status)
+        //
+        // Version
+        .register_fn("version", version);
 
     return engine;
 }

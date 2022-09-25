@@ -28,40 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub mod client;
-pub mod codes;
-pub mod config;
-
-//mod x509_certificate;
-//use x509_certificate::X509Certificate;
-
-// Cargo passes environmental variables to the compiler.
-// We can access meta data from Cargo.toml directly here.
-//
-// Here are the values:
-//
-// CARGO_MANIFEST_DIR
-// CARGO_PKG_AUTHORS
-// CARGO_PKG_DESCRIPTION
-// CARGO_PKG_HOMEPAGE
-// CARGO_PKG_NAME
-// CARGO_PKG_REPOSITORY
-// CARGO_PKG_VERSION
-// CARGO_PKG_VERSION_MAJOR
-// CARGO_PKG_VERSION_MINOR
-// CARGO_PKG_VERSION_PATCH
-// CARGO_PKG_VERSION_PRE
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
-
-pub fn about() {
-    println!("\n");
-    println!("Aurae. Distributed Runtime.");
-    println!("Authors: {}", AUTHORS);
-    version();
-    println!("\n");
-}
-
-pub fn version() {
-    println!("Version: {}", VERSION);
-}
+tonic::include_proto!("meta");
