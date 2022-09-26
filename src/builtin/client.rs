@@ -34,14 +34,15 @@ use crate::observe::*;
 // use crate::runtime::*;
 
 use anyhow::{Context, Result};
-use ring::digest::Digest;
+//use ring::digest::Digest;
+use serde::{Deserialize, Serialize};
 use std::process;
 use tokio::net::UnixStream;
 use tonic::transport::Uri;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tower::service_fn;
 use x509_certificate::certificate::*;
-use x509_certificate::KeyAlgorithm;
+//use x509_certificate::KeyAlgorithm;
 
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
@@ -65,8 +66,11 @@ impl AuraeClient {
         self.x509_details = Some(X509Details {
             subject_common_name: x.x509.subject_common_name().unwrap(),
             issuer_common_name: x.x509.issuer_common_name().unwrap(),
-            sha256_fingerprint: x.x509.sha256_fingerprint().unwrap(),
-            key_algorithm: x.x509.key_algorithm().unwrap(),
+            sha256_fingerprint: format!(
+                "{:?}",
+                x.x509.sha256_fingerprint().unwrap()
+            ),
+            key_algorithm: x.x509.key_algorithm().unwrap().to_string(),
         });
         self.x509 = Some(x.x509);
         Ok(())
@@ -86,18 +90,30 @@ impl AuraeClient {
 
     pub fn info(&mut self) -> X509Details {
         let x = self.x509_details.as_ref().unwrap().clone();
-        println!("{:?}", x);
         x
     }
 }
 
-#[derive(Debug, Clone)]
+// TODO @kris-nova once we are certain these output types are correct we should implement a macro!
+impl X509Details {
+    pub fn raw(&mut self) {
+        println!("{:?}", self);
+    }
+
+    pub fn json(&mut self) {
+        let serialized = serde_json::to_string_pretty(&self).unwrap();
+        println!("{}", serialized);
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct X509Details {
     pub subject_common_name: String,
     pub issuer_common_name: String,
-    pub sha256_fingerprint: Digest,
-    pub key_algorithm: KeyAlgorithm,
+    pub sha256_fingerprint: String,
+    pub key_algorithm: String,
 }
+
 
 #[derive(Debug, Clone)]
 pub struct ClientIdentity {
