@@ -85,7 +85,9 @@ impl AuraeClient {
     }
 
     pub fn info(&mut self) -> X509Details {
-        self.x509_details.as_ref().unwrap().clone()
+        let x = self.x509_details.as_ref().unwrap().clone();
+        println!("{:?}", x);
+        x
     }
 }
 

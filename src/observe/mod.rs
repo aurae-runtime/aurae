@@ -61,7 +61,11 @@ impl Observe {
                             tonic::Request::new(StatusRequest { meta });
                         let res = rt.block_on(client.status(request));
                         match res {
-                            Ok(status) => status.into_inner(),
+                            Ok(status) => {
+                                let obj = status.into_inner();
+                                println!("{:?}", obj);
+                                obj
+                            }
                             Err(e) => {
                                 eprintln!("Unable to get status: {:?}", e);
                                 process::exit(EXIT_REQUEST_FAILURE);
