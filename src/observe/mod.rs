@@ -45,7 +45,7 @@ impl Observe {
     pub fn new() -> Self {
         Self {}
     }
-    pub fn status(&mut self) {
+    pub fn status(&mut self) -> StatusResponse {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
@@ -61,7 +61,11 @@ impl Observe {
                             tonic::Request::new(StatusRequest { meta });
                         let res = rt.block_on(client.status(request));
                         match res {
-                            Ok(status) => println!("{:?}", status),
+                            Ok(status) => {
+                                let obj = status.into_inner();
+                                println!("{:?}", obj);
+                                obj
+                            }
                             Err(e) => {
                                 eprintln!("Unable to get status: {:?}", e);
                                 process::exit(EXIT_REQUEST_FAILURE);

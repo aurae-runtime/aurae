@@ -84,9 +84,10 @@ impl AuraeClient {
         Observe::new()
     }
 
-    pub fn info(&mut self) {
-        let info = &self.x509_details.as_ref().unwrap();
-        println!("{:?}", info);
+    pub fn info(&mut self) -> X509Details {
+        let x = self.x509_details.as_ref().unwrap().clone();
+        println!("{:?}", x);
+        x
     }
 }
 
