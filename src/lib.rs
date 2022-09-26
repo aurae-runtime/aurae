@@ -32,10 +32,11 @@
 // Here we need to build an abstract socket from a SocketAddr until
 // tokio supports abstract sockets natively
 
+// pub mod runtime;
 pub mod builtin;
 pub mod meta;
 pub mod observe;
-// pub mod runtime;
+
 use rhai::Engine;
 
 use crate::builtin::client::*;
@@ -44,15 +45,20 @@ use crate::observe::*;
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
     engine
+        // .register_stdlib<T: Serialize>
         //
         // Top Level Commands
         .register_fn("about", about)
         .register_fn("connect", connect)
         //
+        //
         // Client
         .register_type_with_name::<AuraeClient>("AuraeClient")
         .register_fn("new", AuraeClient::new)
         .register_fn("info", AuraeClient::info)
+        .register_type_with_name::<X509Details>("X509Details")
+        .register_fn("json", X509Details::json)
+        .register_fn("raw", X509Details::raw)
         //
         // Runtime
         //.register_fn("runtime", AuraeClient::runtime)
@@ -62,6 +68,9 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_fn("observe", AuraeClient::observe)
         .register_fn("new", Observe::new)
         .register_fn("status", Observe::status)
+        .register_type_with_name::<StatusResponse>("StatusResponse")
+        .register_fn("json", StatusResponse::json)
+        .register_fn("raw", StatusResponse::raw)
         //
         // Version
         .register_fn("version", version);

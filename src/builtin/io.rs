@@ -28,33 +28,25 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//use std::process::Command;
+use serde::{Deserialize, Serialize};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Example running "make command" during the build
-    //Command::new("make").args(&["command"]).status().unwrap();
+pub trait JSON<'de>
+where
+    Self: Serialize + Deserialize<'de>,
+{
+    fn to_json(&self) -> Result<String, serde_json::Error> {
+        let serialized = serde_json::to_string(&self);
+        println!("serialized = {:?}", serialized);
+        serialized
+    }
 
-    // gRPC
-    tonic_build::configure()
-        .type_attribute(
-            "meta.AuraeMeta",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
-        )
-        .type_attribute(
-            "observe.StatusRequest",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
-        )
-        .type_attribute(
-            "observe.StatusResponse",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
-        )
-        .compile(
-            &[
-                "../api/v1/meta.proto",
-                "../api/v1/runtime.proto",
-                "../api/v1/observe.proto",
-            ],
-            &["../api/v1"],
-        )?;
-    Ok(())
+    fn to_json_pretty(&self) -> Result<String, serde_json::Error> {
+        let serialized = serde_json::to_string_pretty(&self);
+        println!("serialized = {:?}", serialized);
+        serialized
+    }
+
+    fn from_json(json: &'de str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json)
+    }
 }
