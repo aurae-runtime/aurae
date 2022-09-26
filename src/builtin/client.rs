@@ -35,6 +35,7 @@ use crate::observe::*;
 
 use anyhow::{Context, Result};
 //use ring::digest::Digest;
+use serde::{Deserialize, Serialize};
 use std::process;
 use tokio::net::UnixStream;
 use tonic::transport::Uri;
@@ -104,9 +105,6 @@ impl X509Details {
         println!("{}", serialized);
     }
 }
-
-use crate::builtin::io::JSON;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct X509Details {
