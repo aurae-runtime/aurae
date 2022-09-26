@@ -28,25 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub mod client;
-pub mod codes;
-pub mod config;
-pub mod output;
+use serde::Serialize;
 
-//mod x509_certificate;
-//use x509_certificate::X509Certificate;
-
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
-
-pub fn about() {
-    println!("\n");
-    println!("Aurae. Distributed Runtime.");
-    println!("Authors: {}", AUTHORS);
-    version();
-    println!("\n");
-}
-
-pub fn version() {
-    println!("Version: {}", VERSION);
+pub fn json<T: Serialize>(obj: T) {
+    println!("{}", serde_json::to_string_pretty(&obj).unwrap());
 }
