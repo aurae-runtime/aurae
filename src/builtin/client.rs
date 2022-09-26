@@ -114,7 +114,6 @@ pub struct X509Details {
     pub key_algorithm: String,
 }
 
-impl<'de: 'a, 'a> JSON<'de> for X509Details {}
 
 #[derive(Debug, Clone)]
 pub struct ClientIdentity {
