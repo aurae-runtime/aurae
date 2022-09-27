@@ -53,19 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#[derive(serde::Serialize, serde::Deserialize)]",
         )
         .type_attribute(
-            "runtime.RegisterExecutableResponse",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
-        )
-        .type_attribute(
-            "runtime.StartExecutableResponse",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
-        )
-        .type_attribute(
-            "runtime.StopExecutableResponse",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
-        )
-        .type_attribute(
-            "runtime.DestroyExecutableResponse",
+            "runtime.ExecutableStatus",
             "#[derive(serde::Serialize, serde::Deserialize)]",
         )
         .compile(

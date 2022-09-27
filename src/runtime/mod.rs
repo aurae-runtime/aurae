@@ -78,40 +78,7 @@ impl Executable {
 #[derive(Debug, Clone)]
 pub struct Runtime {}
 
-impl RegisterExecutableResponse {
-    pub fn raw(&mut self) {
-        println!("{:?}", self);
-    }
-
-    pub fn json(&mut self) {
-        let serialized = serde_json::to_string_pretty(&self).unwrap();
-        println!("{}", serialized);
-    }
-}
-
-impl StartExecutableResponse {
-    pub fn raw(&mut self) {
-        println!("{:?}", self);
-    }
-
-    pub fn json(&mut self) {
-        let serialized = serde_json::to_string_pretty(&self).unwrap();
-        println!("{}", serialized);
-    }
-}
-
-impl StopExecutableResponse {
-    pub fn raw(&mut self) {
-        println!("{:?}", self);
-    }
-
-    pub fn json(&mut self) {
-        let serialized = serde_json::to_string_pretty(&self).unwrap();
-        println!("{}", serialized);
-    }
-}
-
-impl DestroyExecutableResponse {
+impl ExecutableStatus {
     pub fn raw(&mut self) {
         println!("{:?}", self);
     }
@@ -126,10 +93,7 @@ impl Runtime {
     pub fn new() -> Self {
         Self {}
     }
-    pub fn register_executable(
-        &mut self,
-        req: Executable,
-    ) -> RegisterExecutableResponse {
+    pub fn register_executable(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
@@ -158,10 +122,7 @@ impl Runtime {
         }
     }
 
-    pub fn start_executable(
-        &mut self,
-        req: Executable,
-    ) -> StartExecutableResponse {
+    pub fn start_executable(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
@@ -190,10 +151,7 @@ impl Runtime {
         }
     }
 
-    pub fn stop_executable(
-        &mut self,
-        req: Executable,
-    ) -> StopExecutableResponse {
+    pub fn stop_executable(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
@@ -222,10 +180,7 @@ impl Runtime {
         }
     }
 
-    pub fn destroy_executable(
-        &mut self,
-        req: Executable,
-    ) -> DestroyExecutableResponse {
+    pub fn destroy_executable(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());

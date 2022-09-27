@@ -61,8 +61,9 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         //
         // Runtime
         .register_type_with_name::<Runtime>("Runtime")
+        //
+        // Executable
         .register_fn("runtime", AuraeClient::runtime)
-        // Runtime->Executable
         .register_type_with_name::<Executable>("Executable")
         .register_fn("exec", exec)
         .register_fn("json", Executable::json)
@@ -74,32 +75,25 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
             Executable::get_comment,
             Executable::set_comment,
         )
-        .register_type_with_name::<StartExecutableResponse>(
-            "StartExecutableResponse",
-        )
-        .register_fn("json", StartExecutableResponse::json)
-        .register_fn("raw", StartExecutableResponse::raw)
+        //
+        // ExecutableStatus
+        .register_type_with_name::<ExecutableStatus>("ExecutableStatus")
+        .register_fn("json", ExecutableStatus::json)
+        .register_fn("raw", ExecutableStatus::raw)
+        //
+        // Start Executable
         .register_fn("start_executable", Runtime::start_executable)
         .register_fn("start", Runtime::start_executable) // alias
-        .register_type_with_name::<StopExecutableResponse>(
-            "StopExecutableResponse",
-        )
-        .register_fn("json", StopExecutableResponse::json)
-        .register_fn("raw", StopExecutableResponse::raw)
+        //
+        // Stop Executable
         .register_fn("stop_executable", Runtime::stop_executable)
         .register_fn("stop", Runtime::stop_executable) // alias
-        .register_type_with_name::<RegisterExecutableResponse>(
-            "RegisterExecutableResponse",
-        )
-        .register_fn("json", RegisterExecutableResponse::json)
-        .register_fn("raw", RegisterExecutableResponse::raw)
+        //
+        // Register Executable
         .register_fn("register_executable", Runtime::register_executable)
         .register_fn("register", Runtime::register_executable) // alias
-        .register_type_with_name::<DestroyExecutableResponse>(
-            "StartExecutableResponse",
-        )
-        .register_fn("json", DestroyExecutableResponse::json)
-        .register_fn("raw", DestroyExecutableResponse::raw)
+        //
+        // Destroy Executable
         .register_fn("destroy_executable", Runtime::destroy_executable)
         .register_fn("destroy", Runtime::destroy_executable) //alias
         //
