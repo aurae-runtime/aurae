@@ -28,7 +28,108 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-#[derive(Debug, Clone)]
-pub struct Runtime {
+tonic::include_proto!("runtime");
+tonic::include_proto!("meta");
 
+// use crate::codes::*;
+// use crate::meta;
+// use crate::new_client;
+//use crate::runtime::runtime_client::RuntimeClient;
+
+//use std::process;
+
+#[derive(Debug, Clone)]
+pub struct Runtime {}
+
+// Register
+// Start
+// Stop
+// Destroy
+
+impl RegisterExecutableResponse {
+    pub fn raw(&mut self) {
+        println!("{:?}", self);
+    }
+
+    pub fn json(&mut self) {
+        let serialized = serde_json::to_string_pretty(&self).unwrap();
+        println!("{}", serialized);
+    }
+}
+
+impl StartExecutableResponse {
+    pub fn raw(&mut self) {
+        println!("{:?}", self);
+    }
+
+    pub fn json(&mut self) {
+        let serialized = serde_json::to_string_pretty(&self).unwrap();
+        println!("{}", serialized);
+    }
+}
+
+impl StopExecutableResponse {
+    pub fn raw(&mut self) {
+        println!("{:?}", self);
+    }
+
+    pub fn json(&mut self) {
+        let serialized = serde_json::to_string_pretty(&self).unwrap();
+        println!("{}", serialized);
+    }
+}
+
+impl DestroyExecutableResponse {
+    pub fn raw(&mut self) {
+        println!("{:?}", self);
+    }
+
+    pub fn json(&mut self) {
+        let serialized = serde_json::to_string_pretty(&self).unwrap();
+        println!("{}", serialized);
+    }
+}
+
+impl Runtime {
+    pub fn new() -> Self {
+        Self {}
+    }
+    // pub fn status(&mut self) -> StatusResponse {
+    //     match tokio::runtime::Runtime::new() {
+    //         Ok(rt) => {
+    //             let client = rt.block_on(new_client());
+    //             match client {
+    //                 Ok(ch) => {
+    //                     let mut client = RuntimeClient::new(ch.channel);
+    //                     let mut meta = Vec::new();
+    //                     meta.push(meta::AuraeMeta {
+    //                         code: 0,
+    //                         message: "".into(),
+    //                     });
+    //                     let request =
+    //                         tonic::Request::new(StatusRequest { meta });
+    //                     let res = rt.block_on(client.status(request));
+    //                     match res {
+    //                         Ok(status) => {
+    //                             let obj = status.into_inner();
+    //                             obj // Return StatusResponse
+    //                         }
+    //                         Err(e) => {
+    //                             eprintln!("Unable to get status: {:?}", e);
+    //                             process::exit(EXIT_REQUEST_FAILURE);
+    //                         }
+    //                     }
+    //                 }
+    //                 Err(e) => {
+    //                     eprintln!("Unable to get status: {:?}", e);
+    //                     process::exit(EXIT_CONNECT_FAILURE);
+    //                 }
+    //             }
+    //         }
+    //         Err(e) => {
+    //             eprintln!("Unable to get status: {:?}", e);
+    //             process::exit(EXIT_RUNTIME_ERROR);
+    //         }
+    //     }
+    // }
 }

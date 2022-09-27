@@ -31,6 +31,7 @@
 use crate::codes::*;
 use crate::config::*;
 use crate::observe::*;
+use crate::runtime::*;
 // use crate::runtime::*;
 
 use anyhow::{Context, Result};
@@ -42,7 +43,6 @@ use tonic::transport::Uri;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tower::service_fn;
 use x509_certificate::certificate::*;
-//use x509_certificate::KeyAlgorithm;
 
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
@@ -76,15 +76,11 @@ impl AuraeClient {
         Ok(())
     }
 
-    pub fn observe(&mut self) -> Observe {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let result = rt.block_on(new_client());
-        if let Err(e) = result {
-            eprintln!("Unable to connect: {:?}", e);
-            process::exit(EXIT_CONNECT_FAILURE);
-        }
+    pub fn runtime(&mut self) -> Runtime {
+        Runtime::new()
+    }
 
-        // result is ClientIdentity
+    pub fn observe(&mut self) -> Observe {
         Observe::new()
     }
 
@@ -113,7 +109,6 @@ pub struct X509Details {
     pub sha256_fingerprint: String,
     pub key_algorithm: String,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct ClientIdentity {

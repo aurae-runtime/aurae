@@ -36,6 +36,7 @@
 pub mod builtin;
 pub mod meta;
 pub mod observe;
+pub mod runtime;
 
 use rhai::Engine;
 
@@ -61,7 +62,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_fn("raw", X509Details::raw)
         //
         // Runtime
-        //.register_fn("runtime", AuraeClient::runtime)
+        .register_fn("runtime", AuraeClient::runtime)
         //
         // Observe
         .register_type_with_name::<Observe>("Observe")
