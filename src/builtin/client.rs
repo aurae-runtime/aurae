@@ -42,6 +42,7 @@ use tonic::transport::Uri;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tower::service_fn;
 use x509_certificate::certificate::*;
+use output_macros::Output;
 //use x509_certificate::KeyAlgorithm;
 
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
@@ -94,19 +95,7 @@ impl AuraeClient {
     }
 }
 
-// TODO @kris-nova once we are certain these output types are correct we should implement a macro!
-impl X509Details {
-    pub fn raw(&mut self) {
-        println!("{:?}", self);
-    }
-
-    pub fn json(&mut self) {
-        let serialized = serde_json::to_string_pretty(&self).unwrap();
-        println!("{}", serialized);
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Output)]
 pub struct X509Details {
     pub subject_common_name: String,
     pub issuer_common_name: String,

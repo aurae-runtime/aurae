@@ -38,15 +38,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tonic_build::configure()
         .type_attribute(
             "meta.AuraeMeta",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::output_macros::Output)]",
         )
         .type_attribute(
             "observe.StatusRequest",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::output_macros::Output)]",
         )
         .type_attribute(
             "observe.StatusResponse",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::output_macros::Output)]",
         )
         .compile(
             &[
