@@ -41,17 +41,6 @@ use std::process;
 #[derive(Debug, Clone)]
 pub struct Observe {}
 
-impl StatusResponse {
-    pub fn raw(&mut self) {
-        println!("{:?}", self);
-    }
-
-    pub fn json(&mut self) {
-        let serialized = serde_json::to_string_pretty(&self).unwrap();
-        println!("{}", serialized);
-    }
-}
-
 impl Observe {
     pub fn new() -> Self {
         Self {}
