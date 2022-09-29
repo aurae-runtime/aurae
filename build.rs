@@ -48,6 +48,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "observe.StatusResponse",
             "#[derive(serde::Serialize, serde::Deserialize)]",
         )
+        .type_attribute(
+            "runtime.Executable",
+            "#[derive(serde::Serialize, serde::Deserialize)]",
+        )
+        .type_attribute(
+            "runtime.ExecutableStatus",
+            "#[derive(serde::Serialize, serde::Deserialize)]",
+        )
         .compile(
             &[
                 "../api/v1/meta.proto",
