@@ -5,7 +5,7 @@ This repository is the 'aurae' interpreter for executing scripts against the dae
 
 The project aims at targetting the same space as the Kubernetes Kubelet, and Systemd.
 
-This repository is the Turing complete client binary, that can be optionally used for quick and easy access to the core APIs.
+Scripts can be optionally used for quick and easy access to the core APIs.
 
 ---
 
