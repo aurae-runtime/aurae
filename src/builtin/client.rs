@@ -36,6 +36,7 @@ use crate::runtime::*;
 
 use anyhow::{Context, Result};
 //use ring::digest::Digest;
+use macros::Output;
 use serde::{Deserialize, Serialize};
 use std::process;
 use tokio::net::UnixStream;
@@ -43,7 +44,6 @@ use tonic::transport::Uri;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tower::service_fn;
 use x509_certificate::certificate::*;
-use macros::Output;
 //use x509_certificate::KeyAlgorithm;
 
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
@@ -55,6 +55,12 @@ pub struct AuraeClient {
     pub channel: Option<Channel>,
     x509: Option<X509Certificate>,
     x509_details: Option<X509Details>,
+}
+
+impl Default for AuraeClient {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AuraeClient {

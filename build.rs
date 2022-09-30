@@ -38,6 +38,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tonic_build::configure()
         .type_attribute(
             "meta.AuraeMeta",
+            "#[allow(clippy::derive_partial_eq_without_eq)]",
+        )
+        .type_attribute(
+            "runtime.Executable",
+            "#[allow(clippy::derive_partial_eq_without_eq)]",
+        )
+        .type_attribute(
+            "runtime.ExecutableStatus",
+            "#[allow(clippy::derive_partial_eq_without_eq)]",
+        )
+        .type_attribute(
+            "meta.AuraeMeta",
             "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
         )
         .type_attribute(
