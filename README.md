@@ -47,7 +47,7 @@ let aurae = connect();
 aurae.info();
 
 // Get the status of the daemon
-let observe = aurae.obsever()
+let observe = aurae.observe()
 observe.status()
 ```
 ### Architecture 
