@@ -1,6 +1,7 @@
 # Aurae
 
-Aurae is a simplified distributed systems daemon aimed at providing composable and multi tenant distributed systems.
+The Aurae Project is a simplified distributed systems toolchain aimed at providing composable and multi tenant distributed systems.
+This repository is the 'aurae' interpreter for executing scripts against the daemon.
 
 The project aims at targetting the same space as the Kubernetes Kubelet, and Systemd.
 
