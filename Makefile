@@ -39,6 +39,7 @@ compile: ## Compile for the local architecture ⚙
 	@$(cargo) build
 
 install: ## Build and install (debug) 🎉
+	@$(cargo) clippy
 	@$(cargo) install --debug --path .
 
 release: ## Build and install (release) 🎉

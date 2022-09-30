@@ -41,6 +41,12 @@ use std::process;
 #[derive(Debug, Clone)]
 pub struct Observe {}
 
+impl Default for Observe {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Observe {
     pub fn new() -> Self {
         Self {}
@@ -52,19 +58,15 @@ impl Observe {
                 match client {
                     Ok(ch) => {
                         let mut client = ObserveClient::new(ch.channel);
-                        let mut meta = Vec::new();
-                        meta.push(meta::AuraeMeta {
+                        let meta = vec![meta::AuraeMeta {
                             code: 0,
                             message: "".into(),
-                        });
+                        }];
                         let request =
                             tonic::Request::new(StatusRequest { meta });
                         let res = rt.block_on(client.status(request));
                         match res {
-                            Ok(status) => {
-                                let obj = status.into_inner();
-                                obj // Return StatusResponse
-                            }
+                            Ok(status) => status.into_inner(),
                             Err(e) => {
                                 eprintln!("Unable to get status: {:?}", e);
                                 process::exit(EXIT_REQUEST_FAILURE);

@@ -78,6 +78,12 @@ impl Executable {
 #[derive(Debug, Clone)]
 pub struct Runtime {}
 
+impl Default for Runtime {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ExecutableStatus {
     pub fn raw(&mut self) {
         println!("{:?}", self);
