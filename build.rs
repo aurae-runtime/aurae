@@ -62,11 +62,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .type_attribute(
             "runtime.Executable",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output, ::macros::Getters, ::macros::Setters)]",
+        )
+        .field_attribute(
+            "runtime.Executable.meta",
+            "#[getset(ignore)]",
         )
         .type_attribute(
             "runtime.ExecutableStatus",
-            "#[derive(serde::Serialize, serde::Deserialize)]",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
         )
         .compile(
             &[
