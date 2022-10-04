@@ -31,7 +31,6 @@
 default: install
 all: install
 
-executable   ?=  aurae
 cargo         =  cargo
 
 compile: ## Compile for the local architecture ⚙
