@@ -41,57 +41,12 @@ pub fn exec() -> Executable {
     Executable::default()
 }
 
-impl Executable {
-    pub fn get_comment(&mut self) -> String {
-        self.comment.clone()
-    }
-
-    pub fn set_comment(&mut self, x: String) {
-        self.comment = x;
-    }
-    pub fn get_exec(&mut self) -> String {
-        self.exec.clone()
-    }
-
-    pub fn set_exec(&mut self, x: String) {
-        self.exec = x;
-    }
-
-    pub fn get_name(&mut self) -> String {
-        self.name.clone()
-    }
-
-    pub fn set_name(&mut self, x: String) {
-        self.name = x;
-    }
-
-    pub fn raw(&mut self) {
-        println!("{:?}", self);
-    }
-
-    pub fn json(&mut self) {
-        let serialized = serde_json::to_string_pretty(&self).unwrap();
-        println!("{}", serialized);
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Runtime {}
 
 impl Default for Runtime {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-impl ExecutableStatus {
-    pub fn raw(&mut self) {
-        println!("{:?}", self);
-    }
-
-    pub fn json(&mut self) {
-        let serialized = serde_json::to_string_pretty(&self).unwrap();
-        println!("{}", serialized);
     }
 }
 
