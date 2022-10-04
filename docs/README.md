@@ -1,2 +1,2 @@
-# Saga Language Specification 
+# AuraeScript Language Specification 
 
