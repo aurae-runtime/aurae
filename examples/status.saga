@@ -31,11 +31,9 @@
 
 let aurae = connect();
 //aurae.info().raw();
-
 aurae.info().json();
 
 let observe = aurae.observe();
 observe.status().json();
-
 //let observe = aurae.observe();
 //observe.status().json();

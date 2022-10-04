@@ -30,7 +30,7 @@
 
 [package]
 name = "saga"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
 

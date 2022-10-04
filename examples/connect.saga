@@ -29,16 +29,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+//   Example ~/.aurae/config (TOML)
+
+//   [auth]
+//   ca_crt = "/home/nova/.aurae/pki/ca.crt"
+//   client_crt = "/home/nova/.aurae/pki/_signed.client.nova.crt"
+//   client_key = "/home/nova/.aurae/pki/client.nova.key"
+//
+//   [system]
+//   socket = "/var/run/aurae/aurae.sock"
 
 let aurae = connect();
 aurae.info();
 
-
-//let pod = aurae.runtime().pod("mypod");
-//pod.image("krisnova/hack:latest");
-//aurae.runtime().run(pod);
-//
-//
 
 
 
