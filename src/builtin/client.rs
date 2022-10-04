@@ -32,10 +32,8 @@ use crate::codes::*;
 use crate::config::*;
 use crate::observe::*;
 use crate::runtime::*;
-// use crate::runtime::*;
 
 use anyhow::{Context, Result};
-//use ring::digest::Digest;
 use macros::Output;
 use serde::{Deserialize, Serialize};
 use std::process;
@@ -44,7 +42,6 @@ use tonic::transport::Uri;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tower::service_fn;
 use x509_certificate::certificate::*;
-//use x509_certificate::KeyAlgorithm;
 
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
