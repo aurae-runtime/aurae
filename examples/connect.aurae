@@ -1,4 +1,4 @@
-#!/usr/bin/env aurae
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -29,11 +29,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-let aurae = connect();
-//aurae.info().raw();
-aurae.info().json();
+//   Example ~/.aurae/config (TOML)
 
-let observe = aurae.observe();
-observe.status().json();
-//let observe = aurae.observe();
-//observe.status().json();
+//   [auth]
+//   ca_crt = "/home/nova/.aurae/pki/ca.crt"
+//   client_crt = "/home/nova/.aurae/pki/_signed.client.nova.crt"
+//   client_key = "/home/nova/.aurae/pki/client.nova.key"
+//
+//   [system]
+//   socket = "/var/run/aurae/aurae.sock"
+
+let aurae = connect();
+aurae.info();
+
+
+
+

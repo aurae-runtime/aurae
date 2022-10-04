@@ -1,4 +1,4 @@
-#!/usr/bin/env aurae
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -41,9 +41,9 @@ let runtime = aurae.runtime();
 //observe.status().json();
 
 let x = exec();
-x.name     = "Example from Buffalo Devops Days";
+x.name     = "Example Application";
 x.exec     = "cat /etc/shadow";
-x.comment  = "This is an example executable that can be scheduled with Aurae";
+x.comment  = "This is an example executable that can be scheduled with AuraeScript";
 
 //runtime.start(x).json();
 let output = runtime.stop(x);

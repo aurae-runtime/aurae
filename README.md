@@ -1,6 +1,6 @@
-# The Saga Language
+# AuraeScript
 
-Saga is a turing complete interpreted language for platform teams built on [Rhai](https://rhai.rs/book/) and is similar to TypeScript and Rust.
+AuraeScript is a turing complete language for platform teams built on [Rhai](https://rhai.rs/book/) and is similar to TypeScript and Rust.
 
 ```typescript
 
@@ -13,21 +13,20 @@ if connect {
 
 ```
 
-Saga is a lightweight client that wraps the [Aurae Standard Library](https://github.com/aurae-runtime/api/blob/main/README.md#the-aurae-standard-library). 
+AuraeScript is a lightweight client that wraps the [Aurae Standard Library](https://github.com/aurae-runtime/api/blob/main/README.md#the-aurae-standard-library). 
 
-Saga is a quick way to access the core Aurae APIs and follows normal UNIX parlance. Sage should feel simple and intuitive for any Go, C, Python, or Rust programmer.
+AuraeScript is a quick way to access the core Aurae APIs and follows normal UNIX parlance. AuraeScript should feel simple and intuitive for any Go, C, Python, or Rust programmer.
 
 ```typescript
-#!/usr/bin/env aurae
+#!/usr/bin/env auraescript
 
-let aurae = connect(); // Connect and authenticate with mTLS stored in a ~/.aurae/config
-aurae.info().json();   // Print the connection details as JSON
+let client = connect(); // Connect and authenticate with mTLS stored in a ~/.aurae/config
+client.info().json();   // Print the connection details as JSON
 
 
-let observe = aurae.observe() // Initialize the observe subsystem
+let observe = client.observe() // Initialize the observe subsystem
 observe.status().json();      // Print the status of an Aurae system to JSON
 ```
-
 
 ## Build From Source
 
@@ -41,7 +40,7 @@ cd environment
 make submodules pki config all
 ```
 
-Alternatively it is possible to build `saga` by itself. Check out this repository and use the Makefile.
+Alternatively it is possible to build `aurascript` by itself. Check out this repository and use the Makefile.
 
 ```bash
 make
@@ -56,8 +55,8 @@ cargo install --path .
 
 ### Architecture 
 
-The Saga language follows a similar client paradigm to Kubernetes `kubectl` command. However, unlike Kubernetes this is not a command line tool like `kubectl`. Saga is a fully supported programing language complete with an infrastructure standard library. The Aurae runtime projects supports many clients, and the easiest client to get started building with is Saga.
+AuraeScript follows a similar client paradigm to Kubernetes `kubectl` command. However, unlike Kubernetes this is not a command line tool like `kubectl`. AuraeScript is a fully supported programing language complete with a systems standard library. The Aurae runtime projects supports many clients, and the easiest client to get started building with is AuraeScript.
 
-Download the static binary directly to your system, and you can begin writing saga programs directly against a running Aurae server.
+Download the static binary directly to your system, and you can begin writing AuraeScript programs directly against a running Aurae server.
 
 
