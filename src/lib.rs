@@ -66,8 +66,11 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_fn("exec", exec)
         .register_fn("json", Executable::json)
         .register_fn("raw", Executable::raw)
-        .register_get_set("name", Executable::get_name, Executable::set_name)
-        .register_get_set("exec", Executable::get_exec, Executable::set_exec)
+        .register_get_set(
+            "command",
+            Executable::get_command,
+            Executable::set_command,
+        )
         .register_get_set(
             "comment",
             Executable::get_comment,
@@ -80,20 +83,12 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_fn("raw", ExecutableStatus::raw)
         //
         // Start Executable
-        .register_fn("start_executable", Runtime::start_executable)
-        .register_fn("start", Runtime::start_executable) // alias
+        .register_fn("executable_Start", Runtime::executable_start)
+        .register_fn("start", Runtime::executable_start) // alias
         //
         // Stop Executable
-        .register_fn("stop_executable", Runtime::stop_executable)
-        .register_fn("stop", Runtime::stop_executable) // alias
-        //
-        // Register Executable
-        .register_fn("register_executable", Runtime::register_executable)
-        .register_fn("register", Runtime::register_executable) // alias
-        //
-        // Destroy Executable
-        .register_fn("destroy_executable", Runtime::destroy_executable)
-        .register_fn("destroy", Runtime::destroy_executable) //alias
+        .register_fn("stop_executable", Runtime::executable_stop)
+        .register_fn("stop", Runtime::executable_stop) // alias
         //
         // Observe
         .register_type_with_name::<Observe>("Observe")

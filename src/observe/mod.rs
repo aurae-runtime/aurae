@@ -59,6 +59,7 @@ impl Observe {
                     Ok(ch) => {
                         let mut client = ObserveClient::new(ch.channel);
                         let meta = vec![meta::AuraeMeta {
+                            name: "UNKNOWN".to_string(),
                             code: 0,
                             message: "".into(),
                         }];
