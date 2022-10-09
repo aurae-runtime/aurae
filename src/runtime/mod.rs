@@ -54,14 +54,15 @@ impl Runtime {
     pub fn new() -> Self {
         Self {}
     }
-    pub fn register_executable(&mut self, req: Executable) -> ExecutableStatus {
+
+    pub fn executable_start(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
                 match client {
                     Ok(ch) => {
                         let mut client = RuntimeClient::new(ch.channel);
-                        let res = rt.block_on(client.register_executable(req));
+                        let res = rt.block_on(client.executable_start(req));
                         match res {
                             Ok(x) => x.into_inner(),
                             Err(e) => {
@@ -83,72 +84,14 @@ impl Runtime {
         }
     }
 
-    pub fn start_executable(&mut self, req: Executable) -> ExecutableStatus {
+    pub fn executable_stop(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
                 match client {
                     Ok(ch) => {
                         let mut client = RuntimeClient::new(ch.channel);
-                        let res = rt.block_on(client.start_executable(req));
-                        match res {
-                            Ok(x) => x.into_inner(),
-                            Err(e) => {
-                                eprintln!("{:?}", e);
-                                process::exit(EXIT_REQUEST_FAILURE);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("{:?}", e);
-                        process::exit(EXIT_CONNECT_FAILURE);
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("{:?}", e);
-                process::exit(EXIT_RUNTIME_ERROR);
-            }
-        }
-    }
-
-    pub fn stop_executable(&mut self, req: Executable) -> ExecutableStatus {
-        match tokio::runtime::Runtime::new() {
-            Ok(rt) => {
-                let client = rt.block_on(new_client());
-                match client {
-                    Ok(ch) => {
-                        let mut client = RuntimeClient::new(ch.channel);
-                        let res = rt.block_on(client.stop_executable(req));
-                        match res {
-                            Ok(x) => x.into_inner(),
-                            Err(e) => {
-                                eprintln!("{:?}", e);
-                                process::exit(EXIT_REQUEST_FAILURE);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("{:?}", e);
-                        process::exit(EXIT_CONNECT_FAILURE);
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("{:?}", e);
-                process::exit(EXIT_RUNTIME_ERROR);
-            }
-        }
-    }
-
-    pub fn destroy_executable(&mut self, req: Executable) -> ExecutableStatus {
-        match tokio::runtime::Runtime::new() {
-            Ok(rt) => {
-                let client = rt.block_on(new_client());
-                match client {
-                    Ok(ch) => {
-                        let mut client = RuntimeClient::new(ch.channel);
-                        let res = rt.block_on(client.destroy_executable(req));
+                        let res = rt.block_on(client.executable_stop(req));
                         match res {
                             Ok(x) => x.into_inner(),
                             Err(e) => {

@@ -53,6 +53,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
         )
         .type_attribute(
+            "meta.ProcessMeta",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
+        )
+        .type_attribute(
             "observe.StatusRequest",
             "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
         )
@@ -74,11 +78,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .compile(
             &[
-                "../api/v1/meta.proto",
-                "../api/v1/runtime.proto",
-                "../api/v1/observe.proto",
+                "../auraed/stdlib/v0/meta.proto",
+                "../auraed/stdlib/v0/runtime.proto",
+                "../auraed/stdlib/v0/observe.proto",
             ],
-            &["../api/v1"],
+            &["../auraed/stdlib/v0"],
         )?;
     Ok(())
 }
