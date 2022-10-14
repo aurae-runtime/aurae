@@ -58,13 +58,13 @@ impl Observe {
                 match client {
                     Ok(ch) => {
                         let mut client = ObserveClient::new(ch.channel);
-                        let meta = vec![meta::AuraeMeta {
+                        let meta = meta::AuraeMeta {
                             name: "UNKNOWN".to_string(),
-                            code: 0,
                             message: "".into(),
-                        }];
-                        let request =
-                            tonic::Request::new(StatusRequest { meta });
+                        };
+                        let request = tonic::Request::new(StatusRequest {
+                            meta: Some(meta),
+                        });
                         let res = rt.block_on(client.status(request));
                         match res {
                             Ok(status) => status.into_inner(),

@@ -37,8 +37,19 @@ use crate::runtime::runtime_client::RuntimeClient;
 
 use std::process;
 
-pub fn exec() -> Executable {
+/// exe will create an empty Executable
+pub fn exe() -> Executable {
     Executable::default()
+}
+
+/// exec (exe + command) will create an Executable with a command string
+pub fn exec(cmd: &str) -> Executable {
+    Executable { command: cmd.to_string(), ..Executable::default() }
+}
+
+/// runx (run + executable) will create and run an Executable with a command string
+pub fn runx(cmd: &str) -> ExecutableStatus {
+    Runtime::new().executable_start(exec(cmd))
 }
 
 #[derive(Debug, Clone)]

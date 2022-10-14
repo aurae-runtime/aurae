@@ -64,6 +64,8 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_fn("runtime", AuraeClient::runtime)
         .register_type_with_name::<Executable>("Executable")
         .register_fn("exec", exec)
+        .register_fn("exe", exe)
+        .register_fn("runx", runx)
         .register_fn("json", Executable::json)
         .register_fn("raw", Executable::raw)
         .register_get_set(
