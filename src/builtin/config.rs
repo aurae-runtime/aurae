@@ -58,7 +58,7 @@ pub struct Auth {
 
 pub fn default_config() -> Result<AuraeConfig> {
     // ${HOME}/.aura/default.config.toml
-    let home = std::env::var("HOME").unwrap();
+    let home = std::env::var("HOME").expect("missing $HOME environmental variable");
     let path = format!("{}/.aurae/config", home);
     //println!("Checking: {}", path);
     let res = parse_aurae_config(path);

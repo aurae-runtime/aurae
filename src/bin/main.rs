@@ -28,7 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-#![warn(clippy::unwrap_used)]
+// TODO @kris-nova as we move to Deno we probably want to revist the main function
+// #![warn(clippy::unwrap_used)]
 
 use auraescript::*;
 use rhai::{Engine, EvalAltResult, Position};
@@ -36,7 +37,7 @@ use std::{env, fs::File, io::Read, path::Path, process::exit};
 
 fn eprint_error(input: &str, mut err: EvalAltResult) {
     fn eprint_line(lines: &[&str], pos: Position, err_msg: &str) {
-        let line = pos.line().unwrap();
+        let line = pos.line().expect("position");
         let line_no = format!("{line}: ");
 
         eprintln!("{}{}", line_no, lines[line - 1]);

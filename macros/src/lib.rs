@@ -38,7 +38,7 @@ pub fn getters(input: TokenStream) -> TokenStream {
         .fields
         .iter()
         .filter(|field| {
-            !getset::attribute_contains_any(*field, &["ignore", "ignore_get"])
+            !getset::attribute_contains_any(field, &["ignore", "ignore_get"])
         })
         .map(|field| {
             let field_ident = field
@@ -82,7 +82,7 @@ pub fn setters(input: TokenStream) -> TokenStream {
         .fields
         .iter()
         .filter(|field| {
-            !getset::attribute_contains_any(*field, &["ignore", "ignore_set"])
+            !getset::attribute_contains_any(field, &["ignore", "ignore_set"])
         })
         .map(|field| {
             let field_ident = field

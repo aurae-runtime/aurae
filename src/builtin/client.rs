@@ -68,14 +68,18 @@ impl AuraeClient {
         &mut self,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let x = new_client().await?;
+        let subject_common_name = x.x509.subject_common_name().ok_or("missing subject_common_name")?;
+        let issuer_common_name = x.x509.issuer_common_name().ok_or("missing issuer_common_name")?;
+        let sha256_fingerprint = x.x509.sha256_fingerprint()?;
+        let key_algorithm = x.x509.key_algorithm().ok_or("missing key_algorithm")?.to_string();
         self.x509_details = Some(X509Details {
-            subject_common_name: x.x509.subject_common_name().unwrap(),
-            issuer_common_name: x.x509.issuer_common_name().unwrap(),
+            subject_common_name,
+            issuer_common_name,
             sha256_fingerprint: format!(
                 "{:?}",
-                x.x509.sha256_fingerprint().unwrap()
+                sha256_fingerprint
             ),
-            key_algorithm: x.x509.key_algorithm().unwrap().to_string(),
+            key_algorithm,
         });
         self.x509 = Some(x.x509);
         Ok(())
@@ -90,8 +94,18 @@ impl AuraeClient {
     }
 
     pub fn info(&mut self) -> X509Details {
-        let x = self.x509_details.as_ref().unwrap().clone();
-        x
+        let x = self.x509_details.as_ref();
+        match x {
+            Some(r) => r.clone(),
+            None => {
+                X509Details{
+                    subject_common_name: "-".to_string(),
+                    issuer_common_name: "-".to_string(),
+                    sha256_fingerprint: "-".to_string(),
+                    key_algorithm: "-".to_string()
+                }
+            },
+        }
     }
 }
 
@@ -151,7 +165,7 @@ pub async fn new_client() -> Result<ClientIdentity, Box<dyn std::error::Error>>
 pub fn connect() -> AuraeClient {
     let mut client =
         AuraeClient { channel: None, x509: None, x509_details: None };
-    let rt = tokio::runtime::Runtime::new().unwrap();
+    let rt = tokio::runtime::Runtime::new().expect("new tokio runtime");
     let result = rt.block_on(client.client_connect());
     if let Err(e) = result {
         eprintln!("Unable to connect to Auraed: {:?}", e);
