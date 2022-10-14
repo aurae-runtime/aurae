@@ -36,9 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // gRPC
     tonic_build::configure()
-        .server_mod_attribute("meta", "#[allow(clippy::unwrap_used)]")
-        .server_mod_attribute("observe", "#[allow(clippy::unwrap_used)]")
-        .server_mod_attribute("runtime", "#[allow(clippy::unwrap_used)]")
+.build_server(false)
         .type_attribute(
             "meta.AuraeMeta",
             "#[allow(clippy::derive_partial_eq_without_eq)]",
@@ -83,6 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "runtime.ExecutableStatus",
             "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
         )
+        .build_server(false)
         .compile(
             &[
                 "../auraed/stdlib/v0/meta.proto",
