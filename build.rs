@@ -36,8 +36,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // gRPC
     tonic_build::configure()
+        .server_mod_attribute("meta", "#[allow(clippy::unwrap_used)]")
+        .server_mod_attribute("observe", "#[allow(clippy::unwrap_used)]")
+        .server_mod_attribute("runtime", "#[allow(clippy::unwrap_used)]")
         .type_attribute(
             "meta.AuraeMeta",
+            "#[allow(clippy::derive_partial_eq_without_eq)]",
+        )
+        .type_attribute(
+            "meta.ProcessMeta",
             "#[allow(clippy::derive_partial_eq_without_eq)]",
         )
         .type_attribute(
