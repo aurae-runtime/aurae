@@ -1,4 +1,4 @@
-# AuraeScript Language
+# AuraeScript
 
  - Runtime
     - Executing Commands 
