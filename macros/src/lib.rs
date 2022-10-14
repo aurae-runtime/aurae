@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
-use quote::quote;
+use quote::{quote, ToTokens};
+use syn::spanned::Spanned;
 use syn::{parse_macro_input, Data, DeriveInput};
 
 #[proc_macro_derive(Output)]
@@ -51,9 +52,25 @@ pub fn getters(input: TokenStream) -> TokenStream {
 
             let field_type = &field.ty;
 
-            quote! {
-                pub fn #function_ident(&mut self) -> #field_type {
-                    self.#field_ident.clone()
+            if field_type
+                .to_token_stream()
+                .to_string()
+                .replace(' ', "")
+                .starts_with("::prost::alloc::vec::Vec<")
+            {
+                quote! {
+                    pub fn #function_ident(&mut self) -> ::rhai::Array {
+                        self.#field_ident
+                            .iter()
+                            .map(|x| ::rhai::Dynamic::from(x.clone()))
+                            .collect()
+                    }
+                }
+            } else {
+                quote! {
+                    pub fn #function_ident(&mut self) -> #field_type {
+                        self.#field_ident.clone()
+                    }
                 }
             }
         })
@@ -95,9 +112,62 @@ pub fn setters(input: TokenStream) -> TokenStream {
 
             let field_type = &field.ty;
 
-            quote! {
-                pub fn #function_ident(&mut self, #field_ident: #field_type) {
-                    self.#field_ident = #field_ident;
+            let field_type_name = field_type.to_token_stream().to_string().replace(' ', "");
+            if field_type_name.starts_with("::prost::alloc::vec::Vec<") {
+                let vec_of_type_name = &field_type_name["::prost::alloc::vec::Vec<".len()..field_type_name.len() - 1];
+                let expect_message = format!("Unexpected type in array. Expecting {}", vec_of_type_name);
+                let rhai_dynamic_to_rust_fn = match vec_of_type_name {
+                    "f64" => quote!(val.as_float().expect(#expect_message)),
+                    "f32" => panic!("Protobuf float fields are not supported. AuraeScript only has f64, and f64 cannot be cast to f32 without losing precision"),
+                    "i32" => quote!({
+                        let val = val.as_int().expect(#expect_message);
+                        let val: i32 =::std::convert::TryFrom::<i64>::try_from(val).expect(#expect_message);
+                        val
+                    }),
+                    "i64" => quote!(val.as_int().expect(#expect_message)),
+                    "u32" => quote!({
+                        let val = val.as_int().expect(#expect_message);
+                        let val: u32 =::std::convert::TryFrom::<i64>::try_from(val).expect(#expect_message);
+                        val
+                    }),
+                    "u64" => quote!({
+                        let val = val.as_int().expect(#expect_message);
+                        let val: u64 =::std::convert::TryFrom::<i64>::try_from(val).expect(#expect_message);
+                        val
+                    }),
+                    "bool" => quote!(val.as_bool().expect(#expect_message)),
+                    "::prost::alloc::string::String" => {
+                        let expect_message = "Unexpected type in array. Expecting String";
+                        quote!(val.into_string().expect(#expect_message)) 
+                    },
+                    "::prost::alloc::vec::Vec<u8>" => {
+                        let expect_message = "Unexpected type in array. Expecting [u8]";
+                        quote!(val.into_blob().expect(#expect_message)) 
+                    },
+                    assuming_proto_message => {
+                        let ident = assuming_proto_message
+                            .split("::").map(|x| Ident::new(x, field_type.span()));
+                        quote!({
+                            val.cast::<#(#ident)::*>()
+                        })
+                    }
+                };
+
+                quote! {
+                    pub fn #function_ident(&mut self, #field_ident: ::rhai::Array) {
+                        let mut vals = vec![];
+                        for val in #field_ident.into_iter() {
+                            let val = #rhai_dynamic_to_rust_fn;
+                            vals.push(val);
+                        }
+                        self.#field_ident = vals;
+                    }
+                }
+            } else {
+                quote! {
+                    pub fn #function_ident(&mut self, #field_ident: #field_type) {
+                        self.#field_ident = #field_ident;
+                    }
                 }
             }
         })
