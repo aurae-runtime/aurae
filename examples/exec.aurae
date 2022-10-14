@@ -30,26 +30,20 @@
 \* -------------------------------------------------------------------------- */
 
 let aurae = connect();
-let observe = aurae.observe();
 let runtime = aurae.runtime();
 
-//aurae.info().json();
-//observe.status().json();
+// runx (Run Executable)
+runx("cat /etc/fstab").json();
+runx("cat /etc/hostname").json();
+runx("ls -la /tmp").json();
 
-let x = exec();
-x.command  = "cat /etc/shadow";
-x.comment  = "This is an example executable that can be scheduled with AuraeScript";
+// exec (Executable + Command)
+let example = exec("cat /etc/resolv.conf");
+runtime.start(example).json();
 
-runtime.start(x).json();
-let output = runtime.stop(x);
-output.json();
+// exe (Executable)
+let example = exe();
+example.command = "touch /tmp/boops";
+runtime.start(example).json();
 
-//runtime.register(x);
-//runtime.destroy(x);
-
-//runtime.register(x);
-//runtime.stop(x);
-//runtime.destroy(x);
-//status.raw();
-//x.json();
 
