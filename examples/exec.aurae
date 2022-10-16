@@ -32,18 +32,9 @@
 let aurae = connect();
 let runtime = aurae.runtime();
 
-// runx (Run Executable)
-runx("cat /etc/fstab").json();
-runx("cat /etc/hostname").json();
-runx("ls -la /tmp").json();
+let example = cmd("cat /etc/resolv.conf");
+runtime.exec(example).json();
 
-// exec (Executable + Command)
-let example = exec("cat /etc/resolv.conf");
-runtime.start(example).json();
-
-// exe (Executable)
-let example = exe();
-example.command = "touch /tmp/boops";
-runtime.start(example).json();
+//exec("cat /etc/fstab").json();
 
 

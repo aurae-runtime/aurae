@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # ---------------------------------------------------------------------------- #
 #             Apache 2.0 License Copyright © 2022 The Aurae Authors            #
 #                                                                              #
@@ -28,33 +29,9 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
-default: install
-all: install
-
-cargo         =  cargo
-
-compile: ## Compile for the local architecture ⚙
-	@$(cargo) clippy
-	@$(cargo) build
-
-install: ## Build and install (debug) 🎉
-	@$(cargo) clippy
-	@$(cargo) install --debug --path .
-	sudo -E cp -rv examples/bin/* /usr/bin
-
-release: ## Build and install (release) 🎉
-	@$(cargo) install --path .
-
-test: ## Run the tests
-	@$(cargo) test                # Tidy output
-	#@$(cargo) test -- --nocapture # Full output
-
-clean: ## Clean your artifacts 🧼
-	@echo "Cleaning..."
-	@cargo clean
-	@rm -rvf target/*
-	@rm -rvf $(executable)
-
-.PHONY: help
-help:  ## Show help messages for make targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
+echo "MockD (Mock Daemon) Running endless loop..."
+while :
+do
+  echo "Alive..."
+  sleep 4
+done

@@ -37,19 +37,14 @@ use crate::runtime::runtime_client::RuntimeClient;
 
 use std::process;
 
-/// exe will create an empty Executable
-pub fn exe() -> Executable {
-    Executable::default()
-}
-
-/// exec (exe + command) will create an Executable with a command string
-pub fn exec(cmd: &str) -> Executable {
+/// cmd will create a new Executable{} type and set the command to the input
+pub fn cmd(cmd: &str) -> Executable {
     Executable { command: cmd.to_string(), ..Executable::default() }
 }
 
-/// runx (run + executable) will create and run an Executable with a command string
-pub fn runx(cmd: &str) -> ExecutableStatus {
-    Runtime::new().executable_start(exec(cmd))
+/// exec() is a system alias that will create a new Executable{} type and start it
+pub fn exec(x: &str) -> ExecutableStatus {
+    Runtime::new().exec(cmd(x))
 }
 
 #[derive(Debug, Clone)]
@@ -66,14 +61,14 @@ impl Runtime {
         Self {}
     }
 
-    pub fn executable_start(&mut self, req: Executable) -> ExecutableStatus {
+    pub fn exec(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
                 match client {
                     Ok(ch) => {
                         let mut client = RuntimeClient::new(ch.channel);
-                        let res = rt.block_on(client.executable_start(req));
+                        let res = rt.block_on(client.exec(req));
                         match res {
                             Ok(x) => x.into_inner(),
                             Err(e) => {
@@ -95,32 +90,32 @@ impl Runtime {
         }
     }
 
-    pub fn executable_stop(&mut self, req: Executable) -> ExecutableStatus {
-        match tokio::runtime::Runtime::new() {
-            Ok(rt) => {
-                let client = rt.block_on(new_client());
-                match client {
-                    Ok(ch) => {
-                        let mut client = RuntimeClient::new(ch.channel);
-                        let res = rt.block_on(client.executable_stop(req));
-                        match res {
-                            Ok(x) => x.into_inner(),
-                            Err(e) => {
-                                eprintln!("{:?}", e);
-                                process::exit(EXIT_REQUEST_FAILURE);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("{:?}", e);
-                        process::exit(EXIT_CONNECT_FAILURE);
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("{:?}", e);
-                process::exit(EXIT_RUNTIME_ERROR);
-            }
-        }
-    }
+    // pub fn executable_stop(&mut self, req: Executable) -> ExecutableStatus {
+    //     match tokio::runtime::Runtime::new() {
+    //         Ok(rt) => {
+    //             let client = rt.block_on(new_client());
+    //             match client {
+    //                 Ok(ch) => {
+    //                     let mut client = RuntimeClient::new(ch.channel);
+    //                     let res = rt.block_on(client.executable_stop(req));
+    //                     match res {
+    //                         Ok(x) => x.into_inner(),
+    //                         Err(e) => {
+    //                             eprintln!("{:?}", e);
+    //                             process::exit(EXIT_REQUEST_FAILURE);
+    //                         }
+    //                     }
+    //                 }
+    //                 Err(e) => {
+    //                     eprintln!("{:?}", e);
+    //                     process::exit(EXIT_CONNECT_FAILURE);
+    //                 }
+    //             }
+    //         }
+    //         Err(e) => {
+    //             eprintln!("{:?}", e);
+    //             process::exit(EXIT_RUNTIME_ERROR);
+    //         }
+    //     }
+    // }
 }

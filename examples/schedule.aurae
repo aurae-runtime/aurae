@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -28,92 +29,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-#![warn(clippy::unwrap_used)]
+let aurae = connect();
+let runtime = aurae.runtime();
+let schedule = aurae.schedule();
 
-pub mod builtin;
-pub mod meta;
-pub mod observe;
-pub mod runtime;
+// exec (Executable + Command)
+let example = exec("/usr/bin/mockd");
+schedule.now(example).json();
 
-use rhai::Engine;
-
-use crate::builtin::client::*;
-use crate::builtin::*;
-use crate::observe::*;
-use crate::runtime::*;
-
-pub fn register_stdlib(mut engine: Engine) -> Engine {
-    engine
-        //
-        // Top Level Commands
-        .register_fn("about", about)
-        .register_fn("connect", connect)
-        //
-        //
-        // Client
-        .register_type_with_name::<AuraeClient>("AuraeClient")
-        .register_fn("info", AuraeClient::info)
-        .register_type_with_name::<X509Details>("X509Details")
-        .register_fn("json", X509Details::json)
-        .register_fn("raw", X509Details::raw)
-        //
-        // Runtime
-        .register_type_with_name::<Runtime>("Runtime")
-        //
-        // Executable
-        .register_fn("runtime", AuraeClient::runtime)
-        .register_type_with_name::<Executable>("Executable")
-        .register_fn("exec", exec)
-        .register_fn("cmd", cmd)
-        .register_fn("json", Executable::json)
-        .register_fn("raw", Executable::raw)
-        .register_get_set(
-            "command",
-            Executable::get_command,
-            Executable::set_command,
-        )
-        .register_get_set(
-            "comment",
-            Executable::get_comment,
-            Executable::set_comment,
-        )
-        //
-        // ExecutableStatus
-        .register_type_with_name::<ExecutableStatus>("ExecutableStatus")
-        .register_fn("json", ExecutableStatus::json)
-        .register_fn("raw", ExecutableStatus::raw)
-        //
-        // Start Executable
-        .register_fn("exec", Runtime::exec) // alias
-        //
-        // Observe
-        .register_type_with_name::<Observe>("Observe")
-        .register_fn("observe", AuraeClient::observe)
-        .register_fn("status", Observe::status)
-        .register_type_with_name::<StatusResponse>("StatusResponse")
-        .register_fn("json", StatusResponse::json)
-        .register_fn("raw", StatusResponse::raw)
-        //
-        // Version
-        .register_fn("version", version);
-
-    engine
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_engine() {
-        let mut engine = Engine::new();
-        engine = register_stdlib(engine);
-        let sigs = engine.gen_fn_signatures(true);
-        println!("{:?}", sigs);
-    }
-
-    #[test]
-    fn test_flake() {
-        //assert_eq!(1, 2); // Flake test check
-    }
-}
