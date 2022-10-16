@@ -53,13 +53,13 @@ release: ## Build and install (release) 🎉
 auraescript: ## Initialize and compile aurae
 	@if [ ! -d auraescript ]; then printf "\n\nError: Missing submodules. Run 'make submodule' to download aurae source before compiling.\n\n"; exit 1; fi
 	@$(cargo) clippy -p auraescript
-	@$(cargo) install --path ./auraescript --debug
+	@$(cargo) install --path ./auraescript --debug --force
 
 .PHONY: auraed
 auraed: ## Initialize and compile auraed
 	@if [ ! -d auraed ]; then printf "\n\nError:\nun 'make submodule' to download auraed source before compiling.\n\n"; exit 1; fi
 	@$(cargo) clippy -p auraed
-	@$(cargo) install --path ./auraed --debug
+	@$(cargo) install --path ./auraed --debug --force
 
 .PHONY: docs
 docs: crate ## Assemble all the /docs for the website locally.
