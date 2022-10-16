@@ -28,7 +28,7 @@ pub fn output(input: TokenStream) -> TokenStream {
 /// Creates getter functions for all struct fields.
 ///
 /// Example:
-/// ```
+/// ```ignore
 /// #[derive(::macros::Getters)]
 /// struct MyStruct {
 ///     field_a: String,
@@ -46,7 +46,7 @@ pub fn getters(input: TokenStream) -> TokenStream {
 /// Creates setter functions for all struct fields.
 ///
 /// Example:
-/// ```
+/// ```ignore
 /// #[derive(::macros::Setters)]
 /// struct MyStruct {
 ///     field_a: String,
