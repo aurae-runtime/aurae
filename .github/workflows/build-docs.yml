@@ -1,4 +1,4 @@
-name: Check for documentation
+name: Documentation
 on:
   push:
     branches: main

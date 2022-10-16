@@ -1,4 +1,4 @@
-name: Compile aurae and run tests
+name: Main Build (compile, test)
 on:
   push:
     branches: main

@@ -1,4 +1,4 @@
-name: Publish aurae.io documentation.
+name: Deploy (aurae.io)
 on:
   push:
     branches:
