@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["observe_client","Generated client implementations."]],"struct":[["Observe",""],["StatusRequest",""],["StatusResponse",""]]};

@@ -53,18 +53,22 @@ release: ## Build and install (release) 🎉
 auraescript: ## Initialize and compile aurae
 	@if [ ! -d auraescript ]; then printf "\n\nError: Missing submodules. Run 'make submodule' to download aurae source before compiling.\n\n"; exit 1; fi
 	@$(cargo) clippy -p auraescript
-	@$(cargo) install --path ./auraescript --debug
+	@$(cargo) install --path ./auraescript --debug --force
 
 .PHONY: auraed
 auraed: ## Initialize and compile auraed
 	@if [ ! -d auraed ]; then printf "\n\nError:\nun 'make submodule' to download auraed source before compiling.\n\n"; exit 1; fi
 	@$(cargo) clippy -p auraed
-	@$(cargo) install --path ./auraed --debug
+	@$(cargo) install --path ./auraed --debug --force
 
 .PHONY: docs
-docs: ## Assemble all the /docs for the website locally.
+docs: crate ## Assemble all the /docs for the website locally.
 	cp -rv README.md docs/index.md # Special copy for the main README
 	cp -rv api/README.md docs/stdlib/index.md # Special copy for the main README
+
+crate: ## Build the crate (documentation)
+	$(cargo) doc --no-deps
+	cp -rv target/doc/* docs/crate
 
 serve: ## Run the aurae.io static website locally
 	sudo -E ./hack/serve.sh
