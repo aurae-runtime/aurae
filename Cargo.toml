@@ -62,6 +62,7 @@ serde_json = "1.0.85"
 macros = { path = "macros" }
 
 [build-dependencies]
+anyhow = "1.0"
 tonic-build = "0.8"
 
 [dev-dependencies]
