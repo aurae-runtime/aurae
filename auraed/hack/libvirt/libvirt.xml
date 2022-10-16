@@ -1,0 +1,54 @@
+<domain type="kvm">
+  <name>aurae</name>
+  <metadata>
+    <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
+      <libosinfo:os id="http://libosinfo.org/linux/2022"/>
+    </libosinfo:libosinfo>
+  </metadata>
+  <memory unit='MiB'>2048</memory>
+  <vcpu>4</vcpu>
+  <os firmware="efi">
+    <type arch="x86_64" machine="q35">hvm</type>
+    <kernel>__PWD__/target/kernel/vmlinuz-__KERNEL_VERSION__</kernel>
+    <initrd>__PWD__/target/initramfs.zst</initrd>
+    <cmdline>rdinit=/bin/auraed console=tty0 console=ttyS0,115200</cmdline>
+    <boot dev="hd"/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode="host-passthrough"/>
+  <clock offset="utc">
+    <timer name="rtc" tickpolicy="catchup"/>
+    <timer name="pit" tickpolicy="delay"/>
+    <timer name="hpet" present="no"/>
+  </clock>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+   
+    <console type="pty">
+      <target type="virtio" port="0"/>
+    </console>
+    <serial type="pty">
+      <target type="isa-serial" port="0">
+        <model name="isa-serial"/>
+      </target>
+    </serial>
+
+    <interface type="bridge">
+      <source bridge="vm-br0"/>
+      <model type="virtio"/>
+    </interface>
+
+    <video>
+      <model type="virtio"/>
+    </video>
+
+    <graphics type="vnc" port="5900"/>
+
+    <rng model="virtio">
+      <backend model="random">/dev/urandom</backend>
+    </rng>
+  </devices>
+</domain>

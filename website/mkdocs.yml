@@ -1,0 +1,38 @@
+site_name: "Aurae Runtime"
+site_url: "https://aurae.io"
+repo_url: "https://github.com/aurae-runtime/aurae"
+
+nav:
+  - Home: index.md
+  - Auraed: /auraed
+  - AuraeScript: /auraescript
+  - Aurae Standard Library:
+    - Specification: /stdlib
+    - V0: /stdlib/v0
+  - Building from Source: /build
+  - Quick Start: /quickstart
+  - Certificates: /certs
+
+theme:
+  name: material
+  language: en
+  palette:
+    scheme: slate
+    primary: deep purple
+    accent: yellow
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - pymdownx.highlight
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg

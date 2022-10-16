@@ -1,0 +1,87 @@
+/* -------------------------------------------------------------------------- *\
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *                                                                            *
+ *                +--------------------------------------------+              *
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * -------------------------------------------------------------------------- *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+\* -------------------------------------------------------------------------- */
+
+syntax = "proto3";
+
+package schedule;
+
+option go_package = "github.com/aurae-runtime/client-go/pkg/stdlib/v0/schedule";
+
+import "runtime.proto";
+import "meta.proto";
+
+service Schedule {
+
+  // ShowEnabled will return a response of everything enabled on a system
+  rpc ShowEnabled(ShowEnabledRequest) returns (ShowEnabledResponse) {}
+
+  // ShowDisabled will return a response of everything disabled on a system
+  rpc ShowDisabled(ShowDisabledRequest) returns (ShowDisabledResponse) {}
+
+}
+
+// We break ScheduleExecutable out into its own subsystem for authz purposes
+service ScheduleExecutable {
+
+  rpc Enable(runtime.Executable) returns (ExecutableEnableResponse) {}
+  rpc Disable(runtime.Executable) returns (ExecutableDisableResponse) {}
+  rpc Destroy(runtime.Executable) returns (ExecutableDestroyResponse) {}
+
+}
+
+message ShowEnabledRequest {
+  meta.AuraeMeta meta = 1;
+}
+
+message ShowEnabledResponse {
+  meta.AuraeMeta meta = 1;
+  repeated runtime.Executable Executables = 2;
+}
+
+message ShowDisabledRequest {
+  meta.AuraeMeta meta = 1;
+}
+
+message ShowDisabledResponse {
+  meta.AuraeMeta meta = 1;
+  repeated runtime.Executable Executables = 2;
+}
+
+message ExecutableEnableResponse {
+  meta.AuraeMeta meta = 1;
+}
+
+message ExecutableDisableResponse {
+  meta.AuraeMeta meta = 1;
+}
+
+message ExecutableDestroyResponse {
+  meta.AuraeMeta meta = 1;
+}

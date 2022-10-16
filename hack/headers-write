@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# ---------------------------------------------------------------------------- #
+#             Apache 2.0 License Copyright © 2022 The Aurae Authors            #
+#                                                                              #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#   Licensed under the Apache License, Version 2.0 (the "License");            #
+#   you may not use this file except in compliance with the License.           #
+#   You may obtain a copy of the License at                                    #
+#                                                                              #
+#       http://www.apache.org/licenses/LICENSE-2.0                             #
+#                                                                              #
+#   Unless required by applicable law or agreed to in writing, software        #
+#   distributed under the License is distributed on an "AS IS" BASIS,          #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+#   See the License for the specific language governing permissions and        #
+#   limitations under the License.                                             #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+D=$(pwd)
+if [[ $D == *"hack"* ]]; then
+  echo ""
+  echo "/hack is a special directory. These scripts should only be executed from the Makefile."
+  echo "..or the directory above this one."
+  echo ""
+  echo "We suggest using the github.com/aurae-runtime/environment repository for building aurae"
+  echo "projects from source."
+  echo ""
+  exit 99
+fi
+
+# This script assumes running from the top level directory within a Makefile
+
+. hack/file-definitions
+
+### Write Scripts
+
+echo ""
+echo " [ Checking Scripts ] "
+echo ""
+for FILE in $SCRIPTS; do
+
+    # Bypass files here
+    if [ "$FILE" == "ignore.me" ]; then
+        continue
+    fi
+
+    # Replace the actual year with DATE so we can ignore the year when checking for the license header.
+    CONTENT=$(head -n 30 $FILE | sed -E -e 's/Copyright © [0-9]+/Copyright © DATE/')
+    if [ "$CONTENT" != "$EXPECTEDSCRIPT" ]; then
+      # Replace DATE with the current year.
+      EXPECTEDSCRIPT=$(echo "$EXPECTEDSCRIPT" | sed -E -e "s/Copyright © DATE/Copyright © $(date +%Y)/")
+      SRC="$(cat $FILE)"
+		  echo -e "$EXPECTEDSCRIPT\n\n$SRC" > $FILE
+      echo "  -> [MUTATING SOURCE FILE] Writing header: $FILE"
+    fi
+
+done
+
+### Write Source Files (.rs, .go, .c, etc)
+echo " [ Checking Source Code ] "
+echo ""
+for FILE in $SOURCES; do
+
+    # Bypass files here
+    if [ "$FILE" == "ignore.me" ]; then
+      continue
+    fi
+
+    # Replace the actual year with DATE so we can ignore the year when checking for the license header.
+    CONTENT=$(head -n 30 $FILE | sed -E -e 's/Copyright © [0-9]+/Copyright © DATE/')
+    if [ "$CONTENT" != "$EXPECTEDSOURCE" ]; then
+      # Replace DATE with the current year.
+      EXPECTEDSOURCE=$(echo "$EXPECTEDSOURCE" | sed -E -e "s/Copyright © DATE/Copyright © $(date +%Y)/")
+      SRC="$(cat $FILE)"
+		  echo -e "$EXPECTEDSOURCE\n\n$SRC" > $FILE
+      echo "  -> [MUTATING SOURCE FILE] Writing header: $FILE"
+    fi
+
+done
+
+echo " [ Write Complete] "
+
+echo $status
+
