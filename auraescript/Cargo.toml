@@ -63,6 +63,7 @@ macros = { path = "macros" }
 
 [build-dependencies]
 tonic-build = "0.8"
+anyhow = "1.0"
 
 [dev-dependencies]
 openssl = "0.10.41"

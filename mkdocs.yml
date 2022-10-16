@@ -7,8 +7,8 @@ nav:
   - Auraed: /auraed
   - AuraeScript: /auraescript
   - Aurae Standard Library:
-    - Specification: /stdlib
-    - V0: /stdlib/v0
+    - Specification: /api
+    - V0: /api/v0
   - Building from Source: /build
   - Quick Start: /quickstart
   - Certificates: /certs

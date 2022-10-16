@@ -64,12 +64,12 @@ fn generate_grpc_code() -> Result<()> {
 
     tonic_builder.compile(
         &[
-            "stdlib/v0/meta.proto",
-            "stdlib/v0/runtime.proto",
-            "stdlib/v0/schedule.proto",
-            "stdlib/v0/observe.proto",
+            "../api/v0/meta.proto",
+            "../api/v0/runtime.proto",
+            "../api/v0/schedule.proto",
+            "../api/v0/observe.proto",
         ],
-        &["stdlib/v0/"],
+        &["../api/v0/"],
     )?;
 
     Ok(())

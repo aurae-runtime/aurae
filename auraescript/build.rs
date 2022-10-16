@@ -100,12 +100,12 @@ fn generate_grpc_code() -> Result<()> {
 
     tonic_builder.build_server(false).compile(
         &[
-            "../auraed/stdlib/v0/meta.proto",
-            "../auraed/stdlib/v0/runtime.proto",
-            "../auraed/stdlib/v0/observe.proto",
-            "../auraed/stdlib/v0/schedule.proto",
+            "../api/v0/meta.proto",
+            "../api/v0/runtime.proto",
+            "../api/v0/observe.proto",
+            "../api/v0/schedule.proto",
         ],
-        &["../auraed/stdlib/v0"],
+        &["../api/v0"],
     )?;
 
     Ok(())
