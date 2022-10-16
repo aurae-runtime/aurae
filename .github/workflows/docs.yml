@@ -1,4 +1,4 @@
-name: Publish old.docs
+name: Publish aurae.io documentation.
 
 on:
   push:
