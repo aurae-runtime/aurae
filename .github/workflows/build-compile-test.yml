@@ -1,19 +1,14 @@
-name: compile and test
-
+name: Compile aurae and run tests
 on:
   push:
     branches: main
   pull_request:
     branches: main
-
 env:
   CARGO_TERM_COLOR: always
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -32,6 +27,6 @@ jobs:
       - name: Checkout the aurae api
         run: git clone https://github.com/aurae-runtime/auraed ../auraed
       - name: Build
-        run: cargo build --verbose
+        run: make
       - name: Run tests
-        run: cargo test --verbose
+        run: make test
