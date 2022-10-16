@@ -62,9 +62,13 @@ auraed: ## Initialize and compile auraed
 	@$(cargo) install --path ./auraed --debug
 
 .PHONY: docs
-docs: ## Assemble all the /docs for the website locally.
+docs: crate ## Assemble all the /docs for the website locally.
 	cp -rv README.md docs/index.md # Special copy for the main README
 	cp -rv api/README.md docs/stdlib/index.md # Special copy for the main README
+
+crate: ## Build the crate (documentation)
+	$(cargo) doc --no-deps
+	cp -rv target/doc/* docs/crate
 
 serve: ## Run the aurae.io static website locally
 	sudo -E ./hack/serve.sh

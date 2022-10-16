@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"derive":[["Getters","Creates getter functions for all struct fields."],["Output",""],["Setters","Creates setter functions for all struct fields."]]};
