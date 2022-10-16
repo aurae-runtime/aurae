@@ -24,9 +24,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
-      - name: Checkout the aurae api
-        run: git clone https://github.com/aurae-runtime/auraed ../auraed
-      - name: Build
+      - name: Build (make)
         run: make
-      - name: Run tests
+      - name: Tests (make test)
         run: make test

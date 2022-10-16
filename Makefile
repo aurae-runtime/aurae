@@ -63,7 +63,6 @@ auraed: ## Initialize and compile auraed
 
 .PHONY: docs
 docs: ## Assemble all the /docs for the website locally.
-
 	cp -rv README.md docs/index.md # Special copy for the main README
 	cp -rv api/README.md docs/stdlib/index.md # Special copy for the main README
 
@@ -101,7 +100,6 @@ fmt: headers ## Format the entire code base(s)
 .PHONY: clean
 clean: clean-certs
 	cd aurae && make clean
-	#cd auraectl && make clean
 	cd auraed && make clean
 	@rm -rvf target/*
 
