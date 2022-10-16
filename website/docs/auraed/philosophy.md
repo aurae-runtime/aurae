@@ -1,1 +1,0 @@
-# Aurae Daemon Philosophy 

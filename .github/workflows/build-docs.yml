@@ -1,4 +1,4 @@
-name: build docs
+name: build old.docs
 
 on:
   push:
@@ -13,6 +13,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: build docs
+      - name: build old.docs
         run: |
           make docs
