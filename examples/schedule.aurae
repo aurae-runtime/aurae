@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -28,61 +29,13 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-tonic::include_proto!("observe");
+let aurae = connect();
+let runtime = aurae.runtime();
+let schedule = aurae.schedule_executable();
 
-use crate::codes::*;
-use crate::meta;
-use crate::new_client;
-use crate::observe::observe_client::ObserveClient;
+let example = cmd("/usr/bin/mockd");
+schedule.enable(example).json();
+schedule.disable(example).json();
+schedule.destroy(example).json();
 
-use std::process;
 
-#[derive(Debug, Clone)]
-pub struct Observe {}
-
-impl Default for Observe {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Observe {
-    pub fn new() -> Self {
-        Self {}
-    }
-    pub fn status(&mut self) -> StatusResponse {
-        match tokio::runtime::Runtime::new() {
-            Ok(rt) => {
-                let client = rt.block_on(new_client());
-                match client {
-                    Ok(ch) => {
-                        let mut client = ObserveClient::new(ch.channel);
-                        let meta = meta::AuraeMeta {
-                            name: "UNKNOWN".to_string(),
-                            message: "".into(),
-                        };
-                        let request = tonic::Request::new(StatusRequest {
-                            meta: Some(meta),
-                        });
-                        let res = rt.block_on(client.status(request));
-                        match res {
-                            Ok(status) => status.into_inner(),
-                            Err(e) => {
-                                eprintln!("Unable to get status: {:?}", e);
-                                process::exit(EXIT_REQUEST_FAILURE);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("Unable to get status: {:?}", e);
-                        process::exit(EXIT_CONNECT_FAILURE);
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("Unable to get status: {:?}", e);
-                process::exit(EXIT_RUNTIME_ERROR);
-            }
-        }
-    }
-}
