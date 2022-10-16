@@ -61,8 +61,8 @@ auraed: ## Initialize and compile auraed
 	@$(cargo) clippy -p auraed
 	@$(cargo) install --path ./auraed --debug
 
-.PHONY: website
-website: ## Assemble all the /docs for the website locally.
+.PHONY: docs
+docs: ## Assemble all the /docs for the website locally.
 	@if [ ! -d auraed ]; then printf "\n\nError:\nun 'make submodule' to download auraed source before compiling.\n\n"; exit 1; fi
 	cp -rv README.md website/docs/index.md # Special copy for the main README
 	cp -rv docs/* website/docs
@@ -81,87 +81,12 @@ website: ## Assemble all the /docs for the website locally.
 	cp -rv auraed/stdlib/README.md website/docs/stdlib/index.md # Special copy for the main README
 
 
-.PHONY: docs
-docs: ## Run the documentation site locally on port 8000.
+.PHONY: staticsite
+staticsite: ## Run the documentation site locally on port 8000.
 	cd website && make serve
 
 test: ## Run the tests
 	@$(cargo) test
-
-push: ## (git) Push branch="NAME"
-	cd auraescript && git push origin $(branch)
-	cd auraed && git push origin $(branch)
-	cd website && git push origin $(branch)
-	cd community && git push origin $(branch)
-	git push origin $(branch)
-
-add: ## (git) Add . (dangerous)
-	cd auraescript && git add .
-	cd auraed && git add .
-	cd website && git add .
-	cd community && git add .
-	git add .
-
-commit: ## (git) Commit message="MESSAGE"
-	cd auraescript && git commit -s -m "$(message)" || true
-	cd auraed && git commit -s -m "$(message)" || true
-	cd website && git commit -s -m "$(message)" || true
-	cd community && git commit -s -m "$(message)" || true
-	git add .
-	git commit -s -m "$(message)" || true
-
-checkout: ## (git) Checkout branch="NAME"
-	git checkout $(branch) || git checkout -b $(branch)
-	cd auraescript && git checkout $(branch) || git checkout -b $(branch)
-	cd auraed && git checkout $(branch) || git checkout -b $(branch)
-	cd website && git checkout $(branch) || git checkout -b $(branch)
-	cd website && git checkout $(branch) || git checkout -b $(branch)
-
-status: ## (git) Status
-	git status
-	cd auraescript && git status
-	cd auraed && git status
-	cd website && git status
-	cd community && git status
-
-pull: ## (git) Pull branch="NAME"
-	git pull origin $(branch)
-	cd auraescript && git pull origin $(branch)
-	cd auraed && git pull origin $(branch)
-	cd website && git pull origin $(branch)
-	cd community && git pull origin $(branch)
-
-submodules: submodule ## Alias for submodule
-submodule: ## Initialize all submodules
-	@echo "Initializing submodules"
-	@echo ""
-	@read -p "Warning: This will destroy all work in subdirectories! Press any key to continue." FOO
-
-	# AuraeScript
-	@if [ -d /tmp/auraescript ]; then rm -rvf /tmp/auraescript; fi
-	@if [ -d auraescript ]; then mv -v auraescript /tmp/auraescript; fi
-
-	# Auraed
-	@if [ -d /tmp/auraed ]; then rm -rvf /tmp/auraed; fi
-	@if [ -d auraed ]; then mv -v auraed /tmp/auraed; fi
-
-	# Website
-	@if [ -d /tmp/website ]; then rm -rvf /tmp/website; fi
-	@if [ -d website ]; then mv -v website /tmp/website; fi
-
-	# Community
-	@if [ -d /tmp/community ]; then rm -rvf /tmp/community; fi
-	@if [ -d community ]; then mv -v community /tmp/community; fi
-
-	# Init and update
-	@git submodule update --init --recursive
-	@git submodule update --remote --rebase
-
-	# Attach to main
-	cd auraescript && git checkout $(branch) && git branch && git pull origin $(branch)
-	cd auraed && git checkout $(branch) && git branch && git pull origin $(branch)
-	cd website && git checkout $(branch) && git branch && git pull origin $(branch)
-	cd community && git checkout $(branch) && git branch && git pull origin $(branch)
 
 .PHONY: config
 config: ## Set up default config
