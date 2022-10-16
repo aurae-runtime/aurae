@@ -27,13 +27,8 @@ pacman -S protobuf
 
 ### Prepare the Environment
 
-To install Aurae first build the submodules for the project.
 
-```bash
-make submodules # Please do not forget to do this!
-```
-
-Next you will need to create [authentication certificates](/certs) and create an `~/.aurae/config` file.
+First you will need to create [authentication certificates](/certs) and create an `~/.aurae/config` file.
 
 ```bash 
 make pki config # For quick-start only

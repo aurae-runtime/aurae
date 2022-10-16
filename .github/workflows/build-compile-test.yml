@@ -1,19 +1,14 @@
-name: compile and test
-
+name: Main Build (compile, test)
 on:
   push:
     branches: main
   pull_request:
     branches: main
-
 env:
   CARGO_TERM_COLOR: always
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -29,9 +24,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
-      - name: Checkout the aurae api
-        run: git clone https://github.com/aurae-runtime/auraed ../auraed
-      - name: Build
-        run: cargo build --verbose
-      - name: Run tests
-        run: cargo test --verbose
+      - name: Build (make)
+        run: make
+      - name: Tests (make test)
+        run: make test
