@@ -65,7 +65,7 @@ auraed: ## Initialize and compile auraed
 docs: ## Assemble all the /docs for the website locally.
 
 	cp -rv README.md docs/index.md # Special copy for the main README
-	cp -rv auraed/stdlib/README.md docs/stdlib/index.md # Special copy for the main README
+	cp -rv api/README.md docs/stdlib/index.md # Special copy for the main README
 
 serve: ## Run the aurae.io static website locally
 	sudo -E ./hack/serve.sh
