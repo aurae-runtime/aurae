@@ -29,7 +29,6 @@
 \* -------------------------------------------------------------------------- */
 
 tonic::include_proto!("runtime");
-tonic::include_proto!("meta");
 
 use crate::codes::*;
 use crate::new_client;

@@ -28,59 +28,51 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-tonic::include_proto!("observe");
+tonic::include_proto!("schedule");
 
 use crate::codes::*;
-use crate::meta;
+use crate::meta::*;
 use crate::new_client;
-use crate::observe::observe_client::ObserveClient;
-
-use std::process;
+use crate::schedule::schedule_client::ScheduleClient;
 
 #[derive(Debug, Clone)]
-pub struct Observe {}
+pub struct ScheduleExecutable {}
 
-impl Default for Observe {
+impl Default for ScheduleExecutable {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Observe {
+impl ScheduleExecutable {
     pub fn new() -> Self {
         Self {}
     }
-    pub fn status(&mut self) -> StatusResponse {
+
+    pub fn now(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
                 match client {
                     Ok(ch) => {
-                        let mut client = ObserveClient::new(ch.channel);
-                        let meta = meta::AuraeMeta {
-                            name: "UNKNOWN".to_string(),
-                            message: "".into(),
-                        };
-                        let request = tonic::Request::new(StatusRequest {
-                            meta: Some(meta),
-                        });
-                        let res = rt.block_on(client.status(request));
+                        let mut client = ScheduleClient::new(ch.channel);
+                        let res = rt.block_on(client.now(req));
                         match res {
-                            Ok(status) => status.into_inner(),
+                            Ok(x) => x.into_inner(),
                             Err(e) => {
-                                eprintln!("Unable to get status: {:?}", e);
+                                eprintln!("{:?}", e);
                                 process::exit(EXIT_REQUEST_FAILURE);
                             }
                         }
                     }
                     Err(e) => {
-                        eprintln!("Unable to get status: {:?}", e);
+                        eprintln!("{:?}", e);
                         process::exit(EXIT_CONNECT_FAILURE);
                     }
                 }
             }
             Err(e) => {
-                eprintln!("Unable to get status: {:?}", e);
+                eprintln!("{:?}", e);
                 process::exit(EXIT_RUNTIME_ERROR);
             }
         }
