@@ -1,4 +1,4 @@
-# Aurae Novapants
+# Aurae
 
 Aurae is a free and open source Rust project which houses a generic systems runtime daemon built specifically for enterprise distributed systems. Aurae is designed to work well with Kubernetes, and serves as an enterprise focused alternative to systemd.
 
