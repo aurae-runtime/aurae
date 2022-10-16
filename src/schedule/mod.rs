@@ -52,7 +52,7 @@ impl ScheduleExecutable {
         Self {}
     }
 
-    pub fn now(&mut self, req: Executable) -> ExecutableStatus {
+    pub fn enable(&mut self, req: Executable) -> ExecutableStatus {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
@@ -60,7 +60,7 @@ impl ScheduleExecutable {
                     Ok(ch) => {
                         let mut client =
                             ScheduleExecutableClient::new(ch.channel);
-                        let res = rt.block_on(client.now(req));
+                        let res = rt.block_on(client.enable(req));
                         match res {
                             Ok(x) => x.into_inner(),
                             Err(e) => {

@@ -35,5 +35,5 @@ let schedule = aurae.schedule_executable();
 
 // exec (Executable + Command)
 let example = cmd("/usr/bin/mockd");
-schedule.now(example).json();
+schedule.enable(example).json();
 

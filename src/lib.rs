@@ -91,7 +91,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         // ScheduleExecutable
         .register_type_with_name::<ScheduleExecutable>("ScheduleExecutable")
         .register_fn("schedule_executable", AuraeClient::schedule_executable)
-        .register_fn("now", ScheduleExecutable::now)
+        .register_fn("enable", ScheduleExecutable::enable)
         //
         // Observe
         .register_type_with_name::<Observe>("Observe")
