@@ -1,0 +1,67 @@
+/* -------------------------------------------------------------------------- *\
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *                                                                            *
+ *                +--------------------------------------------+              *
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * -------------------------------------------------------------------------- *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+\* -------------------------------------------------------------------------- */
+
+syntax = "proto3";
+
+package meta;
+
+option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/meta";
+
+/// Status represents the state of an object within Aurae.
+/// The status Enum has special meaning used for each value.
+enum Status {
+  /// Unknown denotes a rogue status, and should only be used for emergencies or development. Generally speaking Aurae
+  /// should never have an unknown object unless something has gone very, very wrong.
+  STATUS_UNKNOWN = 0;
+  /// Standby denotes an object that is healthy but not active. Something that has passed any preliminary or
+  //  prerequisite steps but is not actively executing or running. Standby is a synonym for "enabled".
+  STATUS_STANDBY = 1;
+  /// Active denotes an object that is currently active. The object is currently executing at the point in time the
+  /// request was issued.
+  STATUS_ACTIVE = 3;
+  /// Passive is the opposite of standby. The object is registered but is disabled and has not gone through any
+  /// preliminary or prerequisite steps. Passive is a synonym for "disabled".
+  STATUS_PASSIVE = 4;
+  /// Error denotes a failure, but not severity. Something has gone wrong, there will be more information elsewhere.
+  STATUS_ERROR = 5;
+  // Complete denotes that an action is complete and no longer active.
+  STATUS_COMPLETE = 6;
+}
+
+message AuraeMeta {
+  string name = 1;
+  string message = 2;
+}
+
+
+
+message ProcessMeta {
+  int32 pid = 1;
+}
