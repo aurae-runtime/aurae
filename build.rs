@@ -80,8 +80,15 @@ fn generate_grpc_code() -> Result<()> {
             .type_attribute(message, "#[derive(::macros::Output)]");
     }
 
-    // To generate getters and setters for message fields, see:
-    tonic_builder = generate_grpc_code_for_getters_setters(tonic_builder);
+    // Add proto messages  here to generate getters and setters.
+    tonic_builder = generate_grpc_code_for_getters_setters(
+        tonic_builder,
+        vec![GetSet {
+            message: "runtime.Executable",
+            ignore_fields: vec!["meta"],
+            ..Default::default()
+        }],
+    );
 
     // Loop to add serde attributes
     for message in derive_serde_serialize_deserialize {
@@ -107,13 +114,10 @@ fn generate_grpc_code() -> Result<()> {
 #[allow(clippy::single_element_loop)]
 fn generate_grpc_code_for_getters_setters(
     mut tonic_builder: tonic_build::Builder,
+    message_settings: Vec<GetSet>,
 ) -> tonic_build::Builder {
     // Add proto messages here to generate getters and setters.
-    for getset in [GetSet {
-        message: "runtime.Executable",
-        ignore_fields: vec!["meta"],
-        ..Default::default()
-    }] {
+    for getset in message_settings {
         let attribute = match (getset.getters, getset.setters) {
             (true, true) => "#[derive(::macros::Getters, ::macros::Setters)]",
             (true, false) => "#[derive(::macros::Getters)]",
