@@ -70,6 +70,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
         )
         .type_attribute(
+            "schedule.ExecutableEnableResponse",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
+        )
+        .type_attribute(
+            "schedule.ExecutableDisableResponse",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
+        )
+        .type_attribute(
+            "schedule.ExecutableDestroyResponse",
+            "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output)]",
+        )
+        .type_attribute(
             "runtime.Executable",
             "#[derive(::serde::Serialize, ::serde::Deserialize, ::macros::Output, ::macros::Getters, ::macros::Setters)]",
         )

@@ -47,23 +47,22 @@ use crate::schedule::*;
 pub fn register_stdlib(mut engine: Engine) -> Engine {
     engine
         //
-        // Top Level Commands
+        // [Functions]
         .register_fn("about", about)
         .register_fn("connect", connect)
         //
         //
-        // Client
+        // [Object] AuraeClient
         .register_type_with_name::<AuraeClient>("AuraeClient")
         .register_fn("info", AuraeClient::info)
         .register_type_with_name::<X509Details>("X509Details")
         .register_fn("json", X509Details::json)
         .register_fn("raw", X509Details::raw)
         //
-        // Runtime
+        // [Subsystem] Runtime
         .register_type_with_name::<Runtime>("Runtime")
-        //
-        // Executable
         .register_fn("runtime", AuraeClient::runtime)
+        // [Object] Executable
         .register_type_with_name::<Executable>("Executable")
         .register_fn("exec", exec)
         .register_fn("cmd", cmd)
@@ -80,20 +79,37 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
             Executable::set_comment,
         )
         //
-        // ExecutableStatus
+        // [Object] ExecutableStatus
         .register_type_with_name::<ExecutableStatus>("ExecutableStatus")
         .register_fn("json", ExecutableStatus::json)
         .register_fn("raw", ExecutableStatus::raw)
         //
-        // Exec
+        // [Function] Exec
         .register_fn("exec", Runtime::exec) // alias
         //
-        // ScheduleExecutable
+        // [Subsystem] ScheduleExecutable
         .register_type_with_name::<ScheduleExecutable>("ScheduleExecutable")
         .register_fn("schedule_executable", AuraeClient::schedule_executable)
         .register_fn("enable", ScheduleExecutable::enable)
+        .register_fn("disable", ScheduleExecutable::disable)
+        .register_fn("destroy", ScheduleExecutable::destroy)
+        .register_type_with_name::<ExecutableEnableResponse>(
+            "ExecutableEnableResponse",
+        )
+        .register_fn("json", ExecutableEnableResponse::json)
+        .register_fn("raw", ExecutableEnableResponse::raw)
+        .register_type_with_name::<ExecutableDisableResponse>(
+            "ExecutableDisableResponse",
+        )
+        .register_fn("json", ExecutableDisableResponse::json)
+        .register_fn("raw", ExecutableDisableResponse::raw)
+        .register_type_with_name::<ExecutableDestroyResponse>(
+            "ExecutableDestroyResponse",
+        )
+        .register_fn("json", ExecutableDestroyResponse::json)
+        .register_fn("raw", ExecutableDestroyResponse::raw)
         //
-        // Observe
+        // [Subsystem] Observe
         .register_type_with_name::<Observe>("Observe")
         .register_fn("observe", AuraeClient::observe)
         .register_fn("status", Observe::status)

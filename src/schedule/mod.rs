@@ -34,7 +34,6 @@ use crate::codes::*;
 use crate::new_client;
 use crate::schedule::schedule_executable_client::ScheduleExecutableClient;
 use crate::Executable;
-use crate::ExecutableStatus;
 
 use std::process;
 
@@ -52,7 +51,7 @@ impl ScheduleExecutable {
         Self {}
     }
 
-    pub fn enable(&mut self, req: Executable) -> ExecutableStatus {
+    pub fn enable(&mut self, req: Executable) -> ExecutableEnableResponse {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let client = rt.block_on(new_client());
@@ -61,6 +60,66 @@ impl ScheduleExecutable {
                         let mut client =
                             ScheduleExecutableClient::new(ch.channel);
                         let res = rt.block_on(client.enable(req));
+                        match res {
+                            Ok(x) => x.into_inner(),
+                            Err(e) => {
+                                eprintln!("{:?}", e);
+                                process::exit(EXIT_REQUEST_FAILURE);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("{:?}", e);
+                        process::exit(EXIT_CONNECT_FAILURE);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("{:?}", e);
+                process::exit(EXIT_RUNTIME_ERROR);
+            }
+        }
+    }
+
+    pub fn disable(&mut self, req: Executable) -> ExecutableDisableResponse {
+        match tokio::runtime::Runtime::new() {
+            Ok(rt) => {
+                let client = rt.block_on(new_client());
+                match client {
+                    Ok(ch) => {
+                        let mut client =
+                            ScheduleExecutableClient::new(ch.channel);
+                        let res = rt.block_on(client.disable(req));
+                        match res {
+                            Ok(x) => x.into_inner(),
+                            Err(e) => {
+                                eprintln!("{:?}", e);
+                                process::exit(EXIT_REQUEST_FAILURE);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("{:?}", e);
+                        process::exit(EXIT_CONNECT_FAILURE);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("{:?}", e);
+                process::exit(EXIT_RUNTIME_ERROR);
+            }
+        }
+    }
+
+    pub fn destroy(&mut self, req: Executable) -> ExecutableDestroyResponse {
+        match tokio::runtime::Runtime::new() {
+            Ok(rt) => {
+                let client = rt.block_on(new_client());
+                match client {
+                    Ok(ch) => {
+                        let mut client =
+                            ScheduleExecutableClient::new(ch.channel);
+                        let res = rt.block_on(client.destroy(req));
                         match res {
                             Ok(x) => x.into_inner(),
                             Err(e) => {
