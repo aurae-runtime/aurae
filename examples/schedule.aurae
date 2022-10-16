@@ -31,9 +31,9 @@
 
 let aurae = connect();
 let runtime = aurae.runtime();
-let schedule = aurae.schedule();
+let schedule = aurae.schedule_executable();
 
 // exec (Executable + Command)
-let example = exec("/usr/bin/mockd");
+let example = cmd("/usr/bin/mockd");
 schedule.now(example).json();
 

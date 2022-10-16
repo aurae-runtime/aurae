@@ -32,6 +32,7 @@ use crate::codes::*;
 use crate::config::*;
 use crate::observe::*;
 use crate::runtime::*;
+use crate::schedule::*;
 
 use anyhow::{Context, Result};
 use macros::Output;
@@ -68,17 +69,19 @@ impl AuraeClient {
         &mut self,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let x = new_client().await?;
-        let subject_common_name = x.x509.subject_common_name().ok_or("missing subject_common_name")?;
-        let issuer_common_name = x.x509.issuer_common_name().ok_or("missing issuer_common_name")?;
+        let subject_common_name = x
+            .x509
+            .subject_common_name()
+            .ok_or("missing subject_common_name")?;
+        let issuer_common_name =
+            x.x509.issuer_common_name().ok_or("missing issuer_common_name")?;
         let sha256_fingerprint = x.x509.sha256_fingerprint()?;
-        let key_algorithm = x.x509.key_algorithm().ok_or("missing key_algorithm")?.to_string();
+        let key_algorithm =
+            x.x509.key_algorithm().ok_or("missing key_algorithm")?.to_string();
         self.x509_details = Some(X509Details {
             subject_common_name,
             issuer_common_name,
-            sha256_fingerprint: format!(
-                "{:?}",
-                sha256_fingerprint
-            ),
+            sha256_fingerprint: format!("{:?}", sha256_fingerprint),
             key_algorithm,
         });
         self.x509 = Some(x.x509);
@@ -93,17 +96,19 @@ impl AuraeClient {
         Observe::new()
     }
 
+    pub fn schedule_executable(&mut self) -> ScheduleExecutable {
+        ScheduleExecutable::new()
+    }
+
     pub fn info(&mut self) -> X509Details {
         let x = self.x509_details.as_ref();
         match x {
             Some(r) => r.clone(),
-            None => {
-                X509Details{
-                    subject_common_name: "-".to_string(),
-                    issuer_common_name: "-".to_string(),
-                    sha256_fingerprint: "-".to_string(),
-                    key_algorithm: "-".to_string()
-                }
+            None => X509Details {
+                subject_common_name: "-".to_string(),
+                issuer_common_name: "-".to_string(),
+                sha256_fingerprint: "-".to_string(),
+                key_algorithm: "-".to_string(),
             },
         }
     }

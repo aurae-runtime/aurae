@@ -34,6 +34,7 @@ pub mod builtin;
 pub mod meta;
 pub mod observe;
 pub mod runtime;
+pub mod schedule;
 
 use rhai::Engine;
 
@@ -41,6 +42,7 @@ use crate::builtin::client::*;
 use crate::builtin::*;
 use crate::observe::*;
 use crate::runtime::*;
+use crate::schedule::*;
 
 pub fn register_stdlib(mut engine: Engine) -> Engine {
     engine
@@ -83,8 +85,13 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_fn("json", ExecutableStatus::json)
         .register_fn("raw", ExecutableStatus::raw)
         //
-        // Start Executable
+        // Exec
         .register_fn("exec", Runtime::exec) // alias
+        //
+        // ScheduleExecutable
+        .register_type_with_name::<ScheduleExecutable>("ScheduleExecutable")
+        .register_fn("schedule_executable", AuraeClient::schedule_executable)
+        .register_fn("now", ScheduleExecutable::now)
         //
         // Observe
         .register_type_with_name::<Observe>("Observe")

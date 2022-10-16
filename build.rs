@@ -87,6 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "../auraed/stdlib/v0/meta.proto",
                 "../auraed/stdlib/v0/runtime.proto",
                 "../auraed/stdlib/v0/observe.proto",
+                "../auraed/stdlib/v0/schedule.proto",
             ],
             &["../auraed/stdlib/v0"],
         )?;

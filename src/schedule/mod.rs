@@ -31,9 +31,12 @@
 tonic::include_proto!("schedule");
 
 use crate::codes::*;
-use crate::meta::*;
 use crate::new_client;
-use crate::schedule::schedule_client::ScheduleClient;
+use crate::schedule::schedule_executable_client::ScheduleExecutableClient;
+use crate::Executable;
+use crate::ExecutableStatus;
+
+use std::process;
 
 #[derive(Debug, Clone)]
 pub struct ScheduleExecutable {}
@@ -55,7 +58,8 @@ impl ScheduleExecutable {
                 let client = rt.block_on(new_client());
                 match client {
                     Ok(ch) => {
-                        let mut client = ScheduleClient::new(ch.channel);
+                        let mut client =
+                            ScheduleExecutableClient::new(ch.channel);
                         let res = rt.block_on(client.now(req));
                         match res {
                             Ok(x) => x.into_inner(),
