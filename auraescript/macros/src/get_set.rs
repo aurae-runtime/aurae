@@ -93,7 +93,7 @@ pub(crate) fn getters(input: TokenStream) -> TokenStream {
                             quote! {
                                 match &self.#field_ident {
                                     Some(#field_ident) => rhai::Dynamic::from((*#field_ident).clone()),
-                                    None => rhai::Dynamic::UNIT,
+                                    None => ::rhai::Dynamic::UNIT,
                                 }
                             }
                         }
@@ -120,7 +120,7 @@ pub(crate) fn getters(input: TokenStream) -> TokenStream {
     expanded.into()
 }
 
-pub fn setters(input: TokenStream) -> TokenStream {
+pub(crate) fn setters(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let ident = &ast.ident;
 
@@ -218,7 +218,7 @@ pub fn setters(input: TokenStream) -> TokenStream {
                     quote!({
                         match val.as_unit() {
                             Ok(_) => None,
-                            Err(_) => Some(Box::new(val.cast::<#field_type>())),
+                            Err(_) => Some(::std::boxed::Box::new(val.cast::<#field_type>())),
                         }
                     })
                 } else if assuming_proto_message

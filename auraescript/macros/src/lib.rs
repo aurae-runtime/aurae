@@ -68,7 +68,7 @@ pub fn output(input: TokenStream) -> TokenStream {
 ///     #[getset(ignore_get)]
 ///     field_no_getter: String,
 ///     #[getset(ignore)]
-///     field_not_getter_or_setter: String,
+///     field_no_getter_or_setter: String,
 /// }
 /// ```
 #[proc_macro_derive(Getters, attributes(getset))]
@@ -86,7 +86,7 @@ pub fn getters(input: TokenStream) -> TokenStream {
 ///     #[getset(ignore_set)]
 ///     field_no_setter: String,
 ///     #[getset(ignore)]
-///     field_not_getter_or_setter: String,
+///     field_no_getter_or_setter: String,
 /// }
 /// ```
 #[proc_macro_derive(Setters, attributes(getset))]
