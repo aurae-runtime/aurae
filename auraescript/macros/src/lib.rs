@@ -33,6 +33,7 @@ use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
 mod get_set;
+mod client;
 
 /// Outputs the macro content during a render.
 #[proc_macro_derive(Output)]
@@ -68,7 +69,7 @@ pub fn output(input: TokenStream) -> TokenStream {
 ///     #[getset(ignore_get)]
 ///     field_no_getter: String,
 ///     #[getset(ignore)]
-///     field_not_getter_or_setter: String,
+///     field_no_getter_or_setter: String,
 /// }
 /// ```
 #[proc_macro_derive(Getters, attributes(getset))]
@@ -86,10 +87,24 @@ pub fn getters(input: TokenStream) -> TokenStream {
 ///     #[getset(ignore_set)]
 ///     field_no_setter: String,
 ///     #[getset(ignore)]
-///     field_not_getter_or_setter: String,
+///     field_no_getter_or_setter: String,
 /// }
 /// ```
 #[proc_macro_derive(Setters, attributes(getset))]
 pub fn setters(input: TokenStream) -> TokenStream {
     get_set::setters(input)
+}
+
+/// Generates a struct (no fields), a `new` function, and implements `Default`.
+/// Additionally, generates boilerplate for function signatures provided.
+///
+/// Example:
+/// ```ignore
+/// macros::client_wrapper!(
+///     ServiceName,
+///     snake_case_rpc_name(RequestMessageName) -> ResponseMessageName
+/// );
+#[proc_macro]
+pub fn client_wrapper(input: TokenStream) -> TokenStream {
+    client::client_wrapper(input)
 }

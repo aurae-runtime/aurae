@@ -28,61 +28,26 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::meta;
+
 tonic::include_proto!("observe");
 
-use crate::codes::*;
-use crate::meta;
-use crate::new_client;
-use crate::observe::observe_client::ObserveClient;
-
-use std::process;
-
-#[derive(Debug, Clone)]
-pub struct Observe {}
-
-impl Default for Observe {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+macros::client_wrapper!(
+    Observe,
+    status(StatusRequest) -> StatusResponse,
+);
 
 impl Observe {
-    pub fn new() -> Self {
-        Self {}
-    }
-    pub fn status(&mut self) -> StatusResponse {
-        match tokio::runtime::Runtime::new() {
-            Ok(rt) => {
-                let client = rt.block_on(new_client());
-                match client {
-                    Ok(ch) => {
-                        let mut client = ObserveClient::new(ch.channel);
-                        let meta = meta::AuraeMeta {
-                            name: "UNKNOWN".to_string(),
-                            message: "".into(),
-                        };
-                        let request = tonic::Request::new(StatusRequest {
-                            meta: Some(meta),
-                        });
-                        let res = rt.block_on(client.status(request));
-                        match res {
-                            Ok(status) => status.into_inner(),
-                            Err(e) => {
-                                eprintln!("Unable to get status: {:?}", e);
-                                process::exit(EXIT_REQUEST_FAILURE);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("Unable to get status: {:?}", e);
-                        process::exit(EXIT_CONNECT_FAILURE);
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("Unable to get status: {:?}", e);
-                process::exit(EXIT_RUNTIME_ERROR);
-            }
-        }
+    pub fn status_default(&mut self) -> StatusResponse {
+        let meta = meta::AuraeMeta {
+            name: "UNKNOWN".to_string(),
+            message: "".into(),
+        };
+
+        let request = StatusRequest {
+            meta: Some(meta),
+        };
+
+        self.status(request)
     }
 }

@@ -187,7 +187,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         // Observe.status function
         //
         // Retrieve total system status metrics.
-        .register_fn("status", Observe::status)
+        .register_fn("status", Observe::status_default)
         .register_type_with_name::<StatusResponse>("StatusResponse")
         .register_fn("json", StatusResponse::json)
         .register_fn("raw", StatusResponse::raw)
