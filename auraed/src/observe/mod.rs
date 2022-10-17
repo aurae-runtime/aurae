@@ -30,13 +30,43 @@
 
 tonic::include_proto!("observe");
 
+use std::thread;
+
 use crate::meta;
 use crate::observe::observe_server::Observe;
 use tonic::{Request, Response, Status};
 
+use futures::executor::block_on;
+use log::error;
+use log::info;
+use log::trace;
+use log::Log;
+
+use crossbeam::channel::{unbounded, Receiver, Sender};
+
+use tokio::sync::mpsc;
+use tokio_stream::wrappers::ReceiverStream;
+
 /// The server side implementation of the Observe subsystem.
-#[derive(Debug, Default, Clone)]
-pub struct ObserveService {}
+#[derive(Debug, Clone)]
+pub struct ObserveService {
+    consumer_aurae_logger: Receiver<LogItem>,
+    sub_process_consumer_list: Vec<Receiver<LogItem>>,
+}
+
+impl ObserveService {
+    pub fn new(consumer_aurae_logger: Receiver<LogItem>) -> ObserveService {
+        ObserveService {
+            consumer_aurae_logger,
+            sub_process_consumer_list: Vec::<Receiver<LogItem>>::new(),
+        }
+    }
+
+    pub fn register_channel(&mut self, consumer: Receiver<LogItem>) {
+        info!("Added new channel");
+        self.sub_process_consumer_list.push(consumer);
+    }
+}
 
 #[tonic::async_trait]
 impl Observe for ObserveService {
@@ -50,5 +80,43 @@ impl Observe for ObserveService {
         };
         let response = StatusResponse { meta: Some(meta) };
         Ok(Response::new(response))
+    }
+    type GetAuraeDaemonLogStreamStream =
+        ReceiverStream<Result<LogItem, Status>>;
+
+    async fn get_aurae_daemon_log_stream(
+        &self,
+        _request: Request<GetAuraeDaemonLogStreamRequest>,
+    ) -> Result<Response<Self::GetAuraeDaemonLogStreamStream>, Status> {
+        let (tx, rx) = mpsc::channel::<Result<LogItem, Status>>(4);
+
+        let log_consumer = self.consumer_aurae_logger.clone();
+
+        thread::spawn(move || {
+            for i in log_consumer.into_iter() {
+                if block_on(tx.send(Ok(i))).is_err() {
+                    // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
+                    //  .. thus disabled logging here. 
+                }
+            }
+        });
+        Ok(Response::new(ReceiverStream::new(rx)))
+    }
+
+    type GetSubProcessStreamStream = ReceiverStream<Result<LogItem, Status>>;
+
+    async fn get_sub_process_stream(
+        &self,
+        request: Request<GetSubProcessStreamRequest>,
+    ) -> Result<Response<Self::GetSubProcessStreamStream>, Status> {
+        let requested_channel = request.get_ref().channel_type;
+        let requested_pid = request.get_ref().process_id;
+
+        println!("Requested Channel {}", requested_channel);
+        println!("Requested Process ID {}", requested_pid);
+
+        let (tx, rx) = mpsc::channel::<Result<LogItem, Status>>(4);
+
+        Ok(Response::new(ReceiverStream::new(rx)))
     }
 }

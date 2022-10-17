@@ -48,6 +48,7 @@
 use anyhow::anyhow;
 use anyhow::Context;
 use log::*;
+use logging::logchannel::LogChannel;
 use sea_orm::ConnectOptions;
 use sea_orm::ConnectionTrait;
 use sea_orm::Database;
@@ -70,6 +71,7 @@ use crate::schedule::schedule_executable_server::ScheduleExecutableServer;
 use crate::schedule::ScheduleExecutableService;
 
 pub mod init;
+pub mod logging;
 mod meta;
 mod observe;
 mod runtime;
@@ -102,6 +104,8 @@ pub struct AuraedRuntime {
     /// Configurable socket path. Defaults to the value of
     /// `pub const AURAE_SOCK`
     pub socket: PathBuf,
+    /// Provides logging channels to expose auraed logging via grpc
+    pub log_collector: LogChannel,
 }
 
 /// Primary daemon structure. Holds state and memory for this instance of
@@ -144,13 +148,15 @@ impl AuraedRuntime {
 
         let sock = UnixListener::bind(&self.socket)?;
         let sock_stream = UnixListenerStream::new(sock);
+        let consumer = self.log_collector.get_consumer();
+        let prod = self.log_collector.get_producer();
 
         // Run the server concurrently
         let handle = tokio::spawn(async {
             Server::builder()
                 .tls_config(tls)?
                 .add_service(RuntimeServer::new(RuntimeService::default()))
-                .add_service(ObserveServer::new(ObserveService::default()))
+                .add_service(ObserveServer::new(ObserveService::new(consumer)))
                 .add_service(ScheduleExecutableServer::new(
                     ScheduleExecutableService::default(),
                 ))

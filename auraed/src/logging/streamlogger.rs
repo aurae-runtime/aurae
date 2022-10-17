@@ -28,49 +28,47 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-syntax = "proto3";
+use crossbeam::channel::{unbounded, Receiver, Sender};
+use log::Log;
 
-package observe;
+use crate::observe::LogItem;
 
-option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/observe";
-
-import "meta.proto";
-
-enum LogChannelType {
-  CHANNEL_STDOUT = 0;
-  CHANNEL_STDERR = 1;
+/// Sends log messages generated in rust code to the logging channel
+/// The logging channel is consumed by the observe API
+pub struct StreamLogger {
+    /// Channel used to send log messages to grpc API 
+    pub producer: Sender<LogItem>,
 }
 
-service Observe {
-
-  rpc Status(StatusRequest) returns (StatusResponse) {}
-    // request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
-    rpc GetAuraeDaemonLogStream(GetAuraeDaemonLogStreamRequest) returns (stream LogItem) {}
-
-    // TODO: request log stream for a sub process
-    rpc GetSubProcessStream(GetSubProcessStreamRequest) returns (stream LogItem) {}
-
+impl StreamLogger {
+    /// Constructor requires channel between api and logger
+    pub fn new(producer: Sender<LogItem>) -> StreamLogger {
+        StreamLogger { producer }
+    }
 }
 
-message StatusRequest {
-  meta.AuraeMeta meta = 1;
-}
+impl Log for StreamLogger {
+    fn enabled(&self, _metadata: &log::Metadata) -> bool {
+        true
+    }
 
-message StatusResponse {
-  meta.AuraeMeta meta = 1;
-}
+    fn log(&self, record: &log::Record) {
+        match self.producer.clone().send(LogItem {
+            channel: "rust-logs".to_string(),
+            line: format!(
+                "{}:{} -- {}",
+                record.level(),
+                record.target(),
+                record.args()
+            ),
+            timestamp: 0,
+        }) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("Failed to log message. Error: {:?}", e);
+            }
+        }
+    }
 
-message GetAuraeDaemonLogStreamRequest {
-}
-
-// TODO: not implemented
-message GetSubProcessStreamRequest {
-  LogChannelType channel_type = 1;
-  uint64 process_id = 2;
-}
-
-message LogItem {
-  string channel = 1;
-  string line = 2;
-  uint64 timestamp = 3;
+    fn flush(&self) {}
 }
