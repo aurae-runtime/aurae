@@ -30,11 +30,10 @@
 
 tonic::include_proto!("runtime");
 
-use crate::codes::*;
-use crate::new_client;
-use crate::runtime::runtime_client::RuntimeClient;
-
-use std::process;
+macros::client_wrapper!(
+    Runtime,
+    exec(Executable) -> ExecutableStatus
+);
 
 /// cmd will create a new Executable{} type and set the command to the input
 pub fn cmd(cmd: &str) -> Executable {
@@ -44,77 +43,4 @@ pub fn cmd(cmd: &str) -> Executable {
 /// exec() is a system alias that will create a new Executable{} type and start it
 pub fn exec(x: &str) -> ExecutableStatus {
     Runtime::new().exec(cmd(x))
-}
-
-#[derive(Debug, Clone)]
-pub struct Runtime {}
-
-impl Default for Runtime {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Runtime {
-    pub fn new() -> Self {
-        Self {}
-    }
-
-    pub fn exec(&mut self, req: Executable) -> ExecutableStatus {
-        match tokio::runtime::Runtime::new() {
-            Ok(rt) => {
-                let client = rt.block_on(new_client());
-                match client {
-                    Ok(ch) => {
-                        let mut client = RuntimeClient::new(ch.channel);
-                        let res = rt.block_on(client.exec(req));
-                        match res {
-                            Ok(x) => x.into_inner(),
-                            Err(e) => {
-                                eprintln!("{:?}", e);
-                                process::exit(EXIT_REQUEST_FAILURE);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("{:?}", e);
-                        process::exit(EXIT_CONNECT_FAILURE);
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("{:?}", e);
-                process::exit(EXIT_RUNTIME_ERROR);
-            }
-        }
-    }
-
-    // pub fn executable_stop(&mut self, req: Executable) -> ExecutableStatus {
-    //     match tokio::runtime::Runtime::new() {
-    //         Ok(rt) => {
-    //             let client = rt.block_on(new_client());
-    //             match client {
-    //                 Ok(ch) => {
-    //                     let mut client = RuntimeClient::new(ch.channel);
-    //                     let res = rt.block_on(client.executable_stop(req));
-    //                     match res {
-    //                         Ok(x) => x.into_inner(),
-    //                         Err(e) => {
-    //                             eprintln!("{:?}", e);
-    //                             process::exit(EXIT_REQUEST_FAILURE);
-    //                         }
-    //                     }
-    //                 }
-    //                 Err(e) => {
-    //                     eprintln!("{:?}", e);
-    //                     process::exit(EXIT_CONNECT_FAILURE);
-    //                 }
-    //             }
-    //         }
-    //         Err(e) => {
-    //             eprintln!("{:?}", e);
-    //             process::exit(EXIT_RUNTIME_ERROR);
-    //         }
-    //     }
-    // }
 }
