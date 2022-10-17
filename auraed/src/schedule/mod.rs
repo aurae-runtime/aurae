@@ -39,6 +39,9 @@ use crate::schedule::schedule_executable_server::ScheduleExecutable;
 use crate::{command_from_string, meta};
 use tonic::{Request, Response, Status};
 
+/// Schedule executables in a similar fashion to systemd.
+/// Persist state against an instance of Aurae and configure
+/// executables to run under various criteria.
 #[derive(Debug, Default, Clone)]
 pub struct ScheduleExecutableService {}
 

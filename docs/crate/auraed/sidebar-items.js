@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["AURAE_SOCK",""]],"fn":[["command_from_string",""]],"mod":[["init",""]],"struct":[["AuraedRuntime",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["AURAE_SOCK","Default Unix domain socket path for `auraed`."]],"mod":[["init",""]],"struct":[["AuraedRuntime","Each instance of Aurae holds internal state in memory. Below are the settings which can be configured for a given Aurae daemon instance."]]};

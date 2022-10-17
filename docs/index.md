@@ -10,7 +10,6 @@ Aurae exposes its functionality over a gRPC API which is referred to as the [Aur
 
 A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. Aurae is designed to take ownership of a single machine, and expose the standard library a generic and meaningful way for higher order consumers.
 
-
 ## Motivation 
 
 Read [Why fix Kubernetes and Systemd](https://medium.com/@kris-nova/why-fix-kubernetes-and-systemd-782840e50104) by [Kris Nóva](https://github.com/krisnova). 

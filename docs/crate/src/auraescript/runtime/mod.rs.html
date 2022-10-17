@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/src/runtime/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraescript/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/src/runtime/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraescript/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -146,97 +152,98 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */
+\* -------------------------------------------------------------------------- */</span>
 
-</span><span class="macro">tonic::include_proto!</span>(<span class="string">&quot;runtime&quot;</span>);
+<span class="macro">tonic::include_proto!</span>(<span class="string">&quot;runtime&quot;</span>);
 
-<span class="kw">use </span><span class="kw">crate</span>::codes::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::new_client;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::runtime_client::RuntimeClient;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codes</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::new_client</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::runtime_client::RuntimeClient</span>;
 
-<span class="kw">use </span>std::process;
+<span class="kw">use</span> <span class="ident">std::process</span>;
 
-<span class="doccomment">/// cmd will create a new Executable{} type and set the command to the input
-</span><span class="kw">pub fn </span>cmd(cmd: <span class="kw-2">&amp;</span>str) -&gt; Executable {
-    Executable { command: cmd.to_string(), ..Executable::default() }
+<span class="doccomment">/// cmd will create a new Executable{} type and set the command to the input</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmd</span>(<span class="ident">cmd</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Executable</span> {
+    <span class="ident">Executable</span> { <span class="ident">command</span>: <span class="ident">cmd</span>.<span class="ident">to_string</span>(), ..<span class="ident">Executable::default</span>() }
 }
 
-<span class="doccomment">/// exec() is a system alias that will create a new Executable{} type and start it
-</span><span class="kw">pub fn </span>exec(x: <span class="kw-2">&amp;</span>str) -&gt; ExecutableStatus {
-    Runtime::new().exec(cmd(x))
+<span class="doccomment">/// exec() is a system alias that will create a new Executable{} type and start it</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exec</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">ExecutableStatus</span> {
+    <span class="ident">Runtime::new</span>().<span class="ident">exec</span>(<span class="ident">cmd</span>(<span class="ident">x</span>))
 }
 
-<span class="attribute">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>Runtime {}
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Runtime</span> {}
 
-<span class="kw">impl </span>Default <span class="kw">for </span>Runtime {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new()
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::new</span>()
     }
 }
 
-<span class="kw">impl </span>Runtime {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{}
+<span class="kw">impl</span> <span class="ident">Runtime</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {}
     }
 
-    <span class="kw">pub fn </span>exec(<span class="kw-2">&amp;mut </span><span class="self">self</span>, req: Executable) -&gt; ExecutableStatus {
-        <span class="kw">match </span>tokio::runtime::Runtime::new() {
-            <span class="prelude-val">Ok</span>(rt) =&gt; {
-                <span class="kw">let </span>client = rt.block_on(new_client());
-                <span class="kw">match </span>client {
-                    <span class="prelude-val">Ok</span>(ch) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>client = RuntimeClient::new(ch.channel);
-                        <span class="kw">let </span>res = rt.block_on(client.exec(req));
-                        <span class="kw">match </span>res {
-                            <span class="prelude-val">Ok</span>(x) =&gt; x.into_inner(),
-                            <span class="prelude-val">Err</span>(e) =&gt; {
-                                <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
-                                process::exit(EXIT_REQUEST_FAILURE);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exec</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">Executable</span>) -&gt; <span class="ident">ExecutableStatus</span> {
+        <span class="kw">match</span> <span class="ident">tokio::runtime::Runtime::new</span>() {
+            <span class="prelude-val">Ok</span>(<span class="ident">rt</span>) =&gt; {
+                <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">new_client</span>());
+                <span class="kw">match</span> <span class="ident">client</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">ch</span>) =&gt; {
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">RuntimeClient::new</span>(<span class="ident">ch</span>.<span class="ident">channel</span>);
+                        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">client</span>.<span class="ident">exec</span>(<span class="ident">req</span>));
+                        <span class="kw">match</span> <span class="ident">res</span> {
+                            <span class="prelude-val">Ok</span>(<span class="ident">x</span>) =&gt; <span class="ident">x</span>.<span class="ident">into_inner</span>(),
+                            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                                <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>);
+                                <span class="ident">process::exit</span>(<span class="ident">EXIT_REQUEST_FAILURE</span>);
                             }
                         }
                     }
-                    <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
-                        process::exit(EXIT_CONNECT_FAILURE);
+                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                        <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>);
+                        <span class="ident">process::exit</span>(<span class="ident">EXIT_CONNECT_FAILURE</span>);
                     }
                 }
             }
-            <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
-                process::exit(EXIT_RUNTIME_ERROR);
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>);
+                <span class="ident">process::exit</span>(<span class="ident">EXIT_RUNTIME_ERROR</span>);
             }
         }
     }
 
-    <span class="comment">// pub fn executable_stop(&amp;mut self, req: Executable) -&gt; ExecutableStatus {
-    //     match tokio::runtime::Runtime::new() {
-    //         Ok(rt) =&gt; {
-    //             let client = rt.block_on(new_client());
-    //             match client {
-    //                 Ok(ch) =&gt; {
-    //                     let mut client = RuntimeClient::new(ch.channel);
-    //                     let res = rt.block_on(client.executable_stop(req));
-    //                     match res {
-    //                         Ok(x) =&gt; x.into_inner(),
-    //                         Err(e) =&gt; {
-    //                             eprintln!(&quot;{:?}&quot;, e);
-    //                             process::exit(EXIT_REQUEST_FAILURE);
-    //                         }
-    //                     }
-    //                 }
-    //                 Err(e) =&gt; {
-    //                     eprintln!(&quot;{:?}&quot;, e);
-    //                     process::exit(EXIT_CONNECT_FAILURE);
-    //                 }
-    //             }
-    //         }
-    //         Err(e) =&gt; {
-    //             eprintln!(&quot;{:?}&quot;, e);
-    //             process::exit(EXIT_RUNTIME_ERROR);
-    //         }
-    //     }
-    // }
-</span>}
+    <span class="comment">// pub fn executable_stop(&amp;mut self, req: Executable) -&gt; ExecutableStatus {</span>
+    <span class="comment">//     match tokio::runtime::Runtime::new() {</span>
+    <span class="comment">//         Ok(rt) =&gt; {</span>
+    <span class="comment">//             let client = rt.block_on(new_client());</span>
+    <span class="comment">//             match client {</span>
+    <span class="comment">//                 Ok(ch) =&gt; {</span>
+    <span class="comment">//                     let mut client = RuntimeClient::new(ch.channel);</span>
+    <span class="comment">//                     let res = rt.block_on(client.executable_stop(req));</span>
+    <span class="comment">//                     match res {</span>
+    <span class="comment">//                         Ok(x) =&gt; x.into_inner(),</span>
+    <span class="comment">//                         Err(e) =&gt; {</span>
+    <span class="comment">//                             eprintln!(&quot;{:?}&quot;, e);</span>
+    <span class="comment">//                             process::exit(EXIT_REQUEST_FAILURE);</span>
+    <span class="comment">//                         }</span>
+    <span class="comment">//                     }</span>
+    <span class="comment">//                 }</span>
+    <span class="comment">//                 Err(e) =&gt; {</span>
+    <span class="comment">//                     eprintln!(&quot;{:?}&quot;, e);</span>
+    <span class="comment">//                     process::exit(EXIT_CONNECT_FAILURE);</span>
+    <span class="comment">//                 }</span>
+    <span class="comment">//             }</span>
+    <span class="comment">//         }</span>
+    <span class="comment">//         Err(e) =&gt; {</span>
+    <span class="comment">//             eprintln!(&quot;{:?}&quot;, e);</span>
+    <span class="comment">//             process::exit(EXIT_RUNTIME_ERROR);</span>
+    <span class="comment">//         }</span>
+    <span class="comment">//     }</span>
+    <span class="comment">// }</span>
+}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraescript" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraescript" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/src/builtin/client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraescript/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/src/builtin/client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraescript/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -206,157 +212,158 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */
+\* -------------------------------------------------------------------------- */</span>
 
-</span><span class="kw">use </span><span class="kw">crate</span>::codes::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::config::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::observe::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::schedule::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codes</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule</span>::<span class="kw-2">*</span>;
 
-<span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>macros::Output;
-<span class="kw">use </span>serde::{Deserialize, Serialize};
-<span class="kw">use </span>std::process;
-<span class="kw">use </span>tokio::net::UnixStream;
-<span class="kw">use </span>tonic::transport::Uri;
-<span class="kw">use </span>tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
-<span class="kw">use </span>tower::service_fn;
-<span class="kw">use </span>x509_certificate::certificate::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="ident">macros::Output</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use</span> <span class="ident">std::process</span>;
+<span class="kw">use</span> <span class="ident">tokio::net::UnixStream</span>;
+<span class="kw">use</span> <span class="ident">tonic::transport::Uri</span>;
+<span class="kw">use</span> <span class="ident">tonic::transport</span>::{<span class="ident">Certificate</span>, <span class="ident">Channel</span>, <span class="ident">ClientTlsConfig</span>, <span class="ident">Identity</span>};
+<span class="kw">use</span> <span class="ident">tower::service_fn</span>;
+<span class="kw">use</span> <span class="ident">x509_certificate::certificate</span>::<span class="kw-2">*</span>;
 
-<span class="kw">const </span>KNOWN_IGNORED_SOCKET_ADDR: <span class="kw-2">&amp;</span>str = <span class="string">&quot;hxxp://null&quot;</span>;
+<span class="kw">const</span> <span class="ident">KNOWN_IGNORED_SOCKET_ADDR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;hxxp://null&quot;</span>;
 
-<span class="comment">// TODO @kris-nova Once we have built out more client logic and we are confident this module is &quot;good enough&quot; come remove unwrap() statements
+<span class="comment">// TODO @kris-nova Once we have built out more client logic and we are confident this module is &quot;good enough&quot; come remove unwrap() statements</span>
 
-</span><span class="attribute">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>AuraeClient {
-    <span class="kw">pub </span>channel: <span class="prelude-ty">Option</span>&lt;Channel&gt;,
-    x509: <span class="prelude-ty">Option</span>&lt;X509Certificate&gt;,
-    x509_details: <span class="prelude-ty">Option</span>&lt;X509Details&gt;,
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AuraeClient</span> {
+    <span class="kw">pub</span> <span class="ident">channel</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Channel</span><span class="op">&gt;</span>,
+    <span class="ident">x509</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">X509Certificate</span><span class="op">&gt;</span>,
+    <span class="ident">x509_details</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">X509Details</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>AuraeClient {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new()
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">AuraeClient</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::new</span>()
     }
 }
 
-<span class="kw">impl </span>AuraeClient {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ channel: <span class="prelude-val">None</span>, x509: <span class="prelude-val">None</span>, x509_details: <span class="prelude-val">None </span>}
+<span class="kw">impl</span> <span class="ident">AuraeClient</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">channel</span>: <span class="prelude-val">None</span>, <span class="ident">x509</span>: <span class="prelude-val">None</span>, <span class="ident">x509_details</span>: <span class="prelude-val">None</span> }
     }
-    <span class="kw">async fn </span>client_connect(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;<span class="kw">dyn </span>std::error::Error&gt;&gt; {
-        <span class="kw">let </span>x = new_client().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>subject_common_name = x
-            .x509
-            .subject_common_name()
-            .ok_or(<span class="string">&quot;missing subject_common_name&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>issuer_common_name =
-            x.x509.issuer_common_name().ok_or(<span class="string">&quot;missing issuer_common_name&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>sha256_fingerprint = x.x509.sha256_fingerprint()<span class="question-mark">?</span>;
-        <span class="kw">let </span>key_algorithm =
-            x.x509.key_algorithm().ok_or(<span class="string">&quot;missing key_algorithm&quot;</span>)<span class="question-mark">?</span>.to_string();
-        <span class="self">self</span>.x509_details = <span class="prelude-val">Some</span>(X509Details {
-            subject_common_name,
-            issuer_common_name,
-            sha256_fingerprint: <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, sha256_fingerprint),
-            key_algorithm,
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">client_connect</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">new_client</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">subject_common_name</span> <span class="op">=</span> <span class="ident">x</span>
+            .<span class="ident">x509</span>
+            .<span class="ident">subject_common_name</span>()
+            .<span class="ident">ok_or</span>(<span class="string">&quot;missing subject_common_name&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">issuer_common_name</span> <span class="op">=</span>
+            <span class="ident">x</span>.<span class="ident">x509</span>.<span class="ident">issuer_common_name</span>().<span class="ident">ok_or</span>(<span class="string">&quot;missing issuer_common_name&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">sha256_fingerprint</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">x509</span>.<span class="ident">sha256_fingerprint</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">key_algorithm</span> <span class="op">=</span>
+            <span class="ident">x</span>.<span class="ident">x509</span>.<span class="ident">key_algorithm</span>().<span class="ident">ok_or</span>(<span class="string">&quot;missing key_algorithm&quot;</span>)<span class="question-mark">?</span>.<span class="ident">to_string</span>();
+        <span class="self">self</span>.<span class="ident">x509_details</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">X509Details</span> {
+            <span class="ident">subject_common_name</span>,
+            <span class="ident">issuer_common_name</span>,
+            <span class="ident">sha256_fingerprint</span>: <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">sha256_fingerprint</span>),
+            <span class="ident">key_algorithm</span>,
         });
-        <span class="self">self</span>.x509 = <span class="prelude-val">Some</span>(x.x509);
+        <span class="self">self</span>.<span class="ident">x509</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">x</span>.<span class="ident">x509</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>runtime(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Runtime {
-        Runtime::new()
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">runtime</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Runtime</span> {
+        <span class="ident">Runtime::new</span>()
     }
 
-    <span class="kw">pub fn </span>observe(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Observe {
-        Observe::new()
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">observe</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Observe</span> {
+        <span class="ident">Observe::new</span>()
     }
 
-    <span class="kw">pub fn </span>schedule_executable(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ScheduleExecutable {
-        ScheduleExecutable::new()
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schedule_executable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">ScheduleExecutable</span> {
+        <span class="ident">ScheduleExecutable::new</span>()
     }
 
-    <span class="kw">pub fn </span>info(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; X509Details {
-        <span class="kw">let </span>x = <span class="self">self</span>.x509_details.as_ref();
-        <span class="kw">match </span>x {
-            <span class="prelude-val">Some</span>(r) =&gt; r.clone(),
-            <span class="prelude-val">None </span>=&gt; X509Details {
-                subject_common_name: <span class="string">&quot;-&quot;</span>.to_string(),
-                issuer_common_name: <span class="string">&quot;-&quot;</span>.to_string(),
-                sha256_fingerprint: <span class="string">&quot;-&quot;</span>.to_string(),
-                key_algorithm: <span class="string">&quot;-&quot;</span>.to_string(),
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">info</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">X509Details</span> {
+        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x509_details</span>.<span class="ident">as_ref</span>();
+        <span class="kw">match</span> <span class="ident">x</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">r</span>) =&gt; <span class="ident">r</span>.<span class="ident">clone</span>(),
+            <span class="prelude-val">None</span> =&gt; <span class="ident">X509Details</span> {
+                <span class="ident">subject_common_name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident">issuer_common_name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident">sha256_fingerprint</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident">key_algorithm</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
             },
         }
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize, Output)]
-</span><span class="kw">pub struct </span>X509Details {
-    <span class="kw">pub </span>subject_common_name: String,
-    <span class="kw">pub </span>issuer_common_name: String,
-    <span class="kw">pub </span>sha256_fingerprint: String,
-    <span class="kw">pub </span>key_algorithm: String,
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Output</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">X509Details</span> {
+    <span class="kw">pub</span> <span class="ident">subject_common_name</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">issuer_common_name</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">sha256_fingerprint</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">key_algorithm</span>: <span class="ident">String</span>,
 }
 
-<span class="attribute">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>ClientIdentity {
-    <span class="kw">pub </span>channel: Channel,
-    x509: X509Certificate,
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientIdentity</span> {
+    <span class="kw">pub</span> <span class="ident">channel</span>: <span class="ident">Channel</span>,
+    <span class="ident">x509</span>: <span class="ident">X509Certificate</span>,
 }
 
-<span class="kw">pub async fn </span>new_client() -&gt; <span class="prelude-ty">Result</span>&lt;ClientIdentity, Box&lt;<span class="kw">dyn </span>std::error::Error&gt;&gt;
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new_client</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientIdentity</span>, <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
 {
-    <span class="kw">let </span>res = default_config()<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">default_config</span>()<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>server_root_ca_cert = tokio::fs::read(res.auth.ca_crt)
-        .<span class="kw">await
-        </span>.with_context(|| <span class="string">&quot;could not read ca crt&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">server_root_ca_cert</span> <span class="op">=</span> <span class="ident">tokio::fs::read</span>(<span class="ident">res</span>.<span class="ident">auth</span>.<span class="ident">ca_crt</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;could not read ca crt&quot;</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>server_root_ca_cert = Certificate::from_pem(server_root_ca_cert);
+    <span class="kw">let</span> <span class="ident">server_root_ca_cert</span> <span class="op">=</span> <span class="ident">Certificate::from_pem</span>(<span class="ident">server_root_ca_cert</span>);
 
-    <span class="kw">let </span>client_cert = tokio::fs::read(res.auth.client_crt.clone())
-        .<span class="kw">await
-        </span>.with_context(|| <span class="string">&quot;could not read client crt&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">client_cert</span> <span class="op">=</span> <span class="ident">tokio::fs::read</span>(<span class="ident">res</span>.<span class="ident">auth</span>.<span class="ident">client_crt</span>.<span class="ident">clone</span>())
+        .<span class="kw">await</span>
+        .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;could not read client crt&quot;</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>client_key = tokio::fs::read(<span class="kw-2">&amp;</span>res.auth.client_key)
-        .<span class="kw">await
-        </span>.with_context(|| <span class="string">&quot;could not read client key&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">client_key</span> <span class="op">=</span> <span class="ident">tokio::fs::read</span>(<span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">auth</span>.<span class="ident">client_key</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;could not read client key&quot;</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>client_identity =
-        Identity::from_pem(client_cert.clone(), client_key.clone());
+    <span class="kw">let</span> <span class="ident">client_identity</span> <span class="op">=</span>
+        <span class="ident">Identity::from_pem</span>(<span class="ident">client_cert</span>.<span class="ident">clone</span>(), <span class="ident">client_key</span>.<span class="ident">clone</span>());
 
-    <span class="kw">let </span>tls = ClientTlsConfig::new()
-        .domain_name(<span class="string">&quot;server.unsafe.aurae.io&quot;</span>)
-        .ca_certificate(server_root_ca_cert)
-        .identity(client_identity);
+    <span class="kw">let</span> <span class="ident">tls</span> <span class="op">=</span> <span class="ident">ClientTlsConfig::new</span>()
+        .<span class="ident">domain_name</span>(<span class="string">&quot;server.unsafe.aurae.io&quot;</span>)
+        .<span class="ident">ca_certificate</span>(<span class="ident">server_root_ca_cert</span>)
+        .<span class="ident">identity</span>(<span class="ident">client_identity</span>);
 
-    <span class="kw">let </span>channel = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
-        .tls_config(tls)<span class="question-mark">?
-        </span>.connect_with_connector(service_fn(<span class="kw">move </span>|<span class="kw">_</span>: Uri| {
-            UnixStream::connect(res.system.socket.clone())
+    <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">Channel::from_static</span>(<span class="ident">KNOWN_IGNORED_SOCKET_ADDR</span>)
+        .<span class="ident">tls_config</span>(<span class="ident">tls</span>)<span class="question-mark">?</span>
+        .<span class="ident">connect_with_connector</span>(<span class="ident">service_fn</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span>: <span class="ident">Uri</span><span class="op">|</span> {
+            <span class="ident">UnixStream::connect</span>(<span class="ident">res</span>.<span class="ident">system</span>.<span class="ident">socket</span>.<span class="ident">clone</span>())
         }))
-        .<span class="kw">await
-        </span>.with_context(|| <span class="string">&quot;unable to connect auraed system socket&quot;</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(ClientIdentity {
-        channel,
-        x509: X509Certificate::from_pem(client_cert.clone())<span class="question-mark">?</span>,
+        .<span class="kw">await</span>
+        .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;unable to connect auraed system socket&quot;</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">ClientIdentity</span> {
+        <span class="ident">channel</span>,
+        <span class="ident">x509</span>: <span class="ident">X509Certificate::from_pem</span>(<span class="ident">client_cert</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
     })
 }
 
-<span class="kw">pub fn </span>connect() -&gt; AuraeClient {
-    <span class="kw">let </span><span class="kw-2">mut </span>client =
-        AuraeClient { channel: <span class="prelude-val">None</span>, x509: <span class="prelude-val">None</span>, x509_details: <span class="prelude-val">None </span>};
-    <span class="kw">let </span>rt = tokio::runtime::Runtime::new().expect(<span class="string">&quot;new tokio runtime&quot;</span>);
-    <span class="kw">let </span>result = rt.block_on(client.client_connect());
-    <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result {
-        <span class="macro">eprintln!</span>(<span class="string">&quot;Unable to connect to Auraed: {:?}&quot;</span>, e);
-        process::exit(EXIT_CONNECT_FAILURE);
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connect</span>() -&gt; <span class="ident">AuraeClient</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span>
+        <span class="ident">AuraeClient</span> { <span class="ident">channel</span>: <span class="prelude-val">None</span>, <span class="ident">x509</span>: <span class="prelude-val">None</span>, <span class="ident">x509_details</span>: <span class="prelude-val">None</span> };
+    <span class="kw">let</span> <span class="ident">rt</span> <span class="op">=</span> <span class="ident">tokio::runtime::Runtime::new</span>().<span class="ident">expect</span>(<span class="string">&quot;new tokio runtime&quot;</span>);
+    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">client</span>.<span class="ident">client_connect</span>());
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">result</span> {
+        <span class="macro">eprintln!</span>(<span class="string">&quot;Unable to connect to Auraed: {:?}&quot;</span>, <span class="ident">e</span>);
+        <span class="ident">process::exit</span>(<span class="ident">EXIT_CONNECT_FAILURE</span>);
     }
-    client
+    <span class="ident">client</span>
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraescript" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraescript" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

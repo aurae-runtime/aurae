@@ -34,6 +34,7 @@ use crate::meta;
 use crate::observe::observe_server::Observe;
 use tonic::{Request, Response, Status};
 
+/// The server side implementation of the Observe subsystem.
 #[derive(Debug, Default, Clone)]
 pub struct ObserveService {}
 

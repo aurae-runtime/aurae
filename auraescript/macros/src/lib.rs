@@ -4,6 +4,7 @@ use syn::{parse_macro_input, DeriveInput};
 
 mod get_set;
 
+/// Outputs the macro.
 #[proc_macro_derive(Output)]
 pub fn output(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);

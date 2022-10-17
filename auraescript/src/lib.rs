@@ -29,6 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 #![warn(clippy::unwrap_used)]
+#![warn(missing_docs)]
+#![warn(missing_doc_code_examples)]
 
 pub mod builtin;
 pub mod meta;

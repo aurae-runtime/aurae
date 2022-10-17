@@ -38,6 +38,14 @@ use crate::runtime::runtime_server::Runtime;
 use crate::{command_from_string, meta};
 use tonic::{Request, Response, Status};
 
+/// The server side implementation of the Runtime subsystem.
+///
+/// The Runtime subsystem is synchronous and will operate against
+/// the system inline with any requests.
+///
+/// Warning: Because of the synchronous nature of the subsystem ths
+/// part of the daemon is potentially vulnerable to denial of service
+/// and flooding attacks.
 #[derive(Debug, Default, Clone)]
 pub struct RuntimeService {}
 
@@ -64,8 +72,10 @@ impl Runtime for RuntimeService {
                             meta: Some(meta),
                             proc: Some(proc),
                             status,
-                            stdout: String::from_utf8(output.stdout).unwrap(),
-                            stderr: String::from_utf8(output.stderr).unwrap(),
+                            stdout: String::from_utf8(output.stdout)
+                                .expect("reading stdout"),
+                            stderr: String::from_utf8(output.stderr)
+                                .expect("reading stderr"),
                             exit_code: output.status.to_string(),
                         };
                         Ok(Response::new(response))

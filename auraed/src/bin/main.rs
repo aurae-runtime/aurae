@@ -34,34 +34,34 @@ use auraed::*;
 use clap::Parser;
 use log::*;
 use std::path::PathBuf;
-//use futures::Stream;
-//use std::{error::Error, io::ErrorKind, net::ToSocketAddrs, path::Path, pin::Pin, time::Duration};
-//use tokio::sync::mpsc;
-//use tokio_stream::{wrappers::ReceiverStream, StreamExt};
-//use tonic::{transport::Server, Request, Response, Status, Streaming};
 
 const EXIT_OKAY: i32 = 0;
 const EXIT_ERROR: i32 = 1;
 
+/// Command line options for auraed.
+///
+/// Defines the configurable options which can be used to populate
+/// an AuraeRuntime structure.
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct AuraedOptions {
+    /// The signed server certificate. Defaults to /etc/aurae/pki/_signed.server.crt
     #[clap(
         long,
         value_parser,
         default_value = "/etc/aurae/pki/_signed.server.crt"
     )]
     server_crt: String,
-
+    /// The secret server key. Defaults to /etc/aurae/pki/server.key
     #[clap(long, value_parser, default_value = "/etc/aurae/pki/server.key")]
     server_key: String,
-
+    /// The CA certificate. Defaults to /etc/aurae/pki/ca.crt
     #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
     ca_crt: String,
-
+    /// Aurae socket path. Defaults to /var/run/aurae/aurae.sock
     #[clap(short, long, value_parser, default_value = auraed::AURAE_SOCK)]
     socket: String,
-
+    /// Toggle verbosity. Default false
     #[clap(short, long)]
     verbose: bool,
 }
@@ -84,10 +84,6 @@ async fn daemon() -> i32 {
     trace!("**Logging: Verbose Mode**");
     info!("Starting Aurae Daemon Runtime...");
 
-    // Load Variables
-    //let key = matches.value_of("key").unwrap();
-    //let sock = matches.value_of("sock").unwrap();
-
     let runtime = AuraedRuntime {
         server_crt: PathBuf::from(options.server_crt),
         server_key: PathBuf::from(options.server_key),
@@ -100,7 +96,6 @@ async fn daemon() -> i32 {
         error!("{:?}", e);
     }
 
-    // Return
     if e.is_err() {
         EXIT_ERROR
     } else {
