@@ -17,7 +17,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: build-docs-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install protobuf-compiler
         run: |
           sudo apt-get update
