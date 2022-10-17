@@ -38,6 +38,9 @@ use crate::init::logging::LoggingError;
 use crate::init::system_runtime::{
     Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime,
 };
+use crate::observe::LogItem;
+
+use crossbeam::channel::Sender;
 use log::Level;
 
 mod fileio;
@@ -66,13 +69,13 @@ pub(crate) enum InitError {
 }
 
 /// Run Aurae as an init pid 1 instance.
-pub async fn init(logger_level: Level) {
+pub async fn init(logger_level: Level, producer: Sender<LogItem>) {
     let res = match std::process::id() {
         0 => unreachable!(
             "process is running as PID 0, which should be impossible"
         ),
-        1 => Pid1SystemRuntime {}.init(logger_level),
-        _ => PidGt1SystemRuntime {}.init(logger_level),
+        1 => Pid1SystemRuntime {}.init(logger_level, producer),
+        _ => PidGt1SystemRuntime {}.init(logger_level, producer),
     }
     .await;
 

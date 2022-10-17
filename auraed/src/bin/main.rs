@@ -30,7 +30,7 @@
 
 #![warn(clippy::unwrap_used)]
 
-use auraed::*;
+use auraed::{logging::logchannel::LogChannel, *};
 use clap::Parser;
 use log::*;
 use std::path::PathBuf;
@@ -78,8 +78,12 @@ async fn daemon() -> i32 {
     // let logger_level = if matches.is_present("verbose") {
     let logger_level = if options.verbose { Level::Trace } else { Level::Info };
 
+    let log_collector = LogChannel::new("AuraeRuntime");
+    // Log Collector used to expose logs via API
+    let prod = log_collector.get_producer();
+
     // Initializes Logging and prepares system if auraed is run as pid=1
-    init::init(logger_level).await;
+    init::init(logger_level, prod).await;
 
     trace!("**Logging: Verbose Mode**");
     info!("Starting Aurae Daemon Runtime...");
@@ -89,6 +93,7 @@ async fn daemon() -> i32 {
         server_key: PathBuf::from(options.server_key),
         ca_crt: PathBuf::from(options.ca_crt),
         socket: PathBuf::from(options.socket),
+        log_collector,
     };
 
     let e = runtime.run().await;

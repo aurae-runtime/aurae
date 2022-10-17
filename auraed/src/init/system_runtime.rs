@@ -3,7 +3,10 @@ use crate::init::network::{
 };
 use crate::init::power::spawn_thread_power_button_listener;
 use crate::init::{fs, logging, InitError, BANNER};
+use crate::observe::LogItem;
+
 use anyhow::anyhow;
+use crossbeam::channel::Sender;
 use ipnetwork::{IpNetwork, Ipv6Network};
 use log::{error, info, trace, Level};
 use netlink_packet_route::RtnlMessage;
@@ -28,7 +31,11 @@ const POWER_BUTTON_DEVICE: &str = "/dev/input/event0";
 
 #[async_trait]
 pub(crate) trait SystemRuntime {
-    async fn init(self, logger_level: Level) -> Result<(), InitError>;
+    async fn init(
+        self,
+        logger_level: Level,
+        producer: Sender<LogItem>,
+    ) -> Result<(), InitError>;
 }
 
 pub(crate) struct Pid1SystemRuntime;
@@ -162,10 +169,14 @@ impl Pid1SystemRuntime {
 
 #[async_trait]
 impl SystemRuntime for Pid1SystemRuntime {
-    async fn init(self, logger_level: Level) -> Result<(), InitError> {
+    async fn init(
+        self,
+        logger_level: Level,
+        producer: Sender<LogItem>,
+    ) -> Result<(), InitError> {
         println!("{}", BANNER);
 
-        logging::init(logger_level)?;
+        logging::init(logger_level, producer)?;
         trace!("Logging started");
 
         trace!("Configure filesystem");
@@ -195,8 +206,12 @@ pub(crate) struct PidGt1SystemRuntime;
 
 #[async_trait]
 impl SystemRuntime for PidGt1SystemRuntime {
-    async fn init(self, logger_level: Level) -> Result<(), InitError> {
-        logging::init(logger_level)?;
+    async fn init(
+        self,
+        logger_level: Level,
+        producer: Sender<LogItem>,
+    ) -> Result<(), InitError> {
+        logging::init(logger_level, producer)?;
         Ok(())
     }
 }

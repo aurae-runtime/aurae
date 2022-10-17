@@ -28,49 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-syntax = "proto3";
+use std::{os::unix, time::SystemTime};
 
-package observe;
 
-option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/observe";
+/// Abstraction Layer for one log generating entity
+/// LogChannel provides channels between Log producers and log consumers
+pub mod logchannel;
 
-import "meta.proto";
+/// Implements Log trait. Used to add grpc API to log targets for rust internal logging 
+pub mod streamlogger;
 
-enum LogChannelType {
-  CHANNEL_STDOUT = 0;
-  CHANNEL_STDERR = 1;
-}
+/// Get UNIX timestamp in seconds for logging
+pub fn get_timestamp_sec() -> u64 {
+    let unix_ts = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("System Clock went backwards");
 
-service Observe {
-
-  rpc Status(StatusRequest) returns (StatusResponse) {}
-    // request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
-    rpc GetAuraeDaemonLogStream(GetAuraeDaemonLogStreamRequest) returns (stream LogItem) {}
-
-    // TODO: request log stream for a sub process
-    rpc GetSubProcessStream(GetSubProcessStreamRequest) returns (stream LogItem) {}
-
-}
-
-message StatusRequest {
-  meta.AuraeMeta meta = 1;
-}
-
-message StatusResponse {
-  meta.AuraeMeta meta = 1;
-}
-
-message GetAuraeDaemonLogStreamRequest {
-}
-
-// TODO: not implemented
-message GetSubProcessStreamRequest {
-  LogChannelType channel_type = 1;
-  uint64 process_id = 2;
-}
-
-message LogItem {
-  string channel = 1;
-  string line = 2;
-  uint64 timestamp = 3;
+    unix_ts.as_secs()
 }
