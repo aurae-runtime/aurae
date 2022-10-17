@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/init/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/init/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -74,6 +80,12 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -102,23 +114,28 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */
+\* -------------------------------------------------------------------------- */</span>
 
-</span><span class="kw">use </span><span class="kw">crate</span>::init::fs::FsError;
-<span class="kw">use </span><span class="kw">crate</span>::init::logging::LoggingError;
-<span class="kw">use </span><span class="kw">crate</span>::init::system_runtime::{
-    Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime,
+<span class="doccomment">//! Run the Aurae daemon as a pid 1 init program.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The Aurae daemon assumes that if the current process id (PID) is 1 to</span>
+<span class="doccomment">//! run itself as an initialization program, otherwise bypass the init module.</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::fs::FsError</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::logging::LoggingError</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::system_runtime</span>::{
+    <span class="ident">Pid1SystemRuntime</span>, <span class="ident">PidGt1SystemRuntime</span>, <span class="ident">SystemRuntime</span>,
 };
-<span class="kw">use </span>log::Level;
+<span class="kw">use</span> <span class="ident">log::Level</span>;
 
-<span class="kw">mod </span>fileio;
-<span class="kw">mod </span>fs;
-<span class="kw">mod </span>logging;
-<span class="kw">mod </span>network;
-<span class="kw">mod </span>power;
-<span class="kw">mod </span>system_runtime;
+<span class="kw">mod</span> <span class="ident">fileio</span>;
+<span class="kw">mod</span> <span class="ident">fs</span>;
+<span class="kw">mod</span> <span class="ident">logging</span>;
+<span class="kw">mod</span> <span class="ident">network</span>;
+<span class="kw">mod</span> <span class="ident">power</span>;
+<span class="kw">mod</span> <span class="ident">system_runtime</span>;
 
-<span class="kw">const </span>BANNER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;
+<span class="kw">const</span> <span class="ident">BANNER</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;
     +--------------------------------------------+
     |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |
     |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |
@@ -128,27 +145,29 @@
     |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |
     +--------------------------------------------+\n&quot;</span>;
 
-<span class="attribute">#[derive(thiserror::Error, Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>InitError {
-    <span class="attribute">#[error(transparent)]
-    </span>Logging(<span class="attribute">#[from] </span>LoggingError),
-    <span class="attribute">#[error(transparent)]
-    </span>Fs(<span class="attribute">#[from] </span>FsError),
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">InitError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">Logging</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">LoggingError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">Fs</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">FsError</span>),
 }
 
-<span class="kw">pub async fn </span>init(logger_level: Level) {
-    <span class="kw">let </span>res = <span class="kw">match </span>std::process::id() {
-        <span class="number">0 </span>=&gt; <span class="macro">unreachable!</span>(
-            <span class="string">&quot;process is running as PID 0, which should be impossible&quot;
-        </span>),
-        <span class="number">1 </span>=&gt; Pid1SystemRuntime {}.init(logger_level),
-        <span class="kw">_ </span>=&gt; PidGt1SystemRuntime {}.init(logger_level),
+<span class="doccomment">/// Run Aurae as an init pid 1 instance.</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">logger_level</span>: <span class="ident">Level</span>) {
+    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">std::process::id</span>() {
+        <span class="number">0</span> =&gt; <span class="macro">unreachable!</span>(
+            <span class="string">&quot;process is running as PID 0, which should be impossible&quot;</span>
+        ),
+        <span class="number">1</span> =&gt; <span class="ident">Pid1SystemRuntime</span> {}.<span class="ident">init</span>(<span class="ident">logger_level</span>),
+        <span class="kw">_</span> =&gt; <span class="ident">PidGt1SystemRuntime</span> {}.<span class="ident">init</span>(<span class="ident">logger_level</span>),
     }
     .<span class="kw">await</span>;
 
-    <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = res {
-        <span class="macro">panic!</span>(<span class="string">&quot;Failed to initialize: {}&quot;</span>, e)
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">res</span> {
+        <span class="macro">panic!</span>(<span class="string">&quot;Failed to initialize: {}&quot;</span>, <span class="ident">e</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

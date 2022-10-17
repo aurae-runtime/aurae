@@ -28,6 +28,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+//! An internally scoped rust client specific for AuraeScript.
+//!
+//! Manages authenticating with remove Aurae instances, as well as searching
+//! the local filesystem for configuration and authentication material.
+
 use crate::codes::*;
 use crate::config::*;
 use crate::observe::*;
@@ -48,8 +53,10 @@ const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
 // TODO @kris-nova Once we have built out more client logic and we are confident this module is "good enough" come remove unwrap() statements
 
+/// Instance of a single client for an Aurae consumer.
 #[derive(Debug, Clone)]
 pub struct AuraeClient {
+    /// The channel used for gRPC connections before encryption is handled.
     pub channel: Option<Channel>,
     x509: Option<X509Certificate>,
     x509_details: Option<X509Details>,
@@ -62,6 +69,9 @@ impl Default for AuraeClient {
 }
 
 impl AuraeClient {
+    /// Create a new AuraeClient.
+    ///
+    /// Note: A new client is required for every independent execution of this process.
     pub fn new() -> Self {
         Self { channel: None, x509: None, x509_details: None }
     }
@@ -88,18 +98,22 @@ impl AuraeClient {
         Ok(())
     }
 
+    /// Initialize a new instance of the runtime subsystem.
     pub fn runtime(&mut self) -> Runtime {
         Runtime::new()
     }
 
+    /// Initialize a new instance of the observe subsystem.
     pub fn observe(&mut self) -> Observe {
         Observe::new()
     }
 
+    /// Initialize a new instance of the schedule_executable subsystem.
     pub fn schedule_executable(&mut self) -> ScheduleExecutable {
         ScheduleExecutable::new()
     }
 
+    /// Convenience method for identifying the current service or client.
     pub fn info(&mut self) -> X509Details {
         let x = self.x509_details.as_ref();
         match x {
@@ -114,20 +128,29 @@ impl AuraeClient {
     }
 }
 
+/// An in-memory representation of an X509 identity, and its meta data.
 #[derive(Debug, Clone, Serialize, Deserialize, Output)]
 pub struct X509Details {
+    /// From the SSL spec, the subject common name.
     pub subject_common_name: String,
+    /// From the SSL spec, the issuer common name.
     pub issuer_common_name: String,
+    /// From the SSL spec, the sha256 sum fingerprint of the material.
     pub sha256_fingerprint: String,
+    /// From the SSL spec, the algorithm used for encryption.
     pub key_algorithm: String,
 }
 
+/// Higher order identity structure.
 #[derive(Debug, Clone)]
 pub struct ClientIdentity {
+    /// Channel used for connecting to a remote Aurae instance.
     pub channel: Channel,
+    /// Service identity.
     x509: X509Certificate,
 }
 
+/// Create a new instance of an Aurae client.
 pub async fn new_client() -> Result<ClientIdentity, Box<dyn std::error::Error>>
 {
     let res = default_config()?;
@@ -167,6 +190,7 @@ pub async fn new_client() -> Result<ClientIdentity, Box<dyn std::error::Error>>
     })
 }
 
+/// Connect to a remote Aurae instance.
 pub fn connect() -> AuraeClient {
     let mut client =
         AuraeClient { channel: None, x509: None, x509_details: None };

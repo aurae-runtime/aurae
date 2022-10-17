@@ -28,8 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+//! An interpreted infrastructure language built for enterprise platform teams.
+//!
+//! AuraeScript is an opinionated and Turing complete client language for an
+//! Aurae server. AuraeScript is an alternative to templated YAML for teams
+//! to express their applications.
+//!
+//! The AuraeScript definition lives in this crate library (lib.rs).
+
+// The project prefers .expect("reason") instead of .unwrap() so we fail
+// on any .unwrap() statements in the code.
 #![warn(clippy::unwrap_used)]
 
+// AuraeScript has a high expectation for documentation in this library as it
+// is used for the scripting language docs directly.
+#[warn(missing_docs)]
 pub mod builtin;
 pub mod meta;
 pub mod observe;
@@ -44,27 +57,73 @@ use crate::observe::*;
 use crate::runtime::*;
 use crate::schedule::*;
 
+/// AuraeScript Standard Library.
+///
+/// The main definition of functions, objects, types, methods, and values
+/// for the entire AuraeScript library.
+///
+/// A large portion of this library is plumbed through from the gRPC client.
+///
+/// An important note for this library is that it is not "1-to-1" with the
+/// gRPC client.
+///
+/// There are carefully chosen subtle and semantic differences in how various
+/// parts of the Aurae Standard Library are exposed with AuraeScript.
+/// The philosophy is to keep the library beautiful, and simple.
+/// We prefer name() or meaningful_verbose_name()
+/// We prefer exec() over executable()
+///
+/// Each function in here must be heavily scrutinized as we will need to
+/// maintain some semblance of backward compatability over time.
 pub fn register_stdlib(mut engine: Engine) -> Engine {
     engine
+        // about function
         //
-        // [Functions]
+        // Reserved function name to share information about the current
+        // client interpreter.
         .register_fn("about", about)
+        // connect function
+        //
+        // Opinionated function that will attempt to look up configuration
+        // according to the semantics defined in the configuration module.
+        // This function will load the system configuration that is available
+        // in well known locations, or it will fail with a non-JSON error!
         .register_fn("connect", connect)
+        // AuraeClient type
         //
-        //
-        // [Object] AuraeClient
+        // Returned from connect() and is the pointer to the client which
+        // can be used to initialize subsystems with Aurae.
         .register_type_with_name::<AuraeClient>("AuraeClient")
+        // AuraeClient.info function
+        //
+        // Used to show information about a specific client.
         .register_fn("info", AuraeClient::info)
+        // X509Details type
+        //
+        // Identity and mTLS details.
         .register_type_with_name::<X509Details>("X509Details")
         .register_fn("json", X509Details::json)
         .register_fn("raw", X509Details::raw)
+        // Runtime type
         //
-        // [Subsystem] Runtime
+        // The runtime subsystem with corresponding methods.
         .register_type_with_name::<Runtime>("Runtime")
         .register_fn("runtime", AuraeClient::runtime)
-        // [Object] Executable
+        // Executable type
+        //
+        // An executable which can be started, stopped, or scheduled.
         .register_type_with_name::<Executable>("Executable")
+        // exec function
+        //
+        // Most efficient way to execute a command with Aurae. Wraps up
+        // the runtime subsystem, and cmd setting into a single alias.
+        // Execute the argument string synchronously without any other
+        // code required.
         .register_fn("exec", exec)
+        // cmd function
+        //
+        // Create an instance of an Executable type with an argument
+        // command string. Can be passed to various subsystems.
         .register_fn("cmd", cmd)
         .register_fn("json", Executable::json)
         .register_fn("raw", Executable::raw)
@@ -78,20 +137,32 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
             Executable::get_comment,
             Executable::set_comment,
         )
+        // ExecutableStatus type
         //
-        // [Object] ExecutableStatus
+        // Response with the status of a given Executable back from an Aurae server.
         .register_type_with_name::<ExecutableStatus>("ExecutableStatus")
         .register_fn("json", ExecutableStatus::json)
         .register_fn("raw", ExecutableStatus::raw)
+        // Runtime.exec function
         //
-        // [Function] Exec
-        .register_fn("exec", Runtime::exec) // alias
+        // Longer version of exec. Accepts an Executable type as an argument.
+        .register_fn("exec", Runtime::exec)
+        // ScheduleExecutable type
         //
-        // [Subsystem] ScheduleExecutable
+        // The ScheduleExecutable subsystem.
         .register_type_with_name::<ScheduleExecutable>("ScheduleExecutable")
         .register_fn("schedule_executable", AuraeClient::schedule_executable)
+        // ScheduleExecutable.enable function
+        //
+        // Enable an Executable type{} to always run on the system.
         .register_fn("enable", ScheduleExecutable::enable)
+        // ScheduleExecutable.disable function
+        //
+        // Disable an Executable type{} to not run on the system.
         .register_fn("disable", ScheduleExecutable::disable)
+        // ScheduleExecutable.destroy function
+        //
+        // Destroy an Executable type{} from the system record.
         .register_fn("destroy", ScheduleExecutable::destroy)
         .register_type_with_name::<ExecutableEnableResponse>(
             "ExecutableEnableResponse",
@@ -108,16 +179,21 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         )
         .register_fn("json", ExecutableDestroyResponse::json)
         .register_fn("raw", ExecutableDestroyResponse::raw)
+        // Observe type
         //
-        // [Subsystem] Observe
+        // The observe subsystem.
         .register_type_with_name::<Observe>("Observe")
         .register_fn("observe", AuraeClient::observe)
+        // Observe.status function
+        //
+        // Retrieve total system status metrics.
         .register_fn("status", Observe::status)
         .register_type_with_name::<StatusResponse>("StatusResponse")
         .register_fn("json", StatusResponse::json)
         .register_fn("raw", StatusResponse::raw)
+        // version function
         //
-        // Version
+        // The Aurae version running on
         .register_fn("version", version);
 
     engine

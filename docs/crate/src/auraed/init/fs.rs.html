@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/init/fs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/init/fs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -79,86 +85,87 @@
 <span id="79">79</span>
 <span id="80">80</span>
 <span id="81">81</span>
-</pre><pre class="rust"><code><span class="kw">use </span>log::{error, info};
-<span class="kw">use </span>std::ffi::{CString, NulError};
-<span class="kw">use </span>std::ptr;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">error</span>, <span class="ident">info</span>};
+<span class="kw">use</span> <span class="ident">std::ffi</span>::{<span class="ident">CString</span>, <span class="ident">NulError</span>};
+<span class="kw">use</span> <span class="ident">std::ptr</span>;
 
-<span class="attribute">#[derive(thiserror::Error, Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>FsError {
-    <span class="attribute">#[error(<span class="string">&quot;{source_name} cannot be converted to a CString&quot;</span>)]
-    </span>InvalidSourceName { source_name: String, source: NulError },
-    <span class="attribute">#[error(<span class="string">&quot;{target_name} cannot be converted to a CString&quot;</span>)]
-    </span>InvalidTargetName { target_name: String, source: NulError },
-    <span class="attribute">#[error(<span class="string">&quot;{fstype} cannot be converted to a CString&quot;</span>)]
-    </span>InvalidFstype { fstype: String, source: NulError },
-    <span class="attribute">#[error(<span class="string">&quot;Failed to mount: source_name={source_name}, target_name={target_name}, fstype={fstype}&quot;</span>)]
-    </span>MountFailure { source_name: String, target_name: String, fstype: String },
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">FsError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{source_name} cannot be converted to a CString&quot;</span>)]</span>
+    <span class="ident">InvalidSourceName</span> { <span class="ident">source_name</span>: <span class="ident">String</span>, <span class="ident">source</span>: <span class="ident">NulError</span> },
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{target_name} cannot be converted to a CString&quot;</span>)]</span>
+    <span class="ident">InvalidTargetName</span> { <span class="ident">target_name</span>: <span class="ident">String</span>, <span class="ident">source</span>: <span class="ident">NulError</span> },
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{fstype} cannot be converted to a CString&quot;</span>)]</span>
+    <span class="ident">InvalidFstype</span> { <span class="ident">fstype</span>: <span class="ident">String</span>, <span class="ident">source</span>: <span class="ident">NulError</span> },
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to mount: source_name={source_name}, target_name={target_name}, fstype={fstype}&quot;</span>)]</span>
+    <span class="ident">MountFailure</span> { <span class="ident">source_name</span>: <span class="ident">String</span>, <span class="ident">target_name</span>: <span class="ident">String</span>, <span class="ident">fstype</span>: <span class="ident">String</span> },
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>mount_vfs(
-    source_name: <span class="kw-2">&amp;</span>str,
-    target_name: <span class="kw-2">&amp;</span>str,
-    fstype: <span class="kw-2">&amp;</span>str,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), FsError&gt; {
-    <span class="macro">info!</span>(<span class="string">&quot;Mounting {}&quot;</span>, target_name);
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">mount_vfs</span>(
+    <span class="ident">source_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    <span class="ident">target_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    <span class="ident">fstype</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">FsError</span><span class="op">&gt;</span> {
+    <span class="macro">info!</span>(<span class="string">&quot;Mounting {}&quot;</span>, <span class="ident">target_name</span>);
 
-    <span class="comment">// CString constructor ensures the trailing 0byte, which is required by libc::mount
-    </span><span class="kw">let </span>src_c_str =
-        CString::new(source_name).map_err(|e| FsError::InvalidSourceName {
-            source_name: source_name.to_owned(),
-            source: e,
+    <span class="comment">// CString constructor ensures the trailing 0byte, which is required by libc::mount</span>
+    <span class="kw">let</span> <span class="ident">src_c_str</span> <span class="op">=</span>
+        <span class="ident">CString::new</span>(<span class="ident">source_name</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">FsError::InvalidSourceName</span> {
+            <span class="ident">source_name</span>: <span class="ident">source_name</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">source</span>: <span class="ident">e</span>,
         })<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>target_name_c_str =
-        CString::new(target_name).map_err(|e| FsError::InvalidTargetName {
-            target_name: target_name.to_owned(),
-            source: e,
+    <span class="kw">let</span> <span class="ident">target_name_c_str</span> <span class="op">=</span>
+        <span class="ident">CString::new</span>(<span class="ident">target_name</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">FsError::InvalidTargetName</span> {
+            <span class="ident">target_name</span>: <span class="ident">target_name</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">source</span>: <span class="ident">e</span>,
         })<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>ret = {
-        <span class="attribute">#[cfg(not(target_os = <span class="string">&quot;macos&quot;</span>))]
-        </span>{
-            <span class="kw">let </span>fstype_c_str = CString::new(fstype).map_err(|e| {
-                FsError::InvalidFstype { fstype: fstype.to_owned(), source: e }
+    <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> {
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>))]</span>
+        {
+            <span class="kw">let</span> <span class="ident">fstype_c_str</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">fstype</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">FsError::InvalidFstype</span> { <span class="ident">fstype</span>: <span class="ident">fstype</span>.<span class="ident">to_owned</span>(), <span class="ident">source</span>: <span class="ident">e</span> }
             })<span class="question-mark">?</span>;
 
-            <span class="kw">unsafe </span>{
-                libc::mount(
-                    src_c_str.as_ptr(),
-                    target_name_c_str.as_ptr(),
-                    fstype_c_str.as_ptr(),
+            <span class="kw">unsafe</span> {
+                <span class="ident">libc::mount</span>(
+                    <span class="ident">src_c_str</span>.<span class="ident">as_ptr</span>(),
+                    <span class="ident">target_name_c_str</span>.<span class="ident">as_ptr</span>(),
+                    <span class="ident">fstype_c_str</span>.<span class="ident">as_ptr</span>(),
                     <span class="number">0</span>,
-                    ptr::null(),
+                    <span class="ident">ptr::null</span>(),
                 )
             }
         }
 
-        <span class="attribute">#[cfg(target_os = <span class="string">&quot;macos&quot;</span>)]
-        </span><span class="kw">unsafe </span>{
-            libc::mount(
-                src_c_str.as_ptr(),
-                target_name_c_str.as_ptr(),
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)]</span>
+        <span class="kw">unsafe</span> {
+            <span class="ident">libc::mount</span>(
+                <span class="ident">src_c_str</span>.<span class="ident">as_ptr</span>(),
+                <span class="ident">target_name_c_str</span>.<span class="ident">as_ptr</span>(),
                 <span class="number">0</span>,
-                ptr::null_mut(),
+                <span class="ident">ptr::null_mut</span>(),
             )
         }
     };
 
-    <span class="kw">if </span>ret &lt; <span class="number">0 </span>{
-        <span class="macro">error!</span>(<span class="string">&quot;Failed to mount ({})&quot;</span>, ret);
-        <span class="kw">let </span>error = CString::new(<span class="string">&quot;Error: &quot;</span>).expect(<span class="string">&quot;error creating CString&quot;</span>);
-        <span class="kw">unsafe </span>{
-            libc::perror(error.as_ptr());
+    <span class="kw">if</span> <span class="ident">ret</span> <span class="op">&lt;</span> <span class="number">0</span> {
+        <span class="macro">error!</span>(<span class="string">&quot;Failed to mount ({})&quot;</span>, <span class="ident">ret</span>);
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="string">&quot;Error: &quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;error creating CString&quot;</span>);
+        <span class="kw">unsafe</span> {
+            <span class="ident">libc::perror</span>(<span class="ident">error</span>.<span class="ident">as_ptr</span>());
         };
 
-        <span class="prelude-val">Err</span>(FsError::MountFailure {
-            source_name: source_name.to_owned(),
-            target_name: target_name.to_owned(),
-            fstype: fstype.to_owned(),
+        <span class="prelude-val">Err</span>(<span class="ident">FsError::MountFailure</span> {
+            <span class="ident">source_name</span>: <span class="ident">source_name</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">target_name</span>: <span class="ident">target_name</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">fstype</span>: <span class="ident">fstype</span>.<span class="ident">to_owned</span>(),
         })
-    } <span class="kw">else </span>{
+    } <span class="kw">else</span> {
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"derive":[["Getters","Creates getter functions for all struct fields."],["Output",""],["Setters","Creates setter functions for all struct fields."]]};
+window.SIDEBAR_ITEMS = {"derive":[["Getters","Creates getter functions for all struct fields."],["Output","Outputs the macro content during a render."],["Setters","Creates setter functions for all struct fields."]]};

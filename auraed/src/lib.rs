@@ -28,7 +28,22 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+//! Systems daemon built for higher order simple, safe, secure multi-tenant
+//! distributed systems.
+//!
+//! Runs as pid 1 (init) and serves standard library functionality over a mTLS
+//! backed gRPC server.
+//!
+//! The Aurae Daemon (auraed) is the main server implementation of the Aurae
+//! Standard Library.
+//!
+//! See [`The Aurae Standard Library`] for API reference.
+//!
+//! [`The Aurae Standard Library`]: https://aurae.io/stdlib
+
 #![warn(clippy::unwrap_used)]
+#![warn(missing_docs)]
+#![warn(rustdoc::missing_doc_code_examples)]
 
 use anyhow::anyhow;
 use anyhow::Context;
@@ -60,21 +75,40 @@ mod observe;
 mod runtime;
 mod schedule;
 
+/// Default Unix domain socket path for `auraed`.
+///
+/// Warning: This socket is created (by default) with user
+/// mode 0o766 which allows for unprivileged access to the
+/// auraed daemon which can in turn be used to execute privileged
+/// processes and commands. Access to the socket must be governed
+/// by an appropriate mTLS Authorization setting in order to maintain
+/// a secure multi tenant system.
 pub const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
 
+/// Each instance of Aurae holds internal state in memory. Below are the
+/// settings which can be configured for a given Aurae daemon instance.
+///
+/// Note: These fields represent file paths and not the actual authentication
+/// material. Each new instance of a subsystem will read these from the local
+/// filesystem at runtime in order to authenticate.
 #[derive(Debug)]
 pub struct AuraedRuntime {
-    // Root CA
+    /// Certificate Authority for an organization or mesh of Aurae instances.
     pub ca_crt: PathBuf,
-
+    /// The signed server X509 certificate for this unique instance.
     pub server_crt: PathBuf,
+    /// The secret key for this unique instance.
     pub server_key: PathBuf,
+    /// Configurable socket path. Defaults to the value of
+    /// `pub const AURAE_SOCK`
     pub socket: PathBuf,
 }
 
+/// Primary daemon structure. Holds state and memory for this instance of
+/// Aurae.
 impl AuraedRuntime {
+    /// Starts the runtime loop for the daemon.
     pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        // Manage the socket permission/groups first\
         let _ = fs::remove_file(&self.socket);
         let sock_path = Path::new(&self.socket)
             .parent()
@@ -154,8 +188,6 @@ impl AuraedRuntime {
             .await?;
         info!("Initializing: SQLite: {:?}", x);
 
-        //runtime::hydrate(&db).await?;
-
         // Event loop
         handle.await??;
         info!("gRPC server exited successfully");
@@ -164,7 +196,7 @@ impl AuraedRuntime {
     }
 }
 
-pub fn command_from_string(cmd: &str) -> Result<Command, anyhow::Error> {
+fn command_from_string(cmd: &str) -> Result<Command, anyhow::Error> {
     let mut entries = cmd.split(' ');
     let base = match entries.next() {
         Some(base) => base,

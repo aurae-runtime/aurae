@@ -28,6 +28,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+//! Transaction codes for AuraeScript.
+
+/// Connection failed.
 pub const EXIT_CONNECT_FAILURE: i32 = 1;
+/// Request failed.
 pub const EXIT_REQUEST_FAILURE: i32 = 2;
+/// Runtime error.
 pub const EXIT_RUNTIME_ERROR: i32 = 3;

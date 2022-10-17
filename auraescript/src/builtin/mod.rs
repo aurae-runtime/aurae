@@ -28,16 +28,22 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+//! The builtin functionality for AuraeScript.
+//!
+//! AuraeScript has a small amount of magic with regard to authentication and
+//! managing the client and requests, responses, and output.
+//!
+//! Most of the built in logic that makes AuraeScript useful to an end-user
+//! lives in this module.
+
 pub mod client;
 pub mod codes;
 pub mod config;
 
-//mod x509_certificate;
-//use x509_certificate::X509Certificate;
-
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 
+/// Show meta information about AuraeScript.
 pub fn about() {
     println!("\n");
     println!("Aurae. Distributed Runtime.");
@@ -46,6 +52,7 @@ pub fn about() {
     println!("\n");
 }
 
+/// Show version information.
 pub fn version() {
     println!("Version: {}", VERSION);
 }

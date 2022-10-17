@@ -9,6 +9,7 @@ use x509_parser::{
 };
 
 // TODO: X509Certificate, see comments
+#[allow(missing_docs)] // Will be used; suppress warnings for now
 #[allow(dead_code)] // Will be used; suppress warnings for now
 #[derive(Debug)]
 pub(crate) struct X509Certificate {

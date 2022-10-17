@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["EXIT_CONNECT_FAILURE",""],["EXIT_REQUEST_FAILURE",""],["EXIT_RUNTIME_ERROR",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["EXIT_CONNECT_FAILURE","Connection failed."],["EXIT_REQUEST_FAILURE","Request failed."],["EXIT_RUNTIME_ERROR","Runtime error."]]};

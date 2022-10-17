@@ -28,6 +28,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+//! Run the Aurae daemon as a pid 1 init program.
+//!
+//! The Aurae daemon assumes that if the current process id (PID) is 1 to
+//! run itself as an initialization program, otherwise bypass the init module.
+
 use crate::init::fs::FsError;
 use crate::init::logging::LoggingError;
 use crate::init::system_runtime::{
@@ -60,6 +65,7 @@ pub(crate) enum InitError {
     Fs(#[from] FsError),
 }
 
+/// Run Aurae as an init pid 1 instance.
 pub async fn init(logger_level: Level) {
     let res = match std::process::id() {
         0 => unreachable!(

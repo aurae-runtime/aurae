@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../auraed/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../auraed/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -190,6 +196,38 @@
 <span id="190">190</span>
 <span id="191">191</span>
 <span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -218,169 +256,202 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */
+\* -------------------------------------------------------------------------- */</span>
 
-</span><span class="attribute">#![warn(clippy::unwrap_used)]
+<span class="doccomment">//! Systems daemon built for higher order simple, safe, secure multi-tenant</span>
+<span class="doccomment">//! distributed systems.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Runs as pid 1 (init) and serves standard library functionality over a mTLS</span>
+<span class="doccomment">//! backed gRPC server.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The Aurae Daemon (auraed) is the main server implementation of the Aurae</span>
+<span class="doccomment">//! Standard Library.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! See [`The Aurae Standard Library`] for API reference.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`The Aurae Standard Library`]: https://aurae.io/stdlib</span>
 
-</span><span class="kw">use </span>anyhow::anyhow;
-<span class="kw">use </span>anyhow::Context;
-<span class="kw">use </span>log::<span class="kw-2">*</span>;
-<span class="kw">use </span>sea_orm::ConnectOptions;
-<span class="kw">use </span>sea_orm::ConnectionTrait;
-<span class="kw">use </span>sea_orm::Database;
-<span class="kw">use </span>sea_orm::Statement;
-<span class="kw">use </span>std::borrow::Cow;
-<span class="kw">use </span>std::fs;
-<span class="kw">use </span>std::os::unix::fs::PermissionsExt;
-<span class="kw">use </span>std::path::Path;
-<span class="kw">use </span>std::path::PathBuf;
-<span class="kw">use </span>std::process::Command;
-<span class="kw">use </span>tokio::net::UnixListener;
-<span class="kw">use </span>tokio_stream::wrappers::UnixListenerStream;
-<span class="kw">use </span>tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::unwrap_used</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">rustdoc::missing_doc_code_examples</span>)]</span>
 
-<span class="kw">use </span><span class="kw">crate</span>::observe::observe_server::ObserveServer;
-<span class="kw">use </span><span class="kw">crate</span>::observe::ObserveService;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::runtime_server::RuntimeServer;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::RuntimeService;
-<span class="kw">use </span><span class="kw">crate</span>::schedule::schedule_executable_server::ScheduleExecutableServer;
-<span class="kw">use </span><span class="kw">crate</span>::schedule::ScheduleExecutableService;
+<span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
+<span class="kw">use</span> <span class="ident">anyhow::Context</span>;
+<span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">sea_orm::ConnectOptions</span>;
+<span class="kw">use</span> <span class="ident">sea_orm::ConnectionTrait</span>;
+<span class="kw">use</span> <span class="ident">sea_orm::Database</span>;
+<span class="kw">use</span> <span class="ident">sea_orm::Statement</span>;
+<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+<span class="kw">use</span> <span class="ident">std::fs</span>;
+<span class="kw">use</span> <span class="ident">std::os::unix::fs::PermissionsExt</span>;
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
+<span class="kw">use</span> <span class="ident">std::process::Command</span>;
+<span class="kw">use</span> <span class="ident">tokio::net::UnixListener</span>;
+<span class="kw">use</span> <span class="ident">tokio_stream::wrappers::UnixListenerStream</span>;
+<span class="kw">use</span> <span class="ident">tonic::transport</span>::{<span class="ident">Certificate</span>, <span class="ident">Identity</span>, <span class="ident">Server</span>, <span class="ident">ServerTlsConfig</span>};
 
-<span class="kw">pub mod </span>init;
-<span class="kw">mod </span>meta;
-<span class="kw">mod </span>observe;
-<span class="kw">mod </span>runtime;
-<span class="kw">mod </span>schedule;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe::observe_server::ObserveServer</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe::ObserveService</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::runtime_server::RuntimeServer</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::RuntimeService</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::schedule_executable_server::ScheduleExecutableServer</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::ScheduleExecutableService</span>;
 
-<span class="kw">pub const </span>AURAE_SOCK: <span class="kw-2">&amp;</span>str = <span class="string">&quot;/var/run/aurae/aurae.sock&quot;</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">init</span>;
+<span class="kw">mod</span> <span class="ident">meta</span>;
+<span class="kw">mod</span> <span class="ident">observe</span>;
+<span class="kw">mod</span> <span class="ident">runtime</span>;
+<span class="kw">mod</span> <span class="ident">schedule</span>;
 
-<span class="attribute">#[derive(Debug)]
-</span><span class="kw">pub struct </span>AuraedRuntime {
-    <span class="comment">// Root CA
-    </span><span class="kw">pub </span>ca_crt: PathBuf,
+<span class="doccomment">/// Default Unix domain socket path for `auraed`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Warning: This socket is created (by default) with user</span>
+<span class="doccomment">/// mode 0o766 which allows for unprivileged access to the</span>
+<span class="doccomment">/// auraed daemon which can in turn be used to execute privileged</span>
+<span class="doccomment">/// processes and commands. Access to the socket must be governed</span>
+<span class="doccomment">/// by an appropriate mTLS Authorization setting in order to maintain</span>
+<span class="doccomment">/// a secure multi tenant system.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AURAE_SOCK</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;/var/run/aurae/aurae.sock&quot;</span>;
 
-    <span class="kw">pub </span>server_crt: PathBuf,
-    <span class="kw">pub </span>server_key: PathBuf,
-    <span class="kw">pub </span>socket: PathBuf,
+<span class="doccomment">/// Each instance of Aurae holds internal state in memory. Below are the</span>
+<span class="doccomment">/// settings which can be configured for a given Aurae daemon instance.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Note: These fields represent file paths and not the actual authentication</span>
+<span class="doccomment">/// material. Each new instance of a subsystem will read these from the local</span>
+<span class="doccomment">/// filesystem at runtime in order to authenticate.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AuraedRuntime</span> {
+    <span class="doccomment">/// Certificate Authority for an organization or mesh of Aurae instances.</span>
+    <span class="kw">pub</span> <span class="ident">ca_crt</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// The signed server X509 certificate for this unique instance.</span>
+    <span class="kw">pub</span> <span class="ident">server_crt</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// The secret key for this unique instance.</span>
+    <span class="kw">pub</span> <span class="ident">server_key</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// Configurable socket path. Defaults to the value of</span>
+    <span class="doccomment">/// `pub const AURAE_SOCK`</span>
+    <span class="kw">pub</span> <span class="ident">socket</span>: <span class="ident">PathBuf</span>,
 }
 
-<span class="kw">impl </span>AuraedRuntime {
-    <span class="kw">pub async fn </span>run(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;<span class="kw">dyn </span>std::error::Error&gt;&gt; {
-        <span class="comment">// Manage the socket permission/groups first\
-        </span><span class="kw">let _ </span>= fs::remove_file(<span class="kw-2">&amp;</span><span class="self">self</span>.socket);
-        <span class="kw">let </span>sock_path = Path::new(<span class="kw-2">&amp;</span><span class="self">self</span>.socket)
-            .parent()
-            .ok_or(<span class="string">&quot;unable to find socket path&quot;</span>)<span class="question-mark">?</span>;
-        tokio::fs::create_dir_all(sock_path).<span class="kw">await</span>.with_context(|| {
+<span class="doccomment">/// Primary daemon structure. Holds state and memory for this instance of</span>
+<span class="doccomment">/// Aurae.</span>
+<span class="kw">impl</span> <span class="ident">AuraedRuntime</span> {
+    <span class="doccomment">/// Starts the runtime loop for the daemon.</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">fs::remove_file</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">socket</span>);
+        <span class="kw">let</span> <span class="ident">sock_path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">socket</span>)
+            .<span class="ident">parent</span>()
+            .<span class="ident">ok_or</span>(<span class="string">&quot;unable to find socket path&quot;</span>)<span class="question-mark">?</span>;
+        <span class="ident">tokio::fs::create_dir_all</span>(<span class="ident">sock_path</span>).<span class="kw">await</span>.<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="macro">format!</span>(
                 <span class="string">&quot;Failed to create directory for socket: {}&quot;</span>,
-                <span class="self">self</span>.socket.display()
+                <span class="self">self</span>.<span class="ident">socket</span>.<span class="ident">display</span>()
             )
         })<span class="question-mark">?</span>;
         <span class="macro">trace!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="self">self</span>);
 
-        <span class="kw">let </span>server_crt =
-            tokio::fs::read(<span class="kw-2">&amp;</span><span class="self">self</span>.server_crt).<span class="kw">await</span>.with_context(|| {
+        <span class="kw">let</span> <span class="ident">server_crt</span> <span class="op">=</span>
+            <span class="ident">tokio::fs::read</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">server_crt</span>).<span class="kw">await</span>.<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Failed to read server certificate: {}&quot;</span>,
-                    <span class="self">self</span>.server_crt.display()
+                    <span class="self">self</span>.<span class="ident">server_crt</span>.<span class="ident">display</span>()
                 )
             })<span class="question-mark">?</span>;
-        <span class="kw">let </span>server_key = tokio::fs::read(<span class="kw-2">&amp;</span><span class="self">self</span>.server_key).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>db_key = server_key.clone();
-        <span class="kw">let </span>server_identity = Identity::from_pem(server_crt, server_key);
+        <span class="kw">let</span> <span class="ident">server_key</span> <span class="op">=</span> <span class="ident">tokio::fs::read</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">server_key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">db_key</span> <span class="op">=</span> <span class="ident">server_key</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">server_identity</span> <span class="op">=</span> <span class="ident">Identity::from_pem</span>(<span class="ident">server_crt</span>, <span class="ident">server_key</span>);
         <span class="macro">info!</span>(<span class="string">&quot;Register Server SSL Identity&quot;</span>);
 
-        <span class="kw">let </span>ca_crt = tokio::fs::read(<span class="kw-2">&amp;</span><span class="self">self</span>.ca_crt).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>ca_crt_pem = Certificate::from_pem(ca_crt.clone());
+        <span class="kw">let</span> <span class="ident">ca_crt</span> <span class="op">=</span> <span class="ident">tokio::fs::read</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ca_crt</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">ca_crt_pem</span> <span class="op">=</span> <span class="ident">Certificate::from_pem</span>(<span class="ident">ca_crt</span>.<span class="ident">clone</span>());
 
-        <span class="kw">let </span>tls = ServerTlsConfig::new()
-            .identity(server_identity)
-            .client_ca_root(ca_crt_pem);
+        <span class="kw">let</span> <span class="ident">tls</span> <span class="op">=</span> <span class="ident">ServerTlsConfig::new</span>()
+            .<span class="ident">identity</span>(<span class="ident">server_identity</span>)
+            .<span class="ident">client_ca_root</span>(<span class="ident">ca_crt_pem</span>);
 
         <span class="macro">info!</span>(<span class="string">&quot;Validating SSL Identity and Root Certificate Authority (CA)&quot;</span>);
 
-        <span class="kw">let </span>sock = UnixListener::bind(<span class="kw-2">&amp;</span><span class="self">self</span>.socket)<span class="question-mark">?</span>;
-        <span class="kw">let </span>sock_stream = UnixListenerStream::new(sock);
+        <span class="kw">let</span> <span class="ident">sock</span> <span class="op">=</span> <span class="ident">UnixListener::bind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">socket</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">sock_stream</span> <span class="op">=</span> <span class="ident">UnixListenerStream::new</span>(<span class="ident">sock</span>);
 
-        <span class="comment">// Run the server concurrently
-        </span><span class="kw">let </span>handle = tokio::spawn(<span class="kw">async </span>{
-            Server::builder()
-                .tls_config(tls)<span class="question-mark">?
-                </span>.add_service(RuntimeServer::new(RuntimeService::default()))
-                .add_service(ObserveServer::new(ObserveService::default()))
-                .add_service(ScheduleExecutableServer::new(
-                    ScheduleExecutableService::default(),
+        <span class="comment">// Run the server concurrently</span>
+        <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">tokio::spawn</span>(<span class="kw">async</span> {
+            <span class="ident">Server::builder</span>()
+                .<span class="ident">tls_config</span>(<span class="ident">tls</span>)<span class="question-mark">?</span>
+                .<span class="ident">add_service</span>(<span class="ident">RuntimeServer::new</span>(<span class="ident">RuntimeService::default</span>()))
+                .<span class="ident">add_service</span>(<span class="ident">ObserveServer::new</span>(<span class="ident">ObserveService::default</span>()))
+                .<span class="ident">add_service</span>(<span class="ident">ScheduleExecutableServer::new</span>(
+                    <span class="ident">ScheduleExecutableService::default</span>(),
                 ))
-                .serve_with_incoming(sock_stream)
-                .<span class="kw">await
-        </span>});
+                .<span class="ident">serve_with_incoming</span>(<span class="ident">sock_stream</span>)
+                .<span class="kw">await</span>
+        });
 
-        <span class="macro">trace!</span>(<span class="string">&quot;Setting socket mode {} -&gt; 766&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.socket.display());
+        <span class="macro">trace!</span>(<span class="string">&quot;Setting socket mode {} -&gt; 766&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">socket</span>.<span class="ident">display</span>());
 
-        <span class="comment">// We set the mode to 766 for the Unix domain socket.
-        // This is what allows non-root users to dial the socket
-        // and authenticate with mTLS.
-        </span>fs::set_permissions(<span class="kw-2">&amp;</span><span class="self">self</span>.socket, fs::Permissions::from_mode(<span class="number">0o766</span>))<span class="question-mark">?</span>;
-        <span class="macro">info!</span>(<span class="string">&quot;User Access Socket Created: {}&quot;</span>, <span class="self">self</span>.socket.display());
+        <span class="comment">// We set the mode to 766 for the Unix domain socket.</span>
+        <span class="comment">// This is what allows non-root users to dial the socket</span>
+        <span class="comment">// and authenticate with mTLS.</span>
+        <span class="ident">fs::set_permissions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">socket</span>, <span class="ident">fs::Permissions::from_mode</span>(<span class="number">0o766</span>))<span class="question-mark">?</span>;
+        <span class="macro">info!</span>(<span class="string">&quot;User Access Socket Created: {}&quot;</span>, <span class="self">self</span>.<span class="ident">socket</span>.<span class="ident">display</span>());
 
-        <span class="comment">// SQLite
-        </span><span class="macro">info!</span>(<span class="string">&quot;Database Location:  /var/lib/aurae.db&quot;</span>);
-        <span class="macro">info!</span>(<span class="string">&quot;Unlocking SQLite Database with Key: {:?}&quot;</span>, <span class="self">self</span>.server_key);
-        <span class="kw">let </span><span class="kw-2">mut </span>opt =
-            ConnectOptions::new(<span class="string">&quot;sqlite:/var/lib/aurae.db&quot;</span>.to_owned());
-        opt.sqlx_logging(<span class="bool-val">false</span>).sqlcipher_key(Cow::from(<span class="macro">format!</span>(
+        <span class="comment">// SQLite</span>
+        <span class="macro">info!</span>(<span class="string">&quot;Database Location:  /var/lib/aurae.db&quot;</span>);
+        <span class="macro">info!</span>(<span class="string">&quot;Unlocking SQLite Database with Key: {:?}&quot;</span>, <span class="self">self</span>.<span class="ident">server_key</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">opt</span> <span class="op">=</span>
+            <span class="ident">ConnectOptions::new</span>(<span class="string">&quot;sqlite:/var/lib/aurae.db&quot;</span>.<span class="ident">to_owned</span>());
+        <span class="ident">opt</span>.<span class="ident">sqlx_logging</span>(<span class="bool-val">false</span>).<span class="ident">sqlcipher_key</span>(<span class="ident">Cow::from</span>(<span class="macro">format!</span>(
             <span class="string">&quot;{:?}&quot;</span>,
-            db_key.to_ascii_lowercase()
+            <span class="ident">db_key</span>.<span class="ident">to_ascii_lowercase</span>()
         )));
 
-        <span class="comment">// Pragma initial connection
-        </span><span class="kw">let </span><span class="kw-2">mut </span>opt = ConnectOptions::new(<span class="string">&quot;sqlite::memory:&quot;</span>.to_owned());
-        opt.sqlx_logging(<span class="bool-val">false</span>); <span class="comment">// TODO add sqlcipher_key
-        </span><span class="kw">let </span>db = Database::connect(opt).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>x = db
-            .execute(Statement::from_string(
-                db.get_database_backend(),
-                <span class="string">&quot;PRAGMA database_list;&quot;</span>.to_string(),
+        <span class="comment">// Pragma initial connection</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">opt</span> <span class="op">=</span> <span class="ident">ConnectOptions::new</span>(<span class="string">&quot;sqlite::memory:&quot;</span>.<span class="ident">to_owned</span>());
+        <span class="ident">opt</span>.<span class="ident">sqlx_logging</span>(<span class="bool-val">false</span>); <span class="comment">// TODO add sqlcipher_key</span>
+        <span class="kw">let</span> <span class="ident">db</span> <span class="op">=</span> <span class="ident">Database::connect</span>(<span class="ident">opt</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">db</span>
+            .<span class="ident">execute</span>(<span class="ident">Statement::from_string</span>(
+                <span class="ident">db</span>.<span class="ident">get_database_backend</span>(),
+                <span class="string">&quot;PRAGMA database_list;&quot;</span>.<span class="ident">to_string</span>(),
             ))
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="macro">info!</span>(<span class="string">&quot;Initializing: SQLite: {:?}&quot;</span>, x);
+        <span class="macro">info!</span>(<span class="string">&quot;Initializing: SQLite: {:?}&quot;</span>, <span class="ident">x</span>);
 
-        <span class="comment">//runtime::hydrate(&amp;db).await?;
-
-        // Event loop
-        </span>handle.<span class="kw">await</span><span class="question-mark">??</span>;
+        <span class="comment">// Event loop</span>
+        <span class="ident">handle</span>.<span class="kw">await</span><span class="question-mark">?</span><span class="question-mark">?</span>;
         <span class="macro">info!</span>(<span class="string">&quot;gRPC server exited successfully&quot;</span>);
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">pub fn </span>command_from_string(cmd: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Command, anyhow::Error&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>entries = cmd.split(<span class="string">&#39; &#39;</span>);
-    <span class="kw">let </span>base = <span class="kw">match </span>entries.next() {
-        <span class="prelude-val">Some</span>(base) =&gt; base,
-        <span class="prelude-val">None </span>=&gt; {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;empty base command string&quot;</span>));
+<span class="kw">fn</span> <span class="ident">command_from_string</span>(<span class="ident">cmd</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Command</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">split</span>(<span class="string">&#39; &#39;</span>);
+    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">entries</span>.<span class="ident">next</span>() {
+        <span class="prelude-val">Some</span>(<span class="ident">base</span>) =&gt; <span class="ident">base</span>,
+        <span class="prelude-val">None</span> =&gt; {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;empty base command string&quot;</span>));
         }
     };
-    <span class="kw">let </span><span class="kw-2">mut </span>command = Command::new(base);
-    <span class="kw">for </span>ent <span class="kw">in </span>entries {
-        <span class="kw">if </span>ent != base {
-            command.arg(ent);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">command</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="ident">base</span>);
+    <span class="kw">for</span> <span class="ident">ent</span> <span class="kw">in</span> <span class="ident">entries</span> {
+        <span class="kw">if</span> <span class="ident">ent</span> <span class="op">!</span><span class="op">=</span> <span class="ident">base</span> {
+            <span class="ident">command</span>.<span class="ident">arg</span>(<span class="ident">ent</span>);
         }
     }
-    <span class="prelude-val">Ok</span>(command)
+    <span class="prelude-val">Ok</span>(<span class="ident">command</span>)
 }
 
-<span class="attribute">#[cfg(test)]
-</span><span class="kw">mod </span>tests {
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[test]
-    </span><span class="kw">fn </span>test_socket_path() {
-        <span class="macro">assert_eq!</span>(AURAE_SOCK, <span class="string">&quot;/var/run/aurae/aurae.sock&quot;</span>);
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_socket_path</span>() {
+        <span class="macro">assert_eq!</span>(<span class="ident">AURAE_SOCK</span>, <span class="string">&quot;/var/run/aurae/aurae.sock&quot;</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

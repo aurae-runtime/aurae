@@ -43,6 +43,12 @@ fn main() -> Result<()> {
 fn generate_grpc_code() -> Result<()> {
     let mut tonic_builder = tonic_build::configure();
 
+    // Generated services use unwrap. Add them here to suppress the warning.
+    for service in ["meta", "observe", "runtime", "schedule"] {
+        tonic_builder =
+            tonic_builder.server_attribute(service, "#[allow(missing_docs)]");
+    }
+
     // Types generated from proto messages derive PartialEq without Eq. Add them here to suppress the warning.
     for message in [
         "meta.AuraeMeta",
