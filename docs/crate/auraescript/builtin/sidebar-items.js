@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["about",""],["version",""]],"mod":[["client",""],["codes",""],["config",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["about","Show meta information about AuraeScript."],["version","Show version information."]],"mod":[["client","An internally scoped rust client specific for AuraeScript."],["codes","Transaction codes for AuraeScript."],["config","Configuration used to authenticate with a remote Aurae daemon."]]};

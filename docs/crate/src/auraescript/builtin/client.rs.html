@@ -184,6 +184,30 @@
 <span id="178">178</span>
 <span id="179">179</span>
 <span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -214,6 +238,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */</span>
 
+<span class="doccomment">//! An internally scoped rust client specific for AuraeScript.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Manages authenticating with remove Aurae instances, as well as searching</span>
+<span class="doccomment">//! the local filesystem for configuration and authentication material.</span>
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codes</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe</span>::<span class="kw-2">*</span>;
@@ -234,8 +263,10 @@
 
 <span class="comment">// TODO @kris-nova Once we have built out more client logic and we are confident this module is &quot;good enough&quot; come remove unwrap() statements</span>
 
+<span class="doccomment">/// Instance of a single client for an Aurae consumer.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AuraeClient</span> {
+    <span class="doccomment">/// The channel used for gRPC connections before encryption is handled.</span>
     <span class="kw">pub</span> <span class="ident">channel</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Channel</span><span class="op">&gt;</span>,
     <span class="ident">x509</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">X509Certificate</span><span class="op">&gt;</span>,
     <span class="ident">x509_details</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">X509Details</span><span class="op">&gt;</span>,
@@ -248,6 +279,9 @@
 }
 
 <span class="kw">impl</span> <span class="ident">AuraeClient</span> {
+    <span class="doccomment">/// Create a new AuraeClient.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Note: A new client is required for every independent execution of this process.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">channel</span>: <span class="prelude-val">None</span>, <span class="ident">x509</span>: <span class="prelude-val">None</span>, <span class="ident">x509_details</span>: <span class="prelude-val">None</span> }
     }
@@ -274,18 +308,22 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Initialize a new instance of the runtime subsystem.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">runtime</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Runtime</span> {
         <span class="ident">Runtime::new</span>()
     }
 
+    <span class="doccomment">/// Initialize a new instance of the observe subsystem.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">observe</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Observe</span> {
         <span class="ident">Observe::new</span>()
     }
 
+    <span class="doccomment">/// Initialize a new instance of the schedule_executable subsystem.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schedule_executable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">ScheduleExecutable</span> {
         <span class="ident">ScheduleExecutable::new</span>()
     }
 
+    <span class="doccomment">/// Convenience method for identifying the current service or client.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">info</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">X509Details</span> {
         <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x509_details</span>.<span class="ident">as_ref</span>();
         <span class="kw">match</span> <span class="ident">x</span> {
@@ -300,20 +338,29 @@
     }
 }
 
+<span class="doccomment">/// An in-memory representation of an X509 identity, and its meta data.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Output</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">X509Details</span> {
+    <span class="doccomment">/// From the SSL spec, the subject common name.</span>
     <span class="kw">pub</span> <span class="ident">subject_common_name</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// From the SSL spec, the issuer common name.</span>
     <span class="kw">pub</span> <span class="ident">issuer_common_name</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// From the SSL spec, the sha256 sum fingerprint of the material.</span>
     <span class="kw">pub</span> <span class="ident">sha256_fingerprint</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// From the SSL spec, the algorithm used for encryption.</span>
     <span class="kw">pub</span> <span class="ident">key_algorithm</span>: <span class="ident">String</span>,
 }
 
+<span class="doccomment">/// Higher order identity structure.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientIdentity</span> {
+    <span class="doccomment">/// Channel used for connecting to a remote Aurae instance.</span>
     <span class="kw">pub</span> <span class="ident">channel</span>: <span class="ident">Channel</span>,
+    <span class="doccomment">/// Service identity.</span>
     <span class="ident">x509</span>: <span class="ident">X509Certificate</span>,
 }
 
+<span class="doccomment">/// Create a new instance of an Aurae client.</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new_client</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientIdentity</span>, <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>
 {
     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">default_config</span>()<span class="question-mark">?</span>;
@@ -353,6 +400,7 @@
     })
 }
 
+<span class="doccomment">/// Connect to a remote Aurae instance.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connect</span>() -&gt; <span class="ident">AuraeClient</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span>
         <span class="ident">AuraeClient</span> { <span class="ident">channel</span>: <span class="prelude-val">None</span>, <span class="ident">x509</span>: <span class="prelude-val">None</span>, <span class="ident">x509_details</span>: <span class="prelude-val">None</span> };

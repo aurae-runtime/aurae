@@ -80,6 +80,12 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -109,6 +115,11 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */</span>
+
+<span class="doccomment">//! Run the Aurae daemon as a pid 1 init program.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The Aurae daemon assumes that if the current process id (PID) is 1 to</span>
+<span class="doccomment">//! run itself as an initialization program, otherwise bypass the init module.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::fs::FsError</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::logging::LoggingError</span>;
@@ -142,6 +153,7 @@
     <span class="ident">Fs</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">FsError</span>),
 }
 
+<span class="doccomment">/// Run Aurae as an init pid 1 instance.</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">logger_level</span>: <span class="ident">Level</span>) {
     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">std::process::id</span>() {
         <span class="number">0</span> =&gt; <span class="macro">unreachable!</span>(

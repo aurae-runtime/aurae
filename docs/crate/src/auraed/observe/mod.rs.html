@@ -57,6 +57,7 @@
 <span id="51">51</span>
 <span id="52">52</span>
 <span id="53">53</span>
+<span id="54">54</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -93,6 +94,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe::observe_server::Observe</span>;
 <span class="kw">use</span> <span class="ident">tonic</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">Status</span>};
 
+<span class="doccomment">/// The server side implementation of the Observe subsystem.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ObserveService</span> {}
 

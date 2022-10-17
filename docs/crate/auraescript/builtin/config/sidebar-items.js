@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["default_config",""],["parse_aurae_config",""]],"struct":[["AuraeConfig",""],["Auth",""],["System",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["default_config","Attempt to easy-load Aurae configuration from well-known locations."],["parse_aurae_config","Attempt to parse a config file into memory."]],"struct":[["AuraeConfig","Configuration for AuraeScript client"],["Auth","Authentication material for an AuraeScript client."],["System","The system configuration for AuraeScript."]]};

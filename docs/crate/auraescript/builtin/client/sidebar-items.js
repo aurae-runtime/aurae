@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["connect",""],["new_client",""]],"struct":[["AuraeClient",""],["ClientIdentity",""],["X509Details",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["connect","Connect to a remote Aurae instance."],["new_client","Create a new instance of an Aurae client."]],"struct":[["AuraeClient","Instance of a single client for an Aurae consumer."],["ClientIdentity","Higher order identity structure."],["X509Details","An in-memory representation of an X509 identity, and its meta data."]]};

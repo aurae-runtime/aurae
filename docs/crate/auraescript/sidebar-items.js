@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["register_stdlib",""]],"mod":[["builtin",""],["meta",""],["observe",""],["runtime",""],["schedule",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["register_stdlib","AuraeScript Standard Library."]],"mod":[["builtin","The builtin functionality for AuraeScript."],["meta",""],["observe",""],["runtime",""],["schedule",""]]};

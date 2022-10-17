@@ -148,6 +148,80 @@
 <span id="142">142</span>
 <span id="143">143</span>
 <span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -178,10 +252,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */</span>
 
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::unwrap_used</span>)]</span>
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_doc_code_examples</span>)]</span>
+<span class="doccomment">//! An interpreted infrastructure language built for enterprise platform teams.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! AuraeScript is an opinionated and Turing complete client language for an</span>
+<span class="doccomment">//! Aurae server. AuraeScript is an alternative to templated YAML for teams</span>
+<span class="doccomment">//! to express their applications.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The AuraeScript definition lives in this crate library (lib.rs).</span>
 
+<span class="comment">// The project prefers .expect(&quot;reason&quot;) instead of .unwrap() so we fail</span>
+<span class="comment">// on any .unwrap() statements in the code.</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::unwrap_used</span>)]</span>
+
+<span class="comment">// AuraeScript has a high expectation for documentation in this library as it</span>
+<span class="comment">// is used for the scripting language docs directly.</span>
+<span class="attribute">#[<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">builtin</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">meta</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">observe</span>;
@@ -196,27 +281,73 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule</span>::<span class="kw-2">*</span>;
 
+<span class="doccomment">/// AuraeScript Standard Library.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The main definition of functions, objects, types, methods, and values</span>
+<span class="doccomment">/// for the entire AuraeScript library.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A large portion of this library is plumbed through from the gRPC client.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// An important note for this library is that it is not &quot;1-to-1&quot; with the</span>
+<span class="doccomment">/// gRPC client.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// There are carefully chosen subtle and semantic differences in how various</span>
+<span class="doccomment">/// parts of the Aurae Standard Library are exposed with AuraeScript.</span>
+<span class="doccomment">/// The philosophy is to keep the library beautiful, and simple.</span>
+<span class="doccomment">/// We prefer name() or meaningful_verbose_name()</span>
+<span class="doccomment">/// We prefer exec() over executable()</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Each function in here must be heavily scrutinized as we will need to</span>
+<span class="doccomment">/// maintain some semblance of backward compatability over time.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_stdlib</span>(<span class="kw-2">mut</span> <span class="ident">engine</span>: <span class="ident">Engine</span>) -&gt; <span class="ident">Engine</span> {
     <span class="ident">engine</span>
+        <span class="comment">// about function</span>
         <span class="comment">//</span>
-        <span class="comment">// [Functions]</span>
+        <span class="comment">// Reserved function name to share information about the current</span>
+        <span class="comment">// client interpreter.</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;about&quot;</span>, <span class="ident">about</span>)
+        <span class="comment">// connect function</span>
+        <span class="comment">//</span>
+        <span class="comment">// Opinionated function that will attempt to look up configuration</span>
+        <span class="comment">// according to the semantics defined in the configuration module.</span>
+        <span class="comment">// This function will load the system configuration that is available</span>
+        <span class="comment">// in well known locations, or it will fail with a non-JSON error!</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;connect&quot;</span>, <span class="ident">connect</span>)
+        <span class="comment">// AuraeClient type</span>
         <span class="comment">//</span>
-        <span class="comment">//</span>
-        <span class="comment">// [Object] AuraeClient</span>
+        <span class="comment">// Returned from connect() and is the pointer to the client which</span>
+        <span class="comment">// can be used to initialize subsystems with Aurae.</span>
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">AuraeClient</span><span class="op">&gt;</span>(<span class="string">&quot;AuraeClient&quot;</span>)
+        <span class="comment">// AuraeClient.info function</span>
+        <span class="comment">//</span>
+        <span class="comment">// Used to show information about a specific client.</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;info&quot;</span>, <span class="ident">AuraeClient::info</span>)
+        <span class="comment">// X509Details type</span>
+        <span class="comment">//</span>
+        <span class="comment">// Identity and mTLS details.</span>
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">X509Details</span><span class="op">&gt;</span>(<span class="string">&quot;X509Details&quot;</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;json&quot;</span>, <span class="ident">X509Details::json</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;raw&quot;</span>, <span class="ident">X509Details::raw</span>)
+        <span class="comment">// Runtime type</span>
         <span class="comment">//</span>
-        <span class="comment">// [Subsystem] Runtime</span>
+        <span class="comment">// The runtime subsystem with corresponding methods.</span>
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">Runtime</span><span class="op">&gt;</span>(<span class="string">&quot;Runtime&quot;</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;runtime&quot;</span>, <span class="ident">AuraeClient::runtime</span>)
-        <span class="comment">// [Object] Executable</span>
+        <span class="comment">// Executable type</span>
+        <span class="comment">//</span>
+        <span class="comment">// An executable which can be started, stopped, or scheduled.</span>
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">Executable</span><span class="op">&gt;</span>(<span class="string">&quot;Executable&quot;</span>)
+        <span class="comment">// exec function</span>
+        <span class="comment">//</span>
+        <span class="comment">// Most efficient way to execute a command with Aurae. Wraps up</span>
+        <span class="comment">// the runtime subsystem, and cmd setting into a single alias.</span>
+        <span class="comment">// Execute the argument string synchronously without any other</span>
+        <span class="comment">// code required.</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;exec&quot;</span>, <span class="ident">exec</span>)
+        <span class="comment">// cmd function</span>
+        <span class="comment">//</span>
+        <span class="comment">// Create an instance of an Executable type with an argument</span>
+        <span class="comment">// command string. Can be passed to various subsystems.</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;cmd&quot;</span>, <span class="ident">cmd</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;json&quot;</span>, <span class="ident">Executable::json</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;raw&quot;</span>, <span class="ident">Executable::raw</span>)
@@ -230,20 +361,32 @@
             <span class="ident">Executable::get_comment</span>,
             <span class="ident">Executable::set_comment</span>,
         )
+        <span class="comment">// ExecutableStatus type</span>
         <span class="comment">//</span>
-        <span class="comment">// [Object] ExecutableStatus</span>
+        <span class="comment">// Response with the status of a given Executable back from an Aurae server.</span>
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">ExecutableStatus</span><span class="op">&gt;</span>(<span class="string">&quot;ExecutableStatus&quot;</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;json&quot;</span>, <span class="ident">ExecutableStatus::json</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;raw&quot;</span>, <span class="ident">ExecutableStatus::raw</span>)
+        <span class="comment">// Runtime.exec function</span>
         <span class="comment">//</span>
-        <span class="comment">// [Function] Exec</span>
-        .<span class="ident">register_fn</span>(<span class="string">&quot;exec&quot;</span>, <span class="ident">Runtime::exec</span>) <span class="comment">// alias</span>
+        <span class="comment">// Longer version of exec. Accepts an Executable type as an argument.</span>
+        .<span class="ident">register_fn</span>(<span class="string">&quot;exec&quot;</span>, <span class="ident">Runtime::exec</span>)
+        <span class="comment">// ScheduleExecutable type</span>
         <span class="comment">//</span>
-        <span class="comment">// [Subsystem] ScheduleExecutable</span>
+        <span class="comment">// The ScheduleExecutable subsystem.</span>
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">ScheduleExecutable</span><span class="op">&gt;</span>(<span class="string">&quot;ScheduleExecutable&quot;</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;schedule_executable&quot;</span>, <span class="ident">AuraeClient::schedule_executable</span>)
+        <span class="comment">// ScheduleExecutable.enable function</span>
+        <span class="comment">//</span>
+        <span class="comment">// Enable an Executable type{} to always run on the system.</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;enable&quot;</span>, <span class="ident">ScheduleExecutable::enable</span>)
+        <span class="comment">// ScheduleExecutable.disable function</span>
+        <span class="comment">//</span>
+        <span class="comment">// Disable an Executable type{} to not run on the system.</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;disable&quot;</span>, <span class="ident">ScheduleExecutable::disable</span>)
+        <span class="comment">// ScheduleExecutable.destroy function</span>
+        <span class="comment">//</span>
+        <span class="comment">// Destroy an Executable type{} from the system record.</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;destroy&quot;</span>, <span class="ident">ScheduleExecutable::destroy</span>)
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">ExecutableEnableResponse</span><span class="op">&gt;</span>(
             <span class="string">&quot;ExecutableEnableResponse&quot;</span>,
@@ -260,16 +403,21 @@
         )
         .<span class="ident">register_fn</span>(<span class="string">&quot;json&quot;</span>, <span class="ident">ExecutableDestroyResponse::json</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;raw&quot;</span>, <span class="ident">ExecutableDestroyResponse::raw</span>)
+        <span class="comment">// Observe type</span>
         <span class="comment">//</span>
-        <span class="comment">// [Subsystem] Observe</span>
+        <span class="comment">// The observe subsystem.</span>
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">Observe</span><span class="op">&gt;</span>(<span class="string">&quot;Observe&quot;</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;observe&quot;</span>, <span class="ident">AuraeClient::observe</span>)
+        <span class="comment">// Observe.status function</span>
+        <span class="comment">//</span>
+        <span class="comment">// Retrieve total system status metrics.</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;status&quot;</span>, <span class="ident">Observe::status</span>)
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">StatusResponse</span><span class="op">&gt;</span>(<span class="string">&quot;StatusResponse&quot;</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;json&quot;</span>, <span class="ident">StatusResponse::json</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;raw&quot;</span>, <span class="ident">StatusResponse::raw</span>)
+        <span class="comment">// version function</span>
         <span class="comment">//</span>
-        <span class="comment">// Version</span>
+        <span class="comment">// The Aurae version running on</span>
         .<span class="ident">register_fn</span>(<span class="string">&quot;version&quot;</span>, <span class="ident">version</span>);
 
     <span class="ident">engine</span>

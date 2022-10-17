@@ -315,7 +315,67 @@
 <span id="309">309</span>
 <span id="310">310</span>
 <span id="311">311</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+</pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *                                                                            *
+ *                +--------------------------------------------+              *
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * -------------------------------------------------------------------------- *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+\* -------------------------------------------------------------------------- */</span>
+
+<span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
 <span class="kw">use</span> <span class="ident">proc_macro2::Ident</span>;
 <span class="kw">use</span> <span class="ident">quote</span>::{<span class="ident">quote</span>, <span class="ident">ToTokens</span>};
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;

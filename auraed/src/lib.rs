@@ -43,7 +43,7 @@
 
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
-#![warn(missing_doc_code_examples)]
+#![warn(rustdoc::missing_doc_code_examples)]
 
 use anyhow::anyhow;
 use anyhow::Context;

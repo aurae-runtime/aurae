@@ -105,6 +105,9 @@
 <span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -146,6 +149,9 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">command_from_string</span>, <span class="ident">meta</span>};
 <span class="kw">use</span> <span class="ident">tonic</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">Status</span>};
 
+<span class="doccomment">/// Schedule executables in a similar fashion to systemd.</span>
+<span class="doccomment">/// Persist state against an instance of Aurae and configure</span>
+<span class="doccomment">/// executables to run under various criteria.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ScheduleExecutableService</span> {}
 
