@@ -44,11 +44,12 @@ enum LogChannelType {
 service Observe {
 
   rpc Status(StatusRequest) returns (StatusResponse) {}
-    // request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
-    rpc GetAuraeDaemonLogStream(GetAuraeDaemonLogStreamRequest) returns (stream LogItem) {}
 
-    // TODO: request log stream for a sub process
-    rpc GetSubProcessStream(GetSubProcessStreamRequest) returns (stream LogItem) {}
+  // request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
+  rpc GetAuraeDaemonLogStream(GetAuraeDaemonLogStreamRequest) returns (stream LogItem) {}
+
+  // TODO: request log stream for a sub process
+  rpc GetSubProcessStream(GetSubProcessStreamRequest) returns (stream LogItem) {}
 
 }
 
@@ -66,11 +67,11 @@ message GetAuraeDaemonLogStreamRequest {
 // TODO: not implemented
 message GetSubProcessStreamRequest {
   LogChannelType channel_type = 1;
-  uint64 process_id = 2;
+  int64 process_id = 2;
 }
 
 message LogItem {
   string channel = 1;
   string line = 2;
-  uint64 timestamp = 3;
+  int64 timestamp = 3;
 }

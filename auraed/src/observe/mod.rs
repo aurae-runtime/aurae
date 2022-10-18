@@ -28,24 +28,20 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-tonic::include_proto!("observe");
+// @todo @krisnova remove this once logging is futher along
+#![allow(dead_code)]
 
-use std::thread;
+tonic::include_proto!("observe");
 
 use crate::meta;
 use crate::observe::observe_server::Observe;
-use tonic::{Request, Response, Status};
-
+use crossbeam::channel::Receiver;
 use futures::executor::block_on;
-use log::error;
 use log::info;
-use log::trace;
-use log::Log;
-
-use crossbeam::channel::{unbounded, Receiver, Sender};
-
+use std::thread;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
+use tonic::{Request, Response, Status};
 
 /// The server side implementation of the Observe subsystem.
 #[derive(Debug, Clone)]
@@ -96,7 +92,7 @@ impl Observe for ObserveService {
             for i in log_consumer.into_iter() {
                 if block_on(tx.send(Ok(i))).is_err() {
                     // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
-                    //  .. thus disabled logging here. 
+                    //  .. thus disabled logging here.
                 }
             }
         });
@@ -115,7 +111,7 @@ impl Observe for ObserveService {
         println!("Requested Channel {}", requested_channel);
         println!("Requested Process ID {}", requested_pid);
 
-        let (tx, rx) = mpsc::channel::<Result<LogItem, Status>>(4);
+        let (_tx, rx) = mpsc::channel::<Result<LogItem, Status>>(4);
 
         Ok(Response::new(ReceiverStream::new(rx)))
     }

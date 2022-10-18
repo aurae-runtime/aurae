@@ -28,15 +28,14 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crossbeam::channel::{unbounded, Receiver, Sender};
-use log::Log;
-
 use crate::observe::LogItem;
+use crossbeam::channel::Sender;
+use log::Log;
 
 /// Sends log messages generated in rust code to the logging channel
 /// The logging channel is consumed by the observe API
 pub struct StreamLogger {
-    /// Channel used to send log messages to grpc API 
+    /// Channel used to send log messages to grpc API
     pub producer: Sender<LogItem>,
 }
 

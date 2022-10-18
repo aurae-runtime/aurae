@@ -28,11 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use std::time::SystemTime;
-
+// @todo @krisnova remove this once logging is futher along
+#![allow(dead_code)]
+//
 use crate::observe::LogItem;
 use crossbeam::channel::{bounded, Receiver, Sender};
-use log::{error, trace};
+use log::error;
 
 use super::get_timestamp_sec;
 
@@ -48,7 +49,7 @@ pub struct LogChannel {
 impl LogChannel {
     /// Constructor creating the channel for log communication
     pub fn new(name: &str) -> LogChannel {
-        // TODO: decide for a cap. 40 is arbitrary 
+        // TODO: decide for a cap. 40 is arbitrary
         let (producer, consumer) = bounded(40);
         LogChannel { producer, consumer, name: name.to_string() }
     }
@@ -78,15 +79,13 @@ impl LogChannel {
     }
 
     // Receives a message from the channel
-    // multiple consumer possible 
+    // multiple consumer possible
     fn consume_line(consumer: Receiver<LogItem>) -> Option<LogItem> {
         match consumer.recv() {
-            Ok(val) => {
-                return Some(val);
-            }
+            Ok(val) => Some(val),
             Err(e) => {
                 error!("Error: {:?}", e);
-                return None;
+                None
             }
         }
     }
@@ -94,10 +93,9 @@ impl LogChannel {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use log::Level;
     use simplelog::SimpleLogger;
-
-    use super::*;
 
     fn init_logging() {
         let logger_simple = SimpleLogger::new(

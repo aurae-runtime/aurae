@@ -55,6 +55,9 @@ fn generate_grpc_code() -> Result<()> {
         "meta.ProcessMeta",
         "runtime.Executable",
         "runtime.ExecutableStatus",
+        "observe.GetAuraeDaemonLogStreamRequest",
+        "observe.GetSubProcessStreamRequest",
+        "observe.LogItem",
     ] {
         tonic_builder = tonic_builder.type_attribute(
             message,

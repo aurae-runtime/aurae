@@ -28,21 +28,23 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use std::{os::unix, time::SystemTime};
+//! Internal logging system for Auraed and all spawned Executables, Containers
+//! and Instances.
 
+use std::time::SystemTime;
 
 /// Abstraction Layer for one log generating entity
 /// LogChannel provides channels between Log producers and log consumers
 pub mod logchannel;
 
-/// Implements Log trait. Used to add grpc API to log targets for rust internal logging 
+/// Implements Log trait. Used to add grpc API to log targets for rust internal logging
 pub mod streamlogger;
 
 /// Get UNIX timestamp in seconds for logging
-pub fn get_timestamp_sec() -> u64 {
+pub fn get_timestamp_sec() -> i64 {
     let unix_ts = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("System Clock went backwards");
 
-    unix_ts.as_secs()
+    unix_ts.as_secs() as i64
 }
