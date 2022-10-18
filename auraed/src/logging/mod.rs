@@ -28,7 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use std::{os::unix, time::SystemTime};
+//! Internal logging system for Auraed and all spawned Executables, Containers
+//! and Instances.
+
+use std::time::SystemTime;
 
 /// Abstraction Layer for one log generating entity
 /// LogChannel provides channels between Log producers and log consumers

@@ -149,7 +149,7 @@ impl AuraedRuntime {
         let sock = UnixListener::bind(&self.socket)?;
         let sock_stream = UnixListenerStream::new(sock);
         let consumer = self.log_collector.get_consumer();
-        let prod = self.log_collector.get_producer();
+        let _ = self.log_collector.get_producer();
 
         // Run the server concurrently
         let handle = tokio::spawn(async {
