@@ -47,21 +47,23 @@
         patterns_in_fns_without_body,
         private_in_public,
         unconditional_recursion,
-        unused,
-        unused_allocation,
-        unused_comparisons,
-        unused_parens,
-        while_true)]
+        // TODO: unused,
+        // TODO: unused_allocation,
+        // TODO: unused_comparisons,
+        // TODO: unused_parens,
+        while_true
+        )]
 
-#![deny(missing_copy_implementations,
-        missing_debug_implementations,
-        missing_docs,
-        trivial_casts,
+#![deny(// TODO: missing_copy_implementations,
+        // TODO: missing_debug_implementations,
+        // TODO: missing_docs,
+        // TODO: trivial_casts,
         trivial_numeric_casts,
-        unused_extern_crates,
-        unused_import_braces,
-        unused_qualifications,
-        unused_results)]
+        // TODO: unused_extern_crates,
+        // TODO: unused_import_braces,
+        // TODO: unused_qualifications,
+        // TODO: unused_results
+        )]
 
 // The project prefers .expect("reason") instead of .unwrap() so we fail
 // on any .unwrap() statements in the code.
@@ -102,7 +104,7 @@ use crate::schedule::*;
 ///
 /// Each function in here must be heavily scrutinized as we will need to
 /// maintain some semblance of backward compatability over time.
-pub fn register_stdlib(mut engine: Engine) -> Engine {
+pub fn register_stdlib(engine: &mut Engine) -> &mut Engine {
     engine
         // about function
         //
@@ -221,9 +223,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         // version function
         //
         // The Aurae version running on
-        .register_fn("version", version);
-
-    engine
+        .register_fn("version", version)
 }
 
 #[cfg(test)]
