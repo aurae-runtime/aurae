@@ -104,7 +104,7 @@ use crate::schedule::*;
 ///
 /// Each function in here must be heavily scrutinized as we will need to
 /// maintain some semblance of backward compatability over time.
-pub fn register_stdlib(engine: &mut Engine) -> &mut Engine {
+pub fn register_stdlib(mut engine: Engine) -> Engine {
     engine
         // about function
         //
@@ -223,7 +223,9 @@ pub fn register_stdlib(engine: &mut Engine) -> &mut Engine {
         // version function
         //
         // The Aurae version running on
-        .register_fn("version", version)
+        .register_fn("version", version);
+
+    engine
 }
 
 #[cfg(test)]

@@ -120,7 +120,7 @@ fn main() {
         engine.set_optimization_level(rhai::OptimizationLevel::Simple);
 
         // Load builtin engine components
-        register_stdlib(&mut engine);
+        engine = register_stdlib(engine);
 
         let mut f = match File::open(&filename) {
             Err(err) => {
