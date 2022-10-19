@@ -41,6 +41,35 @@
 //!
 //! [`The Aurae Standard Library`]: https://aurae.io/stdlib
 
+#![deny(bad_style,
+        const_err,
+        dead_code,
+        improper_ctypes,
+        non_shorthand_field_patterns,
+        no_mangle_generic_items,
+        overflowing_literals,
+        path_statements,
+        patterns_in_fns_without_body,
+        private_in_public,
+        unconditional_recursion,
+        // TODO: unused,
+        // TODO: unused_allocation,
+        // TODO: unused_comparisons,
+        // TODO: unused_parens,
+        while_true
+        )]
+
+#![deny(// TODO: missing_copy_implementations,
+        // TODO: missing_debug_implementations,
+        // TODO: missing_docs,
+        // TODO: trivial_casts,
+        trivial_numeric_casts,
+        // TODO: unused_extern_crates,
+        // TODO: unused_import_braces,
+        // TODO: unused_qualifications,
+        // TODO: unused_results
+        )]
+
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]

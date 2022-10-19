@@ -104,8 +104,10 @@ pub fn parse_aurae_config(path: String) -> Result<AuraeConfig> {
     let mut config_toml = String::new();
     let mut file = File::open(&path)?;
 
-    file.read_to_string(&mut config_toml)
-        .with_context(|| "could not read AuraeConfig toml")?;
+    if file.read_to_string(&mut config_toml)
+           .with_context(|| "could not read AuraeConfig toml")? == 0 {
+        return Err(anyhow!("empty config"));
+    }
 
     Ok(toml::from_str(&config_toml)?)
 }
