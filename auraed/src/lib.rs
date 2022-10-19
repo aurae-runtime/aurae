@@ -41,6 +41,7 @@
 //!
 //! [`The Aurae Standard Library`]: https://aurae.io/stdlib
 
+#![deny(warnings)]
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]

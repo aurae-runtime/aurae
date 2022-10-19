@@ -36,6 +36,8 @@
 //!
 //! The AuraeScript definition lives in this crate library (lib.rs).
 
+#![deny(warnings)]
+
 // The project prefers .expect("reason") instead of .unwrap() so we fail
 // on any .unwrap() statements in the code.
 #![warn(clippy::unwrap_used)]
