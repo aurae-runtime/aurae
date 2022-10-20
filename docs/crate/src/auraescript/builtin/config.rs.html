@@ -115,6 +115,8 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -221,8 +223,10 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config_toml</span> <span class="op">=</span> <span class="ident">String::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)<span class="question-mark">?</span>;
 
-    <span class="ident">file</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">config_toml</span>)
-        .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;could not read AuraeConfig toml&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">if</span> <span class="ident">file</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">config_toml</span>)
+           .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;could not read AuraeConfig toml&quot;</span>)<span class="question-mark">?</span> <span class="op">==</span> <span class="number">0</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;empty config&quot;</span>));
+    }
 
     <span class="prelude-val">Ok</span>(<span class="ident">toml::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">config_toml</span>)<span class="question-mark">?</span>)
 }

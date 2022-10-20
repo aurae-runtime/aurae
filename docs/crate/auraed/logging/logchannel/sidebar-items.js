@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["LogChannel","Abstraction Layer for one log generating entity LogChannel provides channels between Log producers and log consumers"]]};

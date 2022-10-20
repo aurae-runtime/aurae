@@ -206,12 +206,30 @@
 <span id="200">200</span>
 <span id="201">201</span>
 <span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::network</span>::{
     <span class="ident">add_address</span>, <span class="ident">add_route_v6</span>, <span class="ident">set_link_up</span>, <span class="ident">show_network_info</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::power::spawn_thread_power_button_listener</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init</span>::{<span class="ident">fs</span>, <span class="ident">logging</span>, <span class="ident">InitError</span>, <span class="ident">BANNER</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe::LogItem</span>;
+
 <span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
+<span class="kw">use</span> <span class="ident">crossbeam::channel::Sender</span>;
 <span class="kw">use</span> <span class="ident">ipnetwork</span>::{<span class="ident">IpNetwork</span>, <span class="ident">Ipv6Network</span>};
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">error</span>, <span class="ident">info</span>, <span class="ident">trace</span>, <span class="ident">Level</span>};
 <span class="kw">use</span> <span class="ident">netlink_packet_route::RtnlMessage</span>;
@@ -236,7 +254,11 @@
 
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait</span> <span class="ident">SystemRuntime</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="self">self</span>, <span class="ident">logger_level</span>: <span class="ident">Level</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(
+        <span class="self">self</span>,
+        <span class="ident">logger_level</span>: <span class="ident">Level</span>,
+        <span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Pid1SystemRuntime</span>;
@@ -370,10 +392,14 @@
 
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span> <span class="ident">SystemRuntime</span> <span class="kw">for</span> <span class="ident">Pid1SystemRuntime</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="self">self</span>, <span class="ident">logger_level</span>: <span class="ident">Level</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(
+        <span class="self">self</span>,
+        <span class="ident">logger_level</span>: <span class="ident">Level</span>,
+        <span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span> {
         <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">BANNER</span>);
 
-        <span class="ident">logging::init</span>(<span class="ident">logger_level</span>)<span class="question-mark">?</span>;
+        <span class="ident">logging::init</span>(<span class="ident">logger_level</span>, <span class="ident">producer</span>)<span class="question-mark">?</span>;
         <span class="macro">trace!</span>(<span class="string">&quot;Logging started&quot;</span>);
 
         <span class="macro">trace!</span>(<span class="string">&quot;Configure filesystem&quot;</span>);
@@ -403,8 +429,12 @@
 
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span> <span class="ident">SystemRuntime</span> <span class="kw">for</span> <span class="ident">PidGt1SystemRuntime</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="self">self</span>, <span class="ident">logger_level</span>: <span class="ident">Level</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span> {
-        <span class="ident">logging::init</span>(<span class="ident">logger_level</span>)<span class="question-mark">?</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(
+        <span class="self">self</span>,
+        <span class="ident">logger_level</span>: <span class="ident">Level</span>,
+        <span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span> {
+        <span class="ident">logging::init</span>(<span class="ident">logger_level</span>, <span class="ident">producer</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }

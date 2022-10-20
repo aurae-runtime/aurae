@@ -1,5 +1,6 @@
+# Aurae
 
-Aurae is a free and open source Rust project which houses a generic systems runtime daemon built specifically for enterprise distributed systems. Aurae is designed to work well with Kubernetes, and serves as an enterprise focused alternative to systemd. 
+Aurae is a free and open source Rust project which houses a generic systems runtime daemon built specifically for enterprise distributed systems. Aurae is designed to work well with (but is deliberetly decoupled from) Kubernetes. Aurae serves as a distributed systems aware alternative to systemd.
 
 Think of [auraed](https://github.com/aurae-runtime/auraed) as a pid 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
 

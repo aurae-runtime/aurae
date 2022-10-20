@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["auraed"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/log/0.4.17/log/trait.Log.html\" title=\"trait log::Log\">Log</a> for <a class=\"struct\" href=\"auraed/logging/streamlogger/struct.StreamLogger.html\" title=\"struct auraed::logging::streamlogger::StreamLogger\">StreamLogger</a>","synthetic":false,"types":["auraed::logging::streamlogger::StreamLogger"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

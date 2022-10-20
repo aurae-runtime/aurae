@@ -228,6 +228,41 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -271,6 +306,35 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [`The Aurae Standard Library`]: https://aurae.io/stdlib</span>
 
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">bad_style</span>,
+        <span class="ident">const_err</span>,
+        <span class="ident">dead_code</span>,
+        <span class="ident">improper_ctypes</span>,
+        <span class="ident">non_shorthand_field_patterns</span>,
+        <span class="ident">no_mangle_generic_items</span>,
+        <span class="ident">overflowing_literals</span>,
+        <span class="ident">path_statements</span>,
+        <span class="ident">patterns_in_fns_without_body</span>,
+        <span class="ident">private_in_public</span>,
+        <span class="ident">unconditional_recursion</span>,
+        <span class="comment">// TODO: unused,</span>
+        <span class="comment">// TODO: unused_allocation,</span>
+        <span class="comment">// TODO: unused_comparisons,</span>
+        <span class="comment">// TODO: unused_parens,</span>
+        <span class="ident">while_true</span>
+        )]</span>
+
+<span class="attribute">#![<span class="ident">deny</span>(<span class="comment">// TODO: missing_copy_implementations,</span>
+        <span class="comment">// TODO: missing_debug_implementations,</span>
+        <span class="comment">// TODO: missing_docs,</span>
+        <span class="comment">// TODO: trivial_casts,</span>
+        <span class="ident">trivial_numeric_casts</span>,
+        <span class="comment">// TODO: unused_extern_crates,</span>
+        <span class="comment">// TODO: unused_import_braces,</span>
+        <span class="comment">// TODO: unused_qualifications,</span>
+        <span class="comment">// TODO: unused_results</span>
+        )]</span>
+
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::unwrap_used</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">rustdoc::missing_doc_code_examples</span>)]</span>
@@ -278,6 +342,7 @@
 <span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
 <span class="kw">use</span> <span class="ident">anyhow::Context</span>;
 <span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">logging::logchannel::LogChannel</span>;
 <span class="kw">use</span> <span class="ident">sea_orm::ConnectOptions</span>;
 <span class="kw">use</span> <span class="ident">sea_orm::ConnectionTrait</span>;
 <span class="kw">use</span> <span class="ident">sea_orm::Database</span>;
@@ -300,6 +365,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::ScheduleExecutableService</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">init</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">logging</span>;
 <span class="kw">mod</span> <span class="ident">meta</span>;
 <span class="kw">mod</span> <span class="ident">observe</span>;
 <span class="kw">mod</span> <span class="ident">runtime</span>;
@@ -332,6 +398,8 @@
     <span class="doccomment">/// Configurable socket path. Defaults to the value of</span>
     <span class="doccomment">/// `pub const AURAE_SOCK`</span>
     <span class="kw">pub</span> <span class="ident">socket</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// Provides logging channels to expose auraed logging via grpc</span>
+    <span class="kw">pub</span> <span class="ident">log_collector</span>: <span class="ident">LogChannel</span>,
 }
 
 <span class="doccomment">/// Primary daemon structure. Holds state and memory for this instance of</span>
@@ -374,13 +442,15 @@
 
         <span class="kw">let</span> <span class="ident">sock</span> <span class="op">=</span> <span class="ident">UnixListener::bind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">socket</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">sock_stream</span> <span class="op">=</span> <span class="ident">UnixListenerStream::new</span>(<span class="ident">sock</span>);
+        <span class="kw">let</span> <span class="ident">consumer</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">log_collector</span>.<span class="ident">get_consumer</span>();
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">log_collector</span>.<span class="ident">get_producer</span>();
 
         <span class="comment">// Run the server concurrently</span>
         <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">tokio::spawn</span>(<span class="kw">async</span> {
             <span class="ident">Server::builder</span>()
                 .<span class="ident">tls_config</span>(<span class="ident">tls</span>)<span class="question-mark">?</span>
                 .<span class="ident">add_service</span>(<span class="ident">RuntimeServer::new</span>(<span class="ident">RuntimeService::default</span>()))
-                .<span class="ident">add_service</span>(<span class="ident">ObserveServer::new</span>(<span class="ident">ObserveService::default</span>()))
+                .<span class="ident">add_service</span>(<span class="ident">ObserveServer::new</span>(<span class="ident">ObserveService::new</span>(<span class="ident">consumer</span>)))
                 .<span class="ident">add_service</span>(<span class="ident">ScheduleExecutableServer::new</span>(
                     <span class="ident">ScheduleExecutableService::default</span>(),
                 ))

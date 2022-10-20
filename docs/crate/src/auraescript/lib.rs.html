@@ -222,6 +222,35 @@
 <span id="216">216</span>
 <span id="217">217</span>
 <span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -259,6 +288,35 @@
 <span class="doccomment">//! to express their applications.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The AuraeScript definition lives in this crate library (lib.rs).</span>
+
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">bad_style</span>,
+        <span class="ident">const_err</span>,
+        <span class="ident">dead_code</span>,
+        <span class="ident">improper_ctypes</span>,
+        <span class="ident">non_shorthand_field_patterns</span>,
+        <span class="ident">no_mangle_generic_items</span>,
+        <span class="ident">overflowing_literals</span>,
+        <span class="ident">path_statements</span>,
+        <span class="ident">patterns_in_fns_without_body</span>,
+        <span class="ident">private_in_public</span>,
+        <span class="ident">unconditional_recursion</span>,
+        <span class="comment">// TODO: unused,</span>
+        <span class="comment">// TODO: unused_allocation,</span>
+        <span class="comment">// TODO: unused_comparisons,</span>
+        <span class="comment">// TODO: unused_parens,</span>
+        <span class="ident">while_true</span>
+        )]</span>
+
+<span class="attribute">#![<span class="ident">deny</span>(<span class="comment">// TODO: missing_copy_implementations,</span>
+        <span class="comment">// TODO: missing_debug_implementations,</span>
+        <span class="comment">// TODO: missing_docs,</span>
+        <span class="comment">// TODO: trivial_casts,</span>
+        <span class="ident">trivial_numeric_casts</span>,
+        <span class="comment">// TODO: unused_extern_crates,</span>
+        <span class="comment">// TODO: unused_import_braces,</span>
+        <span class="comment">// TODO: unused_qualifications,</span>
+        <span class="comment">// TODO: unused_results</span>
+        )]</span>
 
 <span class="comment">// The project prefers .expect(&quot;reason&quot;) instead of .unwrap() so we fail</span>
 <span class="comment">// on any .unwrap() statements in the code.</span>
@@ -411,7 +469,7 @@
         <span class="comment">// Observe.status function</span>
         <span class="comment">//</span>
         <span class="comment">// Retrieve total system status metrics.</span>
-        .<span class="ident">register_fn</span>(<span class="string">&quot;status&quot;</span>, <span class="ident">Observe::status</span>)
+        .<span class="ident">register_fn</span>(<span class="string">&quot;status&quot;</span>, <span class="ident">Observe::status_default</span>)
         .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">StatusResponse</span><span class="op">&gt;</span>(<span class="string">&quot;StatusResponse&quot;</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;json&quot;</span>, <span class="ident">StatusResponse::json</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;raw&quot;</span>, <span class="ident">StatusResponse::raw</span>)

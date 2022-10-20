@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["observe_client","Generated client implementations."]],"struct":[["Observe",""],["StatusRequest",""],["StatusResponse",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["LogChannelType",""]],"mod":[["observe_client","Generated client implementations."]],"struct":[["GetAuraeDaemonLogStreamRequest",""],["GetSubProcessStreamRequest","TODO: not implemented"],["LogItem",""],["Observe",""],["StatusRequest",""],["StatusResponse",""]]};

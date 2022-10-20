@@ -86,6 +86,9 @@
 <span id="80">80</span>
 <span id="81">81</span>
 <span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -126,6 +129,9 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::system_runtime</span>::{
     <span class="ident">Pid1SystemRuntime</span>, <span class="ident">PidGt1SystemRuntime</span>, <span class="ident">SystemRuntime</span>,
 };
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe::LogItem</span>;
+
+<span class="kw">use</span> <span class="ident">crossbeam::channel::Sender</span>;
 <span class="kw">use</span> <span class="ident">log::Level</span>;
 
 <span class="kw">mod</span> <span class="ident">fileio</span>;
@@ -154,13 +160,13 @@
 }
 
 <span class="doccomment">/// Run Aurae as an init pid 1 instance.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">logger_level</span>: <span class="ident">Level</span>) {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">logger_level</span>: <span class="ident">Level</span>, <span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">std::process::id</span>() {
         <span class="number">0</span> =&gt; <span class="macro">unreachable!</span>(
             <span class="string">&quot;process is running as PID 0, which should be impossible&quot;</span>
         ),
-        <span class="number">1</span> =&gt; <span class="ident">Pid1SystemRuntime</span> {}.<span class="ident">init</span>(<span class="ident">logger_level</span>),
-        <span class="kw">_</span> =&gt; <span class="ident">PidGt1SystemRuntime</span> {}.<span class="ident">init</span>(<span class="ident">logger_level</span>),
+        <span class="number">1</span> =&gt; <span class="ident">Pid1SystemRuntime</span> {}.<span class="ident">init</span>(<span class="ident">logger_level</span>, <span class="ident">producer</span>),
+        <span class="kw">_</span> =&gt; <span class="ident">PidGt1SystemRuntime</span> {}.<span class="ident">init</span>(<span class="ident">logger_level</span>, <span class="ident">producer</span>),
     }
     .<span class="kw">await</span>;
 
