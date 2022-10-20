@@ -27,7 +27,7 @@ let runtime = aurae.runtime();
 aurae.info().json();
 
 let example = exec("echo 'Hello World!'");
-runtime.start(example).json();
+runtime.exec(example).json();
 ```
 
 You can now run your first AuraeScript.
