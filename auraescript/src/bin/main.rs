@@ -62,6 +62,7 @@ use rhai::{Engine, EvalAltResult, Position};
 use std::{env, fs::File, io::Read, path::Path, process::exit};
 
 fn eprint_error(input: &str, mut err: EvalAltResult) {
+    #[allow(clippy::unwrap_used)]
     fn eprint_line(lines: &[&str], pos: Position, err_msg: &str) {
         let line = pos.line().expect("position");
         let line_no = format!("{line}: ");
@@ -90,7 +91,7 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut contents = String::new();
 
     for filename in env::args().skip(1) {
@@ -104,7 +105,7 @@ fn main() {
                 exit(1);
             }
             Ok(f) => match f.strip_prefix(
-                std::env::current_dir().unwrap().canonicalize().unwrap(),
+                std::env::current_dir()?.canonicalize()?,
             ) {
                 Ok(f) => f.into(),
                 _ => f,
@@ -170,4 +171,5 @@ fn main() {
             eprint_error(contents, *err);
         }
     }
+    Ok(())
 }
