@@ -1,4 +1,4 @@
-name: Main Build (compile, test)
+name: Main Build (lint, compile, test)
 on:
   push:
     branches: main
