@@ -10,9 +10,9 @@
 }
 
 :root > * {
-  --md-primary-fg-color:        #0D0337;
-  --md-primary-fg-color--light: #ECB7B7;
-  --md-primary-fg-color--dark:  #90030C;
+  --md-primary-fg-color:        #0D0337; // Dark purple (brand color)
+  --md-primary-fg-color--light: #86809e; // Light purple/gray (brand accent)
+  --md-primary-fg-color--dark:  #2D3702; // Dark brown (complimentary) Note: #0C0237 is also complimentary
 }
 
 h1 {
