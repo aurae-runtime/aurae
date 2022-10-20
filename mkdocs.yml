@@ -7,8 +7,8 @@ nav:
   - Auraed: /auraed
   - AuraeScript: /auraescript
   - Aurae Standard Library:
-    - Specification: /api
-    - V0: /api/v0
+    - Specification: /stdlib
+    - V0: /stdlib/v0
   - Building from Source: /build
   - Quick Start: /quickstart
   - Certificates: /certs
@@ -25,10 +25,17 @@ nav:
 theme:
   name: material
   language: en
+  logo: assets/logo-540x540.png
+  favicon: assets/logo-540x540.png
+  font:
+    text: Gotham
   palette:
     scheme: slate
     primary: deep purple
     accent: yellow
+
+extra_css:
+  - assets/aurae.css
 
 markdown_extensions:
   - admonition
