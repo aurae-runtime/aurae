@@ -1,6 +1,6 @@
 # Aurae Quickstart
 
-Now that you have [built Aurae from source](/docs/build) you can begin using Aurae.
+Now that you have [built Aurae from source](/docs/build.md) you can begin using Aurae.
 
 ### Running the Daemon 
 
