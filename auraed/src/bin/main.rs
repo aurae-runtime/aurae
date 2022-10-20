@@ -29,15 +29,12 @@
 \* -------------------------------------------------------------------------- */
 
 #![warn(clippy::unwrap_used)]
-#![deny(bad_style,
-        const_err,
+#![warn(bad_style,
         dead_code,
         improper_ctypes,
         non_shorthand_field_patterns,
         no_mangle_generic_items,
-        overflowing_literals,
         path_statements,
-        patterns_in_fns_without_body,
         private_in_public,
         unconditional_recursion,
         // TODO: unused,
@@ -47,7 +44,7 @@
         while_true
         )]
 
-#![deny(// TODO: missing_copy_implementations,
+#![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
         // TODO: trivial_casts,

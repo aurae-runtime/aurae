@@ -29,16 +29,12 @@
 \* -------------------------------------------------------------------------- */
 
 // TODO @kris-nova as we move to Deno we probably want to revist the main function
-// #![warn(clippy::unwrap_used)]
-#![deny(bad_style,
-        const_err,
+#![warn(bad_style,
         dead_code,
         improper_ctypes,
         non_shorthand_field_patterns,
         no_mangle_generic_items,
-        overflowing_literals,
         path_statements,
-        patterns_in_fns_without_body,
         private_in_public,
         unconditional_recursion,
         // TODO: unused,
@@ -48,7 +44,7 @@
         while_true
         )]
 
-#![deny(// TODO: missing_copy_implementations,
+#![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
         // TODO: trivial_casts,
@@ -59,11 +55,14 @@
         // TODO: unused_results
         )]
 
+#![warn(clippy::unwrap_used)]
+
 use auraescript::*;
 use rhai::{Engine, EvalAltResult, Position};
 use std::{env, fs::File, io::Read, path::Path, process::exit};
 
 fn eprint_error(input: &str, mut err: EvalAltResult) {
+    #[allow(clippy::unwrap_used)]
     fn eprint_line(lines: &[&str], pos: Position, err_msg: &str) {
         let line = pos.line().expect("position");
         let line_no = format!("{line}: ");
@@ -92,7 +91,7 @@ fn eprint_error(input: &str, mut err: EvalAltResult) {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut contents = String::new();
 
     for filename in env::args().skip(1) {
@@ -106,7 +105,7 @@ fn main() {
                 exit(1);
             }
             Ok(f) => match f.strip_prefix(
-                std::env::current_dir().unwrap().canonicalize().unwrap(),
+                std::env::current_dir()?.canonicalize()?,
             ) {
                 Ok(f) => f.into(),
                 _ => f,
@@ -172,4 +171,5 @@ fn main() {
             eprint_error(contents, *err);
         }
     }
+    Ok(())
 }
