@@ -10,6 +10,15 @@ Aurae exposes its functionality over a gRPC API which is referred to as the [Aur
 
 A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. Aurae is designed to take ownership of a single machine, and expose the standard library a generic and meaningful way for higher order consumers.
 
+## Project Status
+
+The project is very young and under active development. The APIs are subject to change without notice until further notice.
+As we continue to develop the project the APIs will stablizie and eventually a long term stable release will be offered. 
+
+At this time the project should not be ran in production.
+
+Please read [getting involved](https://github.com/aurae-runtime/community#getting-involved) if you are interested in joining the project in its early phases. Contribution types of all types and ranges are welcome. You do not have to know Rust to join the project.
+
 ## Motivation 
 
 Read [Why fix Kubernetes and Systemd](https://medium.com/@kris-nova/why-fix-kubernetes-and-systemd-782840e50104) by [Kris Nóva](https://github.com/krisnova). 
@@ -46,3 +55,7 @@ if execute {
 
 AuraeScript servers as one of many clients to the system and can be used to express workload manifests instead of YAML.
 AuraeScript can be used to control and gain visibility to the system.
+
+## The Aurae Standard Library
+
+See the [V0 API Reference](https://aurae.io/stdlib/v0/) for the current library definition.

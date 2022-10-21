@@ -114,6 +114,32 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -143,6 +169,32 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */</span>
+
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">bad_style</span>,
+        <span class="ident">dead_code</span>,
+        <span class="ident">improper_ctypes</span>,
+        <span class="ident">non_shorthand_field_patterns</span>,
+        <span class="ident">no_mangle_generic_items</span>,
+        <span class="ident">path_statements</span>,
+        <span class="ident">private_in_public</span>,
+        <span class="ident">unconditional_recursion</span>,
+        <span class="ident">unused</span>,
+        <span class="comment">// TODO: unused_allocation,</span>
+        <span class="comment">// TODO: unused_comparisons,</span>
+        <span class="comment">// TODO: unused_parens,</span>
+        <span class="ident">while_true</span>
+        )]</span>
+
+<span class="attribute">#![<span class="ident">warn</span>(<span class="comment">// TODO: missing_copy_implementations,</span>
+        <span class="comment">// TODO: missing_debug_implementations,</span>
+        <span class="comment">// TODO: missing_docs,</span>
+        <span class="comment">// TODO: trivial_casts,</span>
+        <span class="ident">trivial_numeric_casts</span>,
+        <span class="comment">// TODO: unused_extern_crates,</span>
+        <span class="comment">// TODO: unused_import_braces,</span>
+        <span class="comment">// TODO: unused_qualifications,</span>
+        <span class="comment">// TODO: unused_results</span>
+        )]</span>
 
 <span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
 <span class="kw">use</span> <span class="ident">quote::quote</span>;
@@ -223,6 +275,7 @@
 <span class="attribute">#[<span class="ident">proc_macro</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_wrapper</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
     <span class="ident">client::client_wrapper</span>(<span class="ident">input</span>)
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="macros" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
 </body></html>

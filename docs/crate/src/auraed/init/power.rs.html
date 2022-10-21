@@ -156,7 +156,7 @@
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">info</span>, <span class="ident">trace</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fs::OpenOptions</span>, <span class="ident">io::Read</span>, <span class="ident">mem</span>, <span class="ident">path::Path</span>, <span class="ident">slice</span>};
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">libc</span>;
+<span class="kw">use</span> <span class="ident">::libc</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">syscall_reboot</span>(<span class="ident">action</span>: <span class="ident">i32</span>) {
