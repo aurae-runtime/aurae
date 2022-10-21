@@ -43,7 +43,7 @@
         path_statements,
         private_in_public,
         unconditional_recursion,
-        // TODO: unused,
+        unused,
         // TODO: unused_allocation,
         // TODO: unused_comparisons,
         // TODO: unused_parens,

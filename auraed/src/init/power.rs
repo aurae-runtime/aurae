@@ -32,7 +32,7 @@ use anyhow::anyhow;
 use log::{info, trace};
 use std::{fs::OpenOptions, io::Read, mem, path::Path, slice};
 
-extern crate libc;
+use ::libc;
 
 #[allow(dead_code)]
 pub(crate) fn syscall_reboot(action: i32) {
