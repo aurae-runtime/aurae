@@ -20,10 +20,14 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: build-compile-test-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install protobuf-compiler
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
+          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          chmod +x protoc-gen-doc
+          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
       - name: Lint (make lint)
         run: make lint
       - name: Build (make)

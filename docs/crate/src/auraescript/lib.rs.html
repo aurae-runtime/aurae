@@ -247,10 +247,6 @@
 <span id="241">241</span>
 <span id="242">242</span>
 <span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
-<span id="246">246</span>
-<span id="247">247</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -288,16 +284,12 @@
 <span class="doccomment">//! to express their applications.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The AuraeScript definition lives in this crate library (lib.rs).</span>
-
-<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">bad_style</span>,
-        <span class="ident">const_err</span>,
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">bad_style</span>,
         <span class="ident">dead_code</span>,
         <span class="ident">improper_ctypes</span>,
         <span class="ident">non_shorthand_field_patterns</span>,
         <span class="ident">no_mangle_generic_items</span>,
-        <span class="ident">overflowing_literals</span>,
         <span class="ident">path_statements</span>,
-        <span class="ident">patterns_in_fns_without_body</span>,
         <span class="ident">private_in_public</span>,
         <span class="ident">unconditional_recursion</span>,
         <span class="comment">// TODO: unused,</span>
@@ -307,7 +299,7 @@
         <span class="ident">while_true</span>
         )]</span>
 
-<span class="attribute">#![<span class="ident">deny</span>(<span class="comment">// TODO: missing_copy_implementations,</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="comment">// TODO: missing_copy_implementations,</span>
         <span class="comment">// TODO: missing_debug_implementations,</span>
         <span class="comment">// TODO: missing_docs,</span>
         <span class="comment">// TODO: trivial_casts,</span>
