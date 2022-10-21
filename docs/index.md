@@ -2,7 +2,7 @@
 
 Aurae is a free and open source Rust project which houses a generic systems runtime daemon built specifically for enterprise distributed systems. Aurae is designed to work well with (but is deliberetly decoupled from) Kubernetes. Aurae serves as a distributed systems aware alternative to systemd.
 
-Think of [auraed](https://github.com/aurae-runtime/auraed) as a pid 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
+Think of [auraed](https://github.com/aurae-runtime/aurae/tree/main/auraed) as a pid 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
 
 Aurae brings [SPIFFE](https://github.com/spiffe)/[SPIRE](https://github.com/spiffe/spire) (x509 mTLS) backed identity, authentication (authn) and authorization (authz) as low as the Unix domain socket layer in a distributed system.
 
@@ -28,7 +28,7 @@ Aurae supports 3 types of workloads which can be started and scheduled alongside
 
 ## AuraeScript 
 
-Aurae offers a Turing complete scripting language written in Rust and similar to TypeScript called [AuraeScript](https://github.com/aurae-runtime/auraescript).
+Aurae offers a Turing complete scripting language written in Rust and similar to TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript).
 
 ```typescript
 let execute = true;    // Toggle execution
