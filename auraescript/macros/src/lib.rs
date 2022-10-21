@@ -28,6 +28,32 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+#![warn(bad_style,
+        dead_code,
+        improper_ctypes,
+        non_shorthand_field_patterns,
+        no_mangle_generic_items,
+        path_statements,
+        private_in_public,
+        unconditional_recursion,
+        unused,
+        // TODO: unused_allocation,
+        // TODO: unused_comparisons,
+        // TODO: unused_parens,
+        while_true
+        )]
+
+#![warn(// TODO: missing_copy_implementations,
+        // TODO: missing_debug_implementations,
+        // TODO: missing_docs,
+        // TODO: trivial_casts,
+        trivial_numeric_casts,
+        // TODO: unused_extern_crates,
+        // TODO: unused_import_braces,
+        // TODO: unused_qualifications,
+        // TODO: unused_results
+        )]
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
