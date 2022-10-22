@@ -36,6 +36,11 @@ tonic::include_proto!("runtime");
 
 use crate::runtime::runtime_server::Runtime;
 use crate::{command_from_string, meta};
+use anyhow::Result;
+use libcontainer::{
+    container::builder::ContainerBuilder, syscall::syscall::create_syscall,
+};
+use std::path::PathBuf;
 use tonic::{Request, Response, Status};
 
 /// The server side implementation of the Runtime subsystem.
@@ -123,7 +128,35 @@ impl Runtime for RuntimeService {
         &self,
         _request: Request<Pod>,
     ) -> Result<Response<PodStatus>, Status> {
-        todo!()
+        let syscall = create_syscall();
+        let mut container =
+            ContainerBuilder::new("123".to_string(), syscall.as_ref())
+                .as_init(PathBuf::new())
+                .with_systemd(false)
+                .build()
+                .expect("building container");
+        // .with_pid_file(args.pid_file.as_ref())?
+        // .with_console_socket(args.console_socket.as_ref())
+        // .with_root_path(root_path)?
+        // .with_preserved_fds(args.preserve_fds)
+        // .as_init(&args.bundle)
+        // .with_systemd(false)
+        // .build()?;
+
+        let _ = container.start();
+        let meta =
+            meta::AuraeMeta { name: "-".to_string(), message: "-".to_string() };
+        let status = meta::Status::Complete as i32;
+        let containers = vec![ContainerStatus {
+            meta: Some(meta::AuraeMeta {
+                name: "-".to_string(),
+                message: "-".to_string(),
+            }),
+            status: meta::Status::Complete as i32,
+            proc: Some(meta::ProcessMeta { pid: -1 }),
+        }];
+        let response = PodStatus { meta: Some(meta), status, containers };
+        Ok(Response::new(response))
     }
 
     // async fn function_name(
