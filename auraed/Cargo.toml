@@ -54,12 +54,17 @@ rustls = "0.20.6"
 anyhow = "1.0.65"
 libc = "0.2"
 walkdir = "2"
-sea-orm = { version = "^0.9.0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros" ] }
+sea-orm = { version = "^0.9.0", features = [
+  "sqlx-sqlite",
+  "runtime-tokio-rustls",
+  "macros",
+] }
 ipnetwork = "0.20.0"
 rtnetlink = "0.11.0"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 thiserror = "1.0.37"
 crossbeam = "0.8"
+libcontainer = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
 
 [build-dependencies]
 anyhow = "1.0.65"

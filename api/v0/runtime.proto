@@ -36,19 +36,35 @@ option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 
 import "meta.proto";
 
-/// Runtime is a synchronous and immediate subsystem.
+// Runtime is a synchronous and immediate subsystem.
+//
 //  Use the Runtime subsystem to start and stop executables, containers, and instances.
+//
+// The naming convention for the Runtime subsystem is to keep short, bespoke function names.
+// These specific functions are similar to distributed system call functions, and will
+// likely never be called by anyone except more advanced users who understand the consequences
+// of the functions.
+//
+// The short function names also encourage the Aurae authors to instill opinions into
+// each of the calls. For example instead of having RunExecutableFromRemote()
+// or RunExecutableIfExistsLocal() we just have Exec() which holds an opinion that
+// all executables should exist locally.
+//
+// In short as an author if you find yourself creating long or many similar function names
+// it is likely a sign that you are violating the opinionated principle of the system.
 service Runtime {
 
   // Exec is the lowest level of executable that Aurae supports.
   rpc Exec(Executable) returns (ExecutableStatus) {}
 
-  // ExecPod resembles Exec() however accepts a higher level "Pod" status
+  // RunP (Run Pod) resembles Exec() however accepts a higher level "Pod" status
   // The intention with a Pod is to be a simplified version a group of containers running in the same
   // namespaces on a system.
   //
-  // ExecPod is a DNS dependent function as it may "pull" an image from a remote registry.
-  rpc ExecPod(Pod) returns (PodStatus) {}
+  // RunP is a DNS dependent function as it may "pull" an image from a remote registry.
+  rpc RunP(Pod) returns (PodStatus) {}
+
+//  rpc RunV(Instance) returns (InstanceStatus{})
 
 }
 

@@ -119,7 +119,7 @@ impl Runtime for RuntimeService {
         }
     }
 
-    async fn exec_pod(
+    async fn run_p(
         &self,
         _request: Request<Pod>,
     ) -> Result<Response<PodStatus>, Status> {
