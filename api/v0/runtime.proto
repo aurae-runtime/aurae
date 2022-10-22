@@ -40,18 +40,19 @@ import "meta.proto";
 //  Use the Runtime subsystem to start and stop executables, containers, and instances.
 service Runtime {
 
+  // Exec is the lowest level of executable that Aurae supports.
   rpc Exec(Executable) returns (ExecutableStatus) {}
 
-  //rpc ExecutableStop(Executable) returns (ExecutableStatus) {}
-
-  //rpc ContainerStart(Container) returns (ContainerStatus) {}
-  //rpc ContainerStop(Container) returns (ContainerStatus) {}
-
-  //rpc InstanceStart(Instance) returns (InstanceStatus) {}
-  //rpc InstanceStop(Instance) returns (InstanceStatus) {}
+  // ExecPod resembles Exec() however accepts a higher level "Pod" status
+  // The intention with a Pod is to be a simplified version a group of containers running in the same
+  // namespaces on a system.
+  //
+  // ExecPod is a DNS dependent function as it may "pull" an image from a remote registry.
+  rpc ExecPod(Pod) returns (PodStatus) {}
 
 }
 
+// Executable is the lowest level of compute that Aurae can execute. A basic process.
 message Executable {
   meta.AuraeMeta meta = 1;
 
@@ -62,43 +63,72 @@ message Executable {
   string comment = 4;
 }
 
+// ExecutableStatus is only returned after a process completes. Because runtime is a synchronous subsystem
+// this will only return upon a terminated process.
 message ExecutableStatus {
   meta.AuraeMeta meta = 1;
   meta.ProcessMeta proc = 2;
   meta.Status status = 3;
+
+  // The full stdout data.
   string stdout = 4;
+
+  // The full stderr data.
   string stderr = 5;
+
+  // The exit code (return code) of the process after termination.
   string exit_code = 6;
 }
 
-message Container {
+// Pod is a group of containers that share common isolation namespaces.
+message Pod {
   meta.AuraeMeta meta = 1;
-  string name = 2;
-  string image = 3;
+
+  // A set of containers.
+  repeated Container containers = 2;
 }
 
+// PodStatus is the status of a completed pod and its subsequent containers.
+message PodStatus {
+  meta.AuraeMeta meta = 1;
+  meta.ProcessMeta proc = 2;
+  meta.Status status = 3;
+
+  // A set of container statuses.
+  repeated ContainerStatus containers = 4;
+}
+
+// Container represents is an OCI compliant container image which can be executed.
+message Container {
+  meta.AuraeMeta meta = 1;
+
+  // OCI compliant image.
+  string image = 2;
+}
+
+// ContainerStatus is the status of a container after it has been executed.
 message ContainerStatus {
   meta.AuraeMeta meta = 1;
   meta.ProcessMeta proc = 2;
   meta.Status status = 3;
 }
 
-message Instance {
-  meta.AuraeMeta meta = 1;
-  string name = 2;
-  string image = 3;
-}
-
-message InstanceStatus {
-  meta.AuraeMeta meta = 1;
-  meta.Status status = 2;
-}
-
-message InstanceMeta {
-  meta.AuraeMeta meta = 1;
-}
-
-message InstanceMetaStatus {
-  meta.AuraeMeta meta = 1;
-  meta.Status status = 2;
-}
+//message Instance {
+//  meta.AuraeMeta meta = 1;
+//  string name = 2;
+//  string image = 3;
+//}
+//
+//message InstanceStatus {
+//  meta.AuraeMeta meta = 1;
+//  meta.Status status = 2;
+//}
+//
+//message InstanceMeta {
+//  meta.AuraeMeta meta = 1;
+//}
+//
+//message InstanceMetaStatus {
+//  meta.AuraeMeta meta = 1;
+//  meta.Status status = 2;
+//}
