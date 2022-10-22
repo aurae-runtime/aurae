@@ -167,6 +167,7 @@ dependencies = [
  "ipnetwork",
  "libc",
  "libcontainer",
+ "liboci-cli",
  "log",
  "multi_log",
  "netlink-packet-route",
@@ -1244,6 +1245,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c185b5b7ad900923ef3a8ff594083d4d9b5aea80bb4f32b8342363138c0d456b"
 dependencies = [
  "pkg-config",
+]
+
+[[package]]
+name = "liboci-cli"
+version = "0.0.2"
+source = "git+https://github.com/containers/youki.git?tag=v0.0.2#0f662dd9794f54f42ec26ed569efd3ba016555b9"
+dependencies = [
+ "clap",
 ]
 
 [[package]]

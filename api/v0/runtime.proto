@@ -107,7 +107,6 @@ message Pod {
 // PodStatus is the status of a completed pod and its subsequent containers.
 message PodStatus {
   meta.AuraeMeta meta = 1;
-  meta.ProcessMeta proc = 2;
   meta.Status status = 3;
 
   // A set of container statuses.
