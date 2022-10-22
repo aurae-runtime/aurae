@@ -40,31 +40,36 @@ import "meta.proto";
 //
 //  Use the Runtime subsystem to start and stop executables, containers, and instances.
 //
-// The naming convention for the Runtime subsystem is to keep short, bespoke function names.
-// These specific functions are similar to distributed system call functions, and will
-// likely never be called by anyone except more advanced users who understand the consequences
-// of the functions.
-//
-// The short function names also encourage the Aurae authors to instill opinions into
-// each of the calls. For example instead of having RunExecutableFromRemote()
-// or RunExecutableIfExistsLocal() we just have Exec() which holds an opinion that
-// all executables should exist locally.
-//
-// In short as an author if you find yourself creating long or many similar function names
-// it is likely a sign that you are violating the opinionated principle of the system.
 service Runtime {
 
-  // Exec is the lowest level of executable that Aurae supports.
-  rpc Exec(Executable) returns (ExecutableStatus) {}
+  // Run an Executable, the most fundamental runtime process.
+  // * Already exists on system
+  rpc RunExecutable(Executable) returns (ExecutableStatus) {}
 
-  // RunP (Run Pod) resembles Exec() however accepts a higher level "Pod" status
-  // The intention with a Pod is to be a simplified version a group of containers running in the same
-  // namespaces on a system.
-  //
-  // RunP is a DNS dependent function as it may "pull" an image from a remote registry.
-  rpc RunP(Pod) returns (PodStatus) {}
+  // Run a set of containers in a unique sandbox micro instance, similar to Firecracker's jailer.
+  // * Pull from a remote OCI registry.
+  // * Runs on opinionated (configurable?) kernel/OS image with Auraed.
+  // * RunPod calls RunMicroInstance() and then calls the recursive/subsequent RunCell() method.
+  rpc RunPod(Pod) returns (PodStatus) {}
 
-//  rpc RunV(Instance) returns (InstanceStatus{})
+  // Spawn a short lived (ephemeral) nested virtual instance with an Auraed
+  // which will terminate on exit. Each instance runs an isolated kernel and
+  // guarantees the spawned auraed has the same version as the parent.
+  // * Manages a security boundary for packets, block devices between the new spawned instance.
+  // * Pull from a remote OCI registry
+  // * Assumes a specific Linux kernel and corresponding userspace with Auraed
+  // * Creates necessary "pipe" between the two auraed's using net devices and gRPC.
+  // * Manages mTLS certificates as necessary.
+  rpc Spawn(Instance) returns (InstanceStatus) {}
+
+  // Run a long lived virtual instance which will persist on exit.
+  // * Pull from a remote registry (e.g. qcow format)
+  rpc RunVirtualMachine(VirtualMachine) returns (VirtualMachineStatus) {}
+
+  // Run a set of containers in a unique Cgroup with shared namespaces.
+  // * Pull from a remote OCI registry.
+  // * Runs directly on the same kernel as the listening Auraed.
+  rpc RunCell(Cell) returns (CellStatus) {}
 
 }
 
@@ -96,7 +101,7 @@ message ExecutableStatus {
   string exit_code = 6;
 }
 
-// Pod is a group of containers that share common isolation namespaces.
+// Pod is a group of containers running in a spawned Aurae instance.
 message Pod {
   meta.AuraeMeta meta = 1;
 
@@ -128,22 +133,34 @@ message ContainerStatus {
   meta.Status status = 3;
 }
 
-//message Instance {
-//  meta.AuraeMeta meta = 1;
-//  string name = 2;
-//  string image = 3;
-//}
-//
-//message InstanceStatus {
-//  meta.AuraeMeta meta = 1;
-//  meta.Status status = 2;
-//}
-//
-//message InstanceMeta {
-//  meta.AuraeMeta meta = 1;
-//}
-//
-//message InstanceMetaStatus {
-//  meta.AuraeMeta meta = 1;
-//  meta.Status status = 2;
-//}
+message VirtualMachine {
+  meta.AuraeMeta meta = 1;
+  string name = 2;
+  string image = 3;
+}
+
+message VirtualMachineStatus {
+  meta.AuraeMeta meta = 1;
+  meta.Status status = 2;
+}
+
+
+message Instance {
+  meta.AuraeMeta meta = 1;
+  string name = 2;
+  string image = 3;
+}
+
+message InstanceStatus {
+  meta.AuraeMeta meta = 1;
+  meta.Status status = 2;
+}
+
+message Cell {
+  meta.AuraeMeta meta = 1;
+}
+
+message CellStatus {
+  meta.AuraeMeta meta = 1;
+  meta.Status status = 2;
+}
