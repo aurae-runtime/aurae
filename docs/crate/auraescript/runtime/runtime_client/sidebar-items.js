@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["RuntimeClient","Use the Runtime subsystem to start and stop executables, containers, and instances."]]};
+window.SIDEBAR_ITEMS = {"struct":[["RuntimeClient","Runtime is a synchronous and immediate subsystem."]]};

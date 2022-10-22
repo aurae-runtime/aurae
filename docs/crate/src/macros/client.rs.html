@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/macros/src/client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../macros/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../macros/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../macros/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/macros/src/client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../macros/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../macros/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../macros/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -130,131 +124,130 @@
 <span id="124">124</span>
 <span id="125">125</span>
 <span id="126">126</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
-<span class="kw">use</span> <span class="ident">proc_macro2::Ident</span>;
-<span class="kw">use</span> <span class="ident">quote::quote</span>;
-<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">parenthesized</span>, <span class="ident">parse_macro_input</span>, <span class="ident">Token</span>, <span class="ident">Type</span>};
-<span class="kw">use</span> <span class="ident">syn::punctuated::Punctuated</span>;
-<span class="kw">use</span> <span class="ident">heck::ToSnakeCase</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>proc_macro::TokenStream;
+<span class="kw">use </span>proc_macro2::Ident;
+<span class="kw">use </span>quote::quote;
+<span class="kw">use </span>syn::parse::{Parse, ParseStream};
+<span class="kw">use </span>syn::{parenthesized, parse_macro_input, Token, Type};
+<span class="kw">use </span>syn::punctuated::Punctuated;
+<span class="kw">use </span>heck::ToSnakeCase;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">client_wrapper</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
-    <span class="kw">let</span> <span class="ident">ClientWrapperInput</span> {
-        <span class="ident">name</span>,
-        <span class="ident">functions</span>,
-    } <span class="op">=</span> <span class="macro">parse_macro_input!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">ClientWrapperInput</span>);
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>client_wrapper(input: TokenStream) -&gt; TokenStream {
+    <span class="kw">let </span>ClientWrapperInput {
+        name,
+        functions,
+    } = <span class="macro">parse_macro_input!</span>(input <span class="kw">as </span>ClientWrapperInput);
 
-    <span class="kw">let</span> <span class="ident">client_namespace</span> <span class="op">=</span> <span class="ident">Ident::new</span>(
-        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}_client&quot;</span>, <span class="ident">name</span>.<span class="ident">to_string</span>().<span class="ident">to_snake_case</span>()),
-        <span class="ident">name</span>.<span class="ident">span</span>(),
+    <span class="kw">let </span>client_namespace = Ident::new(
+        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}_client&quot;</span>, name.to_string().to_snake_case()),
+        name.span(),
     );
 
-    <span class="kw">let</span> <span class="ident">client_ident</span> <span class="op">=</span> <span class="ident">Ident::new</span>(
-        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}Client&quot;</span>, <span class="ident">name</span>),
-        <span class="ident">name</span>.<span class="ident">span</span>(),
+    <span class="kw">let </span>client_ident = Ident::new(
+        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}Client&quot;</span>, name),
+        name.span(),
     );
 
-    <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">functions</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">FunctionInput</span> { <span class="ident">name</span>, <span class="ident">arg</span>, <span class="ident">returns</span> }<span class="op">|</span> {
-            <span class="macro">quote!</span> {
-                <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> #<span class="ident">name</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">req</span>: #<span class="ident">arg</span>) -&gt; #<span class="ident">returns</span> {
-                    <span class="kw">match</span> <span class="ident">::tokio::runtime::Runtime::new</span>() {
-                        <span class="prelude-val">Ok</span>(<span class="ident">rt</span>) =&gt; {
-                            <span class="kw">match</span> <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident"><span class="kw">crate</span>::builtin::client::new_client</span>()) {
-                                <span class="prelude-val">Ok</span>(<span class="ident">ch</span>) =&gt; {
-                                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="self">self</span>::#<span class="ident">client_namespace</span>::#<span class="ident">client_ident::new</span>(<span class="ident">ch</span>.<span class="ident">channel</span>);
-                                    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">client</span>.#<span class="ident">name</span>(<span class="ident">req</span>));
-                                    <span class="kw">match</span> <span class="ident">res</span> {
-                                        <span class="prelude-val">Ok</span>(<span class="ident">x</span>) =&gt; {
-                                            <span class="kw">return</span> <span class="ident">x</span>.<span class="ident">into_inner</span>();
+    <span class="kw">let </span>functions = functions
+        .into_iter()
+        .map(|FunctionInput { name, arg, returns }| {
+            <span class="macro">quote! </span>{
+                <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>#name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, req: #arg) -&gt; #returns {
+                    <span class="kw">match </span>::tokio::runtime::Runtime::new() {
+                        <span class="prelude-val">Ok</span>(rt) =&gt; {
+                            <span class="kw">match </span>rt.block_on(<span class="kw">crate</span>::builtin::client::new_client()) {
+                                <span class="prelude-val">Ok</span>(ch) =&gt; {
+                                    <span class="kw">let </span><span class="kw-2">mut </span>client = <span class="self">self</span>::#client_namespace::#client_ident::new(ch.channel);
+                                    <span class="kw">let </span>res = rt.block_on(client.#name(req));
+                                    <span class="kw">match </span>res {
+                                        <span class="prelude-val">Ok</span>(x) =&gt; {
+                                            <span class="kw">return </span>x.into_inner();
                                         },
-                                        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                                            <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>);
-                                            <span class="ident">::std::process::exit</span>(<span class="ident"><span class="kw">crate</span>::codes::EXIT_REQUEST_FAILURE</span>);
+                                        <span class="prelude-val">Err</span>(e) =&gt; {
+                                            <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
+                                            ::std::process::exit(<span class="kw">crate</span>::codes::EXIT_REQUEST_FAILURE);
                                         }
                                     }
                                 }
-                                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                                    <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>);
-                                    <span class="ident">::std::process::exit</span>(<span class="ident"><span class="kw">crate</span>::codes::EXIT_CONNECT_FAILURE</span>);
+                                <span class="prelude-val">Err</span>(e) =&gt; {
+                                    <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
+                                    ::std::process::exit(<span class="kw">crate</span>::codes::EXIT_CONNECT_FAILURE);
                                 }
                             }
                         }
-                        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                            <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>);
-                            <span class="ident">::std::process::exit</span>(<span class="ident"><span class="kw">crate</span>::codes::EXIT_RUNTIME_ERROR</span>);
+                        <span class="prelude-val">Err</span>(e) =&gt; {
+                            <span class="macro">eprintln!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
+                            ::std::process::exit(<span class="kw">crate</span>::codes::EXIT_RUNTIME_ERROR);
                         }
                     }
                 }
             }
         });
 
-    <span class="kw">let</span> <span class="ident">expanded</span> <span class="op">=</span> <span class="macro">quote!</span> {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">struct</span> #<span class="ident">name</span>;
+    <span class="kw">let </span>expanded = <span class="macro">quote! </span>{
+        <span class="attribute">#[derive(Debug, Clone)]
+        </span><span class="kw">pub struct </span>#name;
 
-        <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> #<span class="ident">name</span> {
-            <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-                <span class="self">Self</span> {}
+        <span class="kw">impl </span>Default <span class="kw">for </span>#name {
+            <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+                <span class="self">Self </span>{}
             }
         }
 
-        <span class="kw">impl</span> #<span class="ident">name</span> {
-            <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-                <span class="ident"><span class="self">Self</span>::default</span>()
+        <span class="kw">impl </span>#name {
+            <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+                <span class="self">Self</span>::default()
             }
 
-            #(#<span class="ident">functions</span>)<span class="op">*</span>
+            #(#functions)*
         }
     };
 
-    <span class="ident">expanded</span>.<span class="ident">into</span>()
+    expanded.into()
 }
 
-<span class="kw">struct</span> <span class="ident">ClientWrapperInput</span> {
-    <span class="ident">name</span>: <span class="ident">Ident</span>,
-    <span class="ident">functions</span>: <span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">FunctionInput</span>, <span class="macro">Token!</span>[,]<span class="op">&gt;</span>,
+<span class="kw">struct </span>ClientWrapperInput {
+    name: Ident,
+    functions: Punctuated&lt;FunctionInput, <span class="macro">Token!</span>[,]&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ClientWrapperInput</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="ident">syn::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw">_</span>: <span class="macro">Token!</span>[,] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+<span class="kw">impl </span>Parse <span class="kw">for </span>ClientWrapperInput {
+    <span class="kw">fn </span>parse(input: ParseStream) -&gt; syn::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>name = input.parse()<span class="question-mark">?</span>;
+        <span class="kw">let _</span>: <span class="macro">Token!</span>[,] = input.parse()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse_terminated</span>(<span class="ident">FunctionInput::parse</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>functions = input.parse_terminated(FunctionInput::parse)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">name</span>,
-            <span class="ident">functions</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            name,
+            functions,
         })
     }
 }
 
-<span class="kw">struct</span> <span class="ident">FunctionInput</span> {
-    <span class="ident">name</span>: <span class="ident">Ident</span>,
-    <span class="ident">arg</span>: <span class="ident">Type</span>,
-    <span class="ident">returns</span>: <span class="ident">Type</span>,
+<span class="kw">struct </span>FunctionInput {
+    name: Ident,
+    arg: Type,
+    returns: Type,
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">FunctionInput</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="ident">syn::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+<span class="kw">impl </span>Parse <span class="kw">for </span>FunctionInput {
+    <span class="kw">fn </span>parse(input: ParseStream) -&gt; syn::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>name = input.parse()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">content</span>;
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">parenthesized!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">arg</span> <span class="op">=</span> <span class="ident">content</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>content;
+        <span class="kw">let _ </span>= <span class="macro">parenthesized!</span>(content <span class="kw">in </span>input);
+        <span class="kw">let </span>arg = content.parse()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw">_</span>: <span class="macro">Token!</span>[-&gt;] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+        <span class="kw">let _</span>: <span class="macro">Token!</span>[-&gt;] = input.parse()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">returns</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>returns = input.parse()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">name</span>,
-            <span class="ident">arg</span>,
-            <span class="ident">returns</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            name,
+            arg,
+            returns,
         })
     }
 }</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="macros" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="macros" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>

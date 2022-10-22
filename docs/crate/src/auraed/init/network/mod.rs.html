@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/init/network/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../auraed/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/init/network/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../auraed/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -307,253 +301,252 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */</span>
+\* -------------------------------------------------------------------------- */
 
-<span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
-<span class="kw">use</span> <span class="ident">futures::stream::TryStreamExt</span>;
-<span class="kw">use</span> <span class="ident">ipnetwork</span>::{<span class="ident">IpNetwork</span>, <span class="ident">Ipv4Network</span>, <span class="ident">Ipv6Network</span>};
-<span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">error</span>, <span class="ident">info</span>, <span class="ident">trace</span>, <span class="ident">warn</span>};
-<span class="kw">use</span> <span class="ident">netlink_packet_route::LinkMessage</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::net::IpAddr</span>;
-<span class="kw">use</span> <span class="ident">std::str</span>;
-<span class="kw">use</span> <span class="ident">std::thread</span>;
-<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+</span><span class="kw">use </span>anyhow::anyhow;
+<span class="kw">use </span>futures::stream::TryStreamExt;
+<span class="kw">use </span>ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
+<span class="kw">use </span>log::{error, info, trace, warn};
+<span class="kw">use </span>netlink_packet_route::LinkMessage;
+<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::net::IpAddr;
+<span class="kw">use </span>std::str;
+<span class="kw">use </span>std::thread;
+<span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use</span> <span class="ident">netlink_packet_route::rtnl::link::nlas::Nla</span>;
-<span class="kw">use</span> <span class="ident">rtnetlink::Handle</span>;
+<span class="kw">use </span>netlink_packet_route::rtnl::link::nlas::Nla;
+<span class="kw">use </span>rtnetlink::Handle;
 
-<span class="kw">mod</span> <span class="ident">sriov</span>;
+<span class="kw">mod </span>sriov;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_link_up</span>(
-    <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>,
-    <span class="ident">iface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">links</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">link</span>().<span class="ident">get</span>().<span class="ident">match_name</span>(<span class="ident">iface</span>.<span class="ident">to_string</span>()).<span class="ident">execute</span>();
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>set_link_up(
+    handle: <span class="kw-2">&amp;</span>Handle,
+    iface: <span class="kw-2">&amp;</span>str,
+) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>links = handle.link().get().match_name(iface.to_string()).execute();
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">link</span>) <span class="op">=</span> <span class="ident">links</span>.<span class="ident">try_next</span>().<span class="kw">await</span><span class="question-mark">?</span> {
-        <span class="ident">handle</span>.<span class="ident">link</span>().<span class="ident">set</span>(<span class="ident">link</span>.<span class="ident">header</span>.<span class="ident">index</span>).<span class="ident">up</span>().<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>
-    } <span class="kw">else</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;iface &#39;{}&#39; not found&quot;</span>, <span class="ident">iface</span>));
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(link) = links.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
+        handle.link().set(link.header.index).up().execute().<span class="kw">await</span><span class="question-mark">?
+    </span>} <span class="kw">else </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;iface &#39;{}&#39; not found&quot;</span>, iface));
     }
 
-    <span class="comment">// TODO: replace sleep with an await mechanism that checks if device is up (with a timeout)</span>
-    <span class="comment">// TODO: https://github.com/aurae-runtime/auraed/issues/40</span>
-    <span class="macro">info!</span>(<span class="string">&quot;Waiting for link &#39;{}&#39; to become up&quot;</span>, <span class="ident">iface</span>);
-    <span class="ident">thread::sleep</span>(<span class="ident">Duration::from_secs</span>(<span class="number">3</span>));
-    <span class="macro">info!</span>(<span class="string">&quot;Waited 3 seconds, assuming link &#39;{}&#39; is up&quot;</span>, <span class="ident">iface</span>);
+    <span class="comment">// TODO: replace sleep with an await mechanism that checks if device is up (with a timeout)
+    // TODO: https://github.com/aurae-runtime/auraed/issues/40
+    </span><span class="macro">info!</span>(<span class="string">&quot;Waiting for link &#39;{}&#39; to become up&quot;</span>, iface);
+    thread::sleep(Duration::from_secs(<span class="number">3</span>));
+    <span class="macro">info!</span>(<span class="string">&quot;Waited 3 seconds, assuming link &#39;{}&#39; is up&quot;</span>, iface);
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_link_down</span>(
-    <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>,
-    <span class="ident">iface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">links</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">link</span>().<span class="ident">get</span>().<span class="ident">match_name</span>(<span class="ident">iface</span>.<span class="ident">to_string</span>()).<span class="ident">execute</span>();
+<span class="attribute">#[allow(dead_code)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>set_link_down(
+    handle: <span class="kw-2">&amp;</span>Handle,
+    iface: <span class="kw-2">&amp;</span>str,
+) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>links = handle.link().get().match_name(iface.to_string()).execute();
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">link</span>) <span class="op">=</span> <span class="ident">links</span>.<span class="ident">try_next</span>().<span class="kw">await</span><span class="question-mark">?</span> {
-        <span class="ident">handle</span>.<span class="ident">link</span>().<span class="ident">set</span>(<span class="ident">link</span>.<span class="ident">header</span>.<span class="ident">index</span>).<span class="ident">down</span>().<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>
-    } <span class="kw">else</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;iface &#39;{}&#39; not found&quot;</span>, <span class="ident">iface</span>));
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(link) = links.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
+        handle.link().set(link.header.index).down().execute().<span class="kw">await</span><span class="question-mark">?
+    </span>} <span class="kw">else </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;iface &#39;{}&#39; not found&quot;</span>, iface));
     }
-    <span class="macro">trace!</span>(<span class="string">&quot;Set link {} down&quot;</span>, <span class="ident">iface</span>);
+    <span class="macro">trace!</span>(<span class="string">&quot;Set link {} down&quot;</span>, iface);
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_address</span>(
-    <span class="ident">iface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">ip</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">IpNetwork</span><span class="op">&gt;</span>,
-    <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>,
-) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">ip</span> <span class="op">=</span> <span class="ident">ip</span>.<span class="ident">into</span>();
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>add_address(
+    iface: <span class="kw-2">&amp;</span>str,
+    ip: <span class="kw">impl </span>Into&lt;IpNetwork&gt;,
+    handle: <span class="kw-2">&amp;</span>Handle,
+) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">let </span>ip = ip.into();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">links</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">link</span>().<span class="ident">get</span>().<span class="ident">match_name</span>(<span class="ident">iface</span>.<span class="ident">to_string</span>()).<span class="ident">execute</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>links = handle.link().get().match_name(iface.to_string()).execute();
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">link</span>) <span class="op">=</span> <span class="ident">links</span>.<span class="ident">try_next</span>().<span class="kw">await</span><span class="question-mark">?</span> {
-        <span class="ident">handle</span>
-            .<span class="ident">address</span>()
-            .<span class="ident">add</span>(<span class="ident">link</span>.<span class="ident">header</span>.<span class="ident">index</span>, <span class="ident">ip</span>.<span class="ident">ip</span>(), <span class="ident">ip</span>.<span class="ident">prefix</span>())
-            .<span class="ident">execute</span>()
-            .<span class="kw">await</span><span class="question-mark">?</span>
-    }
-    <span class="macro">trace!</span>(<span class="string">&quot;Added address to link {}&quot;</span>, <span class="ident">iface</span>);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(link) = links.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
+        handle
+            .address()
+            .add(link.header.index, ip.ip(), ip.prefix())
+            .execute()
+            .<span class="kw">await</span><span class="question-mark">?
+    </span>}
+    <span class="macro">trace!</span>(<span class="string">&quot;Added address to link {}&quot;</span>, iface);
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_links</span>(
-    <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>,
-) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">links</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">link</span>().<span class="ident">get</span>().<span class="ident">execute</span>();
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>get_links(
+    handle: <span class="kw-2">&amp;</span>Handle,
+) -&gt; anyhow::Result&lt;HashMap&lt;u32, String&gt;&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = HashMap::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>links = handle.link().get().execute();
 
-    <span class="lifetime">&#39;outer</span>: <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">msg</span>) <span class="op">=</span> <span class="ident">links</span>.<span class="ident">try_next</span>().<span class="kw">await</span><span class="question-mark">?</span> {
-        <span class="kw">for</span> <span class="ident">nla</span> <span class="kw">in</span> <span class="ident">msg</span>.<span class="ident">nlas</span>.<span class="ident">into_iter</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Nla::IfName</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">nla</span> {
-                <span class="ident">result</span>.<span class="ident">insert</span>(<span class="ident">msg</span>.<span class="ident">header</span>.<span class="ident">index</span>, <span class="ident">name</span>);
-                <span class="kw">continue</span> <span class="lifetime">&#39;outer</span>;
+    <span class="lifetime">&#39;outer</span>: <span class="kw">while let </span><span class="prelude-val">Some</span>(msg) = links.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
+        <span class="kw">for </span>nla <span class="kw">in </span>msg.nlas.into_iter() {
+            <span class="kw">if let </span>Nla::IfName(name) = nla {
+                result.insert(msg.header.index, name);
+                <span class="kw">continue </span><span class="lifetime">&#39;outer</span>;
             }
         }
-        <span class="macro">warn!</span>(<span class="string">&quot;link with index {} has no name&quot;</span>, <span class="ident">msg</span>.<span class="ident">header</span>.<span class="ident">index</span>);
+        <span class="macro">warn!</span>(<span class="string">&quot;link with index {} has no name&quot;</span>, msg.header.index);
     }
 
-    <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+    <span class="prelude-val">Ok</span>(result)
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_link_msg</span>(
-    <span class="ident">iface</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>,
-) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span><span class="ident">LinkMessage</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">handle</span>
-        .<span class="ident">link</span>()
-        .<span class="ident">get</span>()
-        .<span class="ident">match_name</span>(<span class="ident">iface</span>.<span class="ident">into</span>())
-        .<span class="ident">execute</span>()
-        .<span class="ident">try_next</span>()
-        .<span class="kw">await</span>
-    {
-        <span class="prelude-val">Ok</span>(<span class="ident">link_msg</span>) =&gt; <span class="kw">match</span> <span class="ident">link_msg</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">val</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">val</span>),
-            <span class="prelude-val">None</span> =&gt; {
+<span class="kw">async fn </span>get_link_msg(
+    iface: <span class="kw">impl </span>Into&lt;String&gt;,
+    handle: <span class="kw-2">&amp;</span>Handle,
+) -&gt; anyhow::Result&lt;LinkMessage&gt; {
+    <span class="kw">match </span>handle
+        .link()
+        .get()
+        .match_name(iface.into())
+        .execute()
+        .try_next()
+        .<span class="kw">await
+    </span>{
+        <span class="prelude-val">Ok</span>(link_msg) =&gt; <span class="kw">match </span>link_msg {
+            <span class="prelude-val">Some</span>(val) =&gt; <span class="prelude-val">Ok</span>(val),
+            <span class="prelude-val">None </span>=&gt; {
                 <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Could not retreive link message. Does not exist&quot;</span>))
             }
         },
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Could not retreive link message. Error={}&quot;</span>, <span class="ident">e</span>)),
+        <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Could not retreive link message. Error={}&quot;</span>, e)),
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_iface_idx</span>(<span class="ident">iface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">get_link_msg</span>(<span class="ident">iface</span>, <span class="ident">handle</span>).<span class="kw">await</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">link_msg</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">link_msg</span>.<span class="ident">header</span>.<span class="ident">index</span>),
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">e</span>),
+<span class="kw">async fn </span>get_iface_idx(iface: <span class="kw-2">&amp;</span>str, handle: <span class="kw-2">&amp;</span>Handle) -&gt; anyhow::Result&lt;u32&gt; {
+    <span class="kw">match </span>get_link_msg(iface, handle).<span class="kw">await </span>{
+        <span class="prelude-val">Ok</span>(link_msg) =&gt; <span class="prelude-val">Ok</span>(link_msg.header.index),
+        <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e),
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_route_v6</span>(
-    <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="ident">Ipv6Network</span>,
-    <span class="ident">iface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="ident">Ipv6Network</span>,
-    <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>,
-) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">get_iface_idx</span>(<span class="ident">iface</span>, <span class="ident">handle</span>).<span class="kw">await</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">iface_idx</span>) =&gt; {
-            <span class="ident">handle</span>
-                .<span class="ident">route</span>()
-                .<span class="ident">add</span>()
-                .<span class="ident">v6</span>()
-                .<span class="ident">destination_prefix</span>(<span class="ident">dest</span>.<span class="ident">ip</span>(), <span class="ident">dest</span>.<span class="ident">prefix</span>())
-                .<span class="ident">output_interface</span>(<span class="ident">iface_idx</span>)
-                .<span class="ident">pref_source</span>(<span class="ident">source</span>.<span class="ident">ip</span>())
-                .<span class="ident">execute</span>()
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>add_route_v6(
+    dest: <span class="kw-2">&amp;</span>Ipv6Network,
+    iface: <span class="kw-2">&amp;</span>str,
+    source: <span class="kw-2">&amp;</span>Ipv6Network,
+    handle: <span class="kw-2">&amp;</span>Handle,
+) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">match </span>get_iface_idx(iface, handle).<span class="kw">await </span>{
+        <span class="prelude-val">Ok</span>(iface_idx) =&gt; {
+            handle
+                .route()
+                .add()
+                .v6()
+                .destination_prefix(dest.ip(), dest.prefix())
+                .output_interface(iface_idx)
+                .pref_source(source.ip())
+                .execute()
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
+        <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e),
     }
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_route_v4</span>(
-    <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="ident">Ipv4Network</span>,
-    <span class="ident">iface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="ident">Ipv4Network</span>,
-    <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>,
-) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">get_iface_idx</span>(<span class="ident">iface</span>, <span class="ident">handle</span>).<span class="kw">await</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">iface_idx</span>) =&gt; {
-            <span class="ident">handle</span>
-                .<span class="ident">route</span>()
-                .<span class="ident">add</span>()
-                .<span class="ident">v4</span>()
-                .<span class="ident">destination_prefix</span>(<span class="ident">dest</span>.<span class="ident">ip</span>(), <span class="ident">dest</span>.<span class="ident">prefix</span>())
-                .<span class="ident">output_interface</span>(<span class="ident">iface_idx</span>)
-                .<span class="ident">pref_source</span>(<span class="ident">source</span>.<span class="ident">ip</span>())
-                .<span class="ident">execute</span>()
+<span class="attribute">#[allow(dead_code)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>add_route_v4(
+    dest: <span class="kw-2">&amp;</span>Ipv4Network,
+    iface: <span class="kw-2">&amp;</span>str,
+    source: <span class="kw-2">&amp;</span>Ipv4Network,
+    handle: <span class="kw-2">&amp;</span>Handle,
+) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">match </span>get_iface_idx(iface, handle).<span class="kw">await </span>{
+        <span class="prelude-val">Ok</span>(iface_idx) =&gt; {
+            handle
+                .route()
+                .add()
+                .v4()
+                .destination_prefix(dest.ip(), dest.prefix())
+                .output_interface(iface_idx)
+                .pref_source(source.ip())
+                .execute()
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
+        <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e),
     }
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">dump_addresses</span>(
-    <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>,
-    <span class="ident">iface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">links</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">link</span>().<span class="ident">get</span>().<span class="ident">match_name</span>(<span class="ident">iface</span>.<span class="ident">to_string</span>()).<span class="ident">execute</span>();
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">link_msg</span>) <span class="op">=</span> <span class="ident">links</span>.<span class="ident">try_next</span>().<span class="kw">await</span><span class="question-mark">?</span> {
-        <span class="macro">info!</span>(<span class="string">&quot;{}:&quot;</span>, <span class="ident">iface</span>);
-        <span class="kw">for</span> <span class="ident">nla</span> <span class="kw">in</span> <span class="ident">link_msg</span>.<span class="ident">nlas</span>.<span class="ident">into_iter</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Nla::IfName</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">nla</span> {
-                <span class="macro">info!</span>(<span class="string">&quot;\tindex: {}&quot;</span>, <span class="ident">link_msg</span>.<span class="ident">header</span>.<span class="ident">index</span>);
-                <span class="macro">info!</span>(<span class="string">&quot;\tname: {}&quot;</span>, <span class="ident">name</span>);
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>dump_addresses(
+    handle: <span class="kw-2">&amp;</span>Handle,
+    iface: <span class="kw-2">&amp;</span>str,
+) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>links = handle.link().get().match_name(iface.to_string()).execute();
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(link_msg) = links.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
+        <span class="macro">info!</span>(<span class="string">&quot;{}:&quot;</span>, iface);
+        <span class="kw">for </span>nla <span class="kw">in </span>link_msg.nlas.into_iter() {
+            <span class="kw">if let </span>Nla::IfName(name) = nla {
+                <span class="macro">info!</span>(<span class="string">&quot;\tindex: {}&quot;</span>, link_msg.header.index);
+                <span class="macro">info!</span>(<span class="string">&quot;\tname: {}&quot;</span>, name);
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_msg</span> <span class="op">=</span> <span class="ident">handle</span>
-            .<span class="ident">address</span>()
-            .<span class="ident">get</span>()
-            .<span class="ident">set_link_index_filter</span>(<span class="ident">link_msg</span>.<span class="ident">header</span>.<span class="ident">index</span>)
-            .<span class="ident">execute</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>address_msg = handle
+            .address()
+            .get()
+            .set_link_index_filter(link_msg.header.index)
+            .execute();
 
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">msg</span>) <span class="op">=</span> <span class="ident">address_msg</span>.<span class="ident">try_next</span>().<span class="kw">await</span><span class="question-mark">?</span> {
-            <span class="kw">for</span> <span class="ident">nla_address</span> <span class="kw">in</span> <span class="ident">msg</span>.<span class="ident">nlas</span>.<span class="ident">into_iter</span>() {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">netlink_packet_route::address::Nla::Address</span>(<span class="ident">addr</span>) <span class="op">=</span>
-                    <span class="ident">nla_address</span>
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(msg) = address_msg.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="kw">for </span>nla_address <span class="kw">in </span>msg.nlas.into_iter() {
+                <span class="kw">if let </span>netlink_packet_route::address::Nla::Address(addr) =
+                    nla_address
                 {
-                    <span class="kw">let</span> <span class="ident">ip_addr</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">try_into</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">ip</span>: [<span class="ident">u8</span>; <span class="number">4</span>]<span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">IpAddr::from</span>(<span class="ident">ip</span>)))
-                        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> {
-                            <span class="ident">addr</span>.<span class="ident">try_into</span>()
-                                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">ip</span>: [<span class="ident">u8</span>; <span class="number">16</span>]<span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">IpAddr::from</span>(<span class="ident">ip</span>)))
-                                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> {
-                                    <span class="macro">warn!</span>(<span class="string">&quot;Could not Convert vec: {:?} to ipv4 or ipv6&quot;</span>, <span class="ident">addr</span>);
-                                    <span class="prelude-val">None</span>
-                                })
+                    <span class="kw">let </span>ip_addr = addr.try_into()
+                        .map(|ip: [u8; <span class="number">4</span>]| <span class="prelude-val">Some</span>(IpAddr::from(ip)))
+                        .unwrap_or_else(|addr| {
+                            addr.try_into()
+                                .map(|ip: [u8; <span class="number">16</span>]| <span class="prelude-val">Some</span>(IpAddr::from(ip)))
+                                .unwrap_or_else(|addr| {
+                                    <span class="macro">warn!</span>(<span class="string">&quot;Could not Convert vec: {:?} to ipv4 or ipv6&quot;</span>, addr);
+                                    <span class="prelude-val">None
+                                </span>})
                         });
 
-                    <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">ip_addr</span> {
-                        <span class="prelude-val">Some</span>(<span class="ident">IpAddr::V4</span>(<span class="ident">ip_addr</span>)) =&gt; {
-                            <span class="macro">info!</span>(<span class="string">&quot;\t ipv4: {}&quot;</span>, <span class="ident">ip_addr</span>);
+                    <span class="kw">match </span><span class="kw-2">&amp;</span>ip_addr {
+                        <span class="prelude-val">Some</span>(IpAddr::V4(ip_addr)) =&gt; {
+                            <span class="macro">info!</span>(<span class="string">&quot;\t ipv4: {}&quot;</span>, ip_addr);
                         }
-                        <span class="prelude-val">Some</span>(<span class="ident">IpAddr::V6</span>(<span class="ident">ip_addr</span>)) =&gt; {
-                            <span class="macro">info!</span>(<span class="string">&quot;\t ipv6: {}&quot;</span>, <span class="ident">ip_addr</span>);
+                        <span class="prelude-val">Some</span>(IpAddr::V6(ip_addr)) =&gt; {
+                            <span class="macro">info!</span>(<span class="string">&quot;\t ipv6: {}&quot;</span>, ip_addr);
                         }
-                        <span class="prelude-val">None</span> =&gt; {}
+                        <span class="prelude-val">None </span>=&gt; {}
                     }
                 }
             }
         }
         <span class="prelude-val">Ok</span>(())
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;link {} not found&quot;</span>, <span class="ident">iface</span>))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;link {} not found&quot;</span>, iface))
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_network_info</span>(<span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">Handle</span>) {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>show_network_info(handle: <span class="kw-2">&amp;</span>Handle) {
     <span class="macro">info!</span>(<span class="string">&quot;=== Network Interfaces ===&quot;</span>);
 
     <span class="macro">info!</span>(<span class="string">&quot;Addresses:&quot;</span>);
-    <span class="kw">let</span> <span class="ident">links_result</span> <span class="op">=</span> <span class="ident">get_links</span>(<span class="ident">handle</span>).<span class="kw">await</span>;
+    <span class="kw">let </span>links_result = get_links(handle).<span class="kw">await</span>;
 
-    <span class="kw">match</span> <span class="ident">links_result</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">links</span>) =&gt; {
-            <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">iface</span>) <span class="kw">in</span> <span class="ident">links</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">dump_addresses</span>(<span class="ident">handle</span>, <span class="kw-2">&amp;</span><span class="ident">iface</span>).<span class="kw">await</span> {
+    <span class="kw">match </span>links_result {
+        <span class="prelude-val">Ok</span>(links) =&gt; {
+            <span class="kw">for </span>(<span class="kw">_</span>, iface) <span class="kw">in </span>links {
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = dump_addresses(handle, <span class="kw-2">&amp;</span>iface).<span class="kw">await </span>{
                     <span class="macro">error!</span>(
                         <span class="string">&quot;Could not dump addresses for iface {}. Error={}&quot;</span>,
-                        <span class="ident">iface</span>, <span class="ident">e</span>
+                        iface, e
                     );
                 };
             }
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-            <span class="macro">error!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>);
+        <span class="prelude-val">Err</span>(e) =&gt; {
+            <span class="macro">error!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
         }
     }
     <span class="macro">info!</span>(<span class="string">&quot;==========================&quot;</span>);
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>

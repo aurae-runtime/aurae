@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/init/system_runtime.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>system_runtime.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/init/system_runtime.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>system_runtime.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -221,147 +215,147 @@
 <span id="215">215</span>
 <span id="216">216</span>
 <span id="217">217</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::network</span>::{
-    <span class="ident">add_address</span>, <span class="ident">add_route_v6</span>, <span class="ident">set_link_up</span>, <span class="ident">show_network_info</span>,
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::init::network::{
+    add_address, add_route_v6, set_link_up, show_network_info,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init::power::spawn_thread_power_button_listener</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init</span>::{<span class="ident">fs</span>, <span class="ident">logging</span>, <span class="ident">InitError</span>, <span class="ident">BANNER</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe::LogItem</span>;
+<span class="kw">use </span><span class="kw">crate</span>::init::power::spawn_thread_power_button_listener;
+<span class="kw">use </span><span class="kw">crate</span>::init::{fs, logging, InitError, BANNER};
+<span class="kw">use </span><span class="kw">crate</span>::observe::LogItem;
 
-<span class="kw">use</span> <span class="ident">anyhow::anyhow</span>;
-<span class="kw">use</span> <span class="ident">crossbeam::channel::Sender</span>;
-<span class="kw">use</span> <span class="ident">ipnetwork</span>::{<span class="ident">IpNetwork</span>, <span class="ident">Ipv6Network</span>};
-<span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">error</span>, <span class="ident">info</span>, <span class="ident">trace</span>, <span class="ident">Level</span>};
-<span class="kw">use</span> <span class="ident">netlink_packet_route::RtnlMessage</span>;
-<span class="kw">use</span> <span class="ident">rtnetlink::new_connection</span>;
-<span class="kw">use</span> <span class="ident">rtnetlink::proto::Connection</span>;
-<span class="kw">use</span> <span class="ident">std::path::Path</span>;
-<span class="kw">use</span> <span class="ident">tonic::async_trait</span>;
+<span class="kw">use </span>anyhow::anyhow;
+<span class="kw">use </span>crossbeam::channel::Sender;
+<span class="kw">use </span>ipnetwork::{IpNetwork, Ipv6Network};
+<span class="kw">use </span>log::{error, info, trace, Level};
+<span class="kw">use </span>netlink_packet_route::RtnlMessage;
+<span class="kw">use </span>rtnetlink::new_connection;
+<span class="kw">use </span>rtnetlink::proto::Connection;
+<span class="kw">use </span>std::path::Path;
+<span class="kw">use </span>tonic::async_trait;
 
-<span class="kw">const</span> <span class="ident">LOOPBACK_DEV</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;lo&quot;</span>;
+<span class="kw">const </span>LOOPBACK_DEV: <span class="kw-2">&amp;</span>str = <span class="string">&quot;lo&quot;</span>;
 
-<span class="kw">const</span> <span class="ident">LOOPBACK_IPV6</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;::1&quot;</span>;
-<span class="kw">const</span> <span class="ident">LOOPBACK_IPV6_SUBNET</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;/128&quot;</span>;
+<span class="kw">const </span>LOOPBACK_IPV6: <span class="kw-2">&amp;</span>str = <span class="string">&quot;::1&quot;</span>;
+<span class="kw">const </span>LOOPBACK_IPV6_SUBNET: <span class="kw-2">&amp;</span>str = <span class="string">&quot;/128&quot;</span>;
 
-<span class="kw">const</span> <span class="ident">LOOPBACK_IPV4</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;127.0.0.1&quot;</span>;
-<span class="kw">const</span> <span class="ident">LOOPBACK_IPV4_SUBNET</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;/8&quot;</span>;
+<span class="kw">const </span>LOOPBACK_IPV4: <span class="kw-2">&amp;</span>str = <span class="string">&quot;127.0.0.1&quot;</span>;
+<span class="kw">const </span>LOOPBACK_IPV4_SUBNET: <span class="kw-2">&amp;</span>str = <span class="string">&quot;/8&quot;</span>;
 
-<span class="kw">const</span> <span class="ident">DEFAULT_NET_DEV</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;eth0&quot;</span>;
-<span class="kw">const</span> <span class="ident">DEFAULT_NET_DEV_IPV6</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;fe80::2&quot;</span>;
-<span class="kw">const</span> <span class="ident">DEFAULT_NET_DEV_IPV6_SUBNET</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;/64&quot;</span>;
+<span class="kw">const </span>DEFAULT_NET_DEV: <span class="kw-2">&amp;</span>str = <span class="string">&quot;eth0&quot;</span>;
+<span class="kw">const </span>DEFAULT_NET_DEV_IPV6: <span class="kw-2">&amp;</span>str = <span class="string">&quot;fe80::2&quot;</span>;
+<span class="kw">const </span>DEFAULT_NET_DEV_IPV6_SUBNET: <span class="kw-2">&amp;</span>str = <span class="string">&quot;/64&quot;</span>;
 
-<span class="kw">const</span> <span class="ident">POWER_BUTTON_DEVICE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;/dev/input/event0&quot;</span>;
+<span class="kw">const </span>POWER_BUTTON_DEVICE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;/dev/input/event0&quot;</span>;
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait</span> <span class="ident">SystemRuntime</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(
+<span class="attribute">#[async_trait]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>SystemRuntime {
+    <span class="kw">async fn </span>init(
         <span class="self">self</span>,
-        <span class="ident">logger_level</span>: <span class="ident">Level</span>,
-        <span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span>;
+        logger_level: Level,
+        producer: Sender&lt;LogItem&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InitError&gt;;
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Pid1SystemRuntime</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Pid1SystemRuntime;
 
-<span class="kw">impl</span> <span class="ident">Pid1SystemRuntime</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init_network</span>(
+<span class="kw">impl </span>Pid1SystemRuntime {
+    <span class="kw">async fn </span>init_network(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">connection</span>: <span class="ident">Connection</span><span class="op">&lt;</span><span class="ident">RtnlMessage</span><span class="op">&gt;</span>,
-        <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">rtnetlink::Handle</span>,
+        connection: Connection&lt;RtnlMessage&gt;,
+        handle: <span class="kw-2">&amp;</span>rtnetlink::Handle,
     ) {
-        <span class="ident">tokio::spawn</span>(<span class="ident">connection</span>);
+        tokio::spawn(connection);
 
-        <span class="macro">trace!</span>(<span class="string">&quot;configure {}&quot;</span>, <span class="ident">LOOPBACK_DEV</span>);
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">configure_loopback</span>(<span class="ident">handle</span>).<span class="kw">await</span> {
+        <span class="macro">trace!</span>(<span class="string">&quot;configure {}&quot;</span>, LOOPBACK_DEV);
+        <span class="kw">match </span><span class="self">self</span>.configure_loopback(handle).<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
-                <span class="macro">info!</span>(<span class="string">&quot;Successfully configured {}&quot;</span>, <span class="ident">LOOPBACK_DEV</span>);
+                <span class="macro">info!</span>(<span class="string">&quot;Successfully configured {}&quot;</span>, LOOPBACK_DEV);
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                <span class="macro">error!</span>(<span class="string">&quot;Failed to setup loopback device. Error={}&quot;</span>, <span class="ident">e</span>);
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="macro">error!</span>(<span class="string">&quot;Failed to setup loopback device. Error={}&quot;</span>, e);
             }
         }
 
-        <span class="macro">trace!</span>(<span class="string">&quot;configure {}&quot;</span>, <span class="ident">DEFAULT_NET_DEV</span>);
+        <span class="macro">trace!</span>(<span class="string">&quot;configure {}&quot;</span>, DEFAULT_NET_DEV);
 
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">configure_nic</span>(<span class="ident">handle</span>).<span class="kw">await</span> {
+        <span class="kw">match </span><span class="self">self</span>.configure_nic(handle).<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
-                <span class="macro">info!</span>(<span class="string">&quot;Successfully configured {}&quot;</span>, <span class="ident">DEFAULT_NET_DEV</span>);
+                <span class="macro">info!</span>(<span class="string">&quot;Successfully configured {}&quot;</span>, DEFAULT_NET_DEV);
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+            <span class="prelude-val">Err</span>(e) =&gt; {
                 <span class="macro">error!</span>(
                     <span class="string">&quot;Failed to configure NIC {}. Error={}&quot;</span>,
-                    <span class="ident">DEFAULT_NET_DEV</span>, <span class="ident">e</span>
+                    DEFAULT_NET_DEV, e
                 );
             }
         }
 
-        <span class="ident">show_network_info</span>(<span class="ident">handle</span>).<span class="kw">await</span>;
+        show_network_info(handle).<span class="kw">await</span>;
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">configure_loopback</span>(
+    <span class="kw">async fn </span>configure_loopback(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">rtnetlink::Handle</span>,
-    ) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ipv6</span>) <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">LOOPBACK_IPV6</span>, <span class="ident">LOOPBACK_IPV6_SUBNET</span>)
-            .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">IpNetwork</span><span class="op">&gt;</span>()
+        handle: <span class="kw-2">&amp;</span>rtnetlink::Handle,
+    ) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(ipv6) = <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, LOOPBACK_IPV6, LOOPBACK_IPV6_SUBNET)
+            .parse::&lt;IpNetwork&gt;()
         {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">add_address</span>(<span class="ident">LOOPBACK_DEV</span>, <span class="ident">ipv6</span>, <span class="ident">handle</span>).<span class="kw">await</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Failed to add ipv6 address to loopback device {}. Error={}&quot;</span>, <span class="ident">LOOPBACK_DEV</span>, <span class="ident">e</span>));
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = add_address(LOOPBACK_DEV, ipv6, handle).<span class="kw">await </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Failed to add ipv6 address to loopback device {}. Error={}&quot;</span>, LOOPBACK_DEV, e));
             };
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ipv4</span>) <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">LOOPBACK_IPV4</span>, <span class="ident">LOOPBACK_IPV4_SUBNET</span>)
-            .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">IpNetwork</span><span class="op">&gt;</span>()
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(ipv4) = <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, LOOPBACK_IPV4, LOOPBACK_IPV4_SUBNET)
+            .parse::&lt;IpNetwork&gt;()
         {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">add_address</span>(<span class="ident">LOOPBACK_DEV</span>, <span class="ident">ipv4</span>, <span class="ident">handle</span>).<span class="kw">await</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Failed to add ipv4 address to loopback device {}. Error={}&quot;</span>, <span class="ident">LOOPBACK_DEV</span>, <span class="ident">e</span>));
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = add_address(LOOPBACK_DEV, ipv4, handle).<span class="kw">await </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;Failed to add ipv4 address to loopback device {}. Error={}&quot;</span>, LOOPBACK_DEV, e));
             }
         };
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">set_link_up</span>(<span class="ident">handle</span>, <span class="ident">LOOPBACK_DEV</span>).<span class="kw">await</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = set_link_up(handle, LOOPBACK_DEV).<span class="kw">await </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
                 <span class="string">&quot;Failed to set link up for device {}. Error={}&quot;</span>,
-                <span class="ident">LOOPBACK_DEV</span>,
-                <span class="ident">e</span>
+                LOOPBACK_DEV,
+                e
             ));
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// TODO: design network config struct</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">configure_nic</span>(
+    <span class="comment">// TODO: design network config struct
+    </span><span class="kw">async fn </span>configure_nic(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="ident">rtnetlink::Handle</span>,
-    ) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">ipv6</span>) <span class="op">=</span>
-            <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">DEFAULT_NET_DEV_IPV6</span>, <span class="ident">DEFAULT_NET_DEV_IPV6_SUBNET</span>)
-                .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">Ipv6Network</span><span class="op">&gt;</span>()
+        handle: <span class="kw-2">&amp;</span>rtnetlink::Handle,
+    ) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(ipv6) =
+            <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, DEFAULT_NET_DEV_IPV6, DEFAULT_NET_DEV_IPV6_SUBNET)
+                .parse::&lt;Ipv6Network&gt;()
         {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">add_address</span>(<span class="ident">DEFAULT_NET_DEV</span>, <span class="ident">ipv6</span>, <span class="ident">handle</span>).<span class="kw">await</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = add_address(DEFAULT_NET_DEV, ipv6, handle).<span class="kw">await </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
                     <span class="string">&quot;Failed to add ipv6 address to device {}. Error={}&quot;</span>,
-                    <span class="ident">DEFAULT_NET_DEV</span>,
-                    <span class="ident">e</span>
+                    DEFAULT_NET_DEV,
+                    e
                 ));
             }
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">set_link_up</span>(<span class="ident">handle</span>, <span class="ident">DEFAULT_NET_DEV</span>).<span class="kw">await</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = set_link_up(handle, DEFAULT_NET_DEV).<span class="kw">await </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
                     <span class="string">&quot;Failed to set link up for device {}. Error={}&quot;</span>,
-                    <span class="ident">DEFAULT_NET_DEV</span>,
-                    <span class="ident">e</span>
+                    DEFAULT_NET_DEV,
+                    e
                 ));
             }
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">destv6</span>) <span class="op">=</span> <span class="string">&quot;::/0&quot;</span>.<span class="ident">to_string</span>().<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">Ipv6Network</span><span class="op">&gt;</span>() {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span>
-                    <span class="ident">add_route_v6</span>(<span class="kw-2">&amp;</span><span class="ident">destv6</span>, <span class="ident">DEFAULT_NET_DEV</span>, <span class="kw-2">&amp;</span><span class="ident">ipv6</span>, <span class="ident">handle</span>).<span class="kw">await</span>
-                {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(destv6) = <span class="string">&quot;::/0&quot;</span>.to_string().parse::&lt;Ipv6Network&gt;() {
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) =
+                    add_route_v6(<span class="kw-2">&amp;</span>destv6, DEFAULT_NET_DEV, <span class="kw-2">&amp;</span>ipv6, handle).<span class="kw">await
+                </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
                         <span class="string">&quot;Failed to add ipv6 route to device {}. Error={}&quot;</span>,
-                        <span class="ident">DEFAULT_NET_DEV</span>,
-                        <span class="ident">e</span>
+                        DEFAULT_NET_DEV,
+                        e
                     ));
                 }
             }
@@ -370,74 +364,73 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">spawn_system_runtime_threads</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="comment">// ---- MAIN DAEMON THREAD POOL ----</span>
-        <span class="comment">// TODO: https://github.com/aurae-runtime/auraed/issues/33</span>
-        <span class="kw">match</span> <span class="ident">spawn_thread_power_button_listener</span>(<span class="ident">Path::new</span>(<span class="ident">POWER_BUTTON_DEVICE</span>))
+    <span class="kw">fn </span>spawn_system_runtime_threads(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="comment">// ---- MAIN DAEMON THREAD POOL ----
+        // TODO: https://github.com/aurae-runtime/auraed/issues/33
+        </span><span class="kw">match </span>spawn_thread_power_button_listener(Path::new(POWER_BUTTON_DEVICE))
         {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
                 <span class="macro">info!</span>(<span class="string">&quot;Spawned power button device listener&quot;</span>);
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+            <span class="prelude-val">Err</span>(e) =&gt; {
                 <span class="macro">error!</span>(
                     <span class="string">&quot;Failed to spawn power button device listener. Error={}&quot;</span>,
-                    <span class="ident">e</span>
+                    e
                 );
             }
         }
 
-        <span class="comment">// ---- MAIN DAEMON THREAD POOL ----</span>
-    }
+        <span class="comment">// ---- MAIN DAEMON THREAD POOL ----
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">SystemRuntime</span> <span class="kw">for</span> <span class="ident">Pid1SystemRuntime</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>SystemRuntime <span class="kw">for </span>Pid1SystemRuntime {
+    <span class="kw">async fn </span>init(
         <span class="self">self</span>,
-        <span class="ident">logger_level</span>: <span class="ident">Level</span>,
-        <span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">BANNER</span>);
+        logger_level: Level,
+        producer: Sender&lt;LogItem&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InitError&gt; {
+        <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, BANNER);
 
-        <span class="ident">logging::init</span>(<span class="ident">logger_level</span>, <span class="ident">producer</span>)<span class="question-mark">?</span>;
+        logging::init(logger_level, producer)<span class="question-mark">?</span>;
         <span class="macro">trace!</span>(<span class="string">&quot;Logging started&quot;</span>);
 
         <span class="macro">trace!</span>(<span class="string">&quot;Configure filesystem&quot;</span>);
-        <span class="ident">fs::mount_vfs</span>(<span class="string">&quot;none&quot;</span>, <span class="string">&quot;/dev&quot;</span>, <span class="string">&quot;devtmpfs&quot;</span>)<span class="question-mark">?</span>;
-        <span class="ident">fs::mount_vfs</span>(<span class="string">&quot;none&quot;</span>, <span class="string">&quot;/sys&quot;</span>, <span class="string">&quot;sysfs&quot;</span>)<span class="question-mark">?</span>;
-        <span class="ident">fs::mount_vfs</span>(<span class="string">&quot;proc&quot;</span>, <span class="string">&quot;/proc&quot;</span>, <span class="string">&quot;proc&quot;</span>)<span class="question-mark">?</span>;
+        fs::mount_vfs(<span class="string">&quot;none&quot;</span>, <span class="string">&quot;/dev&quot;</span>, <span class="string">&quot;devtmpfs&quot;</span>)<span class="question-mark">?</span>;
+        fs::mount_vfs(<span class="string">&quot;none&quot;</span>, <span class="string">&quot;/sys&quot;</span>, <span class="string">&quot;sysfs&quot;</span>)<span class="question-mark">?</span>;
+        fs::mount_vfs(<span class="string">&quot;proc&quot;</span>, <span class="string">&quot;/proc&quot;</span>, <span class="string">&quot;proc&quot;</span>)<span class="question-mark">?</span>;
 
         <span class="macro">trace!</span>(<span class="string">&quot;configure network&quot;</span>);
-        <span class="comment">//show_dir(&quot;/sys/class/net/&quot;, false); // Show available network interfaces</span>
-        <span class="kw">match</span> <span class="ident">new_connection</span>() {
-            <span class="prelude-val">Ok</span>((<span class="ident">connection</span>, <span class="ident">handle</span>, ..)) =&gt; {
-                <span class="self">self</span>.<span class="ident">init_network</span>(<span class="ident">connection</span>, <span class="kw-2">&amp;</span><span class="ident">handle</span>).<span class="kw">await</span>;
+        <span class="comment">//show_dir(&quot;/sys/class/net/&quot;, false); // Show available network interfaces
+        </span><span class="kw">match </span>new_connection() {
+            <span class="prelude-val">Ok</span>((connection, handle, ..)) =&gt; {
+                <span class="self">self</span>.init_network(connection, <span class="kw-2">&amp;</span>handle).<span class="kw">await</span>;
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                <span class="macro">error!</span>(<span class="string">&quot;Could not initialize network! Error={}&quot;</span>, <span class="ident">e</span>);
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="macro">error!</span>(<span class="string">&quot;Could not initialize network! Error={}&quot;</span>, e);
             }
         };
 
-        <span class="self">self</span>.<span class="ident">spawn_system_runtime_threads</span>();
+        <span class="self">self</span>.spawn_system_runtime_threads();
 
         <span class="macro">trace!</span>(<span class="string">&quot;init of auraed as pid1 done&quot;</span>);
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">PidGt1SystemRuntime</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PidGt1SystemRuntime;
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">SystemRuntime</span> <span class="kw">for</span> <span class="ident">PidGt1SystemRuntime</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>SystemRuntime <span class="kw">for </span>PidGt1SystemRuntime {
+    <span class="kw">async fn </span>init(
         <span class="self">self</span>,
-        <span class="ident">logger_level</span>: <span class="ident">Level</span>,
-        <span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InitError</span><span class="op">&gt;</span> {
-        <span class="ident">logging::init</span>(<span class="ident">logger_level</span>, <span class="ident">producer</span>)<span class="question-mark">?</span>;
+        logger_level: Level,
+        producer: Sender&lt;LogItem&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InitError&gt; {
+        logging::init(logger_level, producer)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>

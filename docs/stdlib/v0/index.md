@@ -25,10 +25,8 @@
     - [ContainerStatus](#runtime-ContainerStatus)
     - [Executable](#runtime-Executable)
     - [ExecutableStatus](#runtime-ExecutableStatus)
-    - [Instance](#runtime-Instance)
-    - [InstanceMeta](#runtime-InstanceMeta)
-    - [InstanceMetaStatus](#runtime-InstanceMetaStatus)
-    - [InstanceStatus](#runtime-InstanceStatus)
+    - [Pod](#runtime-Pod)
+    - [PodStatus](#runtime-PodStatus)
   
     - [Runtime](#runtime-Runtime)
   
@@ -235,14 +233,13 @@ TODO: not implemented
 <a name="runtime-Container"></a>
 
 ### Container
-
+Container represents is an OCI compliant container image which can be executed.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
-| name | [string](#string) |  |  |
-| image | [string](#string) |  |  |
+| image | [string](#string) |  | OCI compliant image. |
 
 
 
@@ -252,7 +249,7 @@ TODO: not implemented
 <a name="runtime-ContainerStatus"></a>
 
 ### ContainerStatus
-
+ContainerStatus is the status of a container after it has been executed.
 
 
 | Field | Type | Label | Description |
@@ -269,7 +266,7 @@ TODO: not implemented
 <a name="runtime-Executable"></a>
 
 ### Executable
-
+Executable is the lowest level of compute that Aurae can execute. A basic process.
 
 
 | Field | Type | Label | Description |
@@ -286,7 +283,8 @@ TODO: not implemented
 <a name="runtime-ExecutableStatus"></a>
 
 ### ExecutableStatus
-
+ExecutableStatus is only returned after a process completes. Because runtime is a synchronous subsystem
+this will only return upon a terminated process.
 
 
 | Field | Type | Label | Description |
@@ -294,73 +292,42 @@ TODO: not implemented
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
 | proc | [meta.ProcessMeta](#meta-ProcessMeta) |  |  |
 | status | [meta.Status](#meta-Status) |  |  |
-| stdout | [string](#string) |  |  |
-| stderr | [string](#string) |  |  |
-| exit_code | [string](#string) |  |  |
+| stdout | [string](#string) |  | The full stdout data. |
+| stderr | [string](#string) |  | The full stderr data. |
+| exit_code | [string](#string) |  | The exit code (return code) of the process after termination. |
 
 
 
 
 
 
-<a name="runtime-Instance"></a>
+<a name="runtime-Pod"></a>
 
-### Instance
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
-| name | [string](#string) |  |  |
-| image | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="runtime-InstanceMeta"></a>
-
-### InstanceMeta
-
+### Pod
+Pod is a group of containers that share common isolation namespaces.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| containers | [Container](#runtime-Container) | repeated | A set of containers. |
 
 
 
 
 
 
-<a name="runtime-InstanceMetaStatus"></a>
+<a name="runtime-PodStatus"></a>
 
-### InstanceMetaStatus
-
+### PodStatus
+PodStatus is the status of a completed pod and its subsequent containers.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
 | status | [meta.Status](#meta-Status) |  |  |
-
-
-
-
-
-
-<a name="runtime-InstanceStatus"></a>
-
-### InstanceStatus
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
-| status | [meta.Status](#meta-Status) |  |  |
+| containers | [ContainerStatus](#runtime-ContainerStatus) | repeated | A set of container statuses. |
 
 
 
@@ -377,11 +344,28 @@ TODO: not implemented
 
 ### Runtime
 Runtime is a synchronous and immediate subsystem.
+
  Use the Runtime subsystem to start and stop executables, containers, and instances.
+
+The naming convention for the Runtime subsystem is to keep short, bespoke function names.
+These specific functions are similar to distributed system call functions, and will
+likely never be called by anyone except more advanced users who understand the consequences
+of the functions.
+
+The short function names also encourage the Aurae authors to instill opinions into
+each of the calls. For example instead of having RunExecutableFromRemote()
+or RunExecutableIfExistsLocal() we just have Exec() which holds an opinion that
+all executables should exist locally.
+
+In short as an author if you find yourself creating long or many similar function names
+it is likely a sign that you are violating the opinionated principle of the system.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Exec | [Executable](#runtime-Executable) | [ExecutableStatus](#runtime-ExecutableStatus) |  |
+| Exec | [Executable](#runtime-Executable) | [ExecutableStatus](#runtime-ExecutableStatus) | Exec is the lowest level of executable that Aurae supports. |
+| RunP | [Pod](#runtime-Pod) | [PodStatus](#runtime-PodStatus) | RunP (Run Pod) resembles Exec() however accepts a higher level &#34;Pod&#34; status The intention with a Pod is to be a simplified version a group of containers running in the same namespaces on a system.
+
+RunP is a DNS dependent function as it may &#34;pull&#34; an image from a remote registry. |
 
  
 

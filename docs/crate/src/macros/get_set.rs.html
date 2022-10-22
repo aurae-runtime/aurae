@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/macros/src/get_set.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>get_set.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../macros/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../macros/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../macros/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/macros/src/get_set.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>get_set.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../macros/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../macros/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../macros/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -373,319 +367,318 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */</span>
+\* -------------------------------------------------------------------------- */
 
-<span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
-<span class="kw">use</span> <span class="ident">proc_macro2::Ident</span>;
-<span class="kw">use</span> <span class="ident">quote</span>::{<span class="ident">quote</span>, <span class="ident">ToTokens</span>};
-<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
-<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
-<span class="kw">use</span> <span class="ident">syn::punctuated::Punctuated</span>;
-<span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">parse_macro_input</span>, <span class="ident">Data</span>, <span class="ident">DeriveInput</span>, <span class="ident">Field</span>, <span class="ident">Token</span>, <span class="ident">Type</span>};
+</span><span class="kw">use </span>proc_macro::TokenStream;
+<span class="kw">use </span>proc_macro2::Ident;
+<span class="kw">use </span>quote::{quote, ToTokens};
+<span class="kw">use </span>std::str::FromStr;
+<span class="kw">use </span>syn::parse::{Parse, ParseStream};
+<span class="kw">use </span>syn::punctuated::Punctuated;
+<span class="kw">use </span>syn::{parse_macro_input, Data, DeriveInput, Field, Token, Type};
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">getters</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
-    <span class="kw">let</span> <span class="ident">ast</span> <span class="op">=</span> <span class="macro">parse_macro_input!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DeriveInput</span>);
-    <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ast</span>.<span class="ident">ident</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>getters(input: TokenStream) -&gt; TokenStream {
+    <span class="kw">let </span>ast = <span class="macro">parse_macro_input!</span>(input <span class="kw">as </span>DeriveInput);
+    <span class="kw">let </span>ident = <span class="kw-2">&amp;</span>ast.ident;
 
-    <span class="kw">let</span> <span class="ident">data_struct</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ast</span>.<span class="ident">data</span> {
-        <span class="ident">Data::Struct</span>(<span class="ident">data_struct</span>) =&gt; <span class="ident">data_struct</span>,
-        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;`Getters` only supports structs&quot;</span>),
+    <span class="kw">let </span>data_struct = <span class="kw">match </span>ast.data {
+        Data::Struct(data_struct) =&gt; data_struct,
+        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;`Getters` only supports structs&quot;</span>),
     };
 
-    <span class="kw">let</span> <span class="ident">field_getters</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">proc_macro2::TokenStream</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_struct</span>
-        .<span class="ident">fields</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">field</span><span class="op">|</span> {
-            <span class="op">!</span><span class="ident">GetSetAttribute::contains_any</span>(<span class="ident">field</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;ignore&quot;</span>, <span class="string">&quot;ignore_get&quot;</span>])
+    <span class="kw">let </span>field_getters: Vec&lt;proc_macro2::TokenStream&gt; = data_struct
+        .fields
+        .iter()
+        .filter(|field| {
+            !GetSetAttribute::contains_any(field, <span class="kw-2">&amp;</span>[<span class="string">&quot;ignore&quot;</span>, <span class="string">&quot;ignore_get&quot;</span>])
         })
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">field</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">field_ident</span> <span class="op">=</span> <span class="ident">field</span>
-                .<span class="ident">ident</span>
-                .<span class="ident">as_ref</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;`Getters` only supports structs with named fields&quot;</span>);
+        .map(|field| {
+            <span class="kw">let </span>field_ident = field
+                .ident
+                .as_ref()
+                .expect(<span class="string">&quot;`Getters` only supports structs with named fields&quot;</span>);
 
-            <span class="kw">let</span> <span class="ident">function_ident</span> <span class="op">=</span>
-                <span class="ident">Ident::new</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;get_{}&quot;</span>, <span class="ident">field_ident</span>), <span class="ident">field_ident</span>.<span class="ident">span</span>());
+            <span class="kw">let </span>function_ident =
+                Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;get_{}&quot;</span>, field_ident), field_ident.span());
 
-            <span class="kw">let</span> <span class="ident">field_type</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">field</span>.<span class="ident">ty</span>;
-            <span class="ident">assert_field_type_is_supported</span>(<span class="ident">field_type</span>);
+            <span class="kw">let </span>field_type = <span class="kw-2">&amp;</span>field.ty;
+            assert_field_type_is_supported(field_type);
 
-            <span class="kw">if</span> <span class="ident">try_field_type_as_vec_type_name</span>(<span class="ident">field_type</span>).<span class="ident">is_some</span>() {
-                <span class="macro">quote!</span> {
-                    <span class="kw">pub</span> <span class="kw">fn</span> #<span class="ident">function_ident</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">::rhai::Array</span> {
-                        <span class="self">self</span>.#<span class="ident">field_ident</span>
-                            .<span class="ident">iter</span>()
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">::rhai::Dynamic::from</span>(<span class="ident">x</span>.<span class="ident">clone</span>()))
-                            .<span class="ident">collect</span>()
+            <span class="kw">if </span>try_field_type_as_vec_type_name(field_type).is_some() {
+                <span class="macro">quote! </span>{
+                    <span class="kw">pub fn </span>#function_ident(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ::rhai::Array {
+                        <span class="self">self</span>.#field_ident
+                            .iter()
+                            .map(|x| ::rhai::Dynamic::from(x.clone()))
+                            .collect()
                     }
                 }
-            } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">value_as_rhai_field_type</span> <span class="op">=</span>
-                    <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">field_type_to_name</span>(<span class="ident">field_type</span>) {
-                        <span class="string">&quot;f64&quot;</span> <span class="op">|</span> <span class="string">&quot;bool&quot;</span> =&gt; {
-                            <span class="macro">quote!</span>(<span class="ident">::rhai::Dynamic::from</span>(<span class="self">self</span>.#<span class="ident">field_ident</span>))
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>value_as_rhai_field_type =
+                    <span class="kw">match </span><span class="kw-2">&amp;*</span>field_type_to_name(field_type) {
+                        <span class="string">&quot;f64&quot; </span>| <span class="string">&quot;bool&quot; </span>=&gt; {
+                            <span class="macro">quote!</span>(::rhai::Dynamic::from(<span class="self">self</span>.#field_ident))
                         }
-                        <span class="string">&quot;i32&quot;</span> <span class="op">|</span> <span class="string">&quot;i64&quot;</span> <span class="op">|</span> <span class="string">&quot;u32&quot;</span> =&gt; {
-                            <span class="macro">quote!</span>(<span class="ident">::rhai::Dynamic::from</span>(<span class="self">self</span>.#<span class="ident">field_ident</span> <span class="kw">as</span> <span class="ident">i64</span>))
+                        <span class="string">&quot;i32&quot; </span>| <span class="string">&quot;i64&quot; </span>| <span class="string">&quot;u32&quot; </span>=&gt; {
+                            <span class="macro">quote!</span>(::rhai::Dynamic::from(<span class="self">self</span>.#field_ident <span class="kw">as </span>i64))
                         }
-                        <span class="ident">other</span> <span class="kw">if</span> <span class="ident">other</span>.<span class="ident">starts_with</span>(<span class="string">&quot;::core::option::Option&lt;::prost::alloc::boxed::Box&lt;&quot;</span>) =&gt; {
-                            <span class="macro">quote!</span> {
-                                <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.#<span class="ident">field_ident</span> {
-                                    <span class="prelude-val">Some</span>(#<span class="ident">field_ident</span>) =&gt; <span class="ident">rhai::Dynamic::from</span>((<span class="kw-2">*</span><span class="kw-2">*</span>#<span class="ident">field_ident</span>).<span class="ident">clone</span>()),
-                                    <span class="prelude-val">None</span> =&gt; <span class="ident">rhai::Dynamic::UNIT</span>,
+                        other <span class="kw">if </span>other.starts_with(<span class="string">&quot;::core::option::Option&lt;::prost::alloc::boxed::Box&lt;&quot;</span>) =&gt; {
+                            <span class="macro">quote! </span>{
+                                <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.#field_ident {
+                                    <span class="prelude-val">Some</span>(#field_ident) =&gt; rhai::Dynamic::from((<span class="kw-2">**</span>#field_ident).clone()),
+                                    <span class="prelude-val">None </span>=&gt; rhai::Dynamic::UNIT,
                                 }
                             }
                         }
-                        <span class="ident">other</span> <span class="kw">if</span> <span class="ident">other</span>.<span class="ident">starts_with</span>(<span class="string">&quot;::core::option::Option&lt;&quot;</span>) =&gt; {
-                            <span class="macro">quote!</span> {
-                                <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.#<span class="ident">field_ident</span> {
-                                    <span class="prelude-val">Some</span>(#<span class="ident">field_ident</span>) =&gt; <span class="ident">rhai::Dynamic::from</span>((<span class="kw-2">*</span>#<span class="ident">field_ident</span>).<span class="ident">clone</span>()),
-                                    <span class="prelude-val">None</span> =&gt; <span class="ident">::rhai::Dynamic::UNIT</span>,
+                        other <span class="kw">if </span>other.starts_with(<span class="string">&quot;::core::option::Option&lt;&quot;</span>) =&gt; {
+                            <span class="macro">quote! </span>{
+                                <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.#field_ident {
+                                    <span class="prelude-val">Some</span>(#field_ident) =&gt; rhai::Dynamic::from((<span class="kw-2">*</span>#field_ident).clone()),
+                                    <span class="prelude-val">None </span>=&gt; ::rhai::Dynamic::UNIT,
                                 }
                             }
                         }
-                        <span class="kw">_</span> =&gt; {
-                            <span class="macro">quote!</span>(<span class="ident">::rhai::Dynamic::from</span>(<span class="self">self</span>.#<span class="ident">field_ident</span>.<span class="ident">clone</span>()))
+                        <span class="kw">_ </span>=&gt; {
+                            <span class="macro">quote!</span>(::rhai::Dynamic::from(<span class="self">self</span>.#field_ident.clone()))
                         }
                     };
 
-                <span class="macro">quote!</span> {
-                    <span class="kw">pub</span> <span class="kw">fn</span> #<span class="ident">function_ident</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">::rhai::Dynamic</span> {
-                        #<span class="ident">value_as_rhai_field_type</span>
+                <span class="macro">quote! </span>{
+                    <span class="kw">pub fn </span>#function_ident(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ::rhai::Dynamic {
+                        #value_as_rhai_field_type
                     }
                 }
             }
         })
-        .<span class="ident">collect</span>();
+        .collect();
 
-    <span class="kw">let</span> <span class="ident">expanded</span> <span class="op">=</span> <span class="macro">quote!</span> {
-        <span class="kw">impl</span> #<span class="ident">ident</span> {
-            #(#<span class="ident">field_getters</span>)<span class="op">*</span>
+    <span class="kw">let </span>expanded = <span class="macro">quote! </span>{
+        <span class="kw">impl </span>#ident {
+            #(#field_getters)*
         }
     };
 
-    <span class="ident">expanded</span>.<span class="ident">into</span>()
+    expanded.into()
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">setters</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
-    <span class="kw">let</span> <span class="ident">ast</span> <span class="op">=</span> <span class="macro">parse_macro_input!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DeriveInput</span>);
-    <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ast</span>.<span class="ident">ident</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>setters(input: TokenStream) -&gt; TokenStream {
+    <span class="kw">let </span>ast = <span class="macro">parse_macro_input!</span>(input <span class="kw">as </span>DeriveInput);
+    <span class="kw">let </span>ident = <span class="kw-2">&amp;</span>ast.ident;
 
-    <span class="kw">let</span> <span class="ident">data_struct</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ast</span>.<span class="ident">data</span> {
-        <span class="ident">Data::Struct</span>(<span class="ident">data_struct</span>) =&gt; <span class="ident">data_struct</span>,
-        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;`Setters` only supports structs&quot;</span>),
+    <span class="kw">let </span>data_struct = <span class="kw">match </span>ast.data {
+        Data::Struct(data_struct) =&gt; data_struct,
+        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;`Setters` only supports structs&quot;</span>),
     };
 
-    <span class="kw">let</span> <span class="ident">field_setters</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">proc_macro2::TokenStream</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_struct</span>
-        .<span class="ident">fields</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">field</span><span class="op">|</span> {
-            <span class="op">!</span><span class="ident">GetSetAttribute::contains_any</span>(<span class="ident">field</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;ignore&quot;</span>, <span class="string">&quot;ignore_set&quot;</span>])
+    <span class="kw">let </span>field_setters: Vec&lt;proc_macro2::TokenStream&gt; = data_struct
+        .fields
+        .iter()
+        .filter(|field| {
+            !GetSetAttribute::contains_any(field, <span class="kw-2">&amp;</span>[<span class="string">&quot;ignore&quot;</span>, <span class="string">&quot;ignore_set&quot;</span>])
         })
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">field</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">field_ident</span> <span class="op">=</span> <span class="ident">field</span>
-                .<span class="ident">ident</span>
-                .<span class="ident">as_ref</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;`Setters` only supports structs with named fields&quot;</span>);
+        .map(|field| {
+            <span class="kw">let </span>field_ident = field
+                .ident
+                .as_ref()
+                .expect(<span class="string">&quot;`Setters` only supports structs with named fields&quot;</span>);
 
-            <span class="kw">let</span> <span class="ident">function_ident</span> <span class="op">=</span>
-                <span class="ident">Ident::new</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;set_{}&quot;</span>, <span class="ident">field_ident</span>), <span class="ident">field_ident</span>.<span class="ident">span</span>());
+            <span class="kw">let </span>function_ident =
+                Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;set_{}&quot;</span>, field_ident), field_ident.span());
 
-            <span class="kw">let</span> <span class="ident">field_type</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">field</span>.<span class="ident">ty</span>;
-            <span class="ident">assert_field_type_is_supported</span>(<span class="ident">field_type</span>);
+            <span class="kw">let </span>field_type = <span class="kw-2">&amp;</span>field.ty;
+            assert_field_type_is_supported(field_type);
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">vec_of_type_name</span>) <span class="op">=</span> <span class="ident">try_field_type_as_vec_type_name</span>(<span class="ident">field_type</span>) {
-                <span class="kw">let</span> <span class="ident">val_as_rust_field_type</span> <span class="op">=</span> <span class="ident">expression_for_val_as_rust_field_type</span>(
-                    <span class="ident">field_type</span>,
-                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unexpected type in array. Expecting {}&quot;</span>, <span class="ident">vec_of_type_name</span>)
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(vec_of_type_name) = try_field_type_as_vec_type_name(field_type) {
+                <span class="kw">let </span>val_as_rust_field_type = expression_for_val_as_rust_field_type(
+                    field_type,
+                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unexpected type in array. Expecting {}&quot;</span>, vec_of_type_name)
                 );
 
-                <span class="macro">quote!</span> {
-                    <span class="kw">pub</span> <span class="kw">fn</span> #<span class="ident">function_ident</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, #<span class="ident">field_ident</span>: <span class="ident">::rhai::Array</span>) {
-                        <span class="self">self</span>.#<span class="ident">field_ident</span> <span class="op">=</span> #<span class="ident">field_ident</span>
-                            .<span class="ident">into_iter</span>()
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">val</span><span class="op">|</span> #<span class="ident">val_as_rust_field_type</span>)
-                            .<span class="ident">collect</span>();
+                <span class="macro">quote! </span>{
+                    <span class="kw">pub fn </span>#function_ident(<span class="kw-2">&amp;mut </span><span class="self">self</span>, #field_ident: ::rhai::Array) {
+                        <span class="self">self</span>.#field_ident = #field_ident
+                            .into_iter()
+                            .map(|val| #val_as_rust_field_type)
+                            .collect();
                     }
                 }
-            } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">val_as_rust_field_type</span> <span class="op">=</span> <span class="ident">expression_for_val_as_rust_field_type</span>(
-                    <span class="ident">field_type</span>,
-                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unexpected type. Expecting {}&quot;</span>, <span class="ident">field_type_to_name</span>(<span class="ident">field_type</span>))
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>val_as_rust_field_type = expression_for_val_as_rust_field_type(
+                    field_type,
+                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unexpected type. Expecting {}&quot;</span>, field_type_to_name(field_type))
                 );
 
-                <span class="macro">quote!</span> {
-                    <span class="kw">pub</span> <span class="kw">fn</span> #<span class="ident">function_ident</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">::rhai::Dynamic</span>) {
-                        <span class="self">self</span>.#<span class="ident">field_ident</span> <span class="op">=</span> #<span class="ident">val_as_rust_field_type</span>;
+                <span class="macro">quote! </span>{
+                    <span class="kw">pub fn </span>#function_ident(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: ::rhai::Dynamic) {
+                        <span class="self">self</span>.#field_ident = #val_as_rust_field_type;
                     }
                 }
             }
         })
-        .<span class="ident">collect</span>();
+        .collect();
 
-    <span class="kw">let</span> <span class="ident">expanded</span> <span class="op">=</span> <span class="macro">quote!</span> {
-        <span class="kw">impl</span> #<span class="ident">ident</span> {
-            #(#<span class="ident">field_setters</span>)<span class="op">*</span>
+    <span class="kw">let </span>expanded = <span class="macro">quote! </span>{
+        <span class="kw">impl </span>#ident {
+            #(#field_setters)*
         }
     };
 
-    <span class="kw">return</span> <span class="ident">expanded</span>.<span class="ident">into</span>();
+    <span class="kw">return </span>expanded.into();
 
-    <span class="kw">fn</span> <span class="ident">expression_for_val_as_rust_field_type</span>(
-        <span class="ident">field_type</span>: <span class="kw-2">&amp;</span><span class="ident">Type</span>,
-        <span class="ident">expect_message</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) -&gt; <span class="ident">proc_macro2::TokenStream</span> {
-        <span class="kw">let</span> <span class="ident">field_type_name</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">vec_of_field_type_name</span>) <span class="op">=</span>
-            <span class="ident">try_field_type_as_vec_type_name</span>(<span class="ident">field_type</span>)
+    <span class="kw">fn </span>expression_for_val_as_rust_field_type(
+        field_type: <span class="kw-2">&amp;</span>Type,
+        expect_message: <span class="kw-2">&amp;</span>str,
+    ) -&gt; proc_macro2::TokenStream {
+        <span class="kw">let </span>field_type_name = <span class="kw">if let </span><span class="prelude-val">Some</span>(vec_of_field_type_name) =
+            try_field_type_as_vec_type_name(field_type)
         {
-            <span class="ident">vec_of_field_type_name</span>
-        } <span class="kw">else</span> {
-            <span class="ident">field_type_to_name</span>(<span class="ident">field_type</span>)
+            vec_of_field_type_name
+        } <span class="kw">else </span>{
+            field_type_to_name(field_type)
         };
 
-        <span class="comment">// val is of type rhai::Dynamic</span>
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">field_type_name</span> {
-            <span class="string">&quot;f64&quot;</span> =&gt; <span class="macro">quote!</span>(<span class="ident">val</span>.<span class="ident">as_float</span>().<span class="ident">expect</span>(#<span class="ident">expect_message</span>)),
-            <span class="string">&quot;i64&quot;</span> =&gt; <span class="macro">quote!</span>(<span class="ident">val</span>.<span class="ident">as_int</span>().<span class="ident">expect</span>(#<span class="ident">expect_message</span>)),
-            <span class="string">&quot;i32&quot;</span> <span class="op">|</span> <span class="string">&quot;u32&quot;</span> =&gt; <span class="macro">quote!</span>({
-                <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">as_int</span>().<span class="ident">expect</span>(#<span class="ident">expect_message</span>);
-                <span class="ident">::std::convert::TryFrom</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">val</span>).<span class="ident">expect</span>(#<span class="ident">expect_message</span>)
+        <span class="comment">// val is of type rhai::Dynamic
+        </span><span class="kw">match </span><span class="kw-2">&amp;*</span>field_type_name {
+            <span class="string">&quot;f64&quot; </span>=&gt; <span class="macro">quote!</span>(val.as_float().expect(#expect_message)),
+            <span class="string">&quot;i64&quot; </span>=&gt; <span class="macro">quote!</span>(val.as_int().expect(#expect_message)),
+            <span class="string">&quot;i32&quot; </span>| <span class="string">&quot;u32&quot; </span>=&gt; <span class="macro">quote!</span>({
+                <span class="kw">let </span>val = val.as_int().expect(#expect_message);
+                ::std::convert::TryFrom::&lt;i64&gt;::try_from(val).expect(#expect_message)
             }),
-            <span class="string">&quot;bool&quot;</span> =&gt; <span class="macro">quote!</span>(<span class="ident">val</span>.<span class="ident">as_bool</span>().<span class="ident">expect</span>(#<span class="ident">expect_message</span>)),
-            <span class="string">&quot;String&quot;</span> =&gt; <span class="macro">quote!</span>(<span class="ident">val</span>.<span class="ident">into_string</span>().<span class="ident">expect</span>(#<span class="ident">expect_message</span>)),
-            <span class="string">&quot;Vec&lt;u8&gt;&quot;</span> =&gt; <span class="macro">quote!</span>(<span class="ident">val</span>.<span class="ident">into_blob</span>().<span class="ident">expect</span>(#<span class="ident">expect_message</span>)),
-            <span class="ident">assuming_proto_message</span> =&gt; {
-                <span class="kw">if</span> <span class="ident">assuming_proto_message</span>.<span class="ident">starts_with</span>(
+            <span class="string">&quot;bool&quot; </span>=&gt; <span class="macro">quote!</span>(val.as_bool().expect(#expect_message)),
+            <span class="string">&quot;String&quot; </span>=&gt; <span class="macro">quote!</span>(val.into_string().expect(#expect_message)),
+            <span class="string">&quot;Vec&lt;u8&gt;&quot; </span>=&gt; <span class="macro">quote!</span>(val.into_blob().expect(#expect_message)),
+            assuming_proto_message =&gt; {
+                <span class="kw">if </span>assuming_proto_message.starts_with(
                     <span class="string">&quot;::core::option::Option&lt;::prost::alloc::boxed::Box&lt;&quot;</span>,
                 ) {
-                    <span class="kw">let</span> <span class="ident">field_type</span> <span class="op">=</span> <span class="ident">proto_message_name_to_type</span>(<span class="kw-2">&amp;</span><span class="ident">assuming_proto_message</span>
-                        [<span class="string">&quot;::core::option::Option&lt;::prost::alloc::boxed::Box&lt;&quot;</span>.<span class="ident">len</span>()
-                        ..<span class="ident">assuming_proto_message</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>]);
+                    <span class="kw">let </span>field_type = proto_message_name_to_type(<span class="kw-2">&amp;</span>assuming_proto_message
+                        [<span class="string">&quot;::core::option::Option&lt;::prost::alloc::boxed::Box&lt;&quot;</span>.len()
+                        ..assuming_proto_message.len() - <span class="number">2</span>]);
 
                     <span class="macro">quote!</span>({
-                        <span class="kw">match</span> <span class="ident">val</span>.<span class="ident">as_unit</span>() {
+                        <span class="kw">match </span>val.as_unit() {
                             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">::std::boxed::Box::new</span>(<span class="ident">val</span>.<span class="ident">cast</span>::<span class="op">&lt;</span>#<span class="ident">field_type</span><span class="op">&gt;</span>())),
+                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(::std::boxed::Box::new(val.cast::&lt;#field_type&gt;())),
                         }
                     })
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">assuming_proto_message</span>
-                    .<span class="ident">starts_with</span>(<span class="string">&quot;::core::option::Option&lt;&quot;</span>)
+                } <span class="kw">else if </span>assuming_proto_message
+                    .starts_with(<span class="string">&quot;::core::option::Option&lt;&quot;</span>)
                 {
-                    <span class="kw">let</span> <span class="ident">field_type</span> <span class="op">=</span> <span class="ident">proto_message_name_to_type</span>(
-                        <span class="kw-2">&amp;</span><span class="ident">assuming_proto_message</span>[<span class="string">&quot;::core::option::Option&lt;&quot;</span>.<span class="ident">len</span>()
-                            ..<span class="ident">assuming_proto_message</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>],
+                    <span class="kw">let </span>field_type = proto_message_name_to_type(
+                        <span class="kw-2">&amp;</span>assuming_proto_message[<span class="string">&quot;::core::option::Option&lt;&quot;</span>.len()
+                            ..assuming_proto_message.len() - <span class="number">1</span>],
                     );
 
                     <span class="macro">quote!</span>({
-                        <span class="kw">match</span> <span class="ident">val</span>.<span class="ident">as_unit</span>() {
+                        <span class="kw">match </span>val.as_unit() {
                             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">val</span>.<span class="ident">cast</span>::<span class="op">&lt;</span>#<span class="ident">field_type</span><span class="op">&gt;</span>()),
+                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(val.cast::&lt;#field_type&gt;()),
                         }
                     })
-                } <span class="kw">else</span> {
-                    <span class="kw">let</span> <span class="ident">field_type</span> <span class="op">=</span>
-                        <span class="ident">proto_message_name_to_type</span>(<span class="ident">assuming_proto_message</span>);
+                } <span class="kw">else </span>{
+                    <span class="kw">let </span>field_type =
+                        proto_message_name_to_type(assuming_proto_message);
 
-                    <span class="macro">quote!</span>(<span class="ident">val</span>.<span class="ident">cast</span>::<span class="op">&lt;</span>#<span class="ident">field_type</span><span class="op">&gt;</span>())
+                    <span class="macro">quote!</span>(val.cast::&lt;#field_type&gt;())
                 }
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">proto_message_name_to_type</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">proc_macro2::TokenStream</span> {
-        <span class="ident">proc_macro2::TokenStream::from_str</span>(<span class="ident">name</span>)
-            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro">panic!</span>(<span class="string">&quot;Could not parse type `{}`&quot;</span>, <span class="ident">name</span>))
+    <span class="kw">fn </span>proto_message_name_to_type(name: <span class="kw-2">&amp;</span>str) -&gt; proc_macro2::TokenStream {
+        proc_macro2::TokenStream::from_str(name)
+            .unwrap_or_else(|<span class="kw">_</span>| <span class="macro">panic!</span>(<span class="string">&quot;Could not parse type `{}`&quot;</span>, name))
     }
 }
 
-<span class="kw">fn</span> <span class="ident">field_type_to_name</span>(<span class="ident">field_type</span>: <span class="kw-2">&amp;</span><span class="ident">Type</span>) -&gt; <span class="ident">String</span> {
-    <span class="kw">let</span> <span class="ident">field_type_name</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">field_type</span>
-        .<span class="ident">to_token_stream</span>()
-        .<span class="ident">to_string</span>()
-        .<span class="ident">chars</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">!</span><span class="ident">x</span>.<span class="ident">is_whitespace</span>())
-        .<span class="ident">collect</span>();
+<span class="kw">fn </span>field_type_to_name(field_type: <span class="kw-2">&amp;</span>Type) -&gt; String {
+    <span class="kw">let </span>field_type_name: String = field_type
+        .to_token_stream()
+        .to_string()
+        .chars()
+        .filter(|x| !x.is_whitespace())
+        .collect();
 
-    <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">field_type_name</span> {
-        <span class="string">&quot;::prost::alloc::string::String&quot;</span> =&gt; <span class="string">&quot;String&quot;</span>.<span class="ident">to_string</span>(),
-        <span class="string">&quot;::prost::alloc::vec::Vec&lt;u8&gt;&quot;</span> =&gt; <span class="string">&quot;Vec&lt;u8&gt;&quot;</span>.<span class="ident">to_string</span>(),
-        <span class="kw">_</span> =&gt; <span class="ident">field_type_name</span>,
+    <span class="kw">match </span><span class="kw-2">&amp;*</span>field_type_name {
+        <span class="string">&quot;::prost::alloc::string::String&quot; </span>=&gt; <span class="string">&quot;String&quot;</span>.to_string(),
+        <span class="string">&quot;::prost::alloc::vec::Vec&lt;u8&gt;&quot; </span>=&gt; <span class="string">&quot;Vec&lt;u8&gt;&quot;</span>.to_string(),
+        <span class="kw">_ </span>=&gt; field_type_name,
     }
 }
 
-<span class="kw">fn</span> <span class="ident">try_field_type_as_vec_type_name</span>(<span class="ident">field_type</span>: <span class="kw-2">&amp;</span><span class="ident">Type</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">field_type_name</span> <span class="op">=</span> <span class="ident">field_type_to_name</span>(<span class="ident">field_type</span>);
-    <span class="kw">if</span> <span class="ident">field_type_name</span>.<span class="ident">starts_with</span>(<span class="string">&quot;::prost::alloc::vec::Vec&lt;&quot;</span>) {
-        <span class="kw">let</span> <span class="ident">field_type_name</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">field_type_name</span>
-            [<span class="string">&quot;::prost::alloc::vec::Vec&lt;&quot;</span>.<span class="ident">len</span>()..<span class="ident">field_type_name</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>]
+<span class="kw">fn </span>try_field_type_as_vec_type_name(field_type: <span class="kw-2">&amp;</span>Type) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+    <span class="kw">let </span>field_type_name = field_type_to_name(field_type);
+    <span class="kw">if </span>field_type_name.starts_with(<span class="string">&quot;::prost::alloc::vec::Vec&lt;&quot;</span>) {
+        <span class="kw">let </span>field_type_name = <span class="kw">match </span><span class="kw-2">&amp;</span>field_type_name
+            [<span class="string">&quot;::prost::alloc::vec::Vec&lt;&quot;</span>.len()..field_type_name.len() - <span class="number">1</span>]
         {
-            <span class="string">&quot;::prost::alloc::string::String&quot;</span> =&gt; <span class="string">&quot;String&quot;</span>,
-            <span class="string">&quot;::prost::alloc::vec::Vec&lt;u8&gt;&quot;</span> =&gt; <span class="string">&quot;Vec&lt;u8&gt;&quot;</span>,
-            <span class="ident">other</span> =&gt; <span class="ident">other</span>,
+            <span class="string">&quot;::prost::alloc::string::String&quot; </span>=&gt; <span class="string">&quot;String&quot;</span>,
+            <span class="string">&quot;::prost::alloc::vec::Vec&lt;u8&gt;&quot; </span>=&gt; <span class="string">&quot;Vec&lt;u8&gt;&quot;</span>,
+            other =&gt; other,
         };
 
-        <span class="prelude-val">Some</span>(<span class="ident">field_type_name</span>.<span class="ident">to_string</span>())
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">Some</span>(field_type_name.to_string())
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">fn</span> <span class="ident">assert_field_type_is_supported</span>(<span class="ident">field_type</span>: <span class="kw-2">&amp;</span><span class="ident">Type</span>) {
-    <span class="kw">let</span> <span class="ident">field_type_name</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">field_type_name</span>) <span class="op">=</span>
-        <span class="ident">try_field_type_as_vec_type_name</span>(<span class="ident">field_type</span>)
+<span class="kw">fn </span>assert_field_type_is_supported(field_type: <span class="kw-2">&amp;</span>Type) {
+    <span class="kw">let </span>field_type_name = <span class="kw">if let </span><span class="prelude-val">Some</span>(field_type_name) =
+        try_field_type_as_vec_type_name(field_type)
     {
-        <span class="ident">field_type_name</span>
-    } <span class="kw">else</span> {
-        <span class="ident">field_type_to_name</span>(<span class="ident">field_type</span>)
+        field_type_name
+    } <span class="kw">else </span>{
+        field_type_to_name(field_type)
     };
 
-    <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">field_type_name</span> {
-        <span class="string">&quot;f32&quot;</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Protobuf float fields are not supported. AuraeScript only has f64, and f64 cannot be cast to f32 without losing precision&quot;</span>),
-        <span class="string">&quot;u64&quot;</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Protobuf uint64 and fixed64 fields are not supported. AuraeScript only has i64, and u64 cannot be cast to i64 safely&quot;</span>),
-        <span class="kw">_</span> =&gt; {}
+    <span class="kw">match </span><span class="kw-2">&amp;*</span>field_type_name {
+        <span class="string">&quot;f32&quot; </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Protobuf float fields are not supported. AuraeScript only has f64, and f64 cannot be cast to f32 without losing precision&quot;</span>),
+        <span class="string">&quot;u64&quot; </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Protobuf uint64 and fixed64 fields are not supported. AuraeScript only has i64, and u64 cannot be cast to i64 safely&quot;</span>),
+        <span class="kw">_ </span>=&gt; {}
     };
 }
 
-<span class="kw">struct</span> <span class="ident">GetSetAttribute</span> {
-    <span class="ident">options</span>: <span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">Ident</span>, <span class="macro">Token!</span>[,]<span class="op">&gt;</span>,
+<span class="kw">struct </span>GetSetAttribute {
+    options: Punctuated&lt;Ident, <span class="macro">Token!</span>[,]&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">GetSetAttribute</span> {
-    <span class="kw">fn</span> <span class="ident">contains_any</span>(<span class="ident">field</span>: <span class="kw-2">&amp;</span><span class="ident">Field</span>, <span class="ident">values</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="ident">bool</span> {
-        <span class="ident">field</span>
-            .<span class="ident">attrs</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">attribute</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">seg</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">attribute</span>.<span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">len</span>() {
-                    <span class="number">1</span> =&gt; <span class="kw-2">&amp;</span><span class="ident">attribute</span>.<span class="ident">path</span>.<span class="ident">segments</span>[<span class="number">0</span>],
-                    <span class="number">2</span> <span class="kw">if</span> <span class="ident">attribute</span>.<span class="ident">path</span>.<span class="ident">segments</span>[<span class="number">0</span>].<span class="ident">ident</span> <span class="op">==</span> <span class="string">&quot;macros&quot;</span> =&gt; {
-                        <span class="kw-2">&amp;</span><span class="ident">attribute</span>.<span class="ident">path</span>.<span class="ident">segments</span>[<span class="number">1</span>]
+<span class="kw">impl </span>GetSetAttribute {
+    <span class="kw">fn </span>contains_any(field: <span class="kw-2">&amp;</span>Field, values: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]) -&gt; bool {
+        field
+            .attrs
+            .iter()
+            .filter(|attribute| {
+                <span class="kw">let </span>seg = <span class="kw">match </span>attribute.path.segments.len() {
+                    <span class="number">1 </span>=&gt; <span class="kw-2">&amp;</span>attribute.path.segments[<span class="number">0</span>],
+                    <span class="number">2 </span><span class="kw">if </span>attribute.path.segments[<span class="number">0</span>].ident == <span class="string">&quot;macros&quot; </span>=&gt; {
+                        <span class="kw-2">&amp;</span>attribute.path.segments[<span class="number">1</span>]
                     }
-                    <span class="kw">_</span> =&gt; {
-                        <span class="kw">return</span> <span class="bool-val">false</span>;
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">return </span><span class="bool-val">false</span>;
                     }
                 };
 
-                <span class="ident">seg</span>.<span class="ident">ident</span> <span class="op">==</span> <span class="string">&quot;getset&quot;</span>
-            })
-            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">attribute</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">GetSetAttribute</span> { <span class="ident">options</span> } <span class="op">=</span> <span class="ident">attribute</span>
-                    .<span class="ident">parse_args_with</span>(<span class="ident">GetSetAttribute::parse</span>)
-                    .<span class="ident">expect</span>(<span class="string">&quot;failed to parse `getset` attribute&quot;</span>);
+                seg.ident == <span class="string">&quot;getset&quot;
+            </span>})
+            .any(|attribute| {
+                <span class="kw">let </span>GetSetAttribute { options } = attribute
+                    .parse_args_with(GetSetAttribute::parse)
+                    .expect(<span class="string">&quot;failed to parse `getset` attribute&quot;</span>);
 
-                <span class="ident">options</span>
-                    .<span class="ident">into_iter</span>()
-                    .<span class="ident">any</span>(<span class="op">|</span><span class="ident">option</span><span class="op">|</span> <span class="ident">values</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">option</span> <span class="op">==</span> <span class="ident">v</span>))
+                options
+                    .into_iter()
+                    .any(|option| values.iter().any(|v| option == v))
             })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">GetSetAttribute</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="ident">syn::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse_terminated</span>(<span class="ident">Ident::parse</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">GetSetAttribute</span> { <span class="ident">options</span> })
+<span class="kw">impl </span>Parse <span class="kw">for </span>GetSetAttribute {
+    <span class="kw">fn </span>parse(input: ParseStream) -&gt; syn::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>options = input.parse_terminated(Ident::parse)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(GetSetAttribute { options })
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="macros" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="macros" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
