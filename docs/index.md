@@ -19,11 +19,11 @@ Please read [getting involved](https://github.com/aurae-runtime/community#gettin
 
 Aurae offers a runtime API which is capable of managing:
 
- - [Executables](/stdlib/v0/#executable) (The most fundamental runtime process)
- - [Cells](/stdlib/v0/#cell) (Processes running in a shared cgroup namespace)
- - [Spawned Aurae Instances](/stdlib/v0/#instance) (Short lived nested virtual instances of Aurae)
- - [Pods](/stdlib/v0/#pod) (Cells running in spawned instances)
- - [Virtual Machines](/stdlib/v0/#virtualmachine) (Long-lived arbitrary virtual machines)
+ - [Executables](https://aurae.io/stdlib/v0/#executable) (The most fundamental runtime process)
+ - [Cells](https://aurae.io/stdlib/v0/#cell) (Processes running in a shared cgroup namespace)
+ - [Spawned Aurae Instances](https://aurae.io/stdlib/v0/#instance) (Short lived nested virtual instances of Aurae)
+ - [Pods](https://aurae.io/stdlib/v0/#pod) (Cells running in spawned instances)
+ - [Virtual Machines](https://aurae.io/stdlib/v0/#virtualmachine) (Long-lived arbitrary virtual machines)
 
 ### Auraed
 

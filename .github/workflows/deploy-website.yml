@@ -16,10 +16,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
           sudo apt-get install -y libdbus-1-dev pkg-config libseccomp-dev
+          mkdir src
+          cd src
           wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
           tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
           chmod +x protoc-gen-doc
           cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
+          cd ../
+          rm -rf src
           pip install mkdocs-material
       - name: Build website
         run: make docs
