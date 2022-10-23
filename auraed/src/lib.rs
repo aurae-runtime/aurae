@@ -178,7 +178,7 @@ impl AuraedRuntime {
         let handle = tokio::spawn(async {
             Server::builder()
                 .tls_config(tls)?
-                .add_service(RuntimeServer::new(RuntimeService::default()))
+                .add_service(CoreServer::new(CoreService::default()))
                 .add_service(ObserveServer::new(ObserveService::new(consumer)))
                 .add_service(ScheduleExecutableServer::new(
                     ScheduleExecutableService::default(),

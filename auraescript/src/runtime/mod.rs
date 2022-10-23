@@ -31,7 +31,7 @@
 tonic::include_proto!("runtime");
 
 macros::client_wrapper!(
-    Runtime,
+    Core,
     run_executable(Executable) -> ExecutableStatus
 );
 
@@ -40,5 +40,5 @@ pub fn cmd(cmd: &str) -> Executable {
 }
 
 pub fn exec(x: &str) -> ExecutableStatus {
-    Runtime::new().run_executable(cmd(x))
+    Core::new().run_executable(cmd(x))
 }

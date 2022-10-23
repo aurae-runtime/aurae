@@ -182,6 +182,8 @@ message Cell {
 message CellStatus {
   meta.AuraeMeta meta = 1;
   meta.Status status = 2;
+  repeated ContainerStatus container_statuses = 3;
+
 }
 
 // Instance is a recursive graph structure which holds the meta data for the nested Aurae instances
