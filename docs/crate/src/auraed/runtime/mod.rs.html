@@ -229,7 +229,7 @@
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="macro">tonic::include_proto!</span>(<span class="string">&quot;runtime&quot;</span>);
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::runtime_server::Runtime</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::core_server::Core</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">command_from_string</span>, <span class="ident">meta</span>};
 <span class="kw">use</span> <span class="ident">anyhow::Result</span>;
 <span class="kw">use</span> <span class="ident">libcontainer</span>::{
@@ -238,7 +238,7 @@
 <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 <span class="kw">use</span> <span class="ident">tonic</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">Status</span>};
 
-<span class="doccomment">/// The server side implementation of the Runtime subsystem.</span>
+<span class="doccomment">/// The server side implementation of the core runtime subsystem.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// The Runtime subsystem is synchronous and will operate against</span>
 <span class="doccomment">/// the system inline with any requests.</span>
@@ -247,10 +247,10 @@
 <span class="doccomment">/// part of the daemon is potentially vulnerable to denial of service</span>
 <span class="doccomment">/// and flooding attacks.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RuntimeService</span> {}
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CoreService</span> {}
 
 <span class="attribute">#[<span class="ident">tonic::async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">Runtime</span> <span class="kw">for</span> <span class="ident">RuntimeService</span> {
+<span class="kw">impl</span> <span class="ident">Core</span> <span class="kw">for</span> <span class="ident">CoreService</span> {
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_executable</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Executable</span><span class="op">&gt;</span>,

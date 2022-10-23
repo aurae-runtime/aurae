@@ -27,6 +27,7 @@
     - [ContainerStatus](#runtime-ContainerStatus)
     - [Executable](#runtime-Executable)
     - [ExecutableStatus](#runtime-ExecutableStatus)
+    - [Instance](#runtime-Instance)
     - [Pod](#runtime-Pod)
     - [PodStatus](#runtime-PodStatus)
     - [SpawnRequest](#runtime-SpawnRequest)
@@ -34,7 +35,7 @@
     - [VirtualMachine](#runtime-VirtualMachine)
     - [VirtualMachineStatus](#runtime-VirtualMachineStatus)
   
-    - [Runtime](#runtime-Runtime)
+    - [Core](#runtime-Core)
   
 - [schedule.proto](#schedule-proto)
     - [ExecutableDestroyResponse](#schedule-ExecutableDestroyResponse)
@@ -233,18 +234,24 @@ TODO: not implemented
 <p align="right"><a href="#top">Top</a></p>
 
 ## runtime.proto
+The runtime subsystem is a synchronous and stateless subsystem which
+enables the most fundamental of runtime functionality.
 
+The runtime subsystem is the lowest level of Aurae. Here the runtime
+procedures can be executed in parallel. Each of the procedures defines a
+core paradigm of work.
 
 
 <a name="runtime-Cell"></a>
 
 ### Cell
-
+A set of containers running on the same kernel as the auraed responding to the request.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| containers | [Container](#runtime-Container) | repeated | A set of containers. |
 
 
 
@@ -338,6 +345,24 @@ this will only return upon a terminated process.
 
 
 
+<a name="runtime-Instance"></a>
+
+### Instance
+Instance is a recursive graph structure which holds the meta data for the nested Aurae instances
+running on a machine.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| is_root | [bool](#bool) |  |  |
+| nested_instances | [Instance](#runtime-Instance) | repeated |  |
+
+
+
+
+
+
 <a name="runtime-Pod"></a>
 
 ### Pod
@@ -347,7 +372,7 @@ Pod is a group of containers running in a spawned Aurae instance.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
-| containers | [Container](#runtime-Container) | repeated | A set of containers. |
+| cells | [Cell](#runtime-Cell) | repeated | The cells to create within the spawned Aurae instance. |
 
 
 
@@ -364,7 +389,9 @@ PodStatus is the status of a completed pod and its subsequent containers.
 | ----- | ---- | ----- | ----------- |
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
 | status | [meta.Status](#meta-Status) |  |  |
-| containers | [ContainerStatus](#runtime-ContainerStatus) | repeated | A set of container statuses. |
+| spawn_response | [SpawnResponse](#runtime-SpawnResponse) |  | The response of the necessary spawn for a pod. |
+| instance | [Instance](#runtime-Instance) |  | If the spawn is successful, the nested Aurae instance. |
+| cell_status | [CellStatus](#runtime-CellStatus) |  | If the cell creation is successful, the cell of containers running in the spawned Aurae instance. |
 
 
 
@@ -374,7 +401,7 @@ PodStatus is the status of a completed pod and its subsequent containers.
 <a name="runtime-SpawnRequest"></a>
 
 ### SpawnRequest
-
+Parameters for spawning a new nested Aurae instance.
 
 
 
@@ -384,7 +411,7 @@ PodStatus is the status of a completed pod and its subsequent containers.
 <a name="runtime-SpawnResponse"></a>
 
 ### SpawnResponse
-
+Response of a spawn.
 
 
 
@@ -394,7 +421,7 @@ PodStatus is the status of a completed pod and its subsequent containers.
 <a name="runtime-VirtualMachine"></a>
 
 ### VirtualMachine
-
+A long lived virtual machine which will persist on termination.
 
 
 | Field | Type | Label | Description |
@@ -411,7 +438,7 @@ PodStatus is the status of a completed pod and its subsequent containers.
 <a name="runtime-VirtualMachineStatus"></a>
 
 ### VirtualMachineStatus
-
+Status of a terminated virtual machine.
 
 
 | Field | Type | Label | Description |
@@ -430,19 +457,32 @@ PodStatus is the status of a completed pod and its subsequent containers.
  
 
 
-<a name="runtime-Runtime"></a>
+<a name="runtime-Core"></a>
 
-### Runtime
-Runtime is a synchronous subsystem which defines the main methods for executing and starting
+### Core
+Core is a synchronous subsystem which defines the main methods for executing and starting
 workloads within an Aurae system.
+
+Core is designed to be called by higher order instance of Aurae, clients, or higher order
+systems in general.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| RunExecutable | [Executable](#runtime-Executable) | [ExecutableStatus](#runtime-ExecutableStatus) | Run an Executable, the most fundamental runtime process. * Already exists on system |
-| RunPod | [Pod](#runtime-Pod) | [PodStatus](#runtime-PodStatus) | Run a set of containers in a unique sandbox micro instance, similar to Firecracker&#39;s jailer. * Pull from a remote OCI registry. * Runs on opinionated (configurable?) kernel/OS image with Auraed. * RunPod calls RunMicroInstance() and then calls the recursive/subsequent RunCell() method. |
-| Spawn | [SpawnRequest](#runtime-SpawnRequest) | [SpawnResponse](#runtime-SpawnResponse) | Spawn a short lived (ephemeral) nested virtual instance of Aurae which will terminate on exit. Each instance runs an isolated kernel and guarantees the spawned auraed has the same version and safe connectivity to the parent. * Manages a security boundary for packets, block devices between the new spawned instance. * Pull from a remote OCI registry * Assumes a specific Linux kernel and corresponding userspace with Auraed * Creates necessary &#34;pipe&#34; between the two auraed&#39;s using net devices and gRPC. * Manages mTLS certificates as necessary. |
-| RunVirtualMachine | [VirtualMachine](#runtime-VirtualMachine) | [VirtualMachineStatus](#runtime-VirtualMachineStatus) | Run a long lived virtual instance which will persist on exit. * Pull from a remote registry (e.g. qcow format) |
-| RunCell | [Cell](#runtime-Cell) | [CellStatus](#runtime-CellStatus) | Run a set of containers in a unique Cgroup with shared namespaces. * Pull from a remote OCI registry. * Runs directly on the same kernel as the listening Auraed. |
+| RunExecutable | [Executable](#runtime-Executable) | [ExecutableStatus](#runtime-ExecutableStatus) | Run an Executable, the most fundamental runtime process. Akin to shell executing a command.
+
+* Executable should exist on system, does not pull from a remote. |
+| RunPod | [Pod](#runtime-Pod) | [PodStatus](#runtime-PodStatus) | Spawn a new instance of Aurae, and then create a cell of containers inside the nested Aurae instance.
+
+* Accepts an OCI compliant container image, will always pull the image before running. * Assumes Spawn() is successful and is able to bridge to the nested Aurae and the nested cell. |
+| Spawn | [SpawnRequest](#runtime-SpawnRequest) | [SpawnResponse](#runtime-SpawnResponse) | Spawn a short lived (ephemeral) nested virtual instance of Aurae which will terminate on exit. Akin to fork() in Linux, each nested instance inherits properties from the parent but runs an isolated virtual machine with its own kernel and auraed instance.
+
+* Inherits a bridged network device from the parent (TAP). * Accepts an OCI compliant container image, will always pull the image before running. * Manages mTLS certificates as necessary. |
+| RunVirtualMachine | [VirtualMachine](#runtime-VirtualMachine) | [VirtualMachineStatus](#runtime-VirtualMachineStatus) | Run a long lived virtual instance which will persist on exit. Akin to a QEMU virtual machine running with the base auraed as a hypervisor.
+
+* Pull from a remote registry (e.g. qcow format) * Accepts a qcow compliant virtual machine image, will always pull the image before running. |
+| RunCell | [Cell](#runtime-Cell) | [CellStatus](#runtime-CellStatus) | Run a set of containers in a unique Cgroup with shared namespaces. Akin to running a &#34;container&#34; in its most native way.
+
+* Accepts an OCI compliant container image, will always pull the image before running. * Runs directly on the same kernel as the root Auraed. |
 
  
 

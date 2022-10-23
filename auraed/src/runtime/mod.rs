@@ -34,7 +34,7 @@
 #![allow(dead_code)]
 tonic::include_proto!("runtime");
 
-use crate::runtime::runtime_server::Runtime;
+use crate::runtime::core_server::Core;
 use crate::{command_from_string, meta};
 use anyhow::Result;
 use libcontainer::{
@@ -43,7 +43,7 @@ use libcontainer::{
 use std::path::PathBuf;
 use tonic::{Request, Response, Status};
 
-/// The server side implementation of the Runtime subsystem.
+/// The server side implementation of the core runtime subsystem.
 ///
 /// The Runtime subsystem is synchronous and will operate against
 /// the system inline with any requests.
@@ -52,10 +52,10 @@ use tonic::{Request, Response, Status};
 /// part of the daemon is potentially vulnerable to denial of service
 /// and flooding attacks.
 #[derive(Debug, Default, Clone)]
-pub struct RuntimeService {}
+pub struct CoreService {}
 
 #[tonic::async_trait]
-impl Runtime for RuntimeService {
+impl Core for CoreService {
     async fn run_executable(
         &self,
         request: Request<Executable>,
