@@ -56,7 +56,7 @@ pub struct RuntimeService {}
 
 #[tonic::async_trait]
 impl Runtime for RuntimeService {
-    async fn exec(
+    async fn run_executable(
         &self,
         request: Request<Executable>,
     ) -> Result<Response<ExecutableStatus>, Status> {
@@ -124,7 +124,7 @@ impl Runtime for RuntimeService {
         }
     }
 
-    async fn run_p(
+    async fn run_pod(
         &self,
         _request: Request<Pod>,
     ) -> Result<Response<PodStatus>, Status> {
@@ -157,6 +157,27 @@ impl Runtime for RuntimeService {
         }];
         let response = PodStatus { meta: Some(meta), status, containers };
         Ok(Response::new(response))
+    }
+
+    async fn spawn(
+        &self,
+        _request: Request<SpawnRequest>,
+    ) -> Result<Response<SpawnResponse>, Status> {
+        todo!()
+    }
+
+    async fn run_virtual_machine(
+        &self,
+        _request: Request<VirtualMachine>,
+    ) -> Result<Response<VirtualMachineStatus>, Status> {
+        todo!()
+    }
+
+    async fn run_cell(
+        &self,
+        _request: Request<Cell>,
+    ) -> Result<Response<CellStatus>, Status> {
+        todo!()
     }
 
     // async fn function_name(

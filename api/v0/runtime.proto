@@ -36,9 +36,8 @@ option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 
 import "meta.proto";
 
-// Runtime is a synchronous and immediate subsystem.
-//
-//  Use the Runtime subsystem to start and stop executables, containers, and instances.
+// Runtime is a synchronous subsystem which defines the main methods for executing and starting
+// workloads within an Aurae system.
 //
 service Runtime {
 
@@ -52,15 +51,15 @@ service Runtime {
   // * RunPod calls RunMicroInstance() and then calls the recursive/subsequent RunCell() method.
   rpc RunPod(Pod) returns (PodStatus) {}
 
-  // Spawn a short lived (ephemeral) nested virtual instance with an Auraed
+  // Spawn a short lived (ephemeral) nested virtual instance of Aurae
   // which will terminate on exit. Each instance runs an isolated kernel and
-  // guarantees the spawned auraed has the same version as the parent.
+  // guarantees the spawned auraed has the same version and safe connectivity to the parent.
   // * Manages a security boundary for packets, block devices between the new spawned instance.
   // * Pull from a remote OCI registry
   // * Assumes a specific Linux kernel and corresponding userspace with Auraed
   // * Creates necessary "pipe" between the two auraed's using net devices and gRPC.
   // * Manages mTLS certificates as necessary.
-  rpc Spawn(Instance) returns (InstanceStatus) {}
+  rpc Spawn(SpawnRequest) returns (SpawnResponse) {}
 
   // Run a long lived virtual instance which will persist on exit.
   // * Pull from a remote registry (e.g. qcow format)
@@ -145,15 +144,10 @@ message VirtualMachineStatus {
 }
 
 
-message Instance {
-  meta.AuraeMeta meta = 1;
-  string name = 2;
-  string image = 3;
+message SpawnRequest {
 }
 
-message InstanceStatus {
-  meta.AuraeMeta meta = 1;
-  meta.Status status = 2;
+message SpawnResponse {
 }
 
 message Cell {
