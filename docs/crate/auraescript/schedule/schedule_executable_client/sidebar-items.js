@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["ScheduleExecutableClient","We break ScheduleExecutable out into its own subsystem for authz purposes"]]};
