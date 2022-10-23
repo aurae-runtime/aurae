@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/src/builtin/config.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>config.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraescript/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraescript/src/builtin/config.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>config.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../auraescript/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraescript/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -139,90 +145,91 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */
+\* -------------------------------------------------------------------------- */</span>
 
-</span><span class="doccomment">//! Configuration used to authenticate with a remote Aurae daemon.
-//!
-//! Follows an ordered priority for searching for configuration on a clients
-//! machine.
-//!
-//! 1. ${HOME}/.aurae/config
-//! 2. /etc/aurae/config
-//! 3. /var/lib/aurae/config
+<span class="doccomment">//! Configuration used to authenticate with a remote Aurae daemon.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Follows an ordered priority for searching for configuration on a clients</span>
+<span class="doccomment">//! machine.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! 1. ${HOME}/.aurae/config</span>
+<span class="doccomment">//! 2. /etc/aurae/config</span>
+<span class="doccomment">//! 3. /var/lib/aurae/config</span>
 
-</span><span class="kw">use </span>anyhow::{anyhow, Context, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>serde::Deserialize;
-<span class="kw">use </span>std::fs::File;
-<span class="kw">use </span>std::io::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>toml;
+<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">anyhow</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
+<span class="kw">use</span> <span class="ident">std::fs::File</span>;
+<span class="kw">use</span> <span class="ident">std::io::prelude</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">toml</span>;
 
-<span class="doccomment">/// Configuration for AuraeScript client
-</span><span class="attribute">#[derive(Debug, Clone, Deserialize)]
-</span><span class="kw">pub struct </span>AuraeConfig {
-    <span class="doccomment">/// Authentication material
-    </span><span class="kw">pub </span>auth: Auth,
-    <span class="doccomment">/// System configuration
-    </span><span class="kw">pub </span>system: System,
+<span class="doccomment">/// Configuration for AuraeScript client</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AuraeConfig</span> {
+    <span class="doccomment">/// Authentication material</span>
+    <span class="kw">pub</span> <span class="ident">auth</span>: <span class="ident">Auth</span>,
+    <span class="doccomment">/// System configuration</span>
+    <span class="kw">pub</span> <span class="ident">system</span>: <span class="ident">System</span>,
 }
 
-<span class="doccomment">/// The system configuration for AuraeScript.
-///
-/// Used to define settings for AuraeScript at runtime.
-</span><span class="attribute">#[derive(Debug, Clone, Deserialize)]
-</span><span class="kw">pub struct </span>System {
-    <span class="doccomment">/// Socket to connect the client to.
-    </span><span class="kw">pub </span>socket: String,
+<span class="doccomment">/// The system configuration for AuraeScript.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Used to define settings for AuraeScript at runtime.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">System</span> {
+    <span class="doccomment">/// Socket to connect the client to.</span>
+    <span class="kw">pub</span> <span class="ident">socket</span>: <span class="ident">String</span>,
 }
 
-<span class="doccomment">/// Authentication material for an AuraeScript client.
-///
-/// This material is read from disk many times during runtime.
-/// Changing this material during a process will impact the currently
-/// running process.
-</span><span class="attribute">#[derive(Debug, Clone, Deserialize)]
-</span><span class="kw">pub struct </span>Auth {
-    <span class="doccomment">/// The same CA certificate the server has.
-    </span><span class="kw">pub </span>ca_crt: String,
-    <span class="doccomment">/// The unique client certificate signed by the server.
-    </span><span class="kw">pub </span>client_crt: String,
-    <span class="doccomment">/// The client secret key.
-    </span><span class="kw">pub </span>client_key: String,
+<span class="doccomment">/// Authentication material for an AuraeScript client.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This material is read from disk many times during runtime.</span>
+<span class="doccomment">/// Changing this material during a process will impact the currently</span>
+<span class="doccomment">/// running process.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Auth</span> {
+    <span class="doccomment">/// The same CA certificate the server has.</span>
+    <span class="kw">pub</span> <span class="ident">ca_crt</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// The unique client certificate signed by the server.</span>
+    <span class="kw">pub</span> <span class="ident">client_crt</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// The client secret key.</span>
+    <span class="kw">pub</span> <span class="ident">client_key</span>: <span class="ident">String</span>,
 }
 
-<span class="doccomment">/// Attempt to easy-load Aurae configuration from well-known locations.
-</span><span class="kw">pub fn </span>default_config() -&gt; <span class="prelude-ty">Result</span>&lt;AuraeConfig&gt; {
-    <span class="kw">let </span>home =
-        std::env::var(<span class="string">&quot;HOME&quot;</span>).expect(<span class="string">&quot;missing $HOME environmental variable&quot;</span>);
-    <span class="kw">let </span>path = <span class="macro">format!</span>(<span class="string">&quot;{}/.aurae/config&quot;</span>, home);
-    <span class="kw">let </span>res = parse_aurae_config(path);
-    <span class="kw">if </span>res.is_ok() {
-        <span class="kw">return </span>res;
+<span class="doccomment">/// Attempt to easy-load Aurae configuration from well-known locations.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">default_config</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AuraeConfig</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">home</span> <span class="op">=</span>
+        <span class="ident">std::env::var</span>(<span class="string">&quot;HOME&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;missing $HOME environmental variable&quot;</span>);
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/.aurae/config&quot;</span>, <span class="ident">home</span>);
+    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">parse_aurae_config</span>(<span class="ident">path</span>);
+    <span class="kw">if</span> <span class="ident">res</span>.<span class="ident">is_ok</span>() {
+        <span class="kw">return</span> <span class="ident">res</span>;
     }
 
-    <span class="kw">let </span>res = parse_aurae_config(<span class="string">&quot;/etc/aurae/config&quot;</span>.into());
-    <span class="kw">if </span>res.is_ok() {
-        <span class="kw">return </span>res;
+    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">parse_aurae_config</span>(<span class="string">&quot;/etc/aurae/config&quot;</span>.<span class="ident">into</span>());
+    <span class="kw">if</span> <span class="ident">res</span>.<span class="ident">is_ok</span>() {
+        <span class="kw">return</span> <span class="ident">res</span>;
     }
 
-    <span class="kw">let </span>res = parse_aurae_config(<span class="string">&quot;/var/lib/aurae/config&quot;</span>.into());
-    <span class="kw">if </span>res.is_ok() {
-        <span class="kw">return </span>res;
+    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">parse_aurae_config</span>(<span class="string">&quot;/var/lib/aurae/config&quot;</span>.<span class="ident">into</span>());
+    <span class="kw">if</span> <span class="ident">res</span>.<span class="ident">is_ok</span>() {
+        <span class="kw">return</span> <span class="ident">res</span>;
     }
 
     <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;unable to find config file&quot;</span>))
 }
 
-<span class="doccomment">/// Attempt to parse a config file into memory.
-</span><span class="kw">pub fn </span>parse_aurae_config(path: String) -&gt; <span class="prelude-ty">Result</span>&lt;AuraeConfig&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>config_toml = String::new();
-    <span class="kw">let </span><span class="kw-2">mut </span>file = File::open(<span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
+<span class="doccomment">/// Attempt to parse a config file into memory.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_aurae_config</span>(<span class="ident">path</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AuraeConfig</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config_toml</span> <span class="op">=</span> <span class="ident">String::new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">if </span>file.read_to_string(<span class="kw-2">&amp;mut </span>config_toml)
-           .with_context(|| <span class="string">&quot;could not read AuraeConfig toml&quot;</span>)<span class="question-mark">? </span>== <span class="number">0 </span>{
-        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;empty config&quot;</span>));
+    <span class="kw">if</span> <span class="ident">file</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">config_toml</span>)
+           .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;could not read AuraeConfig toml&quot;</span>)<span class="question-mark">?</span> <span class="op">==</span> <span class="number">0</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;empty config&quot;</span>));
     }
 
-    <span class="prelude-val">Ok</span>(toml::from_str(<span class="kw-2">&amp;</span>config_toml)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(<span class="ident">toml::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">config_toml</span>)<span class="question-mark">?</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraescript" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraescript" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

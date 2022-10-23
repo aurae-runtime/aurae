@@ -1,6 +1,5 @@
-var sourcesIndex = JSON.parse('{\
-"auraed":["",[["init",[["network",[],["mod.rs","sriov.rs"]]],["fileio.rs","fs.rs","logging.rs","mod.rs","power.rs","system_runtime.rs"]],["logging",[],["logchannel.rs","mod.rs","streamlogger.rs"]],["meta",[],["mod.rs"]],["observe",[],["mod.rs"]],["runtime",[],["mod.rs"]],["schedule",[],["mod.rs"]]],["lib.rs"]],\
-"auraescript":["",[["builtin",[],["client.rs","codes.rs","config.rs","mod.rs"]],["meta",[],["mod.rs"]],["observe",[],["mod.rs"]],["runtime",[],["mod.rs"]],["schedule",[],["mod.rs"]]],["lib.rs"]],\
-"macros":["",[],["client.rs","get_set.rs","lib.rs"]]\
-}');
+var sourcesIndex = {};
+sourcesIndex["auraed"] = {"name":"","dirs":[{"name":"init","dirs":[{"name":"network","files":["mod.rs","sriov.rs"]}],"files":["fileio.rs","fs.rs","logging.rs","mod.rs","power.rs","system_runtime.rs"]},{"name":"logging","files":["logchannel.rs","mod.rs","streamlogger.rs"]},{"name":"meta","files":["mod.rs"]},{"name":"observe","files":["mod.rs"]},{"name":"runtime","files":["mod.rs"]},{"name":"schedule","files":["mod.rs"]}],"files":["lib.rs"]};
+sourcesIndex["auraescript"] = {"name":"","dirs":[{"name":"builtin","files":["client.rs","codes.rs","config.rs","mod.rs"]},{"name":"meta","files":["mod.rs"]},{"name":"observe","files":["mod.rs"]},{"name":"runtime","files":["mod.rs"]},{"name":"schedule","files":["mod.rs"]}],"files":["lib.rs"]};
+sourcesIndex["macros"] = {"name":"","files":["client.rs","get_set.rs","lib.rs"]};
 createSourceSidebar();

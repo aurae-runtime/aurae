@@ -21,12 +21,18 @@
     - [Observe](#observe-Observe)
   
 - [runtime.proto](#runtime-proto)
+    - [Cell](#runtime-Cell)
+    - [CellStatus](#runtime-CellStatus)
     - [Container](#runtime-Container)
     - [ContainerStatus](#runtime-ContainerStatus)
     - [Executable](#runtime-Executable)
     - [ExecutableStatus](#runtime-ExecutableStatus)
     - [Pod](#runtime-Pod)
     - [PodStatus](#runtime-PodStatus)
+    - [SpawnRequest](#runtime-SpawnRequest)
+    - [SpawnResponse](#runtime-SpawnResponse)
+    - [VirtualMachine](#runtime-VirtualMachine)
+    - [VirtualMachineStatus](#runtime-VirtualMachineStatus)
   
     - [Runtime](#runtime-Runtime)
   
@@ -230,6 +236,37 @@ TODO: not implemented
 
 
 
+<a name="runtime-Cell"></a>
+
+### Cell
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+
+
+
+
+
+
+<a name="runtime-CellStatus"></a>
+
+### CellStatus
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| status | [meta.Status](#meta-Status) |  |  |
+
+
+
+
+
+
 <a name="runtime-Container"></a>
 
 ### Container
@@ -304,7 +341,7 @@ this will only return upon a terminated process.
 <a name="runtime-Pod"></a>
 
 ### Pod
-Pod is a group of containers that share common isolation namespaces.
+Pod is a group of containers running in a spawned Aurae instance.
 
 
 | Field | Type | Label | Description |
@@ -333,6 +370,59 @@ PodStatus is the status of a completed pod and its subsequent containers.
 
 
 
+
+<a name="runtime-SpawnRequest"></a>
+
+### SpawnRequest
+
+
+
+
+
+
+
+<a name="runtime-SpawnResponse"></a>
+
+### SpawnResponse
+
+
+
+
+
+
+
+<a name="runtime-VirtualMachine"></a>
+
+### VirtualMachine
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| name | [string](#string) |  |  |
+| image | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="runtime-VirtualMachineStatus"></a>
+
+### VirtualMachineStatus
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| status | [meta.Status](#meta-Status) |  |  |
+
+
+
+
+
  
 
  
@@ -343,29 +433,16 @@ PodStatus is the status of a completed pod and its subsequent containers.
 <a name="runtime-Runtime"></a>
 
 ### Runtime
-Runtime is a synchronous and immediate subsystem.
-
- Use the Runtime subsystem to start and stop executables, containers, and instances.
-
-The naming convention for the Runtime subsystem is to keep short, bespoke function names.
-These specific functions are similar to distributed system call functions, and will
-likely never be called by anyone except more advanced users who understand the consequences
-of the functions.
-
-The short function names also encourage the Aurae authors to instill opinions into
-each of the calls. For example instead of having RunExecutableFromRemote()
-or RunExecutableIfExistsLocal() we just have Exec() which holds an opinion that
-all executables should exist locally.
-
-In short as an author if you find yourself creating long or many similar function names
-it is likely a sign that you are violating the opinionated principle of the system.
+Runtime is a synchronous subsystem which defines the main methods for executing and starting
+workloads within an Aurae system.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Exec | [Executable](#runtime-Executable) | [ExecutableStatus](#runtime-ExecutableStatus) | Exec is the lowest level of executable that Aurae supports. |
-| RunP | [Pod](#runtime-Pod) | [PodStatus](#runtime-PodStatus) | RunP (Run Pod) resembles Exec() however accepts a higher level &#34;Pod&#34; status The intention with a Pod is to be a simplified version a group of containers running in the same namespaces on a system.
-
-RunP is a DNS dependent function as it may &#34;pull&#34; an image from a remote registry. |
+| RunExecutable | [Executable](#runtime-Executable) | [ExecutableStatus](#runtime-ExecutableStatus) | Run an Executable, the most fundamental runtime process. * Already exists on system |
+| RunPod | [Pod](#runtime-Pod) | [PodStatus](#runtime-PodStatus) | Run a set of containers in a unique sandbox micro instance, similar to Firecracker&#39;s jailer. * Pull from a remote OCI registry. * Runs on opinionated (configurable?) kernel/OS image with Auraed. * RunPod calls RunMicroInstance() and then calls the recursive/subsequent RunCell() method. |
+| Spawn | [SpawnRequest](#runtime-SpawnRequest) | [SpawnResponse](#runtime-SpawnResponse) | Spawn a short lived (ephemeral) nested virtual instance of Aurae which will terminate on exit. Each instance runs an isolated kernel and guarantees the spawned auraed has the same version and safe connectivity to the parent. * Manages a security boundary for packets, block devices between the new spawned instance. * Pull from a remote OCI registry * Assumes a specific Linux kernel and corresponding userspace with Auraed * Creates necessary &#34;pipe&#34; between the two auraed&#39;s using net devices and gRPC. * Manages mTLS certificates as necessary. |
+| RunVirtualMachine | [VirtualMachine](#runtime-VirtualMachine) | [VirtualMachineStatus](#runtime-VirtualMachineStatus) | Run a long lived virtual instance which will persist on exit. * Pull from a remote registry (e.g. qcow format) |
+| RunCell | [Cell](#runtime-Cell) | [CellStatus](#runtime-CellStatus) | Run a set of containers in a unique Cgroup with shared namespaces. * Pull from a remote OCI registry. * Runs directly on the same kernel as the listening Auraed. |
 
  
 

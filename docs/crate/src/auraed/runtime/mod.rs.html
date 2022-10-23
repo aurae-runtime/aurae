@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/runtime/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/runtime/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -166,6 +172,27 @@
 <span id="166">166</span>
 <span id="167">167</span>
 <span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -194,145 +221,167 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */
-/*
+\* -------------------------------------------------------------------------- */</span>
+<span class="comment">/*
  * [Runtime] is a SYNCHRONOUS subsystem.
- */
+ */</span>
 
-</span><span class="attribute">#![allow(dead_code)]
-</span><span class="macro">tonic::include_proto!</span>(<span class="string">&quot;runtime&quot;</span>);
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="macro">tonic::include_proto!</span>(<span class="string">&quot;runtime&quot;</span>);
 
-<span class="kw">use </span><span class="kw">crate</span>::runtime::runtime_server::Runtime;
-<span class="kw">use crate</span>::{command_from_string, meta};
-<span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>libcontainer::{
-    container::builder::ContainerBuilder, syscall::syscall::create_syscall,
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::runtime_server::Runtime</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">command_from_string</span>, <span class="ident">meta</span>};
+<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
+<span class="kw">use</span> <span class="ident">libcontainer</span>::{
+    <span class="ident">container::builder::ContainerBuilder</span>, <span class="ident">syscall::syscall::create_syscall</span>,
 };
-<span class="kw">use </span>std::path::PathBuf;
-<span class="kw">use </span>tonic::{Request, Response, Status};
+<span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
+<span class="kw">use</span> <span class="ident">tonic</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">Status</span>};
 
-<span class="doccomment">/// The server side implementation of the Runtime subsystem.
-///
-/// The Runtime subsystem is synchronous and will operate against
-/// the system inline with any requests.
-///
-/// Warning: Because of the synchronous nature of the subsystem ths
-/// part of the daemon is potentially vulnerable to denial of service
-/// and flooding attacks.
-</span><span class="attribute">#[derive(Debug, Default, Clone)]
-</span><span class="kw">pub struct </span>RuntimeService {}
+<span class="doccomment">/// The server side implementation of the Runtime subsystem.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The Runtime subsystem is synchronous and will operate against</span>
+<span class="doccomment">/// the system inline with any requests.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Warning: Because of the synchronous nature of the subsystem ths</span>
+<span class="doccomment">/// part of the daemon is potentially vulnerable to denial of service</span>
+<span class="doccomment">/// and flooding attacks.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RuntimeService</span> {}
 
-<span class="attribute">#[tonic::async_trait]
-</span><span class="kw">impl </span>Runtime <span class="kw">for </span>RuntimeService {
-    <span class="kw">async fn </span>exec(
+<span class="attribute">#[<span class="ident">tonic::async_trait</span>]</span>
+<span class="kw">impl</span> <span class="ident">Runtime</span> <span class="kw">for</span> <span class="ident">RuntimeService</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_executable</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        request: Request&lt;Executable&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;ExecutableStatus&gt;, Status&gt; {
-        <span class="kw">let </span>r = request.into_inner();
-        <span class="kw">let </span>cmd = command_from_string(<span class="kw-2">&amp;</span>r.command);
-        <span class="kw">match </span>cmd {
-            <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>cmd) =&gt; {
-                <span class="kw">let </span>output = cmd.output();
-                <span class="kw">match </span>output {
-                    <span class="prelude-val">Ok</span>(output) =&gt; {
-                        <span class="kw">let </span>meta = meta::AuraeMeta {
-                            name: r.command,
-                            message: <span class="string">&quot;-&quot;</span>.to_string(),
+        <span class="ident">request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Executable</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">ExecutableStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">into_inner</span>();
+        <span class="kw">let</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">command_from_string</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">command</span>);
+        <span class="kw">match</span> <span class="ident">cmd</span> {
+            <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">cmd</span>) =&gt; {
+                <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">output</span>();
+                <span class="kw">match</span> <span class="ident">output</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">output</span>) =&gt; {
+                        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span> <span class="ident">meta::AuraeMeta</span> {
+                            <span class="ident">name</span>: <span class="ident">r</span>.<span class="ident">command</span>,
+                            <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
                         };
-                        <span class="kw">let </span>proc = meta::ProcessMeta { pid: -<span class="number">1 </span>}; <span class="comment">// todo @kris-nova get pid, we will probably want to spawn() and wait and remember the pid
-                        </span><span class="kw">let </span>status = meta::Status::Complete <span class="kw">as </span>i32;
-                        <span class="kw">let </span>response = ExecutableStatus {
-                            meta: <span class="prelude-val">Some</span>(meta),
-                            proc: <span class="prelude-val">Some</span>(proc),
-                            status,
-                            stdout: String::from_utf8(output.stdout)
-                                .expect(<span class="string">&quot;reading stdout&quot;</span>),
-                            stderr: String::from_utf8(output.stderr)
-                                .expect(<span class="string">&quot;reading stderr&quot;</span>),
-                            exit_code: output.status.to_string(),
+                        <span class="kw">let</span> <span class="ident">proc</span> <span class="op">=</span> <span class="ident">meta::ProcessMeta</span> { <span class="ident">pid</span>: <span class="op">-</span><span class="number">1</span> }; <span class="comment">// todo @kris-nova get pid, we will probably want to spawn() and wait and remember the pid</span>
+                        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>;
+                        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">ExecutableStatus</span> {
+                            <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>),
+                            <span class="ident">proc</span>: <span class="prelude-val">Some</span>(<span class="ident">proc</span>),
+                            <span class="ident">status</span>,
+                            <span class="ident">stdout</span>: <span class="ident">String::from_utf8</span>(<span class="ident">output</span>.<span class="ident">stdout</span>)
+                                .<span class="ident">expect</span>(<span class="string">&quot;reading stdout&quot;</span>),
+                            <span class="ident">stderr</span>: <span class="ident">String::from_utf8</span>(<span class="ident">output</span>.<span class="ident">stderr</span>)
+                                .<span class="ident">expect</span>(<span class="string">&quot;reading stderr&quot;</span>),
+                            <span class="ident">exit_code</span>: <span class="ident">output</span>.<span class="ident">status</span>.<span class="ident">to_string</span>(),
                         };
-                        <span class="prelude-val">Ok</span>(Response::new(response))
+                        <span class="prelude-val">Ok</span>(<span class="ident">Response::new</span>(<span class="ident">response</span>))
                     }
-                    <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="kw">let </span>meta = meta::AuraeMeta {
-                            name: <span class="string">&quot;-&quot;</span>.to_string(),
-                            message: <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, e),
+                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span> <span class="ident">meta::AuraeMeta</span> {
+                            <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                            <span class="ident">message</span>: <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>),
                         };
-                        <span class="kw">let </span>proc = meta::ProcessMeta { pid: -<span class="number">1 </span>};
-                        <span class="kw">let </span>status = meta::Status::Error <span class="kw">as </span>i32;
-                        <span class="kw">let </span>response = ExecutableStatus {
-                            meta: <span class="prelude-val">Some</span>(meta),
-                            proc: <span class="prelude-val">Some</span>(proc),
-                            status,
-                            stdout: <span class="string">&quot;-&quot;</span>.to_string(),
-                            stderr: <span class="string">&quot;-&quot;</span>.to_string(),
-                            exit_code: <span class="string">&quot;-&quot;</span>.to_string(),
+                        <span class="kw">let</span> <span class="ident">proc</span> <span class="op">=</span> <span class="ident">meta::ProcessMeta</span> { <span class="ident">pid</span>: <span class="op">-</span><span class="number">1</span> };
+                        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">meta::Status::Error</span> <span class="kw">as</span> <span class="ident">i32</span>;
+                        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">ExecutableStatus</span> {
+                            <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>),
+                            <span class="ident">proc</span>: <span class="prelude-val">Some</span>(<span class="ident">proc</span>),
+                            <span class="ident">status</span>,
+                            <span class="ident">stdout</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                            <span class="ident">stderr</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                            <span class="ident">exit_code</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
                         };
-                        <span class="prelude-val">Ok</span>(Response::new(response))
+                        <span class="prelude-val">Ok</span>(<span class="ident">Response::new</span>(<span class="ident">response</span>))
                     }
                 }
             }
-            <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="kw">let </span>meta = meta::AuraeMeta {
-                    name: <span class="string">&quot;-&quot;</span>.to_string(),
-                    message: <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, e),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span> <span class="ident">meta::AuraeMeta</span> {
+                    <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">message</span>: <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>),
                 };
-                <span class="kw">let </span>proc = meta::ProcessMeta { pid: -<span class="number">1 </span>};
-                <span class="kw">let </span>status = meta::Status::Error <span class="kw">as </span>i32;
-                <span class="kw">let </span>response = ExecutableStatus {
-                    meta: <span class="prelude-val">Some</span>(meta),
-                    proc: <span class="prelude-val">Some</span>(proc),
-                    status,
-                    stdout: <span class="string">&quot;-&quot;</span>.to_string(),
-                    stderr: <span class="string">&quot;-&quot;</span>.to_string(),
-                    exit_code: <span class="string">&quot;-&quot;</span>.to_string(),
+                <span class="kw">let</span> <span class="ident">proc</span> <span class="op">=</span> <span class="ident">meta::ProcessMeta</span> { <span class="ident">pid</span>: <span class="op">-</span><span class="number">1</span> };
+                <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">meta::Status::Error</span> <span class="kw">as</span> <span class="ident">i32</span>;
+                <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">ExecutableStatus</span> {
+                    <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>),
+                    <span class="ident">proc</span>: <span class="prelude-val">Some</span>(<span class="ident">proc</span>),
+                    <span class="ident">status</span>,
+                    <span class="ident">stdout</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">stderr</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">exit_code</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
                 };
-                <span class="prelude-val">Ok</span>(Response::new(response))
+                <span class="prelude-val">Ok</span>(<span class="ident">Response::new</span>(<span class="ident">response</span>))
             }
         }
     }
 
-    <span class="kw">async fn </span>run_p(
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_pod</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _request: Request&lt;Pod&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;PodStatus&gt;, Status&gt; {
-        <span class="kw">let </span>syscall = create_syscall();
-        <span class="kw">let </span><span class="kw-2">mut </span>container =
-            ContainerBuilder::new(<span class="string">&quot;123&quot;</span>.to_string(), syscall.as_ref())
-                .as_init(PathBuf::new())
-                .with_systemd(<span class="bool-val">false</span>)
-                .build()
-                .expect(<span class="string">&quot;building container&quot;</span>);
-        <span class="comment">// .with_pid_file(args.pid_file.as_ref())?
-        // .with_console_socket(args.console_socket.as_ref())
-        // .with_root_path(root_path)?
-        // .with_preserved_fds(args.preserve_fds)
-        // .as_init(&amp;args.bundle)
-        // .with_systemd(false)
-        // .build()?;
+        <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Pod</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">PodStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">syscall</span> <span class="op">=</span> <span class="ident">create_syscall</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">container</span> <span class="op">=</span>
+            <span class="ident">ContainerBuilder::new</span>(<span class="string">&quot;123&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">syscall</span>.<span class="ident">as_ref</span>())
+                .<span class="ident">as_init</span>(<span class="ident">PathBuf::new</span>())
+                .<span class="ident">with_systemd</span>(<span class="bool-val">false</span>)
+                .<span class="ident">build</span>()
+                .<span class="ident">expect</span>(<span class="string">&quot;building container&quot;</span>);
+        <span class="comment">// .with_pid_file(args.pid_file.as_ref())?</span>
+        <span class="comment">// .with_console_socket(args.console_socket.as_ref())</span>
+        <span class="comment">// .with_root_path(root_path)?</span>
+        <span class="comment">// .with_preserved_fds(args.preserve_fds)</span>
+        <span class="comment">// .as_init(&amp;args.bundle)</span>
+        <span class="comment">// .with_systemd(false)</span>
+        <span class="comment">// .build()?;</span>
 
-        </span><span class="kw">let _ </span>= container.start();
-        <span class="kw">let </span>meta =
-            meta::AuraeMeta { name: <span class="string">&quot;-&quot;</span>.to_string(), message: <span class="string">&quot;-&quot;</span>.to_string() };
-        <span class="kw">let </span>status = meta::Status::Complete <span class="kw">as </span>i32;
-        <span class="kw">let </span>containers = <span class="macro">vec!</span>[ContainerStatus {
-            meta: <span class="prelude-val">Some</span>(meta::AuraeMeta {
-                name: <span class="string">&quot;-&quot;</span>.to_string(),
-                message: <span class="string">&quot;-&quot;</span>.to_string(),
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">container</span>.<span class="ident">start</span>();
+        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span>
+            <span class="ident">meta::AuraeMeta</span> { <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>() };
+        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>;
+        <span class="kw">let</span> <span class="ident">containers</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">ContainerStatus</span> {
+            <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta::AuraeMeta</span> {
+                <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
             }),
-            status: meta::Status::Complete <span class="kw">as </span>i32,
-            proc: <span class="prelude-val">Some</span>(meta::ProcessMeta { pid: -<span class="number">1 </span>}),
+            <span class="ident">status</span>: <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>,
+            <span class="ident">proc</span>: <span class="prelude-val">Some</span>(<span class="ident">meta::ProcessMeta</span> { <span class="ident">pid</span>: <span class="op">-</span><span class="number">1</span> }),
         }];
-        <span class="kw">let </span>response = PodStatus { meta: <span class="prelude-val">Some</span>(meta), status, containers };
-        <span class="prelude-val">Ok</span>(Response::new(response))
+        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">PodStatus</span> { <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>), <span class="ident">status</span>, <span class="ident">containers</span> };
+        <span class="prelude-val">Ok</span>(<span class="ident">Response::new</span>(<span class="ident">response</span>))
     }
 
-    <span class="comment">// async fn function_name(
-    //     &amp;self,
-    //     _request: Request&lt;Container&gt;,
-    // ) -&gt; Result&lt;Response&lt;ContainerStatus&gt;, Status&gt; {
-    //     todo!()
-    // }
-</span>}
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">spawn</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">SpawnRequest</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">SpawnResponse</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_virtual_machine</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">VirtualMachine</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">VirtualMachineStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_cell</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">CellStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
+    }
+
+    <span class="comment">// async fn function_name(</span>
+    <span class="comment">//     &amp;self,</span>
+    <span class="comment">//     _request: Request&lt;Container&gt;,</span>
+    <span class="comment">// ) -&gt; Result&lt;Response&lt;ContainerStatus&gt;, Status&gt; {</span>
+    <span class="comment">//     todo!()</span>
+    <span class="comment">// }</span>
+}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

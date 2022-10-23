@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/logging/logchannel.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>logchannel.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `auraed/src/logging/logchannel.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>logchannel.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../auraed/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../auraed/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -160,111 +166,112 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */
+\* -------------------------------------------------------------------------- */</span>
 
-// @todo @krisnova remove this once logging is futher along
-</span><span class="attribute">#![allow(dead_code)]
-</span><span class="comment">//
-</span><span class="kw">use </span><span class="kw">crate</span>::observe::LogItem;
-<span class="kw">use </span>crossbeam::channel::{bounded, Receiver, Sender};
-<span class="kw">use </span>log::error;
+<span class="comment">// @todo @krisnova remove this once logging is futher along</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="comment">//</span>
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::observe::LogItem</span>;
+<span class="kw">use</span> <span class="ident">crossbeam::channel</span>::{<span class="ident">bounded</span>, <span class="ident">Receiver</span>, <span class="ident">Sender</span>};
+<span class="kw">use</span> <span class="ident">log::error</span>;
 
-<span class="kw">use </span><span class="kw">super</span>::get_timestamp_sec;
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::get_timestamp_sec</span>;
 
-<span class="doccomment">/// Abstraction Layer for one log generating entity
-/// LogChannel provides channels between Log producers and log consumers
-</span><span class="attribute">#[derive(Debug)]
-</span><span class="kw">pub struct </span>LogChannel {
-    producer: Sender&lt;LogItem&gt;,
-    consumer: Receiver&lt;LogItem&gt;,
-    name: String,
+<span class="doccomment">/// Abstraction Layer for one log generating entity</span>
+<span class="doccomment">/// LogChannel provides channels between Log producers and log consumers</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LogChannel</span> {
+    <span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>,
+    <span class="ident">consumer</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>,
+    <span class="ident">name</span>: <span class="ident">String</span>,
 }
 
-<span class="kw">impl </span>LogChannel {
-    <span class="doccomment">/// Constructor creating the channel for log communication
-    </span><span class="kw">pub fn </span>new(name: <span class="kw-2">&amp;</span>str) -&gt; LogChannel {
-        <span class="comment">// TODO: decide for a cap. 40 is arbitrary
-        </span><span class="kw">let </span>(producer, consumer) = bounded(<span class="number">40</span>);
-        LogChannel { producer, consumer, name: name.to_string() }
+<span class="kw">impl</span> <span class="ident">LogChannel</span> {
+    <span class="doccomment">/// Constructor creating the channel for log communication</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">LogChannel</span> {
+        <span class="comment">// TODO: decide for a cap. 40 is arbitrary</span>
+        <span class="kw">let</span> (<span class="ident">producer</span>, <span class="ident">consumer</span>) <span class="op">=</span> <span class="ident">bounded</span>(<span class="number">40</span>);
+        <span class="ident">LogChannel</span> { <span class="ident">producer</span>, <span class="ident">consumer</span>, <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">to_string</span>() }
     }
-    <span class="doccomment">/// Getter for producer channel
-    </span><span class="kw">pub fn </span>get_producer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Sender&lt;LogItem&gt; {
-        <span class="self">self</span>.producer.clone()
-    }
-
-    <span class="doccomment">/// Getter for consumer channel
-    </span><span class="kw">pub fn </span>get_consumer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Receiver&lt;LogItem&gt; {
-        <span class="self">self</span>.consumer.clone()
+    <span class="doccomment">/// Getter for producer channel</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_producer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">producer</span>.<span class="ident">clone</span>()
     }
 
-    <span class="doccomment">/// Wrapper that sends a log line to the channel
-    </span><span class="kw">pub fn </span>log_line(producer: Sender&lt;LogItem&gt;, line: <span class="kw-2">&amp;</span>str) {
-        <span class="kw">match </span>producer.send(LogItem {
-            channel: <span class="string">&quot;unknown&quot;</span>.to_string(),
-            line: line.to_string(),
-            <span class="comment">// TODO: milliseconds type in protobuf requires 128bit type
-            </span>timestamp: get_timestamp_sec(),
+    <span class="doccomment">/// Getter for consumer channel</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_consumer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">consumer</span>.<span class="ident">clone</span>()
+    }
+
+    <span class="doccomment">/// Wrapper that sends a log line to the channel</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">log_line</span>(<span class="ident">producer</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>, <span class="ident">line</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+        <span class="kw">match</span> <span class="ident">producer</span>.<span class="ident">send</span>(<span class="ident">LogItem</span> {
+            <span class="ident">channel</span>: <span class="string">&quot;unknown&quot;</span>.<span class="ident">to_string</span>(),
+            <span class="ident">line</span>: <span class="ident">line</span>.<span class="ident">to_string</span>(),
+            <span class="comment">// TODO: milliseconds type in protobuf requires 128bit type</span>
+            <span class="ident">timestamp</span>: <span class="ident">get_timestamp_sec</span>(),
         }) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
-            <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="macro">error!</span>(<span class="string">&quot;Error! {:?}&quot;</span>, e);
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                <span class="macro">error!</span>(<span class="string">&quot;Error! {:?}&quot;</span>, <span class="ident">e</span>);
             }
         }
     }
 
-    <span class="comment">// Receives a message from the channel
-    // multiple consumer possible
-    </span><span class="kw">fn </span>consume_line(consumer: Receiver&lt;LogItem&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;LogItem&gt; {
-        <span class="kw">match </span>consumer.recv() {
-            <span class="prelude-val">Ok</span>(val) =&gt; <span class="prelude-val">Some</span>(val),
-            <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="macro">error!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, e);
-                <span class="prelude-val">None
-            </span>}
+    <span class="comment">// Receives a message from the channel</span>
+    <span class="comment">// multiple consumer possible</span>
+    <span class="kw">fn</span> <span class="ident">consume_line</span>(<span class="ident">consumer</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LogItem</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">consumer</span>.<span class="ident">recv</span>() {
+            <span class="prelude-val">Ok</span>(<span class="ident">val</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">val</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                <span class="macro">error!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, <span class="ident">e</span>);
+                <span class="prelude-val">None</span>
+            }
         }
     }
 }
 
-<span class="attribute">#[cfg(test)]
-</span><span class="kw">mod </span>tests {
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span>log::Level;
-    <span class="kw">use </span>simplelog::SimpleLogger;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">log::Level</span>;
+    <span class="kw">use</span> <span class="ident">simplelog::SimpleLogger</span>;
 
-    <span class="kw">fn </span>init_logging() {
-        <span class="kw">let </span>logger_simple = SimpleLogger::new(
-            Level::Trace.to_level_filter(),
-            simplelog::Config::default(),
+    <span class="kw">fn</span> <span class="ident">init_logging</span>() {
+        <span class="kw">let</span> <span class="ident">logger_simple</span> <span class="op">=</span> <span class="ident">SimpleLogger::new</span>(
+            <span class="ident">Level::Trace</span>.<span class="ident">to_level_filter</span>(),
+            <span class="ident">simplelog::Config::default</span>(),
         );
 
-        multi_log::MultiLogger::init(<span class="macro">vec!</span>[logger_simple], Level::Trace)
-            .unwrap();
+        <span class="ident">multi_log::MultiLogger::init</span>(<span class="macro">vec!</span>[<span class="ident">logger_simple</span>], <span class="ident">Level::Trace</span>)
+            .<span class="ident">unwrap</span>();
     }
 
-    <span class="attribute">#[tokio::test]
-    </span><span class="kw">async fn </span>test_ringbuffer_queue() {
-        init_logging();
-        <span class="kw">let </span>lrb = LogChannel::new(<span class="string">&quot;Test&quot;</span>);
-        <span class="kw">let </span>prod = lrb.get_producer();
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_ringbuffer_queue</span>() {
+        <span class="ident">init_logging</span>();
+        <span class="kw">let</span> <span class="ident">lrb</span> <span class="op">=</span> <span class="ident">LogChannel::new</span>(<span class="string">&quot;Test&quot;</span>);
+        <span class="kw">let</span> <span class="ident">prod</span> <span class="op">=</span> <span class="ident">lrb</span>.<span class="ident">get_producer</span>();
 
-        LogChannel::log_line(prod.clone(), <span class="string">&quot;hello&quot;</span>);
-        LogChannel::log_line(prod.clone(), <span class="string">&quot;aurae&quot;</span>);
-        LogChannel::log_line(prod.clone(), <span class="string">&quot;bye&quot;</span>);
+        <span class="ident">LogChannel::log_line</span>(<span class="ident">prod</span>.<span class="ident">clone</span>(), <span class="string">&quot;hello&quot;</span>);
+        <span class="ident">LogChannel::log_line</span>(<span class="ident">prod</span>.<span class="ident">clone</span>(), <span class="string">&quot;aurae&quot;</span>);
+        <span class="ident">LogChannel::log_line</span>(<span class="ident">prod</span>.<span class="ident">clone</span>(), <span class="string">&quot;bye&quot;</span>);
 
-        <span class="kw">let </span>consumer = lrb.get_consumer();
+        <span class="kw">let</span> <span class="ident">consumer</span> <span class="op">=</span> <span class="ident">lrb</span>.<span class="ident">get_consumer</span>();
 
-        <span class="kw">let </span>cur_item = LogChannel::consume_line(consumer.clone());
-        <span class="macro">assert!</span>(cur_item.is_some());
-        <span class="macro">assert_eq!</span>(cur_item.unwrap().line, <span class="string">&quot;hello&quot;</span>);
+        <span class="kw">let</span> <span class="ident">cur_item</span> <span class="op">=</span> <span class="ident">LogChannel::consume_line</span>(<span class="ident">consumer</span>.<span class="ident">clone</span>());
+        <span class="macro">assert!</span>(<span class="ident">cur_item</span>.<span class="ident">is_some</span>());
+        <span class="macro">assert_eq!</span>(<span class="ident">cur_item</span>.<span class="ident">unwrap</span>().<span class="ident">line</span>, <span class="string">&quot;hello&quot;</span>);
 
-        <span class="kw">let </span>cur_item = LogChannel::consume_line(consumer.clone());
-        <span class="macro">assert!</span>(cur_item.is_some());
-        <span class="macro">assert_eq!</span>(cur_item.unwrap().line, <span class="string">&quot;aurae&quot;</span>);
+        <span class="kw">let</span> <span class="ident">cur_item</span> <span class="op">=</span> <span class="ident">LogChannel::consume_line</span>(<span class="ident">consumer</span>.<span class="ident">clone</span>());
+        <span class="macro">assert!</span>(<span class="ident">cur_item</span>.<span class="ident">is_some</span>());
+        <span class="macro">assert_eq!</span>(<span class="ident">cur_item</span>.<span class="ident">unwrap</span>().<span class="ident">line</span>, <span class="string">&quot;aurae&quot;</span>);
 
-        <span class="kw">let </span>cur_item = LogChannel::consume_line(consumer.clone());
-        <span class="macro">assert!</span>(cur_item.is_some());
-        <span class="macro">assert_eq!</span>(cur_item.unwrap().line, <span class="string">&quot;bye&quot;</span>);
+        <span class="kw">let</span> <span class="ident">cur_item</span> <span class="op">=</span> <span class="ident">LogChannel::consume_line</span>(<span class="ident">consumer</span>.<span class="ident">clone</span>());
+        <span class="macro">assert!</span>(<span class="ident">cur_item</span>.<span class="ident">is_some</span>());
+        <span class="macro">assert_eq!</span>(<span class="ident">cur_item</span>.<span class="ident">unwrap</span>().<span class="ident">line</span>, <span class="string">&quot;bye&quot;</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1120c5e01 2022-09-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>
