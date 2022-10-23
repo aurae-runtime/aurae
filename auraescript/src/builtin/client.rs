@@ -99,8 +99,8 @@ impl AuraeClient {
     }
 
     /// Initialize a new instance of the runtime subsystem.
-    pub fn runtime(&mut self) -> Runtime {
-        Runtime::new()
+    pub fn runtime(&mut self) -> Core {
+        Core::new()
     }
 
     /// Initialize a new instance of the observe subsystem.

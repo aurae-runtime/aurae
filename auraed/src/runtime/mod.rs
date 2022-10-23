@@ -34,11 +34,16 @@
 #![allow(dead_code)]
 tonic::include_proto!("runtime");
 
-use crate::runtime::runtime_server::Runtime;
+use crate::runtime::core_server::Core;
 use crate::{command_from_string, meta};
+use anyhow::Result;
+// use libcontainer::{
+//     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
+// };
+// use std::path::PathBuf;
 use tonic::{Request, Response, Status};
 
-/// The server side implementation of the Runtime subsystem.
+/// The server side implementation of the core runtime subsystem.
 ///
 /// The Runtime subsystem is synchronous and will operate against
 /// the system inline with any requests.
@@ -47,11 +52,11 @@ use tonic::{Request, Response, Status};
 /// part of the daemon is potentially vulnerable to denial of service
 /// and flooding attacks.
 #[derive(Debug, Default, Clone)]
-pub struct RuntimeService {}
+pub struct CoreService {}
 
 #[tonic::async_trait]
-impl Runtime for RuntimeService {
-    async fn exec(
+impl Core for CoreService {
+    async fn run_executable(
         &self,
         request: Request<Executable>,
     ) -> Result<Response<ExecutableStatus>, Status> {
@@ -119,53 +124,68 @@ impl Runtime for RuntimeService {
         }
     }
 
-    // async fn executable_stop(
-    //     &self,
-    //     request: Request<Executable>,
-    // ) -> Result<Response<ExecutableStatus>, Status> {
-    //     let _r = request.into_inner();
-    //     let meta = meta::AuraeMeta {
-    //         name: "UNKNOWN_NAME".to_string(),
-    //         message: "UNKNOWN_MESSAGE".to_string(),
-    //     };
-    //     let proc = meta::ProcessMeta { pid: -1 };
-    //     let status = meta::Status::Unknown as i32;
-    //     let response = ExecutableStatus {
-    //         meta: Some(meta),
-    //         proc: Some(proc),
-    //         status,
-    //         stdout: "-".to_string(),
-    //         stderr: "-".to_string(),
-    //         exit_code: "-".to_string(),
-    //     };
-    //     Ok(Response::new(response))
-    // }
-    //
-    // async fn container_start(
+    async fn run_pod(
+        &self,
+        _request: Request<Pod>,
+    ) -> Result<Response<PodStatus>, Status> {
+        todo!()
+    }
+
+    async fn spawn(
+        &self,
+        _request: Request<SpawnRequest>,
+    ) -> Result<Response<SpawnResponse>, Status> {
+        todo!()
+    }
+
+    async fn run_virtual_machine(
+        &self,
+        _request: Request<VirtualMachine>,
+    ) -> Result<Response<VirtualMachineStatus>, Status> {
+        todo!()
+    }
+
+    async fn run_cell(
+        &self,
+        _request: Request<Cell>,
+    ) -> Result<Response<CellStatus>, Status> {
+        todo!();
+        // let syscall = create_syscall();
+        // let mut container =
+        //     ContainerBuilder::new("123".to_string(), syscall.as_ref())
+        //         .as_init(PathBuf::new())
+        //         .with_systemd(false)
+        //         .build()
+        //         .expect("building container");
+        // // .with_pid_file(args.pid_file.as_ref())?
+        // // .with_console_socket(args.console_socket.as_ref())
+        // // .with_root_path(root_path)?
+        // // .with_preserved_fds(args.preserve_fds)
+        // // .as_init(&args.bundle)
+        // // .with_systemd(false)
+        // // .build()?;
+        //
+        // let _ = container.start();
+        // let meta =
+        //     meta::AuraeMeta { name: "-".to_string(), message: "-".to_string() };
+        // let status = meta::Status::Complete as i32;
+        // let container_statuses = vec![ContainerStatus {
+        //     meta: Some(meta::AuraeMeta {
+        //         name: "-".to_string(),
+        //         message: "-".to_string(),
+        //     }),
+        //     status: meta::Status::Complete as i32,
+        //     proc: Some(meta::ProcessMeta { pid: -1 }),
+        // }];
+        // let response =
+        //     CellStatus { meta: Some(meta), status, container_statuses };
+        // Ok(Response::new(response))
+    }
+
+    // async fn function_name(
     //     &self,
     //     _request: Request<Container>,
     // ) -> Result<Response<ContainerStatus>, Status> {
-    //     todo!()
-    // }
-    //
-    // async fn container_stop(
-    //     &self,
-    //     _request: Request<Container>,
-    // ) -> Result<Response<ContainerStatus>, Status> {
-    //     todo!()
-    // }
-    //
-    // async fn instance_start(
-    //     &self,
-    //     _request: Request<Instance>,
-    // ) -> Result<Response<InstanceStatus>, Status> {
-    //     todo!()
-    // }
-    //
-    // async fn instance_stop(
-    //     &self,
-    //     _request: Request<Instance>,
-    // ) -> Result<Response<InstanceStatus>, Status> {
     //     todo!()
     // }
 }

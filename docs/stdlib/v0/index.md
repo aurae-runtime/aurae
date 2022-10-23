@@ -21,16 +21,21 @@
     - [Observe](#observe-Observe)
   
 - [runtime.proto](#runtime-proto)
+    - [Cell](#runtime-Cell)
+    - [CellStatus](#runtime-CellStatus)
     - [Container](#runtime-Container)
     - [ContainerStatus](#runtime-ContainerStatus)
     - [Executable](#runtime-Executable)
     - [ExecutableStatus](#runtime-ExecutableStatus)
     - [Instance](#runtime-Instance)
-    - [InstanceMeta](#runtime-InstanceMeta)
-    - [InstanceMetaStatus](#runtime-InstanceMetaStatus)
-    - [InstanceStatus](#runtime-InstanceStatus)
+    - [Pod](#runtime-Pod)
+    - [PodStatus](#runtime-PodStatus)
+    - [SpawnRequest](#runtime-SpawnRequest)
+    - [SpawnResponse](#runtime-SpawnResponse)
+    - [VirtualMachine](#runtime-VirtualMachine)
+    - [VirtualMachineStatus](#runtime-VirtualMachineStatus)
   
-    - [Runtime](#runtime-Runtime)
+    - [Core](#runtime-Core)
   
 - [schedule.proto](#schedule-proto)
     - [ExecutableDestroyResponse](#schedule-ExecutableDestroyResponse)
@@ -229,20 +234,57 @@ TODO: not implemented
 <p align="right"><a href="#top">Top</a></p>
 
 ## runtime.proto
+The runtime subsystem is a synchronous and stateless subsystem which
+enables the most fundamental of runtime functionality.
+
+The runtime subsystem is the lowest level of Aurae. Here the runtime
+procedures can be executed in parallel. Each of the procedures defines a
+core paradigm of work.
+
+
+<a name="runtime-Cell"></a>
+
+### Cell
+A set of containers running on the same kernel as the auraed responding to the request.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| containers | [Container](#runtime-Container) | repeated | A set of containers. |
 
 
 
-<a name="runtime-Container"></a>
 
-### Container
+
+
+<a name="runtime-CellStatus"></a>
+
+### CellStatus
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
-| name | [string](#string) |  |  |
-| image | [string](#string) |  |  |
+| status | [meta.Status](#meta-Status) |  |  |
+| container_statuses | [ContainerStatus](#runtime-ContainerStatus) | repeated |  |
+
+
+
+
+
+
+<a name="runtime-Container"></a>
+
+### Container
+Container represents is an OCI compliant container image which can be executed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| image | [string](#string) |  | OCI compliant image. |
 
 
 
@@ -252,7 +294,7 @@ TODO: not implemented
 <a name="runtime-ContainerStatus"></a>
 
 ### ContainerStatus
-
+ContainerStatus is the status of a container after it has been executed.
 
 
 | Field | Type | Label | Description |
@@ -269,7 +311,7 @@ TODO: not implemented
 <a name="runtime-Executable"></a>
 
 ### Executable
-
+Executable is the lowest level of compute that Aurae can execute. A basic process.
 
 
 | Field | Type | Label | Description |
@@ -286,7 +328,8 @@ TODO: not implemented
 <a name="runtime-ExecutableStatus"></a>
 
 ### ExecutableStatus
-
+ExecutableStatus is only returned after a process completes. Because runtime is a synchronous subsystem
+this will only return upon a terminated process.
 
 
 | Field | Type | Label | Description |
@@ -294,9 +337,9 @@ TODO: not implemented
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
 | proc | [meta.ProcessMeta](#meta-ProcessMeta) |  |  |
 | status | [meta.Status](#meta-Status) |  |  |
-| stdout | [string](#string) |  |  |
-| stderr | [string](#string) |  |  |
-| exit_code | [string](#string) |  |  |
+| stdout | [string](#string) |  | The full stdout data. |
+| stderr | [string](#string) |  | The full stderr data. |
+| exit_code | [string](#string) |  | The exit code (return code) of the process after termination. |
 
 
 
@@ -306,7 +349,80 @@ TODO: not implemented
 <a name="runtime-Instance"></a>
 
 ### Instance
+Instance is a recursive graph structure which holds the meta data for the nested Aurae instances
+running on a machine.
 
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| is_root | [bool](#bool) |  |  |
+| nested_instances | [Instance](#runtime-Instance) | repeated |  |
+
+
+
+
+
+
+<a name="runtime-Pod"></a>
+
+### Pod
+Pod is a group of containers running in a spawned Aurae instance.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| cells | [Cell](#runtime-Cell) | repeated | The cells to create within the spawned Aurae instance. |
+
+
+
+
+
+
+<a name="runtime-PodStatus"></a>
+
+### PodStatus
+PodStatus is the status of a completed pod and its subsequent containers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
+| status | [meta.Status](#meta-Status) |  |  |
+| spawn_response | [SpawnResponse](#runtime-SpawnResponse) |  | The response of the necessary spawn for a pod. |
+| instance | [Instance](#runtime-Instance) |  | If the spawn is successful, the nested Aurae instance. |
+| cell_status | [CellStatus](#runtime-CellStatus) |  | If the cell creation is successful, the cell of containers running in the spawned Aurae instance. |
+
+
+
+
+
+
+<a name="runtime-SpawnRequest"></a>
+
+### SpawnRequest
+Parameters for spawning a new nested Aurae instance.
+
+
+
+
+
+
+<a name="runtime-SpawnResponse"></a>
+
+### SpawnResponse
+Response of a spawn.
+
+
+
+
+
+
+<a name="runtime-VirtualMachine"></a>
+
+### VirtualMachine
+A long lived virtual machine which will persist on termination.
 
 
 | Field | Type | Label | Description |
@@ -320,41 +436,10 @@ TODO: not implemented
 
 
 
-<a name="runtime-InstanceMeta"></a>
+<a name="runtime-VirtualMachineStatus"></a>
 
-### InstanceMeta
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
-
-
-
-
-
-
-<a name="runtime-InstanceMetaStatus"></a>
-
-### InstanceMetaStatus
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
-| status | [meta.Status](#meta-Status) |  |  |
-
-
-
-
-
-
-<a name="runtime-InstanceStatus"></a>
-
-### InstanceStatus
-
+### VirtualMachineStatus
+Status of a terminated virtual machine.
 
 
 | Field | Type | Label | Description |
@@ -373,15 +458,32 @@ TODO: not implemented
  
 
 
-<a name="runtime-Runtime"></a>
+<a name="runtime-Core"></a>
 
-### Runtime
-Runtime is a synchronous and immediate subsystem.
- Use the Runtime subsystem to start and stop executables, containers, and instances.
+### Core
+Core is a synchronous subsystem which defines the main methods for executing and starting
+workloads within an Aurae system.
+
+Core is designed to be called by higher order instance of Aurae, clients, or higher order
+systems in general.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Exec | [Executable](#runtime-Executable) | [ExecutableStatus](#runtime-ExecutableStatus) |  |
+| RunExecutable | [Executable](#runtime-Executable) | [ExecutableStatus](#runtime-ExecutableStatus) | Run an Executable, the most fundamental runtime process. Akin to shell executing a command.
+
+* Executable should exist on system, does not pull from a remote. |
+| RunPod | [Pod](#runtime-Pod) | [PodStatus](#runtime-PodStatus) | Spawn a new instance of Aurae, and then create a cell of containers inside the nested Aurae instance.
+
+* Accepts an OCI compliant container image, will always pull the image before running. * Assumes Spawn() is successful and is able to bridge to the nested Aurae and the nested cell. |
+| Spawn | [SpawnRequest](#runtime-SpawnRequest) | [SpawnResponse](#runtime-SpawnResponse) | Spawn a short lived (ephemeral) nested virtual instance of Aurae which will terminate on exit. Akin to fork() in Linux, each nested instance inherits properties from the parent but runs an isolated virtual machine with its own kernel and auraed instance.
+
+* Inherits a bridged network device from the parent (TAP). * Accepts an OCI compliant container image, will always pull the image before running. * Manages mTLS certificates as necessary. |
+| RunVirtualMachine | [VirtualMachine](#runtime-VirtualMachine) | [VirtualMachineStatus](#runtime-VirtualMachineStatus) | Run a long lived virtual instance which will persist on exit. Akin to a QEMU virtual machine running with the base auraed as a hypervisor.
+
+* Pull from a remote registry (e.g. qcow format) * Accepts a qcow compliant virtual machine image, will always pull the image before running. |
+| RunCell | [Cell](#runtime-Cell) | [CellStatus](#runtime-CellStatus) | Run a set of containers in a unique Cgroup with shared namespaces. Akin to running a &#34;container&#34; in its most native way.
+
+* Accepts an OCI compliant container image, will always pull the image before running. * Runs directly on the same kernel as the root Auraed. |
 
  
 

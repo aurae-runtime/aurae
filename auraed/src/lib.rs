@@ -54,7 +54,6 @@
         // TODO: unused_parens,
         while_true
         )]
-
 #![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
@@ -65,7 +64,6 @@
         // TODO: unused_qualifications,
         // TODO: unused_results
         )]
-
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
@@ -90,8 +88,8 @@ use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 
 use crate::observe::observe_server::ObserveServer;
 use crate::observe::ObserveService;
-use crate::runtime::runtime_server::RuntimeServer;
-use crate::runtime::RuntimeService;
+use crate::runtime::core_server::CoreServer;
+use crate::runtime::CoreService;
 use crate::schedule::schedule_executable_server::ScheduleExecutableServer;
 use crate::schedule::ScheduleExecutableService;
 
@@ -180,7 +178,7 @@ impl AuraedRuntime {
         let handle = tokio::spawn(async {
             Server::builder()
                 .tls_config(tls)?
-                .add_service(RuntimeServer::new(RuntimeService::default()))
+                .add_service(CoreServer::new(CoreService::default()))
                 .add_service(ObserveServer::new(ObserveService::new(consumer)))
                 .add_service(ScheduleExecutableServer::new(
                     ScheduleExecutableService::default(),

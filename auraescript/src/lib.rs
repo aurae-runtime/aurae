@@ -49,7 +49,6 @@
         // TODO: unused_parens,
         while_true
         )]
-
 #![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
@@ -60,7 +59,6 @@
         // TODO: unused_qualifications,
         // TODO: unused_results
         )]
-
 // The project prefers .expect("reason") instead of .unwrap() so we fail
 // on any .unwrap() statements in the code.
 #![warn(clippy::unwrap_used)]
@@ -132,7 +130,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         // Runtime type
         //
         // The runtime subsystem with corresponding methods.
-        .register_type_with_name::<Runtime>("Runtime")
+        .register_type_with_name::<Core>("Core")
         .register_fn("runtime", AuraeClient::runtime)
         // Executable type
         //
@@ -150,6 +148,10 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         // Create an instance of an Executable type with an argument
         // command string. Can be passed to various subsystems.
         .register_fn("cmd", cmd)
+        // run_executable function
+        //
+        // Direct access to the run_executable function.
+        .register_fn("run_executable", Core::run_executable)
         .register_fn("json", Executable::json)
         .register_fn("raw", Executable::raw)
         .register_get_set(
@@ -168,10 +170,6 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         .register_type_with_name::<ExecutableStatus>("ExecutableStatus")
         .register_fn("json", ExecutableStatus::json)
         .register_fn("raw", ExecutableStatus::raw)
-        // Runtime.exec function
-        //
-        // Longer version of exec. Accepts an Executable type as an argument.
-        .register_fn("exec", Runtime::exec)
         // ScheduleExecutable type
         //
         // The ScheduleExecutable subsystem.

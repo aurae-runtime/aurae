@@ -39,14 +39,10 @@ macros::client_wrapper!(
 
 impl Observe {
     pub fn status_default(&mut self) -> StatusResponse {
-        let meta = meta::AuraeMeta {
-            name: "UNKNOWN".to_string(),
-            message: "".into(),
-        };
+        let meta =
+            meta::AuraeMeta { name: "UNKNOWN".to_string(), message: "".into() };
 
-        let request = StatusRequest {
-            meta: Some(meta),
-        };
+        let request = StatusRequest { meta: Some(meta) };
 
         self.status(request)
     }

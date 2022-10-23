@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["RuntimeClient","Use the Runtime subsystem to start and stop executables, containers, and instances."]]};
+window.SIDEBAR_ITEMS = {"struct":[["RuntimeClient","Runtime is a synchronous subsystem which defines the main methods for executing and starting workloads within an Aurae system."]]};

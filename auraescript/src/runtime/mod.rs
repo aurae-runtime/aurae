@@ -31,16 +31,14 @@
 tonic::include_proto!("runtime");
 
 macros::client_wrapper!(
-    Runtime,
-    exec(Executable) -> ExecutableStatus
+    Core,
+    run_executable(Executable) -> ExecutableStatus
 );
 
-/// cmd will create a new Executable{} type and set the command to the input
 pub fn cmd(cmd: &str) -> Executable {
     Executable { command: cmd.to_string(), ..Executable::default() }
 }
 
-/// exec() is a system alias that will create a new Executable{} type and start it
 pub fn exec(x: &str) -> ExecutableStatus {
-    Runtime::new().exec(cmd(x))
+    Core::new().run_executable(cmd(x))
 }

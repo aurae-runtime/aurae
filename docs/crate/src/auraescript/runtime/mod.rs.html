@@ -48,8 +48,6 @@
 <span id="42">42</span>
 <span id="43">43</span>
 <span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -83,18 +81,16 @@
 <span class="macro">tonic::include_proto!</span>(<span class="string">&quot;runtime&quot;</span>);
 
 <span class="macro">macros::client_wrapper!</span>(
-    <span class="ident">Runtime</span>,
-    <span class="ident">exec</span>(<span class="ident">Executable</span>) -&gt; <span class="ident">ExecutableStatus</span>
+    <span class="ident">Core</span>,
+    <span class="ident">run_executable</span>(<span class="ident">Executable</span>) -&gt; <span class="ident">ExecutableStatus</span>
 );
 
-<span class="doccomment">/// cmd will create a new Executable{} type and set the command to the input</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmd</span>(<span class="ident">cmd</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Executable</span> {
     <span class="ident">Executable</span> { <span class="ident">command</span>: <span class="ident">cmd</span>.<span class="ident">to_string</span>(), ..<span class="ident">Executable::default</span>() }
 }
 
-<span class="doccomment">/// exec() is a system alias that will create a new Executable{} type and start it</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exec</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">ExecutableStatus</span> {
-    <span class="ident">Runtime::new</span>().<span class="ident">exec</span>(<span class="ident">cmd</span>(<span class="ident">x</span>))
+    <span class="ident">Core::new</span>().<span class="ident">run_executable</span>(<span class="ident">cmd</span>(<span class="ident">x</span>))
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraescript" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>

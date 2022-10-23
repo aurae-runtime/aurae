@@ -175,6 +175,26 @@
 <span id="169">169</span>
 <span id="170">170</span>
 <span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -211,11 +231,16 @@
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="macro">tonic::include_proto!</span>(<span class="string">&quot;runtime&quot;</span>);
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::runtime_server::Runtime</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::runtime::core_server::Core</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">command_from_string</span>, <span class="ident">meta</span>};
+<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
+<span class="kw">use</span> <span class="ident">libcontainer</span>::{
+    <span class="ident">container::builder::ContainerBuilder</span>, <span class="ident">syscall::syscall::create_syscall</span>,
+};
+<span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 <span class="kw">use</span> <span class="ident">tonic</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">Status</span>};
 
-<span class="doccomment">/// The server side implementation of the Runtime subsystem.</span>
+<span class="doccomment">/// The server side implementation of the core runtime subsystem.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// The Runtime subsystem is synchronous and will operate against</span>
 <span class="doccomment">/// the system inline with any requests.</span>
@@ -224,11 +249,11 @@
 <span class="doccomment">/// part of the daemon is potentially vulnerable to denial of service</span>
 <span class="doccomment">/// and flooding attacks.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RuntimeService</span> {}
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CoreService</span> {}
 
 <span class="attribute">#[<span class="ident">tonic::async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">Runtime</span> <span class="kw">for</span> <span class="ident">RuntimeService</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">exec</span>(
+<span class="kw">impl</span> <span class="ident">Core</span> <span class="kw">for</span> <span class="ident">CoreService</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_executable</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Executable</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">ExecutableStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
@@ -296,53 +321,68 @@
         }
     }
 
-    <span class="comment">// async fn executable_stop(</span>
-    <span class="comment">//     &amp;self,</span>
-    <span class="comment">//     request: Request&lt;Executable&gt;,</span>
-    <span class="comment">// ) -&gt; Result&lt;Response&lt;ExecutableStatus&gt;, Status&gt; {</span>
-    <span class="comment">//     let _r = request.into_inner();</span>
-    <span class="comment">//     let meta = meta::AuraeMeta {</span>
-    <span class="comment">//         name: &quot;UNKNOWN_NAME&quot;.to_string(),</span>
-    <span class="comment">//         message: &quot;UNKNOWN_MESSAGE&quot;.to_string(),</span>
-    <span class="comment">//     };</span>
-    <span class="comment">//     let proc = meta::ProcessMeta { pid: -1 };</span>
-    <span class="comment">//     let status = meta::Status::Unknown as i32;</span>
-    <span class="comment">//     let response = ExecutableStatus {</span>
-    <span class="comment">//         meta: Some(meta),</span>
-    <span class="comment">//         proc: Some(proc),</span>
-    <span class="comment">//         status,</span>
-    <span class="comment">//         stdout: &quot;-&quot;.to_string(),</span>
-    <span class="comment">//         stderr: &quot;-&quot;.to_string(),</span>
-    <span class="comment">//         exit_code: &quot;-&quot;.to_string(),</span>
-    <span class="comment">//     };</span>
-    <span class="comment">//     Ok(Response::new(response))</span>
-    <span class="comment">// }</span>
-    <span class="comment">//</span>
-    <span class="comment">// async fn container_start(</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_pod</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Pod</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">PodStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">spawn</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">SpawnRequest</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">SpawnResponse</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_virtual_machine</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">VirtualMachine</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">VirtualMachineStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_cell</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">CellStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>();
+        <span class="kw">let</span> <span class="ident">syscall</span> <span class="op">=</span> <span class="ident">create_syscall</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">container</span> <span class="op">=</span>
+            <span class="ident">ContainerBuilder::new</span>(<span class="string">&quot;123&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">syscall</span>.<span class="ident">as_ref</span>())
+                .<span class="ident">as_init</span>(<span class="ident">PathBuf::new</span>())
+                .<span class="ident">with_systemd</span>(<span class="bool-val">false</span>)
+                .<span class="ident">build</span>()
+                .<span class="ident">expect</span>(<span class="string">&quot;building container&quot;</span>);
+        <span class="comment">// .with_pid_file(args.pid_file.as_ref())?</span>
+        <span class="comment">// .with_console_socket(args.console_socket.as_ref())</span>
+        <span class="comment">// .with_root_path(root_path)?</span>
+        <span class="comment">// .with_preserved_fds(args.preserve_fds)</span>
+        <span class="comment">// .as_init(&amp;args.bundle)</span>
+        <span class="comment">// .with_systemd(false)</span>
+        <span class="comment">// .build()?;</span>
+
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">container</span>.<span class="ident">start</span>();
+        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span>
+            <span class="ident">meta::AuraeMeta</span> { <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>() };
+        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>;
+        <span class="kw">let</span> <span class="ident">container_statuses</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">ContainerStatus</span> {
+            <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta::AuraeMeta</span> {
+                <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+            }),
+            <span class="ident">status</span>: <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>,
+            <span class="ident">proc</span>: <span class="prelude-val">Some</span>(<span class="ident">meta::ProcessMeta</span> { <span class="ident">pid</span>: <span class="op">-</span><span class="number">1</span> }),
+        }];
+        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span>
+            <span class="ident">CellStatus</span> { <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>), <span class="ident">status</span>, <span class="ident">container_statuses</span> };
+        <span class="prelude-val">Ok</span>(<span class="ident">Response::new</span>(<span class="ident">response</span>))
+    }
+
+    <span class="comment">// async fn function_name(</span>
     <span class="comment">//     &amp;self,</span>
     <span class="comment">//     _request: Request&lt;Container&gt;,</span>
     <span class="comment">// ) -&gt; Result&lt;Response&lt;ContainerStatus&gt;, Status&gt; {</span>
-    <span class="comment">//     todo!()</span>
-    <span class="comment">// }</span>
-    <span class="comment">//</span>
-    <span class="comment">// async fn container_stop(</span>
-    <span class="comment">//     &amp;self,</span>
-    <span class="comment">//     _request: Request&lt;Container&gt;,</span>
-    <span class="comment">// ) -&gt; Result&lt;Response&lt;ContainerStatus&gt;, Status&gt; {</span>
-    <span class="comment">//     todo!()</span>
-    <span class="comment">// }</span>
-    <span class="comment">//</span>
-    <span class="comment">// async fn instance_start(</span>
-    <span class="comment">//     &amp;self,</span>
-    <span class="comment">//     _request: Request&lt;Instance&gt;,</span>
-    <span class="comment">// ) -&gt; Result&lt;Response&lt;InstanceStatus&gt;, Status&gt; {</span>
-    <span class="comment">//     todo!()</span>
-    <span class="comment">// }</span>
-    <span class="comment">//</span>
-    <span class="comment">// async fn instance_stop(</span>
-    <span class="comment">//     &amp;self,</span>
-    <span class="comment">//     _request: Request&lt;Instance&gt;,</span>
-    <span class="comment">// ) -&gt; Result&lt;Response&lt;InstanceStatus&gt;, Status&gt; {</span>
     <span class="comment">//     todo!()</span>
     <span class="comment">// }</span>
 }

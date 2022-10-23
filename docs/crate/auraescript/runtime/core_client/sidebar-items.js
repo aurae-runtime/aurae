@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["CoreClient","Core is a synchronous subsystem which defines the main methods for executing and starting workloads within an Aurae system."]]};

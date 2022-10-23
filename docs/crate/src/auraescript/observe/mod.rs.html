@@ -53,10 +53,6 @@
 <span id="47">47</span>
 <span id="48">48</span>
 <span id="49">49</span>
-<span id="50">50</span>
-<span id="51">51</span>
-<span id="52">52</span>
-<span id="53">53</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -98,14 +94,10 @@
 
 <span class="kw">impl</span> <span class="ident">Observe</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">status_default</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">StatusResponse</span> {
-        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span> <span class="ident">meta::AuraeMeta</span> {
-            <span class="ident">name</span>: <span class="string">&quot;UNKNOWN&quot;</span>.<span class="ident">to_string</span>(),
-            <span class="ident">message</span>: <span class="string">&quot;&quot;</span>.<span class="ident">into</span>(),
-        };
+        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span>
+            <span class="ident">meta::AuraeMeta</span> { <span class="ident">name</span>: <span class="string">&quot;UNKNOWN&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">message</span>: <span class="string">&quot;&quot;</span>.<span class="ident">into</span>() };
 
-        <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">StatusRequest</span> {
-            <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>),
-        };
+        <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">StatusRequest</span> { <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>) };
 
         <span class="self">self</span>.<span class="ident">status</span>(<span class="ident">request</span>)
     }
