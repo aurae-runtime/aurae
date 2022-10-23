@@ -75,8 +75,12 @@ liboci-cli     = { git = "https://github.com/containers/youki.git", tag = "v0.0.
 crossbeam = "0.8"
 libcontainer = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
 liboci-cli = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
+<<<<<<< HEAD
 cgroups = "0.1.0"
 >>>>>>> 44ce2fc (Introduce cgroups)
+=======
+cgroups-rs =  { git = "https://github.com/kata-containers/cgroups-rs", branch = "main"}
+>>>>>>> 1502f87 (Introduce cgroup system to run_executable)
 
 [build-dependencies]
 anyhow = "1.0.65"
