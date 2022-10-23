@@ -65,7 +65,8 @@ impl Core for CoreService {
         request: Request<Executable>,
     ) -> Result<Response<ExecutableStatus>, Status> {
         let r = request.into_inner();
-        let rmeta = r.meta.expect("expect meta");
+        let rmeta = r.meta.expect("parsing request meta");
+
         let cmd = command_from_string(&r.command);
         match cmd {
             // Successful parse
@@ -77,6 +78,9 @@ impl Core for CoreService {
                     .shares(10) // Use 10% of the CPU relative to other cgroups
                     .done()
                     .build(hierarchy);
+                // Attach the running command to the cgroup
+                let controller: &cgroups_rs::cpu::CpuController =
+                    cgroup.controller_of().expect("cgroup controller");
 
                 // Spawn the command
                 let running = cmd.spawn();
@@ -84,10 +88,8 @@ impl Core for CoreService {
                     Ok(running) => {
                         let pid = running.id();
 
-                        // Attach the running command to the cgroup
-                        let cpus: &cgroups_rs::cpu::CpuController =
-                            cgroup.controller_of().expect("cgroup controller");
-                        cpus.add_task(&CgroupPid::from(pid as u64))
+                        controller
+                            .add_task(&CgroupPid::from(pid as u64))
                             .expect("attaching to cgroup");
 
                         // Wait for the command to terminate
@@ -95,10 +97,20 @@ impl Core for CoreService {
                             .wait_with_output()
                             .expect("waiting process termination");
 
+                        // Destroy the cgroup upon completion
+                        // Note: https://github.com/kata-containers/cgroups-rs/issues/92
+                        // Note: The library does not clean up the cgroup, so it needs to be
+                        // Note: removed manually.
+                        let resp = cgroup.delete();
+                        if resp.is_err() {
+                            // TODO error cleaning up cgroup
+                            println!("{:?}", resp)
+                        }
+
                         // Return the result synchronously
                         let meta = meta::AuraeMeta {
                             name: r.command,
-                            message: "-".to_string(),
+                            message: "".to_string(),
                         };
                         let proc = meta::ProcessMeta { pid: pid as i32 };
                         let status = meta::Status::Complete as i32;
@@ -135,12 +147,6 @@ impl Core for CoreService {
                         Ok(Response::new(response))
                     }
                 }
-
-                // Get the process metadata
-
-                // Wait for the command (synchronous)
-
-                // Destroy the cgroup
             }
             // Unsuccessful parse
             Err(e) => {
