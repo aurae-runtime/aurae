@@ -63,11 +63,20 @@ ipnetwork = "0.20.0"
 rtnetlink = "0.11.0"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 thiserror = "1.0.37"
+<<<<<<< HEAD
 crossbeam = "0.8"
 libcontainer = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
 liboci-cli = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
 cgroups-rs =  { git = "https://github.com/kata-containers/cgroups-rs", branch = "main"}
 fsutils = "0.1.7"
+=======
+libcontainer     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
+liboci-cli     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
+crossbeam = "0.8"
+libcontainer = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
+liboci-cli = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
+cgroups = "0.1.0"
+>>>>>>> 44ce2fc (Introduce cgroups)
 
 [build-dependencies]
 anyhow = "1.0.65"
