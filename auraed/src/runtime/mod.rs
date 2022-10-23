@@ -40,6 +40,7 @@ use anyhow::Result;
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
 use cgroups_rs::{CgroupPid, Controller};
+use fsutils::rmdir;
 use tonic::{Request, Response, Status};
 // use libcontainer::{
 //     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
@@ -66,7 +67,6 @@ impl Core for CoreService {
     ) -> Result<Response<ExecutableStatus>, Status> {
         let r = request.into_inner();
         let rmeta = r.meta.expect("parsing request meta");
-
         let cmd = command_from_string(&r.command);
         match cmd {
             // Successful parse
@@ -87,7 +87,6 @@ impl Core for CoreService {
                 match running {
                     Ok(running) => {
                         let pid = running.id();
-
                         controller
                             .add_task(&CgroupPid::from(pid as u64))
                             .expect("attaching to cgroup");
@@ -101,10 +100,19 @@ impl Core for CoreService {
                         // Note: https://github.com/kata-containers/cgroups-rs/issues/92
                         // Note: The library does not clean up the cgroup, so it needs to be
                         // Note: removed manually.
-                        let resp = cgroup.delete();
-                        if resp.is_err() {
-                            // TODO error cleaning up cgroup
-                            println!("{:?}", resp)
+                        let controller_resp = controller.delete();
+                        if controller_resp.is_err() {
+                            println!("{:?}", controller_resp)
+                        }
+                        let cgroup_resp = cgroup.delete();
+                        if cgroup_resp.is_err() {
+                            println!("{:?}", cgroup_resp)
+                        }
+                        let cgroup_dir =
+                            format!("/sys/fs/cgroup/{}", rmeta.name);
+                        let cleanup = rmdir(&cgroup_dir);
+                        if cleanup {
+                            println!("cleanup failed")
                         }
 
                         // Return the result synchronously
