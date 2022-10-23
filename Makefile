@@ -76,7 +76,6 @@ docs: crate stdlibdocs ## Assemble all the /docs for the website locally.
 stdlibdocs: ## Generate the docs for the stdlib from the .proto files
 	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0 --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*.proto
 
-
 crate: ## Build the crate (documentation)
 	$(cargo) doc --no-deps
 	cp -rv target/doc/* docs/crate
