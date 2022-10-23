@@ -66,7 +66,7 @@ thiserror = "1.0.37"
 crossbeam = "0.8"
 libcontainer = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
 liboci-cli = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
-cgroups = "0.1.0"
+cgroups-rs =  { git = "https://github.com/kata-containers/cgroups-rs", branch = "main"}
 
 [build-dependencies]
 anyhow = "1.0.65"

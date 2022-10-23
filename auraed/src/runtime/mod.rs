@@ -37,11 +37,14 @@ tonic::include_proto!("runtime");
 use crate::runtime::core_server::Core;
 use crate::{command_from_string, meta};
 use anyhow::Result;
+use cgroups_rs::cgroup_builder::CgroupBuilder;
+use cgroups_rs::*;
+use cgroups_rs::{CgroupPid, Controller};
+use tonic::{Request, Response, Status};
 // use libcontainer::{
 //     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
 // };
 // use std::path::PathBuf;
-use tonic::{Request, Response, Status};
 
 /// The server side implementation of the core runtime subsystem.
 ///
@@ -56,22 +59,48 @@ pub struct CoreService {}
 
 #[tonic::async_trait]
 impl Core for CoreService {
+    /// Create a cgroup based on the "name" of the executable and spawn a process inside.
     async fn run_executable(
         &self,
         request: Request<Executable>,
     ) -> Result<Response<ExecutableStatus>, Status> {
         let r = request.into_inner();
+        let rmeta = r.meta.expect("expect meta");
         let cmd = command_from_string(&r.command);
         match cmd {
+            // Successful parse
             Ok(mut cmd) => {
-                let output = cmd.output();
-                match output {
-                    Ok(output) => {
+                // Create the cgroup
+                let hierarchy = cgroups_rs::hierarchies::auto(); // v1/v2 cgroup switch automatically
+                let cgroup: Cgroup = CgroupBuilder::new(&rmeta.name)
+                    .cpu()
+                    .shares(10) // Use 10% of the CPU relative to other cgroups
+                    .done()
+                    .build(hierarchy);
+
+                // Spawn the command
+                let running = cmd.spawn();
+                match running {
+                    Ok(running) => {
+                        let pid = running.id();
+
+                        // Attach the running command to the cgroup
+                        let cpus: &cgroups_rs::cpu::CpuController =
+                            cgroup.controller_of().expect("cgroup controller");
+                        cpus.add_task(&CgroupPid::from(pid as u64))
+                            .expect("attaching to cgroup");
+
+                        // Wait for the command to terminate
+                        let output = running
+                            .wait_with_output()
+                            .expect("waiting process termination");
+
+                        // Return the result synchronously
                         let meta = meta::AuraeMeta {
                             name: r.command,
                             message: "-".to_string(),
                         };
-                        let proc = meta::ProcessMeta { pid: -1 }; // todo @kris-nova get pid, we will probably want to spawn() and wait and remember the pid
+                        let proc = meta::ProcessMeta { pid: pid as i32 };
                         let status = meta::Status::Complete as i32;
                         let response = ExecutableStatus {
                             meta: Some(meta),
@@ -88,7 +117,10 @@ impl Core for CoreService {
                     Err(e) => {
                         let meta = meta::AuraeMeta {
                             name: "-".to_string(),
-                            message: format!("{:?}", e),
+                            message: format!(
+                                "failed spawning process: {:?}",
+                                e
+                            ),
                         };
                         let proc = meta::ProcessMeta { pid: -1 };
                         let status = meta::Status::Error as i32;
@@ -103,11 +135,18 @@ impl Core for CoreService {
                         Ok(Response::new(response))
                     }
                 }
+
+                // Get the process metadata
+
+                // Wait for the command (synchronous)
+
+                // Destroy the cgroup
             }
+            // Unsuccessful parse
             Err(e) => {
                 let meta = meta::AuraeMeta {
                     name: "-".to_string(),
-                    message: format!("{:?}", e),
+                    message: format!("unable to parse command: {:?}", e),
                 };
                 let proc = meta::ProcessMeta { pid: -1 };
                 let status = meta::Status::Error as i32;
