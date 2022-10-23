@@ -150,36 +150,36 @@ impl Core for CoreService {
         _request: Request<Cell>,
     ) -> Result<Response<CellStatus>, Status> {
         todo!();
-        let syscall = create_syscall();
-        let mut container =
-            ContainerBuilder::new("123".to_string(), syscall.as_ref())
-                .as_init(PathBuf::new())
-                .with_systemd(false)
-                .build()
-                .expect("building container");
-        // .with_pid_file(args.pid_file.as_ref())?
-        // .with_console_socket(args.console_socket.as_ref())
-        // .with_root_path(root_path)?
-        // .with_preserved_fds(args.preserve_fds)
-        // .as_init(&args.bundle)
-        // .with_systemd(false)
-        // .build()?;
-
-        let _ = container.start();
-        let meta =
-            meta::AuraeMeta { name: "-".to_string(), message: "-".to_string() };
-        let status = meta::Status::Complete as i32;
-        let container_statuses = vec![ContainerStatus {
-            meta: Some(meta::AuraeMeta {
-                name: "-".to_string(),
-                message: "-".to_string(),
-            }),
-            status: meta::Status::Complete as i32,
-            proc: Some(meta::ProcessMeta { pid: -1 }),
-        }];
-        let response =
-            CellStatus { meta: Some(meta), status, container_statuses };
-        Ok(Response::new(response))
+        // let syscall = create_syscall();
+        // let mut container =
+        //     ContainerBuilder::new("123".to_string(), syscall.as_ref())
+        //         .as_init(PathBuf::new())
+        //         .with_systemd(false)
+        //         .build()
+        //         .expect("building container");
+        // // .with_pid_file(args.pid_file.as_ref())?
+        // // .with_console_socket(args.console_socket.as_ref())
+        // // .with_root_path(root_path)?
+        // // .with_preserved_fds(args.preserve_fds)
+        // // .as_init(&args.bundle)
+        // // .with_systemd(false)
+        // // .build()?;
+        //
+        // let _ = container.start();
+        // let meta =
+        //     meta::AuraeMeta { name: "-".to_string(), message: "-".to_string() };
+        // let status = meta::Status::Complete as i32;
+        // let container_statuses = vec![ContainerStatus {
+        //     meta: Some(meta::AuraeMeta {
+        //         name: "-".to_string(),
+        //         message: "-".to_string(),
+        //     }),
+        //     status: meta::Status::Complete as i32,
+        //     proc: Some(meta::ProcessMeta { pid: -1 }),
+        // }];
+        // let response =
+        //     CellStatus { meta: Some(meta), status, container_statuses };
+        // Ok(Response::new(response))
     }
 
     // async fn function_name(
