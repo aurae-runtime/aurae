@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["Status","/ Status represents the state of an object within Aurae. / The status Enum has special meaning used for each value."]],"struct":[["AuraeMeta",""],["ProcessMeta",""]]};

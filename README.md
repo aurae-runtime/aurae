@@ -1,39 +1,55 @@
 # Aurae
 
-Aurae is a free and open source Rust project which houses a generic systems runtime daemon built specifically for enterprise distributed systems. Aurae is designed to work well with (but is deliberetly decoupled from) Kubernetes. Aurae serves as a distributed systems aware alternative to systemd.
+Aurae is a free and open source Rust project which houses a low level systems runtime daemon built specifically for enterprise distributed systems called `auraed`. 
 
-Think of [auraed](https://github.com/aurae-runtime/aurae/tree/main/auraed) as a pid 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
+The `auraed` daemon can be ran as a pid 1 on a Linux kernel and manages containers, virtual machines, and spawning short-lived nested virtual instances of itself for an additional layer of isolation.
 
-Aurae brings [SPIFFE](https://github.com/spiffe)/[SPIRE](https://github.com/spiffe/spire) (x509 mTLS) backed identity, authentication (authn) and authorization (authz) as low as the Unix domain socket layer in a distributed system.
+Aurae is designed to work well with (but is deliberately decoupled from) Kubernetes. The `auraed` daemon runs "under" Kubernetes and exposes the [Aurae Standard Library](https://aurae.io/stdlib/) over an mTLS authenticated gRPC server. 
 
-Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://github.com/aurae-runtime/auraed/tree/main/stdlib#the-aurae-standard-library).
-
-A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. Aurae is designed to take ownership of a single machine, and expose the standard library a generic and meaningful way for higher order consumers.
-
-## Project Status
+### Project Status
 
 The project is very young and under active development. The APIs are subject to change without notice until further notice.
-As we continue to develop the project the APIs will stablizie and eventually a long term stable release will be offered. 
+As we continue to develop the project the APIs will stablizie and eventually a long term stable release will be offered.
 
 At this time the project should not be ran in production.
 
 Please read [getting involved](https://github.com/aurae-runtime/community#getting-involved) if you are interested in joining the project in its early phases. Contribution types of all types and ranges are welcome. You do not have to know Rust to join the project.
 
-## Motivation 
+### Runtime Workloads
+
+Aurae offers a runtime API which is capable of managing:
+
+ - [Executables](http://localhost:8000/stdlib/v0/#executable) (The most fundamental runtime process)
+ - [Cells](http://localhost:8000/stdlib/v0/#cell) (Processes running in a shared cgroup namespace)
+ - [Spawned Aurae Instances](http://localhost:8000/stdlib/v0/#instance) (Short lived nested virtual instances of Aurae)
+ - [Pods](http://localhost:8000/stdlib/v0/#pod) (Cells running in spawned instances)
+ - [Virtual Machines](http://localhost:8000/stdlib/v0/#virtualmachine) (Long-lived arbitrary virtual machines)
+
+### Auraed
+
+Think of [auraed](https://github.com/aurae-runtime/aurae/tree/main/auraed) as a pid 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
+
+### Authentication
+
+Aurae brings [SPIFFE](https://github.com/spiffe)/[SPIRE](https://github.com/spiffe/spire) (x509 mTLS) backed identity, authentication (authn) and authorization (authz) as low as the Unix domain socket layer in a distributed system.
+
+### Standard Library
+
+Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://github.com/aurae-runtime/auraed/tree/main/stdlib#the-aurae-standard-library).
+
+### Principle of Least Awareness
+
+A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. Aurae is designed to take ownership of a single node, and expose the standard library a generic and meaningful way for higher order consumers.
+
+Aurae is a low level building block and is designed to work well with any higher order system by offering a thoughtful set of APIs and controls for managing workloads on a node.
+
+### Motivation 
 
 Read [Why fix Kubernetes and Systemd](https://medium.com/@kris-nova/why-fix-kubernetes-and-systemd-782840e50104) by [Kris Nóva](https://github.com/krisnova). 
 
 Aurae attempts to simplify and improve the stack in enterprise distributed systems by carving out a small portion of responsibility while offering a few basic guarantees with regard to state, synchronicity, awareness, and security.
 
 Aurae brings enterprise identity as low as the socket layer in a system, which unlocks multi tenant workloads that run below tools like Kubernetes.
-
-## Workloads 
-
-Aurae supports 3 types of workloads which can be started and scheduled alongside each other on a single machine.
-
- - Executables (Regular executable processes on a host system. Similar to [Systemd Units with ExecStart](https://www.freedesktop.org/software/systemd/man/systemd.service.html)).
- - Containers (A secure and opinionated container runtime is baked directly into the Aurae binary).
- - Virtualization (A secure and opinionated hypervisor is baked directly into the Aurae binary).
 
 ## AuraeScript 
 

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["init","Run Aurae as an init pid 1 instance."]]};
