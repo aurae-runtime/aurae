@@ -41,10 +41,14 @@ use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
 use cgroups_rs::{CgroupPid, Controller};
 <<<<<<< HEAD
+<<<<<<< HEAD
 use log::{debug, info};
 use std::process::Stdio;
 use tonic::{Request, Response, Status};
 =======
+=======
+use fsutils::rmdir;
+>>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
 use tonic::{Request, Response, Status};
 // use libcontainer::{
 //     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
@@ -71,6 +75,7 @@ impl Core for CoreService {
         request: Request<Executable>,
     ) -> Result<Response<ExecutableStatus>, Status> {
         let r = request.into_inner();
+<<<<<<< HEAD
 <<<<<<< HEAD
         // let rmeta = r.meta.expect("parsing request meta");
 
@@ -145,6 +150,9 @@ impl Core for CoreService {
                 Ok(Response::new(response))
 =======
         let rmeta = r.meta.expect("expect meta");
+=======
+        let rmeta = r.meta.expect("parsing request meta");
+>>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
         let cmd = command_from_string(&r.command);
         match cmd {
             // Successful parse
@@ -162,11 +170,16 @@ impl Core for CoreService {
                 match running {
                     Ok(running) => {
                         let pid = running.id();
+<<<<<<< HEAD
 
                         // Attach the running command to the cgroup
                         let cpus: &cgroups_rs::cpu::CpuController =
                             cgroup.controller_of().expect("cgroup controller");
                         cpus.add_task(&CgroupPid::from(pid as u64))
+=======
+                        controller
+                            .add_task(&CgroupPid::from(pid as u64))
+>>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
                             .expect("attaching to cgroup");
 
                         // Wait for the command to terminate
@@ -174,6 +187,28 @@ impl Core for CoreService {
                             .wait_with_output()
                             .expect("waiting process termination");
 
+<<<<<<< HEAD
+=======
+                        // Destroy the cgroup upon completion
+                        // Note: https://github.com/kata-containers/cgroups-rs/issues/92
+                        // Note: The library does not clean up the cgroup, so it needs to be
+                        // Note: removed manually.
+                        let controller_resp = controller.delete();
+                        if controller_resp.is_err() {
+                            println!("{:?}", controller_resp)
+                        }
+                        let cgroup_resp = cgroup.delete();
+                        if cgroup_resp.is_err() {
+                            println!("{:?}", cgroup_resp)
+                        }
+                        let cgroup_dir =
+                            format!("/sys/fs/cgroup/{}", rmeta.name);
+                        let cleanup = rmdir(&cgroup_dir);
+                        if cleanup {
+                            println!("cleanup failed")
+                        }
+
+>>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
                         // Return the result synchronously
                         let meta = meta::AuraeMeta {
                             name: r.command,

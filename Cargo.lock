@@ -171,8 +171,16 @@ dependencies = [
  "anyhow",
  "cgroups-rs",
  "clap",
+<<<<<<< HEAD
  "crossbeam",
  "fsutils",
+=======
+<<<<<<< HEAD
+=======
+ "crossbeam",
+ "fsutils",
+>>>>>>> 9b2378f (Cgroup still failing on pkill, but a good start)
+>>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
  "futures",
  "h2",
  "ipnetwork",
@@ -851,6 +859,19 @@ dependencies = [
 [[package]]
 name = "fsutils"
 version = "0.1.7"
+<<<<<<< HEAD
+=======
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f025c5fe9dd7348f756224f90d3a52fc6499a66aa2e9efc068316f63a3a48848"
+dependencies = [
+ "env_logger",
+ "log",
+]
+
+[[package]]
+name = "futures"
+version = "0.3.24"
+>>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f025c5fe9dd7348f756224f90d3a52fc6499a66aa2e9efc068316f63a3a48848"
 dependencies = [
@@ -1136,6 +1157,18 @@ checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 [[package]]
 name = "humantime"
 version = "1.3.0"
+<<<<<<< HEAD
+=======
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
+dependencies = [
+ "quick-error",
+]
+
+[[package]]
+name = "hyper"
+version = "0.14.20"
+>>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
 dependencies = [

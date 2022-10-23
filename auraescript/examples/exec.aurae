@@ -36,6 +36,8 @@ let runtime = aurae.runtime();
 let example = cmd("cat /etc/resolv.conf");
 runtime.run_executable(example).json();
 
+//exec("cat /etc/fstab").json();
+
 exec("cat /etc/fstab").json();
 =======
 // direct example
