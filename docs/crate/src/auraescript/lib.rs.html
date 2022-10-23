@@ -377,7 +377,7 @@
         <span class="comment">// Runtime type</span>
         <span class="comment">//</span>
         <span class="comment">// The runtime subsystem with corresponding methods.</span>
-        .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">Runtime</span><span class="op">&gt;</span>(<span class="string">&quot;Runtime&quot;</span>)
+        .<span class="ident">register_type_with_name</span>::<span class="op">&lt;</span><span class="ident">Core</span><span class="op">&gt;</span>(<span class="string">&quot;Core&quot;</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;runtime&quot;</span>, <span class="ident">AuraeClient::runtime</span>)
         <span class="comment">// Executable type</span>
         <span class="comment">//</span>
@@ -398,7 +398,7 @@
         <span class="comment">// run_executable function</span>
         <span class="comment">//</span>
         <span class="comment">// Direct access to the run_executable function.</span>
-        .<span class="ident">register_fn</span>(<span class="string">&quot;run_executable&quot;</span>, <span class="ident">Runtime::run_executable</span>)
+        .<span class="ident">register_fn</span>(<span class="string">&quot;run_executable&quot;</span>, <span class="ident">Core::run_executable</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;json&quot;</span>, <span class="ident">Executable::json</span>)
         .<span class="ident">register_fn</span>(<span class="string">&quot;raw&quot;</span>, <span class="ident">Executable::raw</span>)
         .<span class="ident">register_get_set</span>(

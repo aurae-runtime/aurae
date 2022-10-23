@@ -437,7 +437,7 @@
         <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">tokio::spawn</span>(<span class="kw">async</span> {
             <span class="ident">Server::builder</span>()
                 .<span class="ident">tls_config</span>(<span class="ident">tls</span>)<span class="question-mark">?</span>
-                .<span class="ident">add_service</span>(<span class="ident">RuntimeServer::new</span>(<span class="ident">RuntimeService::default</span>()))
+                .<span class="ident">add_service</span>(<span class="ident">CoreServer::new</span>(<span class="ident">CoreService::default</span>()))
                 .<span class="ident">add_service</span>(<span class="ident">ObserveServer::new</span>(<span class="ident">ObserveService::new</span>(<span class="ident">consumer</span>)))
                 .<span class="ident">add_service</span>(<span class="ident">ScheduleExecutableServer::new</span>(
                     <span class="ident">ScheduleExecutableService::default</span>(),

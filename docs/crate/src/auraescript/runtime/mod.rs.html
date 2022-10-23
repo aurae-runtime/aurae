@@ -81,7 +81,7 @@
 <span class="macro">tonic::include_proto!</span>(<span class="string">&quot;runtime&quot;</span>);
 
 <span class="macro">macros::client_wrapper!</span>(
-    <span class="ident">Runtime</span>,
+    <span class="ident">Core</span>,
     <span class="ident">run_executable</span>(<span class="ident">Executable</span>) -&gt; <span class="ident">ExecutableStatus</span>
 );
 
@@ -90,7 +90,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exec</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">ExecutableStatus</span> {
-    <span class="ident">Runtime::new</span>().<span class="ident">run_executable</span>(<span class="ident">cmd</span>(<span class="ident">x</span>))
+    <span class="ident">Core::new</span>().<span class="ident">run_executable</span>(<span class="ident">cmd</span>(<span class="ident">x</span>))
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="auraescript" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>

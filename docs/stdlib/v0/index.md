@@ -268,6 +268,7 @@ A set of containers running on the same kernel as the auraed responding to the r
 | ----- | ---- | ----- | ----------- |
 | meta | [meta.AuraeMeta](#meta-AuraeMeta) |  |  |
 | status | [meta.Status](#meta-Status) |  |  |
+| container_statuses | [ContainerStatus](#runtime-ContainerStatus) | repeated |  |
 
 
 

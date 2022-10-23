@@ -193,6 +193,8 @@
 <span id="187">187</span>
 <span id="188">188</span>
 <span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
 </pre><pre class="rust"><code><span class="comment">/* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -323,35 +325,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Pod</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">PodStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">syscall</span> <span class="op">=</span> <span class="ident">create_syscall</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">container</span> <span class="op">=</span>
-            <span class="ident">ContainerBuilder::new</span>(<span class="string">&quot;123&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">syscall</span>.<span class="ident">as_ref</span>())
-                .<span class="ident">as_init</span>(<span class="ident">PathBuf::new</span>())
-                .<span class="ident">with_systemd</span>(<span class="bool-val">false</span>)
-                .<span class="ident">build</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;building container&quot;</span>);
-        <span class="comment">// .with_pid_file(args.pid_file.as_ref())?</span>
-        <span class="comment">// .with_console_socket(args.console_socket.as_ref())</span>
-        <span class="comment">// .with_root_path(root_path)?</span>
-        <span class="comment">// .with_preserved_fds(args.preserve_fds)</span>
-        <span class="comment">// .as_init(&amp;args.bundle)</span>
-        <span class="comment">// .with_systemd(false)</span>
-        <span class="comment">// .build()?;</span>
-
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">container</span>.<span class="ident">start</span>();
-        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span>
-            <span class="ident">meta::AuraeMeta</span> { <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>() };
-        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>;
-        <span class="kw">let</span> <span class="ident">containers</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">ContainerStatus</span> {
-            <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta::AuraeMeta</span> {
-                <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
-                <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
-            }),
-            <span class="ident">status</span>: <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>,
-            <span class="ident">proc</span>: <span class="prelude-val">Some</span>(<span class="ident">meta::ProcessMeta</span> { <span class="ident">pid</span>: <span class="op">-</span><span class="number">1</span> }),
-        }];
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">PodStatus</span> { <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>), <span class="ident">status</span>, <span class="ident">containers</span> };
-        <span class="prelude-val">Ok</span>(<span class="ident">Response::new</span>(<span class="ident">response</span>))
+        <span class="macro">todo!</span>()
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">spawn</span>(
@@ -372,7 +346,37 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_request</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">CellStatus</span><span class="op">&gt;</span>, <span class="ident">Status</span><span class="op">&gt;</span> {
-        <span class="macro">todo!</span>()
+        <span class="macro">todo!</span>();
+        <span class="kw">let</span> <span class="ident">syscall</span> <span class="op">=</span> <span class="ident">create_syscall</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">container</span> <span class="op">=</span>
+            <span class="ident">ContainerBuilder::new</span>(<span class="string">&quot;123&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">syscall</span>.<span class="ident">as_ref</span>())
+                .<span class="ident">as_init</span>(<span class="ident">PathBuf::new</span>())
+                .<span class="ident">with_systemd</span>(<span class="bool-val">false</span>)
+                .<span class="ident">build</span>()
+                .<span class="ident">expect</span>(<span class="string">&quot;building container&quot;</span>);
+        <span class="comment">// .with_pid_file(args.pid_file.as_ref())?</span>
+        <span class="comment">// .with_console_socket(args.console_socket.as_ref())</span>
+        <span class="comment">// .with_root_path(root_path)?</span>
+        <span class="comment">// .with_preserved_fds(args.preserve_fds)</span>
+        <span class="comment">// .as_init(&amp;args.bundle)</span>
+        <span class="comment">// .with_systemd(false)</span>
+        <span class="comment">// .build()?;</span>
+
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">container</span>.<span class="ident">start</span>();
+        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span>
+            <span class="ident">meta::AuraeMeta</span> { <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>() };
+        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>;
+        <span class="kw">let</span> <span class="ident">container_statuses</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">ContainerStatus</span> {
+            <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta::AuraeMeta</span> {
+                <span class="ident">name</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident">message</span>: <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>(),
+            }),
+            <span class="ident">status</span>: <span class="ident">meta::Status::Complete</span> <span class="kw">as</span> <span class="ident">i32</span>,
+            <span class="ident">proc</span>: <span class="prelude-val">Some</span>(<span class="ident">meta::ProcessMeta</span> { <span class="ident">pid</span>: <span class="op">-</span><span class="number">1</span> }),
+        }];
+        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span>
+            <span class="ident">CellStatus</span> { <span class="ident">meta</span>: <span class="prelude-val">Some</span>(<span class="ident">meta</span>), <span class="ident">status</span>, <span class="ident">container_statuses</span> };
+        <span class="prelude-val">Ok</span>(<span class="ident">Response::new</span>(<span class="ident">response</span>))
     }
 
     <span class="comment">// async fn function_name(</span>
