@@ -69,7 +69,7 @@ docs: crate stdlibdocs ## Assemble all the /docs for the website locally.
 	cp -rv README.md docs/index.md # Special copy for the main README
 	cp -rv api/README.md docs/stdlib/index.md # Special copy for the main README
 
-	ifneq ("$(wildcard /usr/local/bin/protoc-gen-doc)", "")
+	ifeq ("$(wildcard /usr/local/bin/protoc-gen-doc)", "")
 		$(error "No /usr/local/bin/protoc-gen-doc, install from https://github.com/pseudomuto/protoc-gen-doc")
 	endif
 
