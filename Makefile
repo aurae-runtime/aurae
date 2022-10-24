@@ -70,7 +70,7 @@ docs: crate stdlibdocs ## Assemble all the /docs for the website locally.
 	cp -rv api/README.md docs/stdlib/index.md # Special copy for the main README
 
 	ifeq (, $(shell which protoc-gen-doc))
-	$(error "No protoc-gen-doc, install from https://github.com/pseudomuto/protoc-gen-doc")
+		$(error "No protoc-gen-doc, install from https://github.com/pseudomuto/protoc-gen-doc")
 	endif
 
 stdlibdocs: ## Generate the docs for the stdlib from the .proto files
