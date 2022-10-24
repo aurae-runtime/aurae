@@ -22,7 +22,7 @@ Please read [getting involved](https://github.com/aurae-runtime/community#gettin
 
 Aurae offers a runtime API which is capable of managing:
 
- - [Executables](https://aurae.io/stdlib/v0/#executable) (The most fundamental runtime process)
+ - [Executables](https://aurae.io/stdlib/v0/#executable) (Basic runtime processes)
  - [Cells](https://aurae.io/stdlib/v0/#cell) (Processes running in a shared cgroup namespace)
  - [Spawned Aurae Instances](https://aurae.io/stdlib/v0/#instance) (Short lived nested virtual instances of Aurae)
  - [Pods](https://aurae.io/stdlib/v0/#pod) (Cells running in spawned instances)
