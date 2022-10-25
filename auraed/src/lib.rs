@@ -77,11 +77,14 @@ use sea_orm::ConnectionTrait;
 use sea_orm::Database;
 use sea_orm::Statement;
 use std::borrow::Cow;
+use std::collections::hash_map::DefaultHasher;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::time::SystemTime;
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
@@ -225,6 +228,44 @@ impl AuraedRuntime {
     }
 }
 
+#[derive(Hash)]
+struct CellID {
+    base: String,
+    command: String,
+    timestamp: SystemTime,
+}
+
+/// A deterministic function used to calculate a meaningful cgroup directory
+/// name from an arbitrary executable shell string.
+/// Note: The return value of this function is how we look up Aurae cells
+/// Note: from other subsystems
+fn cell_name_from_string(command: &str) -> Result<String, anyhow::Error> {
+    let now = SystemTime::now();
+
+    let mut entries = command.split(' ');
+    let base = match entries.next() {
+        Some(base) => base,
+        None => {
+            return Err(anyhow!("empty base command string"));
+        }
+    };
+    let c = CellID {
+        base: base.to_string(),
+        command: command.to_string(),
+        timestamp: now,
+    };
+    let val = format!("{:?}", cell_hash(&c));
+    Ok(val)
+}
+
+fn cell_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
+}
+
+/// A deterministic function used to take an arbitrary shell string and attempt
+/// to convert to a Command which can be .spawn()'ed later.
 fn command_from_string(cmd: &str) -> Result<Command, anyhow::Error> {
     let mut entries = cmd.split(' ');
     let base = match entries.next() {

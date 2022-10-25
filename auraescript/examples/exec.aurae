@@ -32,7 +32,7 @@
 let aurae = connect();
 let runtime = aurae.runtime();
 
-let example = cmd("mockd");
+let example = cmd("cat /etc/fstab");
 runtime.run_executable(example).json();
 
 //exec("cat /etc/fstab").json();
