@@ -1,7 +1,5 @@
 # Workload Isolation with Aurae Cells
 
-_Author: [Kris Nóva](https://github.com/krisnova)_
-
 ## Introducing Runtime API
 
 Last week we merged [Pull Request #73](https://github.com/aurae-runtime/aurae/pull/73) which marks the project's formal acceptance of our initial runtime [subsystem](https://aurae.io/stdlib/#what-is-a-subsystem) API.
@@ -44,9 +42,12 @@ Thank you to the many authors, contributors, and maintainers who helped the proj
  - [@taniwha3](https://github.com/taniwha3)
  - [Vincent Riesop](https://github.com/Vincinator)
 
-## Keeping Pods Natural
+---
+
+# Keeping Pods Intuitive
 
 We make the assumption that most Aurae consumers will be interested in "scheduling pods", as this is the primary unit of work for Kubernetes.
+
 Therefore, we knew we wanted to make Pods look and feel as much like Kubernetes as possible, so they would be intuitive for users. 
 From a client perspective an Aurae pod should look, feel, and behave just like an OCI compliant Kubernetes pod with only a few small differences.
 
@@ -200,6 +201,10 @@ Because Aurae is acts as a hypervisor this gives an operator the ability to moun
 
 We believe this pattern to be a more flexible, secure, and efficient pattern which can be leveraged in place of traditional sidecar style mesh networking that is often seen with service mesh projects such as [Istio](https://github.com/istio/istio). 
 
+From the original client's perspective scheduling a pod will feel natural, and will still expose basic fields such as OCI image, listen port, etc. Users can run a pod with Aurae, and the extra isolation layer should be transparent and free just by executing the `RunPod` gRPC function.
+
+**Note**: The project has decided not to support the Kubernetes Pod API directly at this layer of the stack.
+
 ## What's Next?
 
 The project is under active development, and many of the features described in this blog are currently a work in progress.
@@ -212,4 +217,6 @@ If you are interested in finding areas to contribute please see our [good first 
 
 f you are interested in discussing product opportunities, or venture funding we unfortunately are not taking these discussions at this time. Our intention is to keep Aurae free and community driven.
 
+---
 
+_Author: [Kris Nóva](https://github.com/krisnova)_
