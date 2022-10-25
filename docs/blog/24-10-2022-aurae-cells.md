@@ -1,6 +1,6 @@
 # Workload Isolation with Aurae Cells
 
-## Introducing Runtime API
+## Runtime Subsystem
 
 Last week we merged [Pull Request #73](https://github.com/aurae-runtime/aurae/pull/73) which marks the project's formal acceptance of our initial runtime [subsystem](https://aurae.io/stdlib/#what-is-a-subsystem) API.
 
@@ -32,17 +32,10 @@ The 5 workload types:
  - Instance
  - Pod
 
-Thank you to the many authors, contributors, and maintainers who helped the project form conviction on the initial API. 
+Thank you to the many authors, contributors, and maintainers who helped the project form conviction on the initial API: 
 
- - [Dominic Hamon](https://github.com/dominichamon)
- - [@future-highway](https://github.com/future-highway)
- - [Hazel Weakly](https://github.com/hazelweakly)
- - [Josh Grant](https://github.com/j0shgrant)
- - [Malte Janduda](https://github.com/MalteJ)
- - [@taniwha3](https://github.com/taniwha3)
- - [Vincent Riesop](https://github.com/Vincinator)
+[Dominic Hamon](https://github.com/dominichamon) 	| [@future-highway](https://github.com/future-highway) 	| [Hazel Weakly](https://github.com/hazelweakly) 	| [Josh Grant](https://github.com/j0shgrant) 	| [Malte Janduda](https://github.com/MalteJ) 	| [@taniwha3](https://github.com/taniwha3) 	| [Vincent Riesop](https://github.com/Vincinator) 	|
 
----
 
 # Keeping Pods Intuitive
 
