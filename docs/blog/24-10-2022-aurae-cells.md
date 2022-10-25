@@ -76,13 +76,13 @@ cgroup  ipc  mnt  net  pid  pid_for_children  time  time_for_children  user  uts
 
 ### Containers
 
-I often say that cgroups are "vertical" resource slices and namespaces are "horizontal" access controls. When a cgroup is ran in its own namespaces its both a slice of resources, as well as an isolation boundary as well. We call this intersection a "container".
+I often say that cgroups are "vertical" resource slices and namespaces are "horizontal" access controls. When a cgroup is run in its own namespaces it's both a slice of resources, and an isolation boundary as well. We call this intersection a "container".
 
 ## Systemd Slices
 
 By default, systemd schedules all of its workloads in their own cgroup with access to the same namespaces as pid 1 on the system. These workloads are called [services](https://www.freedesktop.org/software/systemd/man/systemd.service.html) or units.
 
-Interestingly enough, Kubernetes also leverages systemd slices. You can usually see both systemd slices (`system.slice`) and Kubernetes pods (`kubepods.slice`) running side-by-side by exploring [/sys](https://man7.org/linux/man-pages/man5/sysfs.5.html) or `sysfs(5)` on your system. There are usually other cgroups running their as well. 
+Interestingly enough, Kubernetes also leverages systemd slices. You can usually see both systemd slices (`system.slice`) and Kubernetes pods (`kubepods.slice`) running side-by-side by exploring [/sys](https://man7.org/linux/man-pages/man5/sysfs.5.html) or `sysfs(5)` on your system. There are usually other cgroups running there as well. 
 
 ```bash 
 [root@alice]: /sys/fs/cgroup># ls -d */
