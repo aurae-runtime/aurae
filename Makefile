@@ -115,8 +115,8 @@ fmt: headers ## Format the entire code base(s)
 
 .PHONY: clean
 clean: clean-certs
-	cd aurae && make clean
 	cd auraed && make clean
+	cd auraescript && make clean
 	@rm -rvf target/*
 
 headers: headers-write ## Fix headers. Run this if you want to clobber things.
