@@ -34,6 +34,16 @@ The 5 workload types:
  - Instance
  - Pod
 
+Thank you to the many authors, contributors, and maintainers who helped the project form conviction on the initial API. 
+
+ - [Dominic Hamon](https://github.com/dominichamon)
+ - [@future-highway](https://github.com/future-highway)
+ - [Hazel Weakly](https://github.com/hazelweakly)
+ - [Josh Grant](https://github.com/j0shgrant)
+ - [Malte Janduda](https://github.com/MalteJ)
+ - [@taniwha3](https://github.com/taniwha3)
+ - [Vincent Riesop](https://github.com/Vincinator)
+
 ## Keeping Pods Natural
 
 We make the assumption that most Aurae consumers will be interested in "scheduling pods", as this is the primary unit of work for Kubernetes.
@@ -99,7 +109,11 @@ Additionally, the processes running in a cell will share namespaces, which mirro
 These processes can be grouped together and executed beside each other.
 Most users will recognize this pattern as the pattern that has enabled [the sidecar pattern](https://www.oreilly.com/library/view/designing-distributed-systems/9781491983638/ch02.html).
 
+![cell](/assets/img/blog-cell.png)
+
 Because Aurae intends to manage every process on a system, Aurae will be able to make trustworthy guarantees and offer expressive controls over how a host is broken into cells.
+
+![cells](/assets/img/blog-cells.png)
 
 ### Executables
 
@@ -123,6 +137,10 @@ Regardless of if an administrator is executing a basic process, or a container: 
 
 Taking a step back from containerization we also understand that many enterprise users will need to execute untrusted code at scale.
 Aurae additionally acts as a lightweight virtualization hypervisor and meta-data service in addition to being a cgroup broker.
+
+Each instance of Aurae comes with its own running pid 1 daemon called `auraed`.
+
+![cells](/assets/img/blog-instance.png)
 
 ### Understanding Virtualization
 
@@ -154,6 +172,8 @@ Aurae will manage creating an ephemeral [SPIFFE](https://github.com/spiffe/spiff
 
 Aurae manages the `Spawn()` including the networking bridge, and service identity management transparently at runtime.
 
+![cells](/assets/img/blog-spawn.png)
+
 **Note**: In the case that virtualization is not available on the host (e.g. nested virtualization in the cloud), Aurae will spawn directly into an isolated Cell.
 
 ### Virtual Machines with Aurae
@@ -179,5 +199,17 @@ First Aurae will spawn a new instance of itself. Next Aurae will bridge to the s
 Because Aurae is acts as a hypervisor this gives an operator the ability to mount network devices directly into the spawned instance, which can be referenced from the nested cell.
 
 We believe this pattern to be a more flexible, secure, and efficient pattern which can be leveraged in place of traditional sidecar style mesh networking that is often seen with service mesh projects such as [Istio](https://github.com/istio/istio). 
+
+## What's Next?
+
+The project is under active development, and many of the features described in this blog are currently a work in progress.
+
+If you are interested in helping us work on these features please feel welcome to [join the discord](https://discord.gg/aTe2Rjg5rq) where we discuss our progress.
+
+If you are interested in contributing please see the [getting involved](https://github.com/aurae-runtime/community#getting-involved) documentation.
+
+If you are interested in finding areas to contribute please see our [good first issues](https://github.com/aurae-runtime/aurae/issues?q=is%3Aopen+is%3Aissue+label%3A%22Good+First+Issue%22) which are designed to be easy for a newcomer to pick up and get started with. 
+
+f you are interested in discussing product opportunities, or venture funding we unfortunately are not taking these discussions at this time. Our intention is to keep Aurae free and community driven.
 
 
