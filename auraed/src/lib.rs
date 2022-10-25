@@ -249,7 +249,11 @@ fn cell_name_from_string(command: &str) -> Result<String, anyhow::Error> {
         command: command.to_string(),
         timestamp: now,
     };
+<<<<<<< HEAD
     let val = format!("{}-{:?}", base, cell_hash(&c));
+=======
+    let val = format!("{:?}", cell_hash(&c));
+>>>>>>> 7e5965c (Working on cells)
     Ok(val)
 }
 

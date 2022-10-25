@@ -42,6 +42,7 @@ use cgroups_rs::*;
 use cgroups_rs::{CgroupPid, Controller};
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 use log::{debug, info};
 use std::process::Stdio;
 use tonic::{Request, Response, Status};
@@ -55,6 +56,12 @@ use tonic::{Request, Response, Status};
 // };
 // use std::path::PathBuf;
 >>>>>>> 1502f87 (Introduce cgroup system to run_executable)
+=======
+use log::{debug, info};
+use std::io::Read;
+use std::process::Stdio;
+use tonic::{Request, Response, Status};
+>>>>>>> 7e5965c (Working on cells)
 
 /// The server side implementation of the core runtime subsystem.
 ///
@@ -75,6 +82,7 @@ impl Core for CoreService {
         request: Request<Executable>,
     ) -> Result<Response<ExecutableStatus>, Status> {
         let r = request.into_inner();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         // let rmeta = r.meta.expect("parsing request meta");
@@ -181,12 +189,19 @@ impl Core for CoreService {
                             .add_task(&CgroupPid::from(pid as u64))
 >>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
                             .expect("attaching to cgroup");
+=======
+        // let rmeta = r.meta.expect("parsing request meta");
 
-                        // Wait for the command to terminate
-                        let output = running
-                            .wait_with_output()
-                            .expect("waiting process termination");
+        // Build command to execute.
+        let mut cmd =
+            command_from_string(&r.command).expect("command string parsing");
+>>>>>>> 7e5965c (Working on cells)
 
+        // Calculate the ID for the cell to run the command in
+        let cell_id = cell_name_from_string(&r.command)
+            .expect("cell name hash calculation");
+
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
                         // Destroy the cgroup upon completion
@@ -256,16 +271,93 @@ impl Core for CoreService {
 
                 // Destroy the cgroup
 >>>>>>> 1502f87 (Introduce cgroup system to run_executable)
+=======
+        info!("Spawning cell: {}", cell_id);
+
+        // Create the cgroup for the cell
+        let hierarchy = cgroups_rs::hierarchies::auto(); // v1/v2 cgroup switch automatically
+        let cgroup: Cgroup = CgroupBuilder::new(&cell_id)
+            .cpu()
+            .shares(10) // Use 10% of the CPU relative to other cgroups
+            .done()
+            .build(hierarchy);
+        // Attach the running command to the cgroup
+        let controller: &cgroups_rs::cpu::CpuController =
+            cgroup.controller_of().expect("cgroup controller");
+
+        // Spawn the command
+        let running = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn();
+        match running {
+            Ok(mut running) => {
+                let pid = running.id();
+                controller
+                    .add_task(&CgroupPid::from(pid as u64))
+                    .expect("attaching to cgroup");
+
+                // Wait for the command to terminate
+                let cell_exit_status =
+                    running.wait().expect("waiting process termination");
+
+                // Destroy the cgroup upon completion
+                // Note: https://github.com/kata-containers/cgroups-rs/issues/92
+                // Note: The library does not clean up the cgroup, so it needs to be
+                // Note: removed manually.
+                let controller_resp = controller.delete();
+                if controller_resp.is_err() {
+                    debug!("{:?}", controller_resp)
+                }
+                let cgroup_resp = cgroup.delete();
+                if cgroup_resp.is_err() {
+                    debug!("{:?}", cgroup_resp)
+                }
+
+                // Return the result synchronously
+                let meta = meta::AuraeMeta {
+                    name: r.command,
+                    message: "".to_string(),
+                };
+                let proc = meta::ProcessMeta { pid: pid as i32 };
+                let status = meta::Status::Complete as i32;
+
+                // Parse stdout from pipe
+                let mut stdout_val = String::new();
+                running
+                    .stdout
+                    .expect("parse stdout")
+                    .read_to_string(&mut stdout_val)
+                    .expect("reading stdout");
+
+                // Parse stderr from pipe
+                let mut stderr_val = String::new();
+                running
+                    .stderr
+                    .expect("parse stderr")
+                    .read_to_string(&mut stderr_val)
+                    .expect("reading stderr");
+
+                let response = ExecutableStatus {
+                    meta: Some(meta),
+                    proc: Some(proc),
+                    status,
+                    stdout: stdout_val,
+                    stderr: stderr_val,
+                    exit_code: cell_exit_status.to_string(),
+                };
+                Ok(Response::new(response))
+>>>>>>> 7e5965c (Working on cells)
             }
-            // Unsuccessful parse
             Err(e) => {
                 let meta = meta::AuraeMeta {
                     name: "-".to_string(),
+<<<<<<< HEAD
 <<<<<<< HEAD
                     message: format!("failed spawning process: {:?}", e),
 =======
                     message: format!("unable to parse command: {:?}", e),
 >>>>>>> 1502f87 (Introduce cgroup system to run_executable)
+=======
+                    message: format!("failed spawning process: {:?}", e),
+>>>>>>> 7e5965c (Working on cells)
                 };
                 let proc = meta::ProcessMeta { pid: -1 };
                 let status = meta::Status::Error as i32;

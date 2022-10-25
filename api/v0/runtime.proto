@@ -28,17 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-// The runtime subsystem is a synchronous and stateless subsystem which
-// enables the most fundamental of runtime functionality.
-//
-// The runtime subsystem is the lowest level of Aurae. Here the runtime
-// procedures can be executed in parallel. Each of the procedures defines a
-// core paradigm of work.
 syntax = "proto3";
 package runtime;
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 import "meta.proto";
 
+<<<<<<< HEAD
 //service Cell {
 //  rpc Create(Cell) returns (CellStatus) {}
 //  rpc Destroy(Cell) returns (CellStatus) {}
@@ -62,6 +57,36 @@ import "meta.proto";
 //service Spawn {
 //  rpc Spawn(SpawnRequest) returns (SpawnResponse) {}
 //}
+=======
+// Resource type API modelled after the "Resource-oriented design"
+// Source: https://google.aip.dev/121
+// Source: @dominichamon
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> 7e5965c (Working on cells)
 
 // Core is a synchronous subsystem which defines the main methods for executing and starting
 // workloads within an Aurae system.
