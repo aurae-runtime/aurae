@@ -12,6 +12,7 @@ nav:
   - Building from Source: /build
   - Quick Start: /quickstart
   - Certificates: /certs
+  - Contributors: /contributors
   - Reference:
     - auraed: /crate/auraed
     - auraescript: /crate/auraescript
