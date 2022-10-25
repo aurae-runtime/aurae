@@ -116,7 +116,7 @@ message Pod {
   meta.AuraeMeta meta = 1;
 
   // The cell to create within the spawned Aurae instance.
-  Cell cells = 2;
+  Cell cell = 2;
 }
 
 // PodStatus is the status of a completed pod and its subsequent containers.
