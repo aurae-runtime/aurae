@@ -21,6 +21,8 @@ nav:
       - auraed: /crate/src/auraed/lib.rs.html
       - auraescript: /crate/src/auraescript/lib.rs.html
       - macros: /crate/src/macros/lib.rs.html
+  - Blog:
+      - Isolation with Aurae Cells: /blog/24-10-2022-aurae-cells
 
 theme:
   name: material
