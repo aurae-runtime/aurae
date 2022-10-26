@@ -150,7 +150,6 @@ impl AuraedRuntime {
             )
         })?;
         trace!("{:#?}", self);
-
         let server_crt =
             tokio::fs::read(&self.server_crt).await.with_context(|| {
                 format!(
@@ -254,7 +253,7 @@ fn cell_name_from_string(command: &str) -> Result<String, anyhow::Error> {
         command: command.to_string(),
         timestamp: now,
     };
-    let val = format!("{:?}", cell_hash(&c));
+    let val = format!("{}-{:?}", base, cell_hash(&c));
     Ok(val)
 }
 

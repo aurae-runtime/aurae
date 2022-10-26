@@ -57,7 +57,6 @@ service Core {
   // * Assumes Spawn() is successful and is able to bridge to the nested Aurae and the nested cell.
   rpc RunPod(Pod) returns (PodStatus) {}
 
-
   // Spawn a short lived (ephemeral) nested virtual instance of Aurae which will terminate on exit.
   // Akin to fork() in Linux, each nested instance inherits properties from the parent but runs an
   // isolated virtual machine with its own kernel and auraed instance.
