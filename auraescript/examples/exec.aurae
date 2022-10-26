@@ -35,8 +35,23 @@ let runtime = aurae.runtime();
 <<<<<<< HEAD
 let example = cmd("cat /etc/resolv.conf");
 runtime.run_executable(example).json();
+=======
+let example = cmd("cat 'Hello Welcome to Aurae'");
+runtime.run_executable(example).raw();
 
-//exec("cat /etc/fstab").json();
+// Exec is an alias for runtime.run_executable()
+exec("echo '1'").json();
+exec("echo '2'").json();
+exec("echo '3'").json();
+exec("echo '4'").json();
+exec("echo '5'").json();
+exec("echo '-----------------------'").json();
+exec("echo 'each exec() call'").json();
+exec("echo 'runs in an independent'").json();
+exec("echo 'cgroup isolation cell'").json();
+exec("echo '-----------------------'").json();
+>>>>>>> 8e21ced (Adding naming convention changes to cgroup names)
+
 
 exec("cat /etc/fstab").json();
 =======

@@ -250,10 +250,14 @@ fn cell_name_from_string(command: &str) -> Result<String, anyhow::Error> {
         timestamp: now,
     };
 <<<<<<< HEAD
+<<<<<<< HEAD
     let val = format!("{}-{:?}", base, cell_hash(&c));
 =======
     let val = format!("{:?}", cell_hash(&c));
 >>>>>>> 7e5965c (Working on cells)
+=======
+    let val = format!("{}-{:?}", base, cell_hash(&c));
+>>>>>>> ebbcae1 (Adding naming convention changes to cgroup names)
     Ok(val)
 }
 
