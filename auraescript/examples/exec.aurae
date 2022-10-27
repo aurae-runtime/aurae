@@ -32,20 +32,9 @@
 let aurae = connect();
 let runtime = aurae.runtime();
 
-let example = cmd("cat 'Hello Welcome to Aurae'");
-runtime.run_executable(example).raw();
+// direct example
+let example = cmd("sleep 10");
+runtime.run_executable(example).json();
 
-// Exec is an alias for runtime.run_executable()
-exec("echo '1'").json();
-exec("echo '2'").json();
-exec("echo '3'").json();
-exec("echo '4'").json();
-exec("echo '5'").json();
-exec("echo '-----------------------'").json();
-exec("echo 'each exec() call'").json();
-exec("echo 'runs in an independent'").json();
-exec("echo 'cgroup isolation cell'").json();
-exec("echo '-----------------------'").json();
-
-
-
+// alias example is semantically the same as the above
+exec("sleep 10");
