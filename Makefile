@@ -121,7 +121,7 @@ clean-auraed:
 
 .PHONY: clean
 clean: clean-certs
-	cargo clean
+	@cargo clean
 
 headers: headers-write ## Fix headers. Run this if you want to clobber things.
 
