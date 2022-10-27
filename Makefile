@@ -113,11 +113,15 @@ clean-certs: ## Clean the cert material
 fmt: headers ## Format the entire code base(s)
 	@./hack/code-format
 
+clean-auraescript:
+	cd auraescript && make clean 
+
+clean-auraed:
+	cd auraed && make clean
+
 .PHONY: clean
 clean: clean-certs
-	cd aurae && make clean
-	cd auraed && make clean
-	@rm -rvf target/*
+	@cargo clean
 
 headers: headers-write ## Fix headers. Run this if you want to clobber things.
 
