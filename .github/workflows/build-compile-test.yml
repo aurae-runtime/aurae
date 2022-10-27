@@ -29,9 +29,9 @@ jobs:
           tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
           chmod +x protoc-gen-doc
           cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
+      - name: Build (make build)
+        run: make build
       - name: Lint (make lint)
         run: make lint
-      - name: Build (make)
-        run: make
       - name: Tests (make test)
         run: make test
