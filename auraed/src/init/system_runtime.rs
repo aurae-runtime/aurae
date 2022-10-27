@@ -3,7 +3,7 @@ use crate::init::network::{
 };
 use crate::init::power::spawn_thread_power_button_listener;
 use crate::init::{fs, logging, InitError, BANNER};
-use crate::observe::LogItem;
+use api::observe::LogItem;
 
 use anyhow::anyhow;
 use crossbeam::channel::Sender;

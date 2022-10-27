@@ -90,8 +90,10 @@ use crate::observe::observe_server::ObserveServer;
 use crate::observe::ObserveService;
 use crate::runtime::core_server::CoreServer;
 use crate::runtime::CoreService;
-use crate::schedule::schedule_executable_server::ScheduleExecutableServer;
-use crate::schedule::ScheduleExecutableService;
+use crate::schedule::{
+    schedule_executable_server::ScheduleExecutableServer,
+    ScheduleExecutableService,
+};
 
 pub mod init;
 pub mod logging;

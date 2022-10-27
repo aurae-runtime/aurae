@@ -73,12 +73,12 @@ fn generate_grpc_code() -> Result<()> {
 
     tonic_builder.compile(
         &[
-            "../api/v0/meta.proto",
-            "../api/v0/runtime.proto",
-            "../api/v0/schedule.proto",
-            "../api/v0/observe.proto",
+            "v0/meta.proto",
+            "v0/runtime.proto",
+            "v0/schedule.proto",
+            "v0/observe.proto",
         ],
-        &["../api/v0/"],
+        &["v0"],
     )?;
 
     Ok(())

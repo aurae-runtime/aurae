@@ -30,10 +30,9 @@
 
 // @todo @krisnova remove this once logging is futher along
 #![allow(dead_code)]
-
-tonic::include_proto!("observe");
-
 use crate::meta;
+pub use api::observe::*;
+
 use crate::observe::observe_server::Observe;
 use crossbeam::channel::Receiver;
 use futures::executor::block_on;

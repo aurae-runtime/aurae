@@ -32,11 +32,11 @@
  */
 
 #![allow(dead_code)]
-tonic::include_proto!("runtime");
-
+use crate::command_from_string;
+use crate::meta;
 use crate::runtime::core_server::Core;
-use crate::{command_from_string, meta};
 use anyhow::Result;
+pub use api::runtime::*;
 // use libcontainer::{
 //     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
 // };

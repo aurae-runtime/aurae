@@ -1,0 +1,14 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
+
+[dependencies]
+anyhow = "1.0.66"
+tonic = "0.8"
+prost = "0.11"
+
+[build-dependencies]
+anyhow = "1.0.66"
+tonic-build = "0.8"
