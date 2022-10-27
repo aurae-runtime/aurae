@@ -41,8 +41,13 @@ all: compile install
 
 compile: auraescript auraed ## Compile for the local architecture ⚙
 
-lint: auraescript auraed
-	@$(cargo) clippy --all-features --all -- -D clippy::all -D warnings
+prcheck: build lint test
+
+build:
+	@$(cargo) build
+
+lint:
+	@$(cargo) clippy --all-features --workspace -- -D clippy::all -D warnings
 
 install: ## Build and install (debug) 🎉
 	@$(cargo) install --path ./auraescript --debug
