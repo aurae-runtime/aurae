@@ -52,7 +52,7 @@ impl Log for StreamLogger {
     }
 
     fn log(&self, record: &log::Record) {
-        match self.producer.clone().send(LogItem {
+        match self.producer.send(LogItem {
             channel: "rust-logs".to_string(),
             line: format!(
                 "{}:{} -- {}",
