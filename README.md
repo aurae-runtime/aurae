@@ -3,11 +3,15 @@
 ![Main Build](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml/badge.svg)
 
 
-Aurae is a free and open source Rust project which houses a low level systems runtime daemon built specifically for enterprise distributed systems called `auraed`. 
+Aurae is a free and open source Rust project which houses a memory-safe systems runtime daemon built specifically for enterprise distributed systems called `auraed`.
 
 The `auraed` daemon can be ran as a pid 1 on a Linux kernel and manages containers, virtual machines, and spawning short-lived nested virtual instances of itself for an additional layer of isolation.
 
-Aurae is designed to work well with (but is deliberately decoupled from) Kubernetes. The `auraed` daemon runs "under" Kubernetes and exposes the [Aurae Standard Library](https://aurae.io/stdlib/) over an mTLS authenticated gRPC server. 
+### Mission
+
+Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
+
+Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mtLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
 
 ### Project Status
 
@@ -22,7 +26,7 @@ Please read [getting involved](https://github.com/aurae-runtime/community#gettin
 
 Aurae offers a runtime API which is capable of managing:
 
- - [Executables](https://aurae.io/stdlib/v0/#executable) (The most fundamental runtime process)
+ - [Executables](https://aurae.io/stdlib/v0/#executable) (Basic runtime processes)
  - [Cells](https://aurae.io/stdlib/v0/#cell) (Processes running in a shared cgroup namespace)
  - [Spawned Aurae Instances](https://aurae.io/stdlib/v0/#instance) (Short lived nested virtual instances of Aurae)
  - [Pods](https://aurae.io/stdlib/v0/#pod) (Cells running in spawned instances)

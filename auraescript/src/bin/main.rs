@@ -38,8 +38,8 @@
         private_in_public,
         unconditional_recursion,
         unused,
-        // TODO: unused_allocation,
-        // TODO: unused_comparisons,
+        unused_allocation,
+        unused_comparisons,
         // TODO: unused_parens,
         while_true
         )]

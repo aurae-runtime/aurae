@@ -56,9 +56,7 @@ test: ## Run the tests
 
 clean: ## Clean your artifacts 🧼
 	@echo "Cleaning..."
-	@cargo clean
-	@rm -rvf target/*
-	@rm -rvf $(executable)
+	@cargo clean --package $(executable)
 
 include hack/hack.mk
 
