@@ -29,8 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 use crate::observe::LogItem;
-use crossbeam::channel::Sender;
 use log::Log;
+use tokio::sync::broadcast::Sender;
 
 /// Sends log messages generated in rust code to the logging channel
 /// The logging channel is consumed by the observe API
