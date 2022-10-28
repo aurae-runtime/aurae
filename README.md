@@ -75,7 +75,7 @@ if execute {
 }
 ```
 
-AuraeScript servers as one of many clients to the system and can be used to express workload manifests instead of YAML.
+AuraeScript serves as one of many clients to the system and can be used to express workload manifests instead of YAML.
 AuraeScript can be used to control and gain visibility to the system.
 
 ## The Aurae Standard Library
