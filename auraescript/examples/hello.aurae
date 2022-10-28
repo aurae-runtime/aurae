@@ -33,10 +33,5 @@ let aurae = connect();
 let runtime = aurae.runtime();
 aurae.info().json();
 
-let example = exec("echo 'Hello World!'");
-runtime.start(example).json();
-
-
-
-
-
+cmd("echo 'Hello World!'").json();
+exec("echo 'Hello World!'").json();

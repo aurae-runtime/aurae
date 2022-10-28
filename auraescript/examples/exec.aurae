@@ -32,9 +32,7 @@
 let aurae = connect();
 let runtime = aurae.runtime();
 
-let example = cmd("cat /etc/resolv.conf");
-runtime.exec(example).json();
+let example = "cat /etc/resolv.conf";
+exec(example).json();
 
 //exec("cat /etc/fstab").json();
-
-
