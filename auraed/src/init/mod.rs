@@ -33,13 +33,13 @@
 //! The Aurae daemon assumes that if the current process id (PID) is 1 to
 //! run itself as an initialization program, otherwise bypass the init module.
 
-use crate::init::fs::FsError;
-use crate::init::logging::LoggingError;
-use crate::init::system_runtime::{
-    Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime,
+use crate::init::{
+    fs::FsError,
+    logging::LoggingError,
+    network::NetworkError,
+    system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
 };
 use crate::observe::LogItem;
-
 use crossbeam::channel::Sender;
 use log::Level;
 
@@ -66,6 +66,8 @@ pub(crate) enum InitError {
     Logging(#[from] LoggingError),
     #[error(transparent)]
     Fs(#[from] FsError),
+    #[error(transparent)]
+    Network(#[from] NetworkError),
 }
 
 /// Run Aurae as an init pid 1 instance.
