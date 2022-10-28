@@ -3,6 +3,7 @@ use crate::init::{fs, logging, network, InitError, BANNER};
 use crate::observe::LogItem;
 use crossbeam::channel::Sender;
 use log::{error, info, trace, Level};
+use std::ffi::CString;
 use std::path::Path;
 use tonic::async_trait;
 
@@ -53,9 +54,21 @@ impl SystemRuntime for Pid1SystemRuntime {
         trace!("Logging started");
 
         trace!("Configure filesystem");
-        fs::mount_vfs("none", "/dev", "devtmpfs")?;
-        fs::mount_vfs("none", "/sys", "sysfs")?;
-        fs::mount_vfs("proc", "/proc", "proc")?;
+        fs::mount_vfs(
+            &CString::new("none").expect("valid CString"),
+            &CString::new("/dev").expect("valid CString"),
+            &CString::new("devtmpfs").expect("valid CString"),
+        )?;
+        fs::mount_vfs(
+            &CString::new("none").expect("valid CString"),
+            &CString::new("/sys").expect("valid CString"),
+            &CString::new("sysfs").expect("valid CString"),
+        )?;
+        fs::mount_vfs(
+            &CString::new("proc").expect("valid CString"),
+            &CString::new("/proc").expect("valid CString"),
+            &CString::new("proc").expect("valid CString"),
+        )?;
 
         trace!("configure network");
         //show_dir("/sys/class/net/", false); // Show available network interfaces
