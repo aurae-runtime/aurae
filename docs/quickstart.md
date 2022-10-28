@@ -16,7 +16,7 @@ First create an executable script anywhere you like.
 
 ```bash
 touch ~/hello.aurae
-chmod +x ~/hello.aurae 
+chmod +x ~/hello.aurae
 ```
 
 Next add the following content. 
