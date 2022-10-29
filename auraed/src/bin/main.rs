@@ -43,7 +43,6 @@
         // TODO: unused_parens,
         while_true
         )]
-
 #![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
@@ -59,6 +58,7 @@ use auraed::{logging::logchannel::LogChannel, *};
 use clap::Parser;
 use log::*;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 const EXIT_OKAY: i32 = 0;
 const EXIT_ERROR: i32 = 1;
@@ -103,7 +103,7 @@ async fn daemon() -> i32 {
     // let logger_level = if matches.is_present("verbose") {
     let logger_level = if options.verbose { Level::Trace } else { Level::Info };
 
-    let log_collector = LogChannel::new("AuraeRuntime");
+    let log_collector = Arc::new(LogChannel::new("AuraeRuntime"));
     // Log Collector used to expose logs via API
     let prod = log_collector.get_producer();
 

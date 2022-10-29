@@ -82,6 +82,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Arc;
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
@@ -128,7 +129,7 @@ pub struct AuraedRuntime {
     /// `pub const AURAE_SOCK`
     pub socket: PathBuf,
     /// Provides logging channels to expose auraed logging via grpc
-    pub log_collector: LogChannel,
+    pub log_collector: Arc<LogChannel>,
 }
 
 /// Primary daemon structure. Holds state and memory for this instance of
@@ -171,15 +172,16 @@ impl AuraedRuntime {
 
         let sock = UnixListener::bind(&self.socket)?;
         let sock_stream = UnixListenerStream::new(sock);
-        let consumer = self.log_collector.get_consumer();
-        let _ = self.log_collector.get_producer();
+        let log_collector = self.log_collector.clone();
 
         // Run the server concurrently
         let handle = tokio::spawn(async {
             Server::builder()
                 .tls_config(tls)?
                 .add_service(CoreServer::new(CoreService::default()))
-                .add_service(ObserveServer::new(ObserveService::new(consumer)))
+                .add_service(ObserveServer::new(ObserveService::new(
+                    log_collector,
+                )))
                 .add_service(ScheduleExecutableServer::new(
                     ScheduleExecutableService::default(),
                 ))
