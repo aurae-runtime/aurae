@@ -1,8 +1,8 @@
 use crate::{logging::streamlogger::StreamLogger, observe::LogItem};
-use crossbeam::channel::Sender;
 use log::{Level, SetLoggerError};
 use simplelog::SimpleLogger;
 use syslog::{BasicLogger, Facility, Formatter3164};
+use tokio::sync::broadcast::Sender;
 
 const AURAED_SYSLOG_NAME: &str = "auraed";
 

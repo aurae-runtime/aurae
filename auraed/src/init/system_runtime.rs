@@ -1,10 +1,10 @@
 use crate::init::power::spawn_thread_power_button_listener;
 use crate::init::{fs, logging, network, InitError, BANNER};
 use crate::observe::LogItem;
-use crossbeam::channel::Sender;
 use log::{error, info, trace, Level};
 use std::ffi::CString;
 use std::path::Path;
+use tokio::sync::broadcast::Sender;
 use tonic::async_trait;
 
 const POWER_BUTTON_DEVICE: &str = "/dev/input/event0";

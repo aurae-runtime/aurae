@@ -32,8 +32,8 @@
 #![allow(dead_code)]
 //
 use crate::observe::LogItem;
-use crossbeam::channel::{bounded, Receiver, Sender};
 use log::error;
+use tokio::sync::broadcast::{self, Receiver, Sender};
 
 use super::get_timestamp_sec;
 
@@ -42,7 +42,6 @@ use super::get_timestamp_sec;
 #[derive(Debug)]
 pub struct LogChannel {
     producer: Sender<LogItem>,
-    consumer: Receiver<LogItem>,
     name: String,
 }
 
@@ -50,8 +49,8 @@ impl LogChannel {
     /// Constructor creating the channel for log communication
     pub fn new(name: &str) -> LogChannel {
         // TODO: decide for a cap. 40 is arbitrary
-        let (producer, consumer) = bounded(40);
-        LogChannel { producer, consumer, name: name.to_string() }
+        let (producer, _) = broadcast::channel(40);
+        LogChannel { producer, name: name.to_string() }
     }
     /// Getter for producer channel
     pub fn get_producer(&self) -> Sender<LogItem> {
@@ -60,28 +59,24 @@ impl LogChannel {
 
     /// Getter for consumer channel
     pub fn get_consumer(&self) -> Receiver<LogItem> {
-        self.consumer.clone()
+        self.producer.subscribe()
     }
 
     /// Wrapper that sends a log line to the channel
     pub fn log_line(producer: Sender<LogItem>, line: &str) {
-        match producer.send(LogItem {
+        // send returns an Err if there are no receivers. We ignore that.
+        let _ = producer.send(LogItem {
             channel: "unknown".to_string(),
             line: line.to_string(),
             // TODO: milliseconds type in protobuf requires 128bit type
             timestamp: get_timestamp_sec(),
-        }) {
-            Ok(_) => {}
-            Err(e) => {
-                error!("Error! {:?}", e);
-            }
-        }
+        });
     }
 
     // Receives a message from the channel
     // multiple consumer possible
-    fn consume_line(consumer: Receiver<LogItem>) -> Option<LogItem> {
-        match consumer.recv() {
+    async fn consume_line(consumer: &mut Receiver<LogItem>) -> Option<LogItem> {
+        match consumer.recv().await {
             Ok(val) => Some(val),
             Err(e) => {
                 error!("Error: {:?}", e);
@@ -112,22 +107,21 @@ mod tests {
         init_logging();
         let lrb = LogChannel::new("Test");
         let prod = lrb.get_producer();
+        let mut consumer = lrb.get_consumer();
 
         LogChannel::log_line(prod.clone(), "hello");
         LogChannel::log_line(prod.clone(), "aurae");
         LogChannel::log_line(prod.clone(), "bye");
 
-        let consumer = lrb.get_consumer();
-
-        let cur_item = LogChannel::consume_line(consumer.clone());
+        let cur_item = LogChannel::consume_line(&mut consumer).await;
         assert!(cur_item.is_some());
         assert_eq!(cur_item.unwrap().line, "hello");
 
-        let cur_item = LogChannel::consume_line(consumer.clone());
+        let cur_item = LogChannel::consume_line(&mut consumer).await;
         assert!(cur_item.is_some());
         assert_eq!(cur_item.unwrap().line, "aurae");
 
-        let cur_item = LogChannel::consume_line(consumer.clone());
+        let cur_item = LogChannel::consume_line(&mut consumer).await;
         assert!(cur_item.is_some());
         assert_eq!(cur_item.unwrap().line, "bye");
     }

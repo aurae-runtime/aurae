@@ -33,27 +33,26 @@
 
 tonic::include_proto!("observe");
 
-use crate::meta;
 use crate::observe::observe_server::Observe;
-use crossbeam::channel::Receiver;
-use futures::executor::block_on;
+use crate::{meta, LogChannel};
 use log::info;
-use std::thread;
+use std::sync::Arc;
+use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 
 /// The server side implementation of the Observe subsystem.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ObserveService {
-    consumer_aurae_logger: Receiver<LogItem>,
+    aurae_logger: Arc<LogChannel>,
     sub_process_consumer_list: Vec<Receiver<LogItem>>,
 }
 
 impl ObserveService {
-    pub fn new(consumer_aurae_logger: Receiver<LogItem>) -> ObserveService {
+    pub fn new(aurae_logger: Arc<LogChannel>) -> ObserveService {
         ObserveService {
-            consumer_aurae_logger,
+            aurae_logger,
             sub_process_consumer_list: Vec::<Receiver<LogItem>>::new(),
         }
     }
@@ -86,16 +85,22 @@ impl Observe for ObserveService {
     ) -> Result<Response<Self::GetAuraeDaemonLogStreamStream>, Status> {
         let (tx, rx) = mpsc::channel::<Result<LogItem, Status>>(4);
 
-        let log_consumer = self.consumer_aurae_logger.clone();
+        let mut log_consumer = self.aurae_logger.get_consumer();
 
-        thread::spawn(move || {
-            for i in log_consumer.into_iter() {
-                if block_on(tx.send(Ok(i))).is_err() {
-                    // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
-                    //  .. thus disabled logging here.
+        // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
+        //  .. thus disabled logging here.
+        tokio::spawn(async move {
+            // Log consumer will error if:
+            //  the producer is closed (no more logs)
+            //  the receiver is lagging
+            while let Ok(log_item) = log_consumer.recv().await {
+                if tx.send(Ok(log_item)).await.is_err() {
+                    // receiver is gone
+                    break;
                 }
             }
         });
+
         Ok(Response::new(ReceiverStream::new(rx)))
     }
 
