@@ -71,8 +71,7 @@ aurae.info().json();   // Show identity
 if execute {
     // Execute "cat /etc/resolv.conf"
     let runtime = aurae.runtime();
-    let example = exec("cat /etc/resolv.conf");
-    runtime.start(example).json();
+    exec("cat /etc/resolv.conf").json();
 }
 ```
 

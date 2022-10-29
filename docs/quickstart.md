@@ -1,6 +1,6 @@
 # Aurae Quickstart
 
-Now that you have [built Aurae from source](/docs/build.md) you can begin using Aurae.
+Now that you have [built Aurae from source](/build) you can begin using Aurae.
 
 ### Running the Daemon 
 
@@ -16,18 +16,18 @@ First create an executable script anywhere you like.
 
 ```bash
 touch ~/hello.aurae
-chmod +x ~/.hello.aurae 
+chmod +x ~/hello.aurae
 ```
 
 Next add the following content. 
 
 ```typescript
+#!/usr/bin/env auraescript
+
 let aurae = connect();
-let runtime = aurae.runtime();
 aurae.info().json();
 
-let example = exec("echo 'Hello World!'");
-runtime.exec(example).json();
+exec("echo 'Hello World!'").json();
 ```
 
 You can now run your first AuraeScript.
