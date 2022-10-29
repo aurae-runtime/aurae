@@ -29,8 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 use crate::observe::LogItem;
-use crossbeam::channel::Sender;
 use log::Log;
+use tokio::sync::broadcast::Sender;
 
 /// Sends log messages generated in rust code to the logging channel
 /// The logging channel is consumed by the observe API
@@ -52,7 +52,7 @@ impl Log for StreamLogger {
     }
 
     fn log(&self, record: &log::Record) {
-        match self.producer.clone().send(LogItem {
+        match self.producer.send(LogItem {
             channel: "rust-logs".to_string(),
             line: format!(
                 "{}:{} -- {}",
