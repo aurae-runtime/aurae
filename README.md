@@ -71,12 +71,11 @@ aurae.info().json();   // Show identity
 if execute {
     // Execute "cat /etc/resolv.conf"
     let runtime = aurae.runtime();
-    let example = exec("cat /etc/resolv.conf");
-    runtime.start(example).json();
+    exec("cat /etc/resolv.conf").json();
 }
 ```
 
-AuraeScript servers as one of many clients to the system and can be used to express workload manifests instead of YAML.
+AuraeScript serves as one of many clients to the system and can be used to express workload manifests instead of YAML.
 AuraeScript can be used to control and gain visibility to the system.
 
 ## The Aurae Standard Library
