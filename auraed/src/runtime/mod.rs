@@ -41,7 +41,6 @@ use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
 use cgroups_rs::{CgroupPid, Controller};
 use log::{debug, info};
-use std::io::Read;
 use std::process::Stdio;
 use tonic::{Request, Response, Status};
 
@@ -90,15 +89,14 @@ impl Core for CoreService {
         // Spawn the command
         let running = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn();
         match running {
-            Ok(mut running) => {
+            Ok(running) => {
                 let pid = running.id();
                 controller
                     .add_task(&CgroupPid::from(pid as u64))
                     .expect("attaching to cgroup");
 
                 // Wait for the command to terminate
-                let cell_exit_status =
-                    running.wait().expect("waiting process termination");
+                let output = running.wait_with_output().expect("waiting process termination");
 
                 // Destroy the cgroup upon completion
                 // Note: https://github.com/kata-containers/cgroups-rs/issues/92
@@ -122,28 +120,18 @@ impl Core for CoreService {
                 let status = meta::Status::Complete as i32;
 
                 // Parse stdout from pipe
-                let mut stdout_val = String::new();
-                running
-                    .stdout
-                    .expect("parse stdout")
-                    .read_to_string(&mut stdout_val)
-                    .expect("reading stdout");
+                let stdout_val = String::from_utf8_lossy(&output.stdout);
 
                 // Parse stderr from pipe
-                let mut stderr_val = String::new();
-                running
-                    .stderr
-                    .expect("parse stderr")
-                    .read_to_string(&mut stderr_val)
-                    .expect("reading stderr");
+                let stderr_val = String::from_utf8_lossy(&output.stderr);
 
                 let response = ExecutableStatus {
                     meta: Some(meta),
                     proc: Some(proc),
                     status,
-                    stdout: stdout_val,
-                    stderr: stderr_val,
-                    exit_code: cell_exit_status.to_string(),
+                    stdout: stdout_val.to_string(),
+                    stderr: stderr_val.to_string(),
+                    exit_code: output.status.code().expect("Parse status code").to_string(),
                 };
                 Ok(Response::new(response))
             }
