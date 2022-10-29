@@ -41,8 +41,13 @@ all: compile install
 
 compile: auraescript auraed ## Compile for the local architecture ⚙
 
-lint: auraescript auraed
-	@$(cargo) clippy --all-features --all -- -D clippy::all -D warnings
+prcheck: build lint test
+
+build:
+	@$(cargo) build
+
+lint:
+	@$(cargo) clippy --all-features --workspace -- -D clippy::all -D warnings
 
 install: ## Build and install (debug) 🎉
 	@$(cargo) install --path ./auraescript --debug
@@ -113,11 +118,15 @@ clean-certs: ## Clean the cert material
 fmt: headers ## Format the entire code base(s)
 	@./hack/code-format
 
+clean-auraescript:
+	cd auraescript && make clean 
+
+clean-auraed:
+	cd auraed && make clean
+
 .PHONY: clean
 clean: clean-certs
-	cd aurae && make clean
-	cd auraed && make clean
-	@rm -rvf target/*
+	@cargo clean
 
 headers: headers-write ## Fix headers. Run this if you want to clobber things.
 

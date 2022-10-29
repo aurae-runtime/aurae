@@ -32,6 +32,7 @@ default: install
 all: install
 
 cargo         =  cargo
+executable   ?=  auraescript
 
 compile: ## Compile for the local architecture ⚙
 	@$(cargo) clippy
@@ -51,9 +52,7 @@ test: ## Run the tests
 
 clean: ## Clean your artifacts 🧼
 	@echo "Cleaning..."
-	@cargo clean
-	@rm -rvf target/*
-	@rm -rvf $(executable)
+	@cargo clean --package $(executable)
 
 .PHONY: help
 help:  ## Show help messages for make targets
