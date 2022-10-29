@@ -115,9 +115,8 @@ message ExecutableStatus {
 message Pod {
   meta.AuraeMeta meta = 1;
 
-  // The cells to create within the spawned Aurae instance.
-  repeated Cell cells = 2;
-
+  // The cell to create within the spawned Aurae instance.
+  Cell cell = 2;
 }
 
 // PodStatus is the status of a completed pod and its subsequent containers.
