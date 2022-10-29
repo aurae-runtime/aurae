@@ -4,15 +4,14 @@ use crate::init::network::{
 use crate::init::power::spawn_thread_power_button_listener;
 use crate::init::{fs, logging, InitError, BANNER};
 use crate::observe::LogItem;
-
 use anyhow::anyhow;
-use crossbeam::channel::Sender;
 use ipnetwork::{IpNetwork, Ipv6Network};
 use log::{error, info, trace, Level};
 use netlink_packet_route::RtnlMessage;
 use rtnetlink::new_connection;
 use rtnetlink::proto::Connection;
 use std::path::Path;
+use tokio::sync::broadcast::Sender;
 use tonic::async_trait;
 
 const LOOPBACK_DEV: &str = "lo";

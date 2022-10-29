@@ -39,9 +39,8 @@ use crate::init::system_runtime::{
     Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime,
 };
 use crate::observe::LogItem;
-
-use crossbeam::channel::Sender;
 use log::Level;
+use tokio::sync::broadcast::Sender;
 
 mod fileio;
 mod fs;
