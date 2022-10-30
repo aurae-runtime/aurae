@@ -46,7 +46,7 @@
         trivial_numeric_casts,
         // TODO: unused_extern_crates,
         unused_import_braces,
-        // TODO: unused_qualifications,
+        unused_qualifications,
         // TODO: unused_results
         )]
 
@@ -80,7 +80,7 @@ struct AuraedOptions {
     #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
     ca_crt: String,
     /// Aurae socket path. Defaults to /var/run/aurae/aurae.sock
-    #[clap(short, long, value_parser, default_value = auraed::AURAE_SOCK)]
+    #[clap(short, long, value_parser, default_value = AURAE_SOCK)]
     socket: String,
     /// Toggle verbosity. Default false
     #[clap(short, long)]

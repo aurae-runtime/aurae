@@ -48,7 +48,7 @@
         trivial_numeric_casts,
         // TODO: unused_extern_crates,
         unused_import_braces,
-        // TODO: unused_qualifications,
+        unused_qualifications,
         // TODO: unused_results
         )]
 
