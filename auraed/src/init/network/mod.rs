@@ -28,178 +28,311 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use anyhow::anyhow;
 use futures::stream::TryStreamExt;
 use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
 use log::{error, info, trace, warn};
-use netlink_packet_route::LinkMessage;
+use netlink_packet_route::rtnl::link::nlas::Nla;
+use rtnetlink::Handle;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::str;
 use std::thread;
 use std::time::Duration;
 
-use netlink_packet_route::rtnl::link::nlas::Nla;
-use rtnetlink::Handle;
-
 mod sriov;
 
-pub(crate) async fn set_link_up(
-    handle: &Handle,
-    iface: &str,
-) -> anyhow::Result<()> {
-    let mut links = handle.link().get().match_name(iface.to_string()).execute();
+#[derive(thiserror::Error, Debug)]
+pub(crate) enum NetworkError {
+    #[error("Failed to initialize network: {0}")]
+    FailedToConnect(#[from] std::io::Error),
+    #[error("Could not find link `{iface}`")]
+    DeviceNotFound { iface: String },
+    #[error("Error adding address `{ip}` to link `{iface}`: {source}")]
+    ErrorAddingAddress {
+        iface: String,
+        ip: IpNetwork,
+        source: rtnetlink::Error,
+    },
+    #[error("Failed to set link up for device `{iface}`: {source}")]
+    ErrorSettingLinkUp { iface: String, source: rtnetlink::Error },
+    #[error("Failed to set link down for device `{iface}`: {source}")]
+    ErrorSettingLinkDown { iface: String, source: rtnetlink::Error },
+    #[error("Error adding route from `{route_source}` to {route_destination}` for device `{iface}`: {source}")]
+    ErrorAddingRoute {
+        iface: String,
+        route_source: IpNetwork,
+        route_destination: IpNetwork,
+        source: rtnetlink::Error,
+    },
+    #[error(transparent)]
+    Other(#[from] rtnetlink::Error),
+}
 
-    if let Some(link) = links.try_next().await? {
-        handle.link().set(link.header.index).up().execute().await?
-    } else {
-        return Err(anyhow!("iface '{}' not found", iface));
+pub(crate) struct Network(Handle);
+
+impl Network {
+    pub(crate) fn connect() -> Result<Network, NetworkError> {
+        let (connection, handle, _) = rtnetlink::new_connection()?;
+        tokio::spawn(connection);
+        Ok(Self(handle))
     }
 
-    // TODO: replace sleep with an await mechanism that checks if device is up (with a timeout)
-    // TODO: https://github.com/aurae-runtime/auraed/issues/40
-    info!("Waiting for link '{}' to become up", iface);
-    thread::sleep(Duration::from_secs(3));
-    info!("Waited 3 seconds, assuming link '{}' is up", iface);
+    pub(crate) async fn init(&self) -> Result<(), NetworkError> {
+        configure_loopback(&self.0).await?;
+        configure_nic(&self.0).await?;
+        Ok(())
+    }
+
+    pub(crate) async fn show_network_info(&self) {
+        info!("=== Network Interfaces ===");
+
+        info!("Addresses:");
+        let links_result = get_links(&self.0).await;
+
+        match links_result {
+            Ok(links) => {
+                for (_, iface) in links {
+                    if let Err(e) = dump_addresses(&self.0, &iface).await {
+                        error!(
+                            "Could not dump addresses for iface {}. Error={:?}",
+                            iface, e
+                        );
+                    };
+                }
+            }
+            Err(e) => {
+                error!("{:?}", e);
+            }
+        }
+        info!("==========================");
+    }
+}
+
+async fn configure_loopback(handle: &Handle) -> Result<(), NetworkError> {
+    const LOOPBACK_DEV: &str = "lo";
+    const LOOPBACK_IPV6: &str = "::1";
+    const LOOPBACK_IPV6_SUBNET: &str = "/128";
+    const LOOPBACK_IPV4: &str = "127.0.0.1";
+    const LOOPBACK_IPV4_SUBNET: &str = "/8";
+
+    trace!("configure {}", LOOPBACK_DEV);
+
+    add_address(
+        handle,
+        LOOPBACK_DEV.to_owned(),
+        format!("{}{}", LOOPBACK_IPV6, LOOPBACK_IPV6_SUBNET)
+            .parse::<Ipv6Network>()
+            .expect("valid ipv6 address"),
+    )
+    .await?;
+
+    add_address(
+        handle,
+        LOOPBACK_DEV.to_owned(),
+        format!("{}{}", LOOPBACK_IPV4, LOOPBACK_IPV4_SUBNET)
+            .parse::<Ipv4Network>()
+            .expect("valid ipv4 address"),
+    )
+    .await?;
+
+    set_link_up(handle, LOOPBACK_DEV.to_owned()).await?;
+
+    info!("Successfully configured {}", LOOPBACK_DEV);
+    Ok(())
+}
+
+// TODO: design network config struct
+async fn configure_nic(handle: &Handle) -> Result<(), NetworkError> {
+    const DEFAULT_NET_DEV: &str = "eth0";
+    const DEFAULT_NET_DEV_IPV6: &str = "fe80::2";
+    const DEFAULT_NET_DEV_IPV6_SUBNET: &str = "/64";
+
+    trace!("configure {}", DEFAULT_NET_DEV);
+
+    let ipv6 =
+        format!("{}{}", DEFAULT_NET_DEV_IPV6, DEFAULT_NET_DEV_IPV6_SUBNET)
+            .parse::<Ipv6Network>()
+            .expect("valid ipv6 address");
+
+    add_address(handle, DEFAULT_NET_DEV.to_owned(), ipv6).await?;
+
+    set_link_up(handle, DEFAULT_NET_DEV.to_owned()).await?;
+
+    add_route_v6(
+        handle,
+        DEFAULT_NET_DEV.to_owned(),
+        ipv6,
+        "::/0".parse::<Ipv6Network>().expect("valid ipv6 address"),
+    )
+    .await?;
+
+    info!("Successfully configured {}", DEFAULT_NET_DEV);
+    Ok(())
+}
+
+async fn add_address(
+    handle: &Handle,
+    iface: String,
+    ip: impl Into<IpNetwork>,
+) -> Result<(), NetworkError> {
+    let ip = ip.into();
+    let link_index = get_link_index(handle, iface.clone()).await?;
+
+    handle
+        .address()
+        .add(link_index, ip.ip(), ip.prefix())
+        .execute()
+        .await
+        .map(|_| {
+            trace!("Added address to link {}", iface);
+        })
+        .map_err(|e| NetworkError::ErrorAddingAddress {
+            iface,
+            ip,
+            source: e,
+        })?;
 
     Ok(())
+}
+
+async fn set_link_up(
+    handle: &Handle,
+    iface: String,
+) -> Result<(), NetworkError> {
+    let link_index = get_link_index(handle, iface.clone()).await?;
+
+    handle
+        .link()
+        .set(link_index)
+        .up()
+        .execute()
+        .await
+        .map(|_| {
+            // TODO: replace sleep with an await mechanism that checks if device is up (with a timeout)
+            // TODO: https://github.com/aurae-runtime/auraed/issues/40
+            info!("Waiting for link '{}' to become up", iface);
+            thread::sleep(Duration::from_secs(3));
+            info!("Waited 3 seconds, assuming link '{}' is up", iface);
+        })
+        .map_err(|e| NetworkError::ErrorSettingLinkUp { iface, source: e })
 }
 
 #[allow(dead_code)]
-pub(crate) async fn set_link_down(
+async fn set_link_down(
     handle: &Handle,
-    iface: &str,
-) -> anyhow::Result<()> {
-    let mut links = handle.link().get().match_name(iface.to_string()).execute();
+    iface: String,
+) -> Result<(), NetworkError> {
+    let link_index = get_link_index(handle, iface.clone()).await?;
 
-    if let Some(link) = links.try_next().await? {
-        handle.link().set(link.header.index).down().execute().await?
+    handle
+        .link()
+        .set(link_index)
+        .down()
+        .execute()
+        .await
+        .map(|_| {
+            trace!("Set link {} down", iface);
+        })
+        .map_err(|e| NetworkError::ErrorSettingLinkDown { iface, source: e })
+}
+
+async fn get_link_index(
+    handle: &Handle,
+    iface: String,
+) -> Result<u32, NetworkError> {
+    let link = handle
+        .link()
+        .get()
+        .match_name(iface.clone())
+        .execute()
+        .try_next()
+        .await;
+
+    if let Ok(Some(link)) = link {
+        Ok(link.header.index)
     } else {
-        return Err(anyhow!("iface '{}' not found", iface));
+        Err(NetworkError::DeviceNotFound { iface })
     }
-    trace!("Set link {} down", iface);
+}
+
+#[allow(dead_code)]
+async fn add_route_v4(
+    handle: &Handle,
+    iface: String,
+    source: Ipv4Network,
+    dest: Ipv4Network,
+) -> Result<(), NetworkError> {
+    let link_index = get_link_index(handle, iface.clone()).await?;
+
+    handle
+        .route()
+        .add()
+        .v4()
+        .destination_prefix(dest.ip(), dest.prefix())
+        .output_interface(link_index)
+        .pref_source(source.ip())
+        .execute()
+        .await
+        .map_err(|e| NetworkError::ErrorAddingRoute {
+            iface,
+            route_source: source.into(),
+            route_destination: dest.into(),
+            source: e,
+        })?;
+
     Ok(())
 }
 
-pub(crate) async fn add_address(
-    iface: &str,
-    ip: impl Into<IpNetwork>,
+async fn add_route_v6(
     handle: &Handle,
-) -> anyhow::Result<()> {
-    let ip = ip.into();
+    iface: String,
+    source: Ipv6Network,
+    dest: Ipv6Network,
+) -> Result<(), NetworkError> {
+    let link_index = get_link_index(handle, iface.clone()).await?;
 
-    let mut links = handle.link().get().match_name(iface.to_string()).execute();
+    handle
+        .route()
+        .add()
+        .v6()
+        .destination_prefix(dest.ip(), dest.prefix())
+        .output_interface(link_index)
+        .pref_source(source.ip())
+        .execute()
+        .await
+        .map_err(|e| NetworkError::ErrorAddingRoute {
+            iface,
+            route_source: source.into(),
+            route_destination: dest.into(),
+            source: e,
+        })?;
 
-    if let Some(link) = links.try_next().await? {
-        handle
-            .address()
-            .add(link.header.index, ip.ip(), ip.prefix())
-            .execute()
-            .await?
-    }
-    trace!("Added address to link {}", iface);
     Ok(())
 }
 
-pub(crate) async fn get_links(
+async fn get_links(
     handle: &Handle,
-) -> anyhow::Result<HashMap<u32, String>> {
+) -> Result<HashMap<u32, String>, NetworkError> {
     let mut result = HashMap::new();
     let mut links = handle.link().get().execute();
 
-    'outer: while let Some(msg) = links.try_next().await? {
-        for nla in msg.nlas.into_iter() {
+    'outer: while let Some(link_msg) = links.try_next().await? {
+        for nla in link_msg.nlas.into_iter() {
             if let Nla::IfName(name) = nla {
-                result.insert(msg.header.index, name);
+                result.insert(link_msg.header.index, name);
                 continue 'outer;
             }
         }
-        warn!("link with index {} has no name", msg.header.index);
+        warn!("link with index {} has no name", link_msg.header.index);
     }
 
     Ok(result)
 }
 
-async fn get_link_msg(
-    iface: impl Into<String>,
-    handle: &Handle,
-) -> anyhow::Result<LinkMessage> {
-    match handle
-        .link()
-        .get()
-        .match_name(iface.into())
-        .execute()
-        .try_next()
-        .await
-    {
-        Ok(link_msg) => match link_msg {
-            Some(val) => Ok(val),
-            None => {
-                Err(anyhow!("Could not retreive link message. Does not exist"))
-            }
-        },
-        Err(e) => Err(anyhow!("Could not retreive link message. Error={}", e)),
-    }
-}
-
-async fn get_iface_idx(iface: &str, handle: &Handle) -> anyhow::Result<u32> {
-    match get_link_msg(iface, handle).await {
-        Ok(link_msg) => Ok(link_msg.header.index),
-        Err(e) => Err(e),
-    }
-}
-
-pub(crate) async fn add_route_v6(
-    dest: &Ipv6Network,
-    iface: &str,
-    source: &Ipv6Network,
-    handle: &Handle,
-) -> anyhow::Result<()> {
-    match get_iface_idx(iface, handle).await {
-        Ok(iface_idx) => {
-            handle
-                .route()
-                .add()
-                .v6()
-                .destination_prefix(dest.ip(), dest.prefix())
-                .output_interface(iface_idx)
-                .pref_source(source.ip())
-                .execute()
-                .await?;
-        }
-        Err(e) => return Err(e),
-    }
-    Ok(())
-}
-
-#[allow(dead_code)]
-pub(crate) async fn add_route_v4(
-    dest: &Ipv4Network,
-    iface: &str,
-    source: &Ipv4Network,
-    handle: &Handle,
-) -> anyhow::Result<()> {
-    match get_iface_idx(iface, handle).await {
-        Ok(iface_idx) => {
-            handle
-                .route()
-                .add()
-                .v4()
-                .destination_prefix(dest.ip(), dest.prefix())
-                .output_interface(iface_idx)
-                .pref_source(source.ip())
-                .execute()
-                .await?;
-        }
-        Err(e) => return Err(e),
-    }
-    Ok(())
-}
-
-pub(crate) async fn dump_addresses(
+async fn dump_addresses(
     handle: &Handle,
     iface: &str,
-) -> anyhow::Result<()> {
+) -> Result<(), NetworkError> {
     let mut links = handle.link().get().match_name(iface.to_string()).execute();
     if let Some(link_msg) = links.try_next().await? {
         info!("{}:", iface);
@@ -246,30 +379,6 @@ pub(crate) async fn dump_addresses(
         }
         Ok(())
     } else {
-        Err(anyhow!("link {} not found", iface))
+        Err(NetworkError::DeviceNotFound { iface: iface.to_string() })
     }
-}
-
-pub(crate) async fn show_network_info(handle: &Handle) {
-    info!("=== Network Interfaces ===");
-
-    info!("Addresses:");
-    let links_result = get_links(handle).await;
-
-    match links_result {
-        Ok(links) => {
-            for (_, iface) in links {
-                if let Err(e) = dump_addresses(handle, &iface).await {
-                    error!(
-                        "Could not dump addresses for iface {}. Error={}",
-                        iface, e
-                    );
-                };
-            }
-        }
-        Err(e) => {
-            error!("{:?}", e);
-        }
-    }
-    info!("==========================");
 }
