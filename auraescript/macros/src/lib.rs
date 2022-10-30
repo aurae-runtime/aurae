@@ -42,11 +42,10 @@
         // TODO: unused_parens,
         while_true
         )]
-
 #![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
-        // TODO: trivial_casts,
+        trivial_casts,
         trivial_numeric_casts,
         // TODO: unused_extern_crates,
         // TODO: unused_import_braces,
@@ -58,8 +57,8 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-mod get_set;
 mod client;
+mod get_set;
 
 /// Outputs the macro content during a render.
 #[proc_macro_derive(Output)]

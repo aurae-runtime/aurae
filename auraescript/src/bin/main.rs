@@ -43,18 +43,16 @@
         // TODO: unused_parens,
         while_true
         )]
-
 #![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
-        // TODO: trivial_casts,
+        trivial_casts,
         trivial_numeric_casts,
         // TODO: unused_extern_crates,
         // TODO: unused_import_braces,
         // TODO: unused_qualifications,
         // TODO: unused_results
         )]
-
 #![warn(clippy::unwrap_used)]
 
 use auraescript::*;
@@ -104,12 +102,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
                 exit(1);
             }
-            Ok(f) => match f.strip_prefix(
-                std::env::current_dir()?.canonicalize()?,
-            ) {
-                Ok(f) => f.into(),
-                _ => f,
-            },
+            Ok(f) => {
+                match f.strip_prefix(std::env::current_dir()?.canonicalize()?) {
+                    Ok(f) => f.into(),
+                    _ => f,
+                }
+            }
         };
 
         // Initialize scripting engine

@@ -63,6 +63,10 @@ pub(crate) struct InputEvent {
 // see  https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/input-event-codes.h#L191
 const KEY_POWER: u16 = 116;
 
+fn to_u8_ptr<T>(p: *mut T) -> *mut u8 {
+    p as _
+}
+
 pub(crate) fn spawn_thread_power_button_listener(
     power_btn_device_path: impl AsRef<Path>,
 ) -> anyhow::Result<()> {
@@ -88,10 +92,7 @@ pub(crate) fn spawn_thread_power_button_listener(
     std::thread::spawn(move || {
         loop {
             let event_slice = unsafe {
-                slice::from_raw_parts_mut(
-                    &mut event as *mut _ as *mut u8,
-                    event_size,
-                )
+                slice::from_raw_parts_mut(to_u8_ptr(&mut event), event_size)
             };
             match event_file.read(event_slice) {
                 Ok(result) => {

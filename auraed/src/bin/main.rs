@@ -46,7 +46,7 @@
 #![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
-        // TODO: trivial_casts,
+        trivial_casts,
         trivial_numeric_casts,
         // TODO: unused_extern_crates,
         // TODO: unused_import_braces,

@@ -99,7 +99,7 @@ mod tests {
         );
 
         multi_log::MultiLogger::init(vec![logger_simple], Level::Trace)
-            .unwrap();
+            .expect("failed to initialize logger");
     }
 
     #[tokio::test]
