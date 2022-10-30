@@ -28,19 +28,18 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+// The project prefers .expect("reason") instead of .unwrap() so we fail
+// on any .unwrap() statements in the code.
+#![warn(clippy::unwrap_used)]
+// Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
+#![warn(future_incompatible, nonstandard_style, unused)]
 #![warn(
     bad_style,
-    dead_code,
     improper_ctypes,
     non_shorthand_field_patterns,
     no_mangle_generic_items,
-    path_statements,
-    private_in_public,
     unconditional_recursion,
-    unused,
-    unused_allocation,
     unused_comparisons,
-    unused_parens,
     while_true
 )]
 #![warn(// TODO: missing_copy_implementations,
