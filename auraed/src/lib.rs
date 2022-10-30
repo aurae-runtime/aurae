@@ -55,7 +55,7 @@
         // TODO: missing_docs,
         trivial_casts,
         trivial_numeric_casts,
-        // TODO: unused_extern_crates,
+        unused_extern_crates,
         unused_import_braces,
         // TODO: unused_results
         )]
