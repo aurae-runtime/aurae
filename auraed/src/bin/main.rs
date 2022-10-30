@@ -29,20 +29,16 @@
 \* -------------------------------------------------------------------------- */
 
 #![warn(clippy::unwrap_used)]
-#![warn(bad_style,
-        dead_code,
-        improper_ctypes,
-        non_shorthand_field_patterns,
-        no_mangle_generic_items,
-        path_statements,
-        private_in_public,
-        unconditional_recursion,
-        unused,
-        unused_allocation,
-        unused_comparisons,
-        // TODO: unused_parens,
-        while_true
-        )]
+// Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
+#![warn(future_incompatible, nonstandard_style, unused)]
+#![warn(
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    unconditional_recursion,
+    unused_comparisons,
+    while_true
+)]
 #![warn(// TODO: missing_copy_implementations,
         // TODO: missing_debug_implementations,
         // TODO: missing_docs,
