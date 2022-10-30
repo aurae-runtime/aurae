@@ -38,7 +38,6 @@
 // Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
 #![warn(future_incompatible, nonstandard_style, unused)]
 #![warn(
-    bad_style,
     improper_ctypes,
     non_shorthand_field_patterns,
     no_mangle_generic_items,
