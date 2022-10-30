@@ -56,7 +56,7 @@
         trivial_casts,
         trivial_numeric_casts,
         // TODO: unused_extern_crates,
-        // TODO: unused_import_braces,
+        unused_import_braces,
         // TODO: unused_qualifications,
         // TODO: unused_results
         )]
