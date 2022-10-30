@@ -50,9 +50,8 @@
         // TODO: missing_docs,
         trivial_casts,
         trivial_numeric_casts,
-        // TODO: unused_extern_crates,
-        // TODO: unused_import_braces,
-        // TODO: unused_qualifications,
+        unused_extern_crates,
+        unused_import_braces,
         // TODO: unused_results
         )]
 // The project prefers .expect("reason") instead of .unwrap() so we fail
