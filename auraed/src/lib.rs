@@ -51,7 +51,7 @@
         unused,
         unused_allocation,
         unused_comparisons,
-        // TODO: unused_parens,
+        unused_parens,
         while_true
         )]
 #![warn(// TODO: missing_copy_implementations,
