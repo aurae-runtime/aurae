@@ -1,6 +1,7 @@
 site_name: "Aurae Runtime"
 site_url: "https://aurae.io"
 repo_url: "https://github.com/aurae-runtime/aurae"
+edit_uri: "edit/main/"
 
 nav:
   - Home: index.md
