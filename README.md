@@ -11,7 +11,7 @@ The `auraed` daemon can be ran as a pid 1 on a Linux kernel and manages containe
 
 Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
 
-Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mtLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
+Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mTLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
 
 ### Project Status
 
