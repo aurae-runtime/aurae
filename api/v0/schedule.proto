@@ -29,10 +29,14 @@
 \* -------------------------------------------------------------------------- */
 
 syntax = "proto3";
-
 package schedule;
-
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/schedule";
+
+// [ Schedule ]
+// - Enable     Configure a resource to start if ever it is not started
+// - Disable    Configure a resource to stop if ever it is not stopped
+// - Destroy    Destroy a resource, and all records of it
+// - Create     Create a resource, but do not start it
 
 import "runtime.proto";
 import "meta.proto";

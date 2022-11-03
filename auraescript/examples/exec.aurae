@@ -32,11 +32,8 @@
 let aurae = connect();
 let runtime = aurae.runtime();
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 let example = cmd("cat /etc/resolv.conf");
 runtime.run_executable(example).json();
-=======
 let example = cmd("cat 'Hello Welcome to Aurae'");
 runtime.run_executable(example).raw();
 
@@ -51,11 +48,9 @@ exec("echo 'each exec() call'").json();
 exec("echo 'runs in an independent'").json();
 exec("echo 'cgroup isolation cell'").json();
 exec("echo '-----------------------'").json();
->>>>>>> 8e21ced (Adding naming convention changes to cgroup names)
 
 
 exec("cat /etc/fstab").json();
-=======
 // direct example
 let example = cmd("sleep 10");
 runtime.run_executable(example).json();
@@ -63,7 +58,10 @@ runtime.run_executable(example).json();
 // alias example is semantically the same as the above
 exec("sleep 10");
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> df4ee54ce4a0ba7c33be3d13e29ad615396d1503
 =======
 >>>>>>> d94cb80 (Clean up exec file)
 >>>>>>> dc8da42 (Clean up exec file)
+=======
+>>>>>>> b0115e4 (Adding changes for the folks to review in Discord)

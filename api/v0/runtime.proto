@@ -31,8 +31,8 @@
 syntax = "proto3";
 package runtime;
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
-import "meta.proto";
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 //service Cell {
@@ -61,15 +61,47 @@ import "meta.proto";
 =======
 =======
 >>>>>>> 6b8db4d (Adding RPC thoughts from anxiety attack)
+=======
+>>>>>>> b0115e4 (Adding changes for the folks to review in Discord)
 // Resource type API modelled after the "Resource-oriented design"
 // Source: https://google.aip.dev/121
 // Source: @dominichamon
 
+/// Runtime Verbs
+/// ===
+///
+/// We call out a set of common verbs to the runtime subsystem.
+/// These verbs should be generic enough to use for each resource
+/// added to the RPCs and services.
+///
+/// If functionality can not be implemented by one of these
+/// verbs a new verb may be introduced as long as it reasonably
+/// applicable to similar RPCs and services.
+///
+/// * Allocate   Reserve resources, and manage any prerequisites but do not start
+/// * Free       Free resources, and destroy any prerequisites that have been started
+/// * Start      Run a resource immediately
+/// * Stop       Stop a resource immediately
+/// * Spawn      A special function that creates a child instance with inherited properties of the parent
 
+/// Cells is the most fundamental isolation boundary for Aurae.
+/// A cell is an isolate set of resources of the system which can be
+/// used to run workloads.
+///
+/// A cell is composed of a unique cgroup namespace, and unshared kernel namespaces.
+service Cells {
 
+  /// Reserve requested system resources for a new cell
+  rpc Allocate(CellAllocateRequest) returns (CellAllocateResponse) {}
 
+  /// Free up previously requested resources for an existing cell
+  rpc Free(CellFreeRequest) returns (CellFreeResponse) {}
 
+  /// Start a new Executable inside of an existing cell. Can be called
+  /// in serial to start more than one executable in the same cell.
+  rpc Start(CellStartRequest) returns (CellStartResponse) {}
 
+<<<<<<< HEAD
 
 
 
@@ -159,122 +191,68 @@ service Core {
   // * Accepts an OCI compliant container image, will always pull the image before running.
   // * Runs directly on the same kernel as the root Auraed.
   rpc RunCell(Cell) returns (CellStatus) {}
+=======
+  /// Stop workloads inside of a cell given specific criteria.
+  /// Can be called in serial to stop more than one executable in the
+  /// same cell.
+  rpc Stop(CellStopRequest) returns (CellStopResponse) {}
+>>>>>>> b0115e4 (Adding changes for the folks to review in Discord)
 
 }
 
-// Executable is the lowest level of compute that Aurae can execute. A basic process.
 message Executable {
-  meta.AuraeMeta meta = 1;
-
-  /// Command resembles systemd's ExecStart. This is the shell command (with arguments) you intend to execute.
-  string command = 3;
-
-  /// Comment is an arbitrary (user defined) comment used to identify the Executable at runtime.
-  string comment = 4;
+  string name = 1;
+  string command = 2;
+  string description = 3;
+  string cell_name = 4;
 }
 
-// ExecutableStatus is only returned after a process completes. Because runtime is a synchronous subsystem
-// this will only return upon a terminated process.
-message ExecutableStatus {
-  meta.AuraeMeta meta = 1;
-  meta.ProcessMeta proc = 2;
-  meta.Status status = 3;
-
-  // The full stdout data.
-  string stdout = 4;
-
-  // The full stderr data.
-  string stderr = 5;
-
-  // The exit code (return code) of the process after termination.
-  string exit_code = 6;
+message ExecutableReference {
+  string cell_name = 1;
+  string executable_name = 2;
 }
 
-// Pod is a group of containers running in a spawned Aurae instance.
-message Pod {
-  meta.AuraeMeta meta = 1;
-
-  // The cell to create within the spawned Aurae instance.
-  Cell cell = 2;
-}
-
-// PodStatus is the status of a completed pod and its subsequent containers.
-message PodStatus {
-  meta.AuraeMeta meta = 1;
-  meta.Status status = 3;
-
-  // The response of the necessary spawn for a pod.
-  SpawnResponse spawn_response = 4;
-
-  // If the spawn is successful, the nested Aurae instance.
-  Instance instance = 5;
-
-  // If the cell creation is successful, the cell of containers running in the spawned Aurae instance.
-  CellStatus cell_status = 6;
-
-}
-
-// Container represents is an OCI compliant container image which can be executed.
-message Container {
-  meta.AuraeMeta meta = 1;
-
-  // OCI compliant image.
-  string image = 2;
-}
-
-// ContainerStatus is the status of a container after it has been executed.
-message ContainerStatus {
-  meta.AuraeMeta meta = 1;
-  meta.ProcessMeta proc = 2;
-  meta.Status status = 3;
-}
-
-// A long lived virtual machine which will persist on termination.
-message VirtualMachine {
-  meta.AuraeMeta meta = 1;
-  string name = 2;
-  string image = 3;
-}
-
-// Status of a terminated virtual machine.
-message VirtualMachineStatus {
-  meta.AuraeMeta meta = 1;
-  meta.Status status = 2;
-}
-
-// Parameters for spawning a new nested Aurae instance.
-message SpawnRequest {
-}
-
-// Response of a spawn.
-message SpawnResponse {
-}
-
-// A set of containers running on the same kernel as the auraed responding to the request.
 message Cell {
-  meta.AuraeMeta meta = 1;
-  // A set of containers.
-  repeated Container containers = 2;
+  string name = 1;
+  ControlGroupOptions cgroup = 2;
+  NamespaceShare share = 3;
 }
 
-message CellStatus {
-  meta.AuraeMeta meta = 1;
-  meta.Status status = 2;
-  repeated ContainerStatus container_statuses = 3;
-
+message ControlGroupOptions {
+  string name = 1;
+  string cpus = 2;
+  string mems = 3;
+  uint64 shares = 4;
+  int64 quota = 5;
 }
 
-// Instance is a recursive graph structure which holds the meta data for the nested Aurae instances
-// running on a machine.
-message Instance {
-  meta.AuraeMeta meta = 1;
-  bool is_root = 2;
-  repeated Instance nested_instances = 3;
+message NamespaceShare {
+  bool mount = 1;
+  bool uts = 2;
+  bool ipc = 3;
+  bool pid = 4;
+  bool net = 5;
+  bool cgroup = 6;
 }
 
-message InstanceStatus {
-  meta.AuraeMeta meta = 1;
-  meta.Status status = 2;
-  repeated ContainerStatus container_statuses = 3;
-
+message CellAllocateRequest {
+  Cell cell = 1;
 }
+message CellAllocateResponse {
+  Cell cell = 1;
+}
+
+message CellFreeRequest {
+  Cell cell = 1;
+}
+message CellFreeResponse {}
+
+message CellStartRequest {
+  Executable executable = 1;
+}
+message CellStartResponse {}
+
+message CellStopRequest {
+  repeated Executable executables = 1;
+}
+message CellStopResponse {}
