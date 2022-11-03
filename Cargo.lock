@@ -172,15 +172,24 @@ dependencies = [
  "cgroups-rs",
  "clap",
 <<<<<<< HEAD
+<<<<<<< HEAD
  "crossbeam",
  "fsutils",
 =======
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> c0d8ff7 (Fixing conflicts from merge)
  "crossbeam",
  "fsutils",
+<<<<<<< HEAD
 >>>>>>> 9b2378f (Cgroup still failing on pkill, but a good start)
+<<<<<<< HEAD
 >>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
+=======
+=======
+>>>>>>> aefbb92 (Fixing conflicts from merge)
+>>>>>>> c0d8ff7 (Fixing conflicts from merge)
  "futures",
  "h2",
  "ipnetwork",
@@ -870,6 +879,7 @@ dependencies = [
 
 [[package]]
 name = "futures"
+<<<<<<< HEAD
 version = "0.3.24"
 >>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -883,6 +893,10 @@ dependencies = [
 name = "futures"
 version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+=======
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+>>>>>>> c0d8ff7 (Fixing conflicts from merge)
 checksum = "38390104763dc37a5145a53c29c63c1290b5d316d6086ec32c293f6736051bb0"
 dependencies = [
  "futures-channel",
@@ -1167,6 +1181,7 @@ dependencies = [
 
 [[package]]
 name = "hyper"
+<<<<<<< HEAD
 version = "0.14.20"
 >>>>>>> 01a9580 (Cgroup still failing on pkill, but a good start)
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1179,6 +1194,10 @@ dependencies = [
 name = "hyper"
 version = "0.14.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+=======
+version = "0.14.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+>>>>>>> c0d8ff7 (Fixing conflicts from merge)
 checksum = "abfba89e19b959ca163c7752ba59d737c1ceea53a5d31a149c805446fc958064"
 dependencies = [
  "bytes",
