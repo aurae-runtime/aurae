@@ -32,7 +32,16 @@
 let aurae = connect();
 let runtime = aurae.runtime();
 
+<<<<<<< HEAD
 let example = cmd("cat /etc/resolv.conf");
 runtime.run_executable(example).json();
 
 exec("cat /etc/fstab").json();
+=======
+// direct example
+let example = cmd("sleep 10");
+runtime.run_executable(example).json();
+
+// alias example is semantically the same as the above
+exec("sleep 10");
+>>>>>>> df4ee54ce4a0ba7c33be3d13e29ad615396d1503

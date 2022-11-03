@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::meta;
 tonic::include_proto!("runtime");
 
 macros::client_wrapper!(
@@ -36,7 +37,13 @@ macros::client_wrapper!(
 );
 
 pub fn cmd(cmd: &str) -> Executable {
-    Executable { command: cmd.to_string(), ..Executable::default() }
+    let meta =
+        meta::AuraeMeta { name: cmd.to_string(), message: "-".to_string() };
+    Executable {
+        command: cmd.to_string(),
+        meta: Some(meta),
+        ..Executable::default()
+    }
 }
 
 pub fn exec(x: &str) -> ExecutableStatus {

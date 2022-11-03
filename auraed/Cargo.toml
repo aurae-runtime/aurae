@@ -24,7 +24,7 @@
 #   distributed under the License is distributed on an "AS IS" BASIS,          #
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
 #   See the License for the specific language governing permissions and        #
-#   limitations under the License.                                             #                                                                             #
+#   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -46,7 +46,7 @@ simplelog = "0.12.0"
 syslog = "6.0.1"
 tonic = { version = "0.8", features = ["tls"] }
 prost = "0.11"
-tokio-stream = { version = "0.1", features = ["net", "sync"] }
+tokio-stream = { version = "0.1", features = ["net"] }
 tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
 futures = "0.3.23"
 h2 = "0.3.13"
@@ -63,9 +63,11 @@ ipnetwork = "0.20.0"
 rtnetlink = "0.11.0"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 thiserror = "1.0.37"
-libcontainer     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
-liboci-cli     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
-
+crossbeam = "0.8"
+libcontainer = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
+liboci-cli = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
+cgroups-rs =  { git = "https://github.com/kata-containers/cgroups-rs", branch = "main"}
+fsutils = "0.1.7"
 
 [build-dependencies]
 anyhow = "1.0.65"

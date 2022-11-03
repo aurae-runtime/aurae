@@ -29,23 +29,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//   Example ~/.aurae/config (TOML)
-
-//   [auth]
-//   ca_crt = "/home/nova/.aurae/pki/ca.crt"
-//   client_crt = "/home/nova/.aurae/pki/_signed.client.nova.crt"
-//   client_key = "/home/nova/.aurae/pki/client.nova.key"
-//
-//   [system]
-//   socket = "/var/run/aurae/aurae.sock"
-
 let aurae = connect();
-aurae.info().json();
+let runtime = aurae.runtime();
 
-
-
-let enabled = false;
-
-
-
-
+// direct example
+let example = cmd("wget -L https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-edu-11.5.0-amd64-netinst.iso");
+runtime.run_executable(example).json();

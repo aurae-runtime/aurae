@@ -39,6 +39,30 @@ package runtime;
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 import "meta.proto";
 
+//service Cell {
+//  rpc Create(Cell) returns (CellStatus) {}
+//  rpc Destroy(Cell) returns (CellStatus) {}
+//}
+//
+//service Instance {
+//  rpc Create(Instance) returns (InstanceStatus){}
+//  rpc Start(Instance) returns (InstanceStatus){}
+//  rpc Stop(Instance) returns (InstanceStatus){}
+//  rpc Destroy(Instance) returns (InstanceStatus){}
+//}
+//
+//service Pod {
+//  rpc Start(Pod) returns (PodStatus) {}
+//}
+//
+//service Exec {
+//  rpc Start(Executable) returns (ExecutableStatus) {}
+//}
+//
+//service Spawn {
+//  rpc Spawn(SpawnRequest) returns (SpawnResponse) {}
+//}
+
 // Core is a synchronous subsystem which defines the main methods for executing and starting
 // workloads within an Aurae system.
 //
@@ -56,7 +80,6 @@ service Core {
   // * Accepts an OCI compliant container image, will always pull the image before running.
   // * Assumes Spawn() is successful and is able to bridge to the nested Aurae and the nested cell.
   rpc RunPod(Pod) returns (PodStatus) {}
-
 
   // Spawn a short lived (ephemeral) nested virtual instance of Aurae which will terminate on exit.
   // Akin to fork() in Linux, each nested instance inherits properties from the parent but runs an
@@ -193,3 +216,9 @@ message Instance {
   repeated Instance nested_instances = 3;
 }
 
+message InstanceStatus {
+  meta.AuraeMeta meta = 1;
+  meta.Status status = 2;
+  repeated ContainerStatus container_statuses = 3;
+
+}
