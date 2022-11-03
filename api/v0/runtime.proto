@@ -69,6 +69,10 @@ service Cells {
   /// Start a new Executable inside of an existing cell. Can be called
   /// in serial to start more than one executable in the same cell.
   rpc Start(CellStartRequest) returns (CellStartResponse) {}
+
+  /// Stop one or more Executables inside of an existing cell.
+  /// Can be called in serial to stop/retry more than one executable.
+  rpc Stop(CellStopRequest) returns (CellStopResponse) {}
 }
 
 message Executable {
