@@ -34,6 +34,7 @@ option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 import "meta.proto";
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 //service Cell {
 //  rpc Create(Cell) returns (CellStatus) {}
 //  rpc Destroy(Cell) returns (CellStatus) {}
@@ -58,6 +59,8 @@ import "meta.proto";
 //  rpc Spawn(SpawnRequest) returns (SpawnResponse) {}
 //}
 =======
+=======
+>>>>>>> 6b8db4d (Adding RPC thoughts from anxiety attack)
 // Resource type API modelled after the "Resource-oriented design"
 // Source: https://google.aip.dev/121
 // Source: @dominichamon
@@ -86,7 +89,35 @@ import "meta.proto";
 
 
 
+<<<<<<< HEAD
 >>>>>>> 7e5965c (Working on cells)
+=======
+=======
+//service Cell {
+//  rpc Create(Cell) returns (CellStatus) {}
+//  rpc Destroy(Cell) returns (CellStatus) {}
+//}
+//
+//service Instance {
+//  rpc Create(Instance) returns (InstanceStatus){}
+//  rpc Start(Instance) returns (InstanceStatus){}
+//  rpc Stop(Instance) returns (InstanceStatus){}
+//  rpc Destroy(Instance) returns (InstanceStatus){}
+//}
+//
+//service Pod {
+//  rpc Start(Pod) returns (PodStatus) {}
+//}
+//
+//service Exec {
+//  rpc Start(Executable) returns (ExecutableStatus) {}
+//}
+//
+//service Spawn {
+//  rpc Spawn(SpawnRequest) returns (SpawnResponse) {}
+//}
+>>>>>>> df4ee54 (Adding RPC thoughts from anxiety attack)
+>>>>>>> 6b8db4d (Adding RPC thoughts from anxiety attack)
 
 // Core is a synchronous subsystem which defines the main methods for executing and starting
 // workloads within an Aurae system.
