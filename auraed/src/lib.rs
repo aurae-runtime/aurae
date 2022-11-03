@@ -78,11 +78,8 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-<<<<<<< HEAD
 use std::sync::Arc;
-=======
 use std::time::SystemTime;
->>>>>>> df4ee54ce4a0ba7c33be3d13e29ad615396d1503
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
