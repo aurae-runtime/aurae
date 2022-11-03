@@ -35,7 +35,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     gperf \
     ninja-build \
     protobuf-compiler \
-    libprotobuf-dev
+    libprotobuf-dev \
+    libdbus-1-dev \
+    libseccomp-dev
 
 RUN rustup component add clippy
 RUN mkdir /aurae
