@@ -31,14 +31,17 @@
 tonic::include_proto!("runtime");
 
 macros::client_wrapper!(
-    Core,
-    run_executable(Executable) -> ExecutableStatus
+    CellService,
+    allocate(AllocateCellRequest) -> AllocateCellResponse,
+    free(FreeCellRequest) -> FreeCellResponse,
+    start(StartCellRequest) -> StartCellResponse,
+    stop(StopCellRequest) -> StopCellResponse,
 );
 
-pub fn cmd(cmd: &str) -> Executable {
-    Executable { command: cmd.to_string(), ..Executable::default() }
-}
-
-pub fn exec(x: &str) -> ExecutableStatus {
-    Core::new().run_executable(cmd(x))
-}
+// pub fn cmd(cmd: &str) -> Executable {
+//     Executable { command: cmd.to_string(), ..Executable::default() }
+// }
+//
+// pub fn exec(x: &str) -> ExecutableStatus {
+//     Core::new().run_executable(cmd(x))
+// }
