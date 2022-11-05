@@ -4,26 +4,36 @@ The Aurae Standard Library (stdlib or "the library") is a set of remote function
 
 The library leverages [protobuf](https://github.com/protocolbuffers/protobuf) as the source of truth for the types, names, and function signatures for the library.
 
-### What is a subsystem? 
+### What is a subsystem?
 
-A subsystem is a smaller and scoped subsection of the library. Subsystems are similar to "packages" or "modules" in programming languages such as [Rust](https://github.com/rust-lang/rust/tree/master/library/core/src). Kubernetes as API groups, and Linux itself has subsystems. 
+A subsystem is a smaller and scoped subsection of the library composed of RPCs and services. Subsystems are similar to "packages" or "modules" in programming languages such as [Rust](https://github.com/rust-lang/rust/tree/master/library/core/src). Kubernetes as API groups, and Linux itself has subsystems.
 
 Each subsystem is unique. Each subsystem is liable to come with its own guarantees, and expectations.
-For example the runtime subsystem is adamantly a synchronous subsystem which creates an imperative experience for the client. 
-Contrarywise, the schedule subsystem is adamantly an asynchronous subsystem which instills a declarative model for the client.
 
-In protobuf terms a subsystem is a [service](https://developers.google.com/protocol-buffers/docs/proto3#services).
+In protobuf terms a subsystem is a group of [remote procedure calls (RPCs)](https://developers.google.com/protocol-buffers/docs/proto3#services) and [services](https://developers.google.com/protocol-buffers/docs/proto3#services).
 
-### What are objects?
+### What are resources?
 
-Aurae is built on the concept of core objects that are useful to distributed systems engineers. 
-For example, Aurae has the concept of an `Executable` object which can be passed to `runtime.StartExecutable` and `runtime.StopExecutable` functions respectively. 
+Aurae is built on the concept of core resources that represent the main components of the system. Resources are like objects.
 
-The core objects are intended to be fundamental and composable, similar to the objects and structures found in modern programming languages.
+For example, Aurae has the concept of an `Executable` resource which represents an executable workload similar to systemd's [Unit](https://www.freedesktop.org/software/systemd/man/systemd.unit.html).
 
-Objects are defined directly in the corresponding protobuf definition and later generated into code for various languages.
+The core resources are intended to be fundamental and composable, similar to the objects and structures found in modern programming languages.
 
-In protobuf terms an object is a [message](https://developers.google.com/protocol-buffers/docs/proto3#simple).
+Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed to directly to, or received directly from an RPC.
+
+In protobuf terms a resource is a [message](https://developers.google.com/protocol-buffers/docs/proto3#simple).
+
+### What are services?
+
+Services are a section of the API designed to be a way of grouping functionality together such that it can be enabled/disabled with authorization mechanisms.
+
+A service should be discreet in the terms of how it mutates the system. For example if a service starts, it should stop. If a service allocates, it should free. And so on.
+
+Services should be named after a resource or set of functionality around common resources.
+Services should follow the `service NameService` paradigm as defined in the [style guide](https://developers.google.com/protocol-buffers/docs/style)
+
+For example the service that mutates a `Cell` should be called `CellService`.
 
 ### What are functions?
 
@@ -32,21 +42,6 @@ A function is a discreet piece of functionality designed to execute on the "back
 The library is designed to be executed procedurally and quickly. Many function calls per second is a reasonable expectation for any client.
 
 In protobuf terms a function is a [remote procedure call (RPC)](https://developers.google.com/protocol-buffers/docs/proto3#services)
-
-### What about metadata? 
-
-Similar to Kubernetes, Aurae defines some common objects which are embedded in some or all objects in the standard library.
-
-Every Aurae object must embed `meta.AuraeMeta` implying that every object in the library will have a `.name` and a `.message` field.
-
-```proto 
-message AuraeMeta {
-  string name = 1;
-  string message = 2;
-}
-```
-
-There are other common objects such as `meta.ProcessMeta` which is embedded in any object that has a concept of an executing runtime process.
 
 ### API Definition Convention
 

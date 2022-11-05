@@ -70,22 +70,22 @@ service Spawn{}
 /// used to run workloads.
 ///
 /// A cell is composed of a unique cgroup namespace, and unshared kernel namespaces.
-service Cells {
+service CellService {
 
   /// Reserve requested system resources for a new cell.
   /// For cells specifically this will allocate and reserve cgroup resources only.
-  rpc Allocate(CellAllocateRequest) returns (CellAllocateResponse) {}
+  rpc Allocate(AllocateCellRequest) returns (AllocateCellResponse) {}
 
   /// Free up previously requested resources for an existing cell
-  rpc Free(CellFreeRequest) returns (CellFreeResponse) {}
+  rpc Free(FreeCellRequest) returns (FreeCellResponse) {}
 
   /// Start a new Executable inside of an existing cell. Can be called
   /// in serial to start more than one executable in the same cell.
-  rpc Start(CellStartRequest) returns (CellStartResponse) {}
+  rpc Start(StartCellRequest) returns (StartCellResponse) {}
 
   /// Stop one or more Executables inside of an existing cell.
   /// Can be called in serial to stop/retry more than one executable.
-  rpc Stop(CellStopRequest) returns (CellStopResponse) {}
+  rpc Stop(StopCellRequest) returns (StopCellResponse) {}
 }
 
 /// The most primitive workload in Aurae, a standard executable process.
@@ -96,7 +96,7 @@ message Executable {
   string cell_name = 4;
 }
 
-/// A reference to an executable.
+/// A reference to an executable and it's parent cell.
 message ExecutableReference {
   string cell_name = 1;
   string executable_name = 2;
@@ -104,54 +104,47 @@ message ExecutableReference {
 
 /// An isolation resource used to divide a system into smaller resource boundaries.
 message Cell {
-  string name = 1;
-  ControlGroupOptions cgroup = 2;
-  NamespaceShare share = 3;
-}
 
-/// Resource parameters for control groups (cgroups)
-/// Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) crate.
-/// See [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
-message ControlGroupOptions {
+  /// Resource parameters for control groups (cgroups)
+  /// Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) crate.
+  /// See [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
   string name = 1;
   string cpus = 2;
   string mems = 3;
   uint64 shares = 4;
   int64 quota = 5;
+
+  /// Linux namespaces to share with the calling process.
+  /// If all values are set to false, the resulting cell
+  /// will be as isolated as possible.
+  ///
+  /// Each shared namespace is a potential security risk.
+  bool ns_share_mount = 10;
+  bool ns_share_uts = 11;
+  bool ns_share_ipc = 12;
+  bool ns_share_pid = 13;
+  bool ns_share_net = 14;
+  bool ns_share_cgroup = 15;
 }
 
-/// Linux namespaces to share with the calling process.
-/// If all values are set to false, the resulting cell
-/// will be as isolated as possible.
-///
-/// Each shared namespace is a potential security risk.
-message NamespaceShare {
-  bool mount = 1;
-  bool uts = 2;
-  bool ipc = 3;
-  bool pid = 4;
-  bool net = 5;
-  bool cgroup = 6;
-}
 
-message CellAllocateRequest {
+message AllocateCellRequest {
   Cell cell = 1;
 }
-message CellAllocateResponse {
+message AllocateCellResponse {}
+
+message FreeCellRequest {
   Cell cell = 1;
 }
+message FreeCellResponse {}
 
-message CellFreeRequest {
-  Cell cell = 1;
-}
-message CellFreeResponse {}
-
-message CellStartRequest {
+message StartCellRequest {
   Executable executable = 1;
 }
-message CellStartResponse {}
-
-message CellStopRequest {
-  repeated Executable executables = 1;
+message StartCellResponse {
 }
-message CellStopResponse {}
+
+message StopCellRequest {
+  ExecutableReference executable_reference = 1;
+}
+message StopCellResponse {}
