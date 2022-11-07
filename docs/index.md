@@ -16,7 +16,7 @@ Aurae is designed to work well with (but is deliberately decoupled from) Kuberne
 ### Project Status
 
 The project is very young and under active development. The APIs are subject to change without notice until further notice.
-As we continue to develop the project the APIs will stablizie and eventually a long term stable release will be offered.
+As we continue to develop the project the APIs will stabilize and eventually a long term stable release will be offered.
 
 At this time the project should not be ran in production.
 
