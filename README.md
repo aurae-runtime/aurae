@@ -42,7 +42,7 @@ Aurae brings [SPIFFE](https://github.com/spiffe)/[SPIRE](https://github.com/spif
 
 ### Standard Library
 
-Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://github.com/aurae-runtime/auraed/tree/main/stdlib#the-aurae-standard-library).
+Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://aurae.io/stdlib/).
 
 ### Principle of Least Awareness
 
