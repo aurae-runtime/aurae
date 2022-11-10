@@ -1,11 +1,16 @@
 use log::{error, info};
-use std::ffi::{CStr, CString};
-use std::ptr;
+use std::ffi::CStr;
+use std::{io, ptr};
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum FsError {
-    #[error("Failed to mount: source_name={source_name}, target_name={target_name}, fstype={fstype}")]
-    MountFailure { source_name: String, target_name: String, fstype: String },
+    #[error("Failed to mount (source_name={source_name}, target_name={target_name}, fstype={fstype}) due to error: {source}")]
+    MountFailure {
+        source_name: String,
+        target_name: String,
+        fstype: String,
+        source: io::Error,
+    },
 }
 
 pub(crate) fn mount_vfs(
@@ -39,16 +44,14 @@ pub(crate) fn mount_vfs(
     };
 
     if ret < 0 {
-        error!("Failed to mount ({})", ret);
-        let error = CString::new("Error: ").expect("error creating CString");
-        unsafe {
-            libc::perror(error.as_ptr());
-        };
+        let error = io::Error::last_os_error();
+        error!("Failed to mount ({})", error);
 
         Err(FsError::MountFailure {
             source_name: source_name.to_string_lossy().to_string(),
             target_name: target_name.to_string_lossy().to_string(),
             fstype: fstype.to_string_lossy().to_string(),
+            source: error,
         })
     } else {
         Ok(())
