@@ -29,32 +29,25 @@
 \* -------------------------------------------------------------------------- */
 
 // TODO @kris-nova as we move to Deno we probably want to revist the main function
-#![warn(bad_style,
-        dead_code,
-        improper_ctypes,
-        non_shorthand_field_patterns,
-        no_mangle_generic_items,
-        path_statements,
-        private_in_public,
-        unconditional_recursion,
-        unused,
-        unused_allocation,
-        unused_comparisons,
-        // TODO: unused_parens,
-        while_true
-        )]
-
-#![warn(// TODO: missing_copy_implementations,
-        // TODO: missing_debug_implementations,
+// Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
+#![warn(future_incompatible, nonstandard_style, unused)]
+#![warn(
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    unconditional_recursion,
+    unused_comparisons,
+    while_true
+)]
+#![warn(// TODO: missing_debug_implementations,
         // TODO: missing_docs,
-        // TODO: trivial_casts,
+        trivial_casts,
         trivial_numeric_casts,
-        // TODO: unused_extern_crates,
-        // TODO: unused_import_braces,
-        // TODO: unused_qualifications,
+        unused_extern_crates,
+        unused_import_braces,
+        unused_qualifications,
         // TODO: unused_results
         )]
-
 #![warn(clippy::unwrap_used)]
 
 use auraescript::*;
@@ -104,12 +97,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
                 exit(1);
             }
-            Ok(f) => match f.strip_prefix(
-                std::env::current_dir()?.canonicalize()?,
-            ) {
-                Ok(f) => f.into(),
-                _ => f,
-            },
+            Ok(f) => {
+                match f.strip_prefix(std::env::current_dir()?.canonicalize()?) {
+                    Ok(f) => f.into(),
+                    _ => f,
+                }
+            }
         };
 
         // Initialize scripting engine

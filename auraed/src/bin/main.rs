@@ -29,28 +29,23 @@
 \* -------------------------------------------------------------------------- */
 
 #![warn(clippy::unwrap_used)]
-#![warn(bad_style,
-        dead_code,
-        improper_ctypes,
-        non_shorthand_field_patterns,
-        no_mangle_generic_items,
-        path_statements,
-        private_in_public,
-        unconditional_recursion,
-        unused,
-        unused_allocation,
-        unused_comparisons,
-        // TODO: unused_parens,
-        while_true
-        )]
-#![warn(// TODO: missing_copy_implementations,
-        // TODO: missing_debug_implementations,
+// Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
+#![warn(future_incompatible, nonstandard_style, unused)]
+#![warn(
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    unconditional_recursion,
+    unused_comparisons,
+    while_true
+)]
+#![warn(// TODO: missing_debug_implementations,
         // TODO: missing_docs,
-        // TODO: trivial_casts,
+        trivial_casts,
         trivial_numeric_casts,
-        // TODO: unused_extern_crates,
-        // TODO: unused_import_braces,
-        // TODO: unused_qualifications,
+        unused_extern_crates,
+        unused_import_braces,
+        unused_qualifications,
         // TODO: unused_results
         )]
 
@@ -84,7 +79,7 @@ struct AuraedOptions {
     #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
     ca_crt: String,
     /// Aurae socket path. Defaults to /var/run/aurae/aurae.sock
-    #[clap(short, long, value_parser, default_value = auraed::AURAE_SOCK)]
+    #[clap(short, long, value_parser, default_value = AURAE_SOCK)]
     socket: String,
     /// Toggle verbosity. Default false
     #[clap(short, long)]

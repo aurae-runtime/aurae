@@ -11,14 +11,14 @@ The `auraed` daemon can be ran as a pid 1 on a Linux kernel and manages containe
 
 Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
 
-Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mtLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
+Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mTLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
 
 ### Project Status
 
 The project is very young and under active development. The APIs are subject to change without notice until further notice.
-As we continue to develop the project the APIs will stablizie and eventually a long term stable release will be offered.
+As we continue to develop the project the APIs will stabilize and eventually a long term stable release will be offered.
 
-At this time the project should not be ran in production.
+At this time the project should not be run in production.
 
 Please read [getting involved](https://github.com/aurae-runtime/community#getting-involved) if you are interested in joining the project in its early phases. Contribution types of all types and ranges are welcome. You do not have to know Rust to join the project.
 
@@ -42,7 +42,7 @@ Aurae brings [SPIFFE](https://github.com/spiffe)/[SPIRE](https://github.com/spif
 
 ### Standard Library
 
-Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://github.com/aurae-runtime/auraed/tree/main/stdlib#the-aurae-standard-library).
+Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://aurae.io/stdlib/).
 
 ### Principle of Least Awareness
 
