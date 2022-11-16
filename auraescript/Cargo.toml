@@ -40,30 +40,8 @@ name = "auraescript"
 path = "src/bin/main.rs"
 
 [dependencies]
-rhai = { version = "1.9.1", features = ["metadata"] }
-tonic = { version = "0.8", features = ["tls"] }
-tokio-stream = { version = "0.1", features = ["net"] }
-tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
-toml = "0.5.9"
-serde = { version = "1.0.144", features = ["derive"] }
-tower = "0.4.13"
-home = "0.5.3"
-anyhow = "1.0"
-x509-parser = "0.14.0"
-rustls-pemfile = "1.0.1"
-if_chain = "1.0.2"
-time = "0.3.14"
-oid-registry = "0.6.0"
-x509-certificate = "0.14.0"
-prost = "0.11"
-ring = "0.16.20"
-json = "0.12.4"
-serde_json = "1.0.85"
-macros = { path = "macros" }
+deno = "1.28.0"
 
 [build-dependencies]
-tonic-build = "0.8"
 anyhow = "1.0"
 
-[dev-dependencies]
-openssl = "0.10.41"
