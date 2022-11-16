@@ -40,7 +40,8 @@ name = "auraescript"
 path = "src/bin/main.rs"
 
 [dependencies]
-deno = "1.28.0"
+clap = "4.0.25"
+deno_core = "0.159.0"
 
 [build-dependencies]
 anyhow = "1.0"
