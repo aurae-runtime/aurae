@@ -1,0 +1,13 @@
+#!/usr/bin/env auraescript
+
+// Hello world example
+// Taken from: https://github.com/denoland/deno/blob/main/core/examples/hello_world.rs
+
+// Print helper function, calling Deno.core.print()
+function print(value) {
+  Deno.core.print(value.toString()+"\n");
+}
+
+print("--------------------");
+print("Aurae is the Future.");
+print("--------------------");
