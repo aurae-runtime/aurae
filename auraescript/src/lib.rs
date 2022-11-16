@@ -48,8 +48,10 @@
 // The project prefers .expect("reason") instead of .unwrap() so we fail
 // on any .unwrap() statements in the code.
 #![warn(clippy::unwrap_used)]
+#![allow(clippy::extra_unused_lifetimes)]
 //#![warn(missing_docs)]
 
+use anyhow::anyhow;
 use deno_core::Extension;
 
 // This is a hack to make the `#[op]` macro work with
@@ -58,21 +60,19 @@ use deno_core::Extension;
 use deno_core::*;
 
 #[op]
-fn op_sum(nums: Vec<f64>) -> Result<f64, deno_core::error::AnyError> {
-    // Sum inputs
-    let sum = nums.iter().fold(0.0, |a, v| a + v);
-    // return as a Result<f64, AnyError>
-    Ok(sum)
+fn op_example_print() -> Result<(), deno_core::error::AnyError> {
+    println!("Example printing...");
+    Ok(())
+}
+
+#[op]
+fn op_example_error() -> Result<(), deno_core::error::AnyError> {
+    Err(anyhow!("Example error: {}", "value"))
 }
 
 pub fn register_stdlib() -> Extension {
     let ext = Extension::builder()
-        .ops(vec![
-            // An op for summing an array of numbers
-            // The op-layer automatically deserializes inputs
-            // and serializes the returned Result & value
-            op_sum::decl(),
-        ])
+        .ops(vec![op_example_print::decl(), op_example_error::decl()])
         .build();
     ext
 }

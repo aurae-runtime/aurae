@@ -11,3 +11,7 @@ function print(value) {
 print("--------------------");
 print("Aurae is the Future.");
 print("--------------------");
+
+Deno.core.ops.op_example_print();
+//Deno.core.ops.op_example_error();
+
