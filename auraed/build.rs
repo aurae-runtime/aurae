@@ -44,23 +44,28 @@ fn generate_grpc_code() -> Result<()> {
     let mut tonic_builder = tonic_build::configure();
 
     // Generated services use unwrap. Add them here to suppress the warning.
-    for service in ["meta", "observe", "runtime", "schedule"] {
+    for service in ["observe", "runtime", "schedule"] {
         tonic_builder = tonic_builder
-            .server_mod_attribute(service, "#[allow(clippy::unwrap_used)]");
+            .server_mod_attribute(service, "#[allow(clippy::unwrap_used)]")
+            .server_mod_attribute(
+                service,
+                "#[allow(clippy::match_single_binding)]",
+            );
     }
 
     // Types generated from proto messages derive PartialEq without Eq. Add them here to suppress the warning.
     for message in [
-        "meta.AuraeMeta",
-        "meta.ProcessMeta",
+        "runtime.Cell",
         "runtime.Executable",
-        "runtime.ExecutableStatus",
-        "runtime.Pod",
-        "runtime.PodStatus",
-        "runtime.VirtualMachine",
-        "runtime.VirtualMachineStatus",
-        "runtime.SpawnRequest",
-        "runtime.SpawnResponse",
+        "runtime.ExecutableReference",
+        "runtime.AllocateCellRequest",
+        "runtime.AllocateCellResponse",
+        "runtime.FreeCellRequest",
+        "runtime.FreeCellResponse",
+        "runtime.StartCellRequest",
+        "runtime.StartCellResponse",
+        "runtime.StopCellRequest",
+        "runtime.StopCellResponse",
         "observe.GetAuraeDaemonLogStreamRequest",
         "observe.GetSubProcessStreamRequest",
         "observe.LogItem",
@@ -68,16 +73,11 @@ fn generate_grpc_code() -> Result<()> {
         tonic_builder = tonic_builder.type_attribute(
             message,
             "#[allow(clippy::derive_partial_eq_without_eq)]",
-        );
+        )
     }
 
     tonic_builder.compile(
-        &[
-            "../api/v0/meta.proto",
-            "../api/v0/runtime.proto",
-            "../api/v0/schedule.proto",
-            "../api/v0/observe.proto",
-        ],
+        &["../api/v0/runtime.proto", "../api/v0/observe.proto"],
         &["../api/v0/"],
     )?;
 

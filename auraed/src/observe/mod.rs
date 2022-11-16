@@ -34,7 +34,7 @@
 tonic::include_proto!("observe");
 
 use crate::observe::observe_server::Observe;
-use crate::{meta, LogChannel};
+use crate::LogChannel;
 use log::info;
 use std::sync::Arc;
 use tokio::sync::broadcast::Receiver;
@@ -65,17 +65,6 @@ impl ObserveService {
 
 #[tonic::async_trait]
 impl Observe for ObserveService {
-    async fn status(
-        &self,
-        _request: Request<StatusRequest>,
-    ) -> Result<Response<StatusResponse>, Status> {
-        let meta = meta::AuraeMeta {
-            name: "UNKNOWN_NAME".to_string(),
-            message: "UNKNOWN_MESSAGE".to_string(),
-        };
-        let response = StatusResponse { meta: Some(meta) };
-        Ok(Response::new(response))
-    }
     type GetAuraeDaemonLogStreamStream =
         ReceiverStream<Result<LogItem, Status>>;
 

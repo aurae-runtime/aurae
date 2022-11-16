@@ -35,9 +35,7 @@
 
 use crate::codes::*;
 use crate::config::*;
-use crate::observe::*;
 use crate::runtime::*;
-use crate::schedule::*;
 
 use anyhow::{Context, Result};
 use macros::Output;
@@ -99,18 +97,8 @@ impl AuraeClient {
     }
 
     /// Initialize a new instance of the runtime subsystem.
-    pub fn runtime(&mut self) -> Core {
-        Core::new()
-    }
-
-    /// Initialize a new instance of the observe subsystem.
-    pub fn observe(&mut self) -> Observe {
-        Observe::new()
-    }
-
-    /// Initialize a new instance of the schedule_executable subsystem.
-    pub fn schedule_executable(&mut self) -> ScheduleExecutable {
-        ScheduleExecutable::new()
+    pub fn runtime(&mut self) -> CellService {
+        CellService::new()
     }
 
     /// Convenience method for identifying the current service or client.

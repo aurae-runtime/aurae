@@ -30,9 +30,15 @@
 \* -------------------------------------------------------------------------- */
 
 let aurae = connect();
-let runtime = aurae.runtime();
+aurae.info().json();
 
-let example = cmd("cat /etc/resolv.conf");
-runtime.run_executable(example).json();
+let my_cell = cell("ExampleCell");
+my_cell.cpu_p = 10;   // Allocate 10% of the cpu
+my_cell.mem_p = 1024; // Allocate 1024 bytes of memory
 
-exec("cat /etc/fstab").json();
+let me_exec = executable("cat /etc/fstab");
+let cell_service = aurae.cell_service();
+
+cell_service.allocate(my_cell);
+cell_service.start("ExampleCell", my_exec);
+

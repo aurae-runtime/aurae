@@ -27,165 +27,154 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-/*
- * [Runtime] is a SYNCHRONOUS subsystem.
- */
 
 #![allow(dead_code)]
 tonic::include_proto!("runtime");
 
-use crate::runtime::core_server::Core;
-use crate::{command_from_string, meta};
-use anyhow::Result;
-// use libcontainer::{
-//     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
-// };
-// use std::path::PathBuf;
 use tonic::{Request, Response, Status};
 
-/// The server side implementation of the core runtime subsystem.
-///
-/// The Runtime subsystem is synchronous and will operate against
-/// the system inline with any requests.
-///
-/// Warning: Because of the synchronous nature of the subsystem ths
-/// part of the daemon is potentially vulnerable to denial of service
-/// and flooding attacks.
 #[derive(Debug, Default, Clone)]
-pub struct CoreService {}
+pub struct CellService {}
 
 #[tonic::async_trait]
-impl Core for CoreService {
-    async fn run_executable(
+impl cell_service_server::CellService for CellService {
+    async fn allocate(
         &self,
-        request: Request<Executable>,
-    ) -> Result<Response<ExecutableStatus>, Status> {
-        let r = request.into_inner();
-        let cmd = command_from_string(&r.command);
-        match cmd {
-            Ok(mut cmd) => {
-                let output = cmd.output();
-                match output {
-                    Ok(output) => {
-                        let meta = meta::AuraeMeta {
-                            name: r.command,
-                            message: "-".to_string(),
-                        };
-                        let proc = meta::ProcessMeta { pid: -1 }; // todo @kris-nova get pid, we will probably want to spawn() and wait and remember the pid
-                        let status = meta::Status::Complete as i32;
-                        let response = ExecutableStatus {
-                            meta: Some(meta),
-                            proc: Some(proc),
-                            status,
-                            stdout: String::from_utf8(output.stdout)
-                                .expect("reading stdout"),
-                            stderr: String::from_utf8(output.stderr)
-                                .expect("reading stderr"),
-                            exit_code: output.status.to_string(),
-                        };
-                        Ok(Response::new(response))
-                    }
-                    Err(e) => {
-                        let meta = meta::AuraeMeta {
-                            name: "-".to_string(),
-                            message: format!("{:?}", e),
-                        };
-                        let proc = meta::ProcessMeta { pid: -1 };
-                        let status = meta::Status::Error as i32;
-                        let response = ExecutableStatus {
-                            meta: Some(meta),
-                            proc: Some(proc),
-                            status,
-                            stdout: "-".to_string(),
-                            stderr: "-".to_string(),
-                            exit_code: "-".to_string(),
-                        };
-                        Ok(Response::new(response))
-                    }
-                }
-            }
-            Err(e) => {
-                let meta = meta::AuraeMeta {
-                    name: "-".to_string(),
-                    message: format!("{:?}", e),
-                };
-                let proc = meta::ProcessMeta { pid: -1 };
-                let status = meta::Status::Error as i32;
-                let response = ExecutableStatus {
-                    meta: Some(meta),
-                    proc: Some(proc),
-                    status,
-                    stdout: "-".to_string(),
-                    stderr: "-".to_string(),
-                    exit_code: "-".to_string(),
-                };
-                Ok(Response::new(response))
-            }
-        }
-    }
-
-    async fn run_pod(
-        &self,
-        _request: Request<Pod>,
-    ) -> Result<Response<PodStatus>, Status> {
+        _request: Request<AllocateCellRequest>,
+    ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
         todo!()
     }
 
-    async fn spawn(
+    async fn free(
         &self,
-        _request: Request<SpawnRequest>,
-    ) -> Result<Response<SpawnResponse>, Status> {
+        _request: Request<FreeCellRequest>,
+    ) -> std::result::Result<Response<FreeCellResponse>, Status> {
         todo!()
     }
 
-    async fn run_virtual_machine(
+    async fn start(
         &self,
-        _request: Request<VirtualMachine>,
-    ) -> Result<Response<VirtualMachineStatus>, Status> {
+        _request: Request<StartCellRequest>,
+    ) -> std::result::Result<Response<StartCellResponse>, Status> {
         todo!()
     }
 
-    async fn run_cell(
+    async fn stop(
         &self,
-        _request: Request<Cell>,
-    ) -> Result<Response<CellStatus>, Status> {
-        todo!();
-        // let syscall = create_syscall();
-        // let mut container =
-        //     ContainerBuilder::new("123".to_string(), syscall.as_ref())
-        //         .as_init(PathBuf::new())
-        //         .with_systemd(false)
-        //         .build()
-        //         .expect("building container");
-        // // .with_pid_file(args.pid_file.as_ref())?
-        // // .with_console_socket(args.console_socket.as_ref())
-        // // .with_root_path(root_path)?
-        // // .with_preserved_fds(args.preserve_fds)
-        // // .as_init(&args.bundle)
-        // // .with_systemd(false)
-        // // .build()?;
-        //
-        // let _ = container.start();
-        // let meta =
-        //     meta::AuraeMeta { name: "-".to_string(), message: "-".to_string() };
-        // let status = meta::Status::Complete as i32;
-        // let container_statuses = vec![ContainerStatus {
-        //     meta: Some(meta::AuraeMeta {
-        //         name: "-".to_string(),
-        //         message: "-".to_string(),
-        //     }),
-        //     status: meta::Status::Complete as i32,
-        //     proc: Some(meta::ProcessMeta { pid: -1 }),
-        // }];
-        // let response =
-        //     CellStatus { meta: Some(meta), status, container_statuses };
-        // Ok(Response::new(response))
+        _request: Request<StopCellRequest>,
+    ) -> std::result::Result<Response<StopCellResponse>, Status> {
+        todo!()
     }
-
-    // async fn function_name(
-    //     &self,
-    //     _request: Request<Container>,
-    // ) -> Result<Response<ContainerStatus>, Status> {
-    //     todo!()
-    // }
 }
+
+// async fn run_executable(
+//     &self,
+//     request: Request<Executable>,
+// ) -> Result<Response<ExecutableStatus>, Status> {
+//     let r = request.into_inner();
+//     let cmd = command_from_string(&r.command);
+//     match cmd {
+//         Ok(mut cmd) => {
+//             let output = cmd.output();
+//             match output {
+//                 Ok(output) => {
+//                     let meta = meta::AuraeMeta {
+//                         name: r.command,
+//                         message: "-".to_string(),
+//                     };
+//                     let proc = meta::ProcessMeta { pid: -1 }; // todo @kris-nova get pid, we will probably want to spawn() and wait and remember the pid
+//                     let status = meta::Status::Complete as i32;
+//                     let response = ExecutableStatus {
+//                         meta: Some(meta),
+//                         proc: Some(proc),
+//                         status,
+//                         stdout: String::from_utf8(output.stdout)
+//                             .expect("reading stdout"),
+//                         stderr: String::from_utf8(output.stderr)
+//                             .expect("reading stderr"),
+//                         exit_code: output.status.to_string(),
+//                     };
+//                     Ok(Response::new(response))
+//                 }
+//                 Err(e) => {
+//                     let meta = meta::AuraeMeta {
+//                         name: "-".to_string(),
+//                         message: format!("{:?}", e),
+//                     };
+//                     let proc = meta::ProcessMeta { pid: -1 };
+//                     let status = meta::Status::Error as i32;
+//                     let response = ExecutableStatus {
+//                         meta: Some(meta),
+//                         proc: Some(proc),
+//                         status,
+//                         stdout: "-".to_string(),
+//                         stderr: "-".to_string(),
+//                         exit_code: "-".to_string(),
+//                     };
+//                     Ok(Response::new(response))
+//                 }
+//             }
+//         }
+//         Err(e) => {
+//             let meta = meta::AuraeMeta {
+//                 name: "-".to_string(),
+//                 message: format!("{:?}", e),
+//             };
+//             let proc = meta::ProcessMeta { pid: -1 };
+//             let status = meta::Status::Error as i32;
+//             let response = ExecutableStatus {
+//                 meta: Some(meta),
+//                 proc: Some(proc),
+//                 status,
+//                 stdout: "-".to_string(),
+//                 stderr: "-".to_string(),
+//                 exit_code: "-".to_string(),
+//             };
+//             Ok(Response::new(response))
+//         }
+//     }
+// }
+
+// async fn run_cell(
+//     &self,
+//     _request: Request<Cell>,
+// ) -> Result<Response<CellStatus>, Status> {
+//     todo!();
+//     // let syscall = create_syscall();
+//     // let mut container =
+//     //     ContainerBuilder::new("123".to_string(), syscall.as_ref())
+//     //         .as_init(PathBuf::new())
+//     //         .with_systemd(false)
+//     //         .build()
+//     //         .expect("building container");
+//     // // .with_pid_file(args.pid_file.as_ref())?
+//     // // .with_console_socket(args.console_socket.as_ref())
+//     // // .with_root_path(root_path)?
+//     // // .with_preserved_fds(args.preserve_fds)
+//     // // .as_init(&args.bundle)
+//     // // .with_systemd(false)
+//     // // .build()?;
+//     //
+//     // let _ = container.start();
+//     // let meta =
+//     //     meta::AuraeMeta { name: "-".to_string(), message: "-".to_string() };
+//     // let status = meta::Status::Complete as i32;
+//     // let container_statuses = vec![ContainerStatus {
+//     //     meta: Some(meta::AuraeMeta {
+//     //         name: "-".to_string(),
+//     //         message: "-".to_string(),
+//     //     }),
+//     //     status: meta::Status::Complete as i32,
+//     //     proc: Some(meta::ProcessMeta { pid: -1 }),
+//     // }];
+//     // let response =
+//     //     CellStatus { meta: Some(meta), status, container_statuses };
+//     // Ok(Response::new(response))
+// }
+
+// async fn function_name(
+//     &self,
+//     _request: Request<Container>,
+// ) -> Result<Response<ContainerStatus>, Status> {
+//     todo!()
+// }

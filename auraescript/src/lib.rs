@@ -61,18 +61,13 @@
 // is used for the scripting language docs directly.
 #[warn(missing_docs)]
 pub mod builtin;
-pub mod meta;
-pub mod observe;
 pub mod runtime;
-pub mod schedule;
 
 use rhai::Engine;
 
 use crate::builtin::client::*;
 use crate::builtin::*;
-use crate::observe::*;
 use crate::runtime::*;
-use crate::schedule::*;
 
 /// AuraeScript Standard Library.
 ///
@@ -124,7 +119,7 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         // Runtime type
         //
         // The runtime subsystem with corresponding methods.
-        .register_type_with_name::<Core>("Core")
+        .register_type_with_name::<CellService>("CellService")
         .register_fn("runtime", AuraeClient::runtime)
         // Executable type
         //
@@ -136,78 +131,34 @@ pub fn register_stdlib(mut engine: Engine) -> Engine {
         // the runtime subsystem, and cmd setting into a single alias.
         // Execute the argument string synchronously without any other
         // code required.
-        .register_fn("exec", exec)
+        //.register_fn("exec", exec)
         // cmd function
         //
         // Create an instance of an Executable type with an argument
         // command string. Can be passed to various subsystems.
-        .register_fn("cmd", cmd)
+        //.register_fn("cmd", cmd)
         // run_executable function
         //
         // Direct access to the run_executable function.
-        .register_fn("run_executable", Core::run_executable)
-        .register_fn("json", Executable::json)
-        .register_fn("raw", Executable::raw)
-        .register_get_set(
-            "command",
-            Executable::get_command,
-            Executable::set_command,
-        )
-        .register_get_set(
-            "comment",
-            Executable::get_comment,
-            Executable::set_comment,
-        )
+        //.register_fn("run_executable", Core::run_executable)
+        //.register_fn("json", Executable::json)
+        //.register_fn("raw", Executable::raw)
+        //.register_get_set(
+        //    "command",
+        //    Executable::get_command,
+        //    Executable::set_command,
+        //)
+        //.register_get_set(
+        //    "comment",
+        //    Executable::get_comment,
+        //    Executable::set_comment,
+        //)
         // ExecutableStatus type
         //
         // Response with the status of a given Executable back from an Aurae server.
-        .register_type_with_name::<ExecutableStatus>("ExecutableStatus")
-        .register_fn("json", ExecutableStatus::json)
-        .register_fn("raw", ExecutableStatus::raw)
-        // ScheduleExecutable type
-        //
-        // The ScheduleExecutable subsystem.
-        .register_type_with_name::<ScheduleExecutable>("ScheduleExecutable")
-        .register_fn("schedule_executable", AuraeClient::schedule_executable)
-        // ScheduleExecutable.enable function
-        //
-        // Enable an Executable type{} to always run on the system.
-        .register_fn("enable", ScheduleExecutable::enable)
-        // ScheduleExecutable.disable function
-        //
-        // Disable an Executable type{} to not run on the system.
-        .register_fn("disable", ScheduleExecutable::disable)
-        // ScheduleExecutable.destroy function
-        //
-        // Destroy an Executable type{} from the system record.
-        .register_fn("destroy", ScheduleExecutable::destroy)
-        .register_type_with_name::<ExecutableEnableResponse>(
-            "ExecutableEnableResponse",
-        )
-        .register_fn("json", ExecutableEnableResponse::json)
-        .register_fn("raw", ExecutableEnableResponse::raw)
-        .register_type_with_name::<ExecutableDisableResponse>(
-            "ExecutableDisableResponse",
-        )
-        .register_fn("json", ExecutableDisableResponse::json)
-        .register_fn("raw", ExecutableDisableResponse::raw)
-        .register_type_with_name::<ExecutableDestroyResponse>(
-            "ExecutableDestroyResponse",
-        )
-        .register_fn("json", ExecutableDestroyResponse::json)
-        .register_fn("raw", ExecutableDestroyResponse::raw)
-        // Observe type
-        //
-        // The observe subsystem.
-        .register_type_with_name::<Observe>("Observe")
-        .register_fn("observe", AuraeClient::observe)
-        // Observe.status function
-        //
-        // Retrieve total system status metrics.
-        .register_fn("status", Observe::status_default)
-        .register_type_with_name::<StatusResponse>("StatusResponse")
-        .register_fn("json", StatusResponse::json)
-        .register_fn("raw", StatusResponse::raw)
+        //.register_type_with_name::<ExecutableStatus>("ExecutableStatus")
+        //.register_fn("json", ExecutableStatus::json)
+        //.register_fn("raw", ExecutableStatus::raw)
         // version function
         //
         // The Aurae version running on

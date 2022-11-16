@@ -51,16 +51,17 @@ fn generate_grpc_code() -> Result<()> {
 
     // Types generated from proto messages derive PartialEq without Eq. Add them here to suppress the warning.
     for message in [
-        "meta.AuraeMeta",
-        "meta.ProcessMeta",
+        "runtime.Cell",
         "runtime.Executable",
-        "runtime.ExecutableStatus",
-        "runtime.Pod",
-        "runtime.PodStatus",
-        "runtime.VirtualMachine",
-        "runtime.VirtualMachineStatus",
-        "runtime.SpawnRequest",
-        "runtime.SpawnResponse",
+        "runtime.ExecutableReference",
+        "runtime.AllocateCellRequest",
+        "runtime.AllocateCellResponse",
+        "runtime.FreeCellRequest",
+        "runtime.FreeCellResponse",
+        "runtime.StartCellRequest",
+        "runtime.StartCellResponse",
+        "runtime.StopCellRequest",
+        "runtime.StopCellResponse",
         "observe.GetAuraeDaemonLogStreamRequest",
         "observe.GetSubProcessStreamRequest",
         "observe.LogItem",
@@ -76,17 +77,7 @@ fn generate_grpc_code() -> Result<()> {
     let mut derive_serde_serialize_deserialize: Vec<&str> = vec![];
 
     // Add proto messages here to generate output functions (e.g., `json()`) on the type
-    for message in [
-        "meta.AuraeMeta",
-        "meta.ProcessMeta",
-        "observe.StatusResponse",
-        "observe.StatusRequest",
-        "runtime.Executable",
-        "runtime.ExecutableStatus",
-        "schedule.ExecutableDestroyResponse",
-        "schedule.ExecutableDisableResponse",
-        "schedule.ExecutableEnableResponse",
-    ] {
+    for message in ["runtime.Cell", "runtime.Executable", "observe.LogItem"] {
         if !derive_serde_serialize_deserialize.contains(&message) {
             derive_serde_serialize_deserialize.push(message);
         }
@@ -115,7 +106,6 @@ fn generate_grpc_code() -> Result<()> {
 
     tonic_builder.build_server(false).compile(
         &[
-            "../api/v0/meta.proto",
             "../api/v0/runtime.proto",
             "../api/v0/observe.proto",
             "../api/v0/schedule.proto",

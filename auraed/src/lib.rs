@@ -61,6 +61,7 @@
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
+#![allow(dead_code)]
 
 use anyhow::anyhow;
 use anyhow::Context;
@@ -81,16 +82,12 @@ use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 
-use crate::observe::observe_server::ObserveServer;
-use crate::observe::ObserveService;
-use crate::runtime::core_server::CoreServer;
-use crate::runtime::CoreService;
-use crate::schedule::schedule_executable_server::ScheduleExecutableServer;
-use crate::schedule::ScheduleExecutableService;
+// Cells
+use crate::runtime::cell_service_server::CellServiceServer;
+use crate::runtime::CellService;
 
 pub mod init;
 pub mod logging;
-mod meta;
 mod observe;
 mod runtime;
 mod schedule;
@@ -166,19 +163,16 @@ impl AuraedRuntime {
 
         let sock = UnixListener::bind(&self.socket)?;
         let sock_stream = UnixListenerStream::new(sock);
-        let log_collector = self.log_collector.clone();
+        let _log_collector = self.log_collector.clone();
 
         // Run the server concurrently
         let handle = tokio::spawn(async {
             Server::builder()
                 .tls_config(tls)?
-                .add_service(CoreServer::new(CoreService::default()))
-                .add_service(ObserveServer::new(ObserveService::new(
-                    log_collector,
-                )))
-                .add_service(ScheduleExecutableServer::new(
-                    ScheduleExecutableService::default(),
-                ))
+                .add_service(CellServiceServer::new(CellService::default()))
+                // .add_service(ObserveServer::new(ObserveService::new(
+                //     log_collector,
+                // )))
                 .serve_with_incoming(sock_stream)
                 .await
         });
