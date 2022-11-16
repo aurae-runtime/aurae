@@ -24,8 +24,10 @@ use syn::{parse_macro_input, Data, DeriveInput, Ident};
 /// }
 /// ```
 ///
-/// The macro will then generate a trait `TypeValidator` and an empty struct `Validator`.
-/// You must `impl TypeValidator for Validator`.
+/// The macro will then generate a trait `MessageTypeValidator` and an empty struct `MessageValidator`.
+/// You must `impl MessageTypeValidator for MessageValidator`.
+///
+/// Decorate fields with the `field_type` attribute, when the unvalidated type differs from the validated type. See example above.
 #[proc_macro_derive(ValidatingType, attributes(field_type))]
 pub fn validating_type(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -36,6 +38,7 @@ pub fn validating_type(input: TokenStream) -> TokenStream {
         field_names,
         field_validations,
         type_validator,
+        validator_struct_ident,
     } = parse(input);
 
     let expanded = quote! {
@@ -47,7 +50,7 @@ pub fn validating_type(input: TokenStream) -> TokenStream {
                 #validated_type_ident,
                 ::validation::ValidationError
             > {
-                Validator::validate_fields(
+                #validator_struct_ident::validate_fields(
                     &self,
                     parent_name
                 )?;
@@ -79,6 +82,7 @@ pub fn validated_type(input: TokenStream) -> TokenStream {
         field_names,
         field_validations,
         type_validator,
+        validator_struct_ident,
     } = parse(input);
 
     let expanded = quote! {
@@ -90,7 +94,7 @@ pub fn validated_type(input: TokenStream) -> TokenStream {
                 #validated_type_ident,
                 ::validation::ValidationError
             > {
-                Validator::validate_fields(
+                #validator_struct_ident::validate_fields(
                     &input,
                     parent_name
                 )?;
@@ -117,6 +121,7 @@ struct ValidateInput {
     field_names: Vec<Ident>,
     field_validations: Vec<proc_macro2::TokenStream>,
     type_validator: proc_macro2::TokenStream,
+    validator_struct_ident: Ident,
 }
 
 fn parse(
@@ -126,10 +131,16 @@ fn parse(
         panic!("Validated type should be named the same as the unvalidated type with a `Validated` prefix");
     }
 
-    let type_ident = syn::Ident::new(
+    let type_ident = Ident::new(
         &validated_type_ident.to_string().replace("Validated", ""),
         validated_type_ident.span(),
     );
+
+    let validator_trait_ident =
+        Ident::new(&format!("{type_ident}TypeValidator"), type_ident.span());
+
+    let validator_struct_ident =
+        Ident::new(&format!("{type_ident}Validator"), type_ident.span());
 
     let validated_type_struct = match data {
         Data::Struct(x) => x,
@@ -145,7 +156,7 @@ fn parse(
     let field_validations = field_names
         .iter()
         .map(|field_ident| {
-            let field_validation_fn_ident = syn::Ident::new(
+            let field_validation_fn_ident = Ident::new(
                 &format!("validate_{}", field_ident),
                 field_ident.span(),
             );
@@ -153,7 +164,7 @@ fn parse(
             let field_name = field_ident.to_string().to_snake_case();
 
             quote! {
-                let #field_ident = Validator::#field_validation_fn_ident(
+                let #field_ident = #validator_struct_ident::#field_validation_fn_ident(
                     #field_ident,
                     #field_name,
                     parent_name
@@ -191,15 +202,15 @@ fn parse(
                 })
                 .collect::<Vec<syn::Type>>();
 
-            if field_type.len() != 1 {
-                panic!(
-                    "Found {} `field_type` attributes on `{}`",
+            let field_type = match field_type.len() {
+                0 => &f.ty,
+                1 => &field_type[0],
+                _ => panic!(
+                    "Found {} `field_type` attributes on `{}`. Maximum of 1 is supported.",
                     field_type.len(),
                     field_ident
-                );
-            }
-
-            let field_type = &field_type[0];
+                )
+            };
 
             quote! {
                 fn #field_validation_fn_ident(
@@ -215,7 +226,7 @@ fn parse(
         .collect::<Vec<proc_macro2::TokenStream>>();
 
     let type_validator = quote! {
-        trait TypeValidator {
+        trait #validator_trait_ident {
             #(#validator_trait_fns)*
 
             fn validate_fields(
@@ -226,7 +237,7 @@ fn parse(
             }
         }
 
-        struct Validator;
+        struct #validator_struct_ident;
     };
 
     ValidateInput {
@@ -235,5 +246,6 @@ fn parse(
         field_names,
         field_validations,
         type_validator,
+        validator_struct_ident,
     }
 }
