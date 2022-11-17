@@ -41,7 +41,7 @@
     unused_comparisons,
     while_true
 )]
-#![warn(// TODO: missing_debug_implementations,
+#![warn(missing_debug_implementations,
         // TODO: missing_docs,
         trivial_casts,
         trivial_numeric_casts,
