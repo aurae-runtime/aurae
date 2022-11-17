@@ -34,6 +34,7 @@ use tokio::sync::broadcast::Sender;
 
 /// Sends log messages generated in rust code to the logging channel
 /// The logging channel is consumed by the observe API
+#[derive(Debug)]
 pub struct StreamLogger {
     /// Channel used to send log messages to grpc API
     pub producer: Sender<LogItem>,
