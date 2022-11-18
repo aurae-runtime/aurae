@@ -117,35 +117,13 @@ fn main() -> anyhow::Result<()> {
         } else {
             &contents[..]
         };
-        runtime.execute_script(&filename, contents).expect("runtime");
+
+        // Add the standard library to each "script" that is being executed.
+        let stdlib = include_str!("../../lib/aurae.ae");
+        let mut script_to_exec: String = stdlib.to_owned();
+        script_to_exec.push_str(contents);
+
+        runtime.execute_script(&filename, &script_to_exec).expect("runtime");
     }
     Ok(())
 }
-
-// Now we see how to invoke the op we just defined. The runtime automatically
-// contains a Deno.core object with several functions for interacting with it.
-// You can find its definition in core.js.
-//     runtime
-//         .execute_script(
-//             "<usage>",
-//             r#"
-// // Print helper function, calling Deno.core.print()
-// function print(value) {
-//   Deno.core.print(value.toString()+"\n");
-// }
-// const arr = [1, 2, 3];
-// print("The sum of");
-// print(arr);
-// print("is");
-// print(Deno.core.ops.op_sum(arr));
-// // And incorrect usage
-// try {
-//   print(Deno.core.ops.op_sum(0));
-// } catch(e) {
-//   print('Exception:');
-//   print(e);
-// }
-// "#,
-//         )
-//         .unwrap();
-// }

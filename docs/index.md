@@ -60,24 +60,9 @@ Aurae brings enterprise identity as low as the socket layer in a system, which u
 
 ## AuraeScript 
 
-Aurae offers a Turing complete scripting language written in Rust and similar to TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript).
+AuraeScript is JavaScript and TypeScript interpreter built on [Deno](https://deno.land/) that includes the Aurae Standard client library.
 
-```typescript
-let execute = true;    // Toggle execution
-
-let aurae = connect(); // Connect to the daemon
-aurae.info().json();   // Show identity
-
-if execute {
-    // Execute "cat /etc/resolv.conf"
-    let runtime = aurae.runtime();
-    let example = exec("cat /etc/resolv.conf");
-    runtime.start(example).json();
-}
-```
-
-AuraeScript servers as one of many clients to the system and can be used to express workload manifests instead of YAML.
-AuraeScript can be used to control and gain visibility to the system.
+See the [AuraeScript Documentation](https://aurae.io/auraescript) for more detail.
 
 ## The Aurae Standard Library
 
