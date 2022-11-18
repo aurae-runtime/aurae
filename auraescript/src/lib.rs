@@ -52,16 +52,24 @@
 //#![warn(missing_docs)]
 
 use anyhow::anyhow;
-use deno_core::Extension;
-
-// This is a hack to make the `#[op]` macro work with
-// deno_core examples.
-// You can remove this:
 use deno_core::*;
 
+// --[ Main Standard Library Functions ]--
+
 #[op]
-fn op_example_print() -> Result<(), deno_core::error::AnyError> {
-    println!("Example printing...");
+fn ae_connect() -> Result<(), deno_core::error::AnyError> {
+    // Left off here
+    // We need to get connect() working with X509 certs
+    // and our new changes!
+    // Start here, and remember to move pub mod builtin up!
+    //pub mod builtin;
+    //connect();
+    Ok(())
+}
+
+#[op]
+fn ae_about() -> Result<(), deno_core::error::AnyError> {
+    println!("About...");
     Ok(())
 }
 
@@ -69,6 +77,8 @@ fn op_example_print() -> Result<(), deno_core::error::AnyError> {
 fn op_example_error() -> Result<(), deno_core::error::AnyError> {
     Err(anyhow!("Example error: {}", "value"))
 }
+
+// --[ Preloader ]--
 
 // Similar to LD_PRELOAD or kprobe in the kernel. This function
 // is executed for *every* op function.
@@ -79,13 +89,18 @@ fn middleware_intercept(decl: OpDecl) -> OpDecl {
     decl
 }
 
+// The main registry for AuraeScript
+//
+// All new functionality must go through here.
 pub fn register_stdlib() -> Extension {
     let ext = Extension::builder()
-        .ops(vec![op_example_print::decl(), op_example_error::decl()])
+        .ops(vec![ae_connect::decl(), ae_about::decl()])
         .middleware(middleware_intercept)
         .build();
     ext
 }
+
+// --[ Tests ]--
 
 #[cfg(test)]
 mod tests {

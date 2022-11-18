@@ -28,11 +28,30 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Transaction codes for AuraeScript.
+//! The builtin functionality for AuraeScript.
+//!
+//! AuraeScript has a small amount of magic with regard to authentication and
+//! managing the client and requests, responses, and output.
+//!
+//! Most of the built in logic that makes AuraeScript useful to an end-user
+//! lives in this module.
 
-/// Connection failed.
-pub const EXIT_CONNECT_FAILURE: i32 = 1;
-/// Request failed.
-pub const EXIT_REQUEST_FAILURE: i32 = 2;
-/// Runtime error.
-pub const EXIT_RUNTIME_ERROR: i32 = 3;
+pub mod client;
+pub mod config;
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
+
+/// Show meta information about AuraeScript.
+pub fn about() {
+    println!("\n");
+    println!("Aurae. Distributed Runtime.");
+    println!("Authors: {}", AUTHORS);
+    version();
+    println!("\n");
+}
+
+/// Show version information.
+pub fn version() {
+    println!("Version: {}", VERSION);
+}

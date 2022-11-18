@@ -40,8 +40,14 @@ name = "auraescript"
 path = "src/bin/main.rs"
 
 [dependencies]
-anyhow = "1.0"
 deno_core = "0.159.0"
+anyhow = "1.0"
+serde = "1.0.147"
+tokio = "1.21.2"
+tonic = "0.8.2"
+tower = "0.4.13"
+x509-certificate = "0.15.0"
+toml = "0.5.9"
 
 [build-dependencies]
 anyhow = "1.0"

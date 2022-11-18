@@ -38,7 +38,7 @@ use crate::config::*;
 use crate::runtime::*;
 
 use anyhow::{Context, Result};
-use macros::Output;
+// use macros::Output;
 use serde::{Deserialize, Serialize};
 use std::process;
 use tokio::net::UnixStream;
@@ -117,7 +117,7 @@ impl AuraeClient {
 }
 
 /// An in-memory representation of an X509 identity, and its meta data.
-#[derive(Debug, Clone, Serialize, Deserialize, Output)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct X509Details {
     /// From the SSL spec, the subject common name.
     pub subject_common_name: String,

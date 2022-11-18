@@ -31,3 +31,11 @@
 function print(value) {
   Deno.core.print(value.toString()+"\n");
 }
+
+function connect() {
+  Deno.core.ops.ae_connect();
+}
+
+function about() {
+  Deno.core.ops.ae_about();
+}
