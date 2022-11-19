@@ -51,7 +51,8 @@
         trivial_numeric_casts,
         unused_extern_crates,
         unused_import_braces,
-        // TODO: unused_results
+        // TODO: enable this once we're out of the rhai game.
+        // unused_results
         )]
 // The project prefers .expect("reason") instead of .unwrap() so we fail
 // on any .unwrap() statements in the code.

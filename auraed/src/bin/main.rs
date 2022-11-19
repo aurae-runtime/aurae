@@ -46,7 +46,7 @@
         unused_extern_crates,
         unused_import_braces,
         unused_qualifications,
-        // TODO: unused_results
+        unused_results
         )]
 
 use auraed::{logging::logchannel::LogChannel, *};

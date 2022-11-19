@@ -56,7 +56,7 @@
         trivial_numeric_casts,
         unused_extern_crates,
         unused_import_braces,
-        // TODO: unused_results
+        unused_results
         )]
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
@@ -188,16 +188,17 @@ impl AuraedRuntime {
         // SQLite
         info!("Database Location:  /var/lib/aurae.db");
         info!("Unlocking SQLite Database with Key: {:?}", self.server_key);
+
         let mut opt =
             ConnectOptions::new("sqlite:/var/lib/aurae.db".to_owned());
-        opt.sqlx_logging(false).sqlcipher_key(Cow::from(format!(
-            "{:?}",
-            db_key.to_ascii_lowercase()
-        )));
+        let _unused_opt = opt.sqlx_logging(false).sqlcipher_key(Cow::from(
+            format!("{:?}", db_key.to_ascii_lowercase()),
+        ));
 
         // Pragma initial connection
+        // TODO add sqlcipher_key
         let mut opt = ConnectOptions::new("sqlite::memory:".to_owned());
-        opt.sqlx_logging(false); // TODO add sqlcipher_key
+        let _unused_opt = opt.sqlx_logging(false);
         let db = Database::connect(opt).await?;
         let x = db
             .execute(Statement::from_string(
@@ -226,7 +227,7 @@ fn command_from_string(cmd: &str) -> Result<Command, anyhow::Error> {
     let mut command = Command::new(base);
     for ent in entries {
         if ent != base {
-            command.arg(ent);
+            let _unused_command = command.arg(ent);
         }
     }
     Ok(command)

@@ -37,7 +37,9 @@ use ::libc;
 #[allow(dead_code)]
 pub(crate) fn syscall_reboot(action: i32) {
     unsafe {
-        libc::reboot(action);
+        if libc::reboot(action) != 0 {
+            panic!("failed to reboot");
+        }
     }
 }
 
@@ -89,7 +91,7 @@ pub(crate) fn spawn_thread_power_button_listener(
     let event_size = mem::size_of::<InputEvent>();
 
     let power_btn_device = power_btn_device_path.as_ref().to_owned();
-    std::thread::spawn(move || {
+    let _unused_join_handle = std::thread::spawn(move || {
         loop {
             let event_slice = unsafe {
                 slice::from_raw_parts_mut(to_u8_ptr(&mut event), event_size)
