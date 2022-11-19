@@ -53,21 +53,34 @@
 
 pub mod builtin;
 pub mod runtime;
-
-use crate::builtin::client::connect;
+use crate::builtin::client::*;
 use deno_core::*;
 
 // --[ Main Standard Library Functions ]--
 
 #[op]
-fn ae_connect() -> Result<String, error::AnyError> {
-    let mut client = connect();
-    let resp = serde_json::to_string_pretty(&client.info());
-    Ok(resp.unwrap_or("{}".parse()?))
+fn ae_connect() -> Result<AuraeClient, error::AnyError> {
+    let client = connect();
+    Ok(client)
 }
 
 #[op]
-fn ae_cell_service() -> Result<String, error::AnyError> {
+fn ae_runtime_cell_service_allocate() -> Result<String, error::AnyError> {
+    Ok("".parse()?)
+}
+
+#[op]
+fn ae_runtime_cell_service_start() -> Result<String, error::AnyError> {
+    Ok("".parse()?)
+}
+
+#[op]
+fn ae_runtime_cell_service_stop() -> Result<String, error::AnyError> {
+    Ok("".parse()?)
+}
+
+#[op]
+fn ae_runtime_cell_service_free() -> Result<String, error::AnyError> {
     Ok("".parse()?)
 }
 
@@ -88,7 +101,13 @@ fn middleware_intercept(decl: OpDecl) -> OpDecl {
 pub fn register_stdlib() -> Extension {
     let ext = Extension::builder()
         // Standard Operations
-        .ops(vec![ae_connect::decl(), ae_cell_service::decl()])
+        .ops(vec![
+            ae_connect::decl(),
+            ae_runtime_cell_service_allocate::decl(),
+            ae_runtime_cell_service_start::decl(),
+            ae_runtime_cell_service_stop::decl(),
+            ae_runtime_cell_service_free::decl(),
+        ])
         .middleware(middleware_intercept)
         .build();
     ext

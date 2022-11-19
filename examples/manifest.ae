@@ -29,22 +29,17 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-let client = connect();
-print(client);
-
-let cell = {
+let cell_1 = {
     name: "Example Cell",
     cpu: 2,
 };
 
-let cells = cellService();
-cells.allocate(cell);
-// cells.start(cell);
-// cells.stop(cell);
+let cell_2 = {
+    name: "Example Cell",
+    cpu: 2,
+};
 
-
-
-// runtime.cellService.allocate(cell);
-
-
-
+let cell_3 = {
+    name: "Example Cell",
+    cpu: 2,
+};

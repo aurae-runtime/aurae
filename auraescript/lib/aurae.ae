@@ -29,16 +29,47 @@
 \* -------------------------------------------------------------------------- */
 
 function print(value) {
-  Deno.core.print(value.toString()+"\n");
+  if (
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      value !== null
+  ){
+      let json_str = JSON.stringify(value, null, 2)
+      Deno.core.print(json_str+"\n");
+  }else {
+    Deno.core.print(value.toString()+"\n");
+  }
+}
+
+class auraeClientObject {
+
 }
 
 function connect() {
   return Deno.core.ops.ae_connect();
 }
 
-function cellService() {
-  return Deno.core.ops.ae_cell_service();
+class cellServiceObject {
+    allocate(x) {
+        Deno.core.ops.ae_runtime_cell_service_allocate(x);
+    }
+    start(x) {
+        Deno.core.ops.ae_runtime_cell_service_start(x);
+    }
+    stop(x) {
+        Deno.core.ops.ae_runtime_cell_service_stop(x);
+    }
+    free(x) {
+        Deno.core.ops.ae_runtime_cell_service_free(x);
+    }
 }
+
+function cellService() {
+  return new cellServiceObject();
+}
+
+
+
 
 //function exampleFunc(beeps, boops, meeps) {
 //  // Define desired object

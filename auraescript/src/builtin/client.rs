@@ -36,10 +36,8 @@
 #![allow(dead_code)]
 
 use crate::builtin::config::*;
-//use crate::runtime::*;
-
 use anyhow::{Context, Result};
-// use macros::Output;
+use deno_core::*;
 use serde::{Deserialize, Serialize};
 use std::process;
 use tokio::net::UnixStream;
@@ -56,13 +54,13 @@ const EXIT_REQUEST_FAILURE: i32 = 2;
 /// Runtime error.
 const EXIT_RUNTIME_ERROR: i32 = 3;
 
-// TODO @kris-nova Once we have built out more client logic and we are confident this module is "good enough" come remove unwrap() statements
-
 /// Instance of a single client for an Aurae consumer.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuraeClient {
     /// The channel used for gRPC connections before encryption is handled.
+    #[serde(skip)]
     pub channel: Option<Channel>,
+    #[serde(skip)]
     x509: Option<X509Certificate>,
     x509_details: Option<X509Details>,
 }
@@ -101,24 +99,6 @@ impl AuraeClient {
         });
         self.x509 = Some(x.x509);
         Ok(())
-    }
-
-    /// Initialize a new instance of the runtime subsystem.
-    pub fn runtime(&mut self)  {
-    }
-
-    /// Convenience method for identifying the current service or client.
-    pub fn info(&mut self) -> X509Details {
-        let x = self.x509_details.as_ref();
-        match x {
-            Some(r) => r.clone(),
-            None => X509Details {
-                subject_common_name: "-".to_string(),
-                issuer_common_name: "-".to_string(),
-                sha256_fingerprint: "-".to_string(),
-                key_algorithm: "-".to_string(),
-            },
-        }
     }
 }
 
