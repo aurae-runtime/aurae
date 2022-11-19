@@ -191,14 +191,15 @@ impl AuraedRuntime {
 
         let mut opt =
             ConnectOptions::new("sqlite:/var/lib/aurae.db".to_owned());
-        let _unused_opt = opt.sqlx_logging(false).sqlcipher_key(Cow::from(
-            format!("{:?}", db_key.to_ascii_lowercase()),
-        ));
+        let _ = opt.sqlx_logging(false).sqlcipher_key(Cow::from(format!(
+            "{:?}",
+            db_key.to_ascii_lowercase()
+        )));
 
         // Pragma initial connection
         // TODO add sqlcipher_key
         let mut opt = ConnectOptions::new("sqlite::memory:".to_owned());
-        let _unused_opt = opt.sqlx_logging(false);
+        let _ = opt.sqlx_logging(false);
         let db = Database::connect(opt).await?;
         let x = db
             .execute(Statement::from_string(
@@ -227,7 +228,7 @@ fn command_from_string(cmd: &str) -> Result<Command, anyhow::Error> {
     let mut command = Command::new(base);
     for ent in entries {
         if ent != base {
-            let _unused_command = command.arg(ent);
+            let _ = command.arg(ent);
         }
     }
     Ok(command)

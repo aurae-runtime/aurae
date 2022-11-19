@@ -38,6 +38,7 @@ use ::libc;
 pub(crate) fn syscall_reboot(action: i32) {
     unsafe {
         if libc::reboot(action) != 0 {
+            // TODO: handle this better
             panic!("failed to reboot");
         }
     }
@@ -91,7 +92,7 @@ pub(crate) fn spawn_thread_power_button_listener(
     let event_size = mem::size_of::<InputEvent>();
 
     let power_btn_device = power_btn_device_path.as_ref().to_owned();
-    let _unused_join_handle = std::thread::spawn(move || {
+    let _ = std::thread::spawn(move || {
         loop {
             let event_slice = unsafe {
                 slice::from_raw_parts_mut(to_u8_ptr(&mut event), event_size)
