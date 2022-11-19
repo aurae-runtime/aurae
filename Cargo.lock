@@ -152,6 +152,7 @@ dependencies = [
  "tokio",
  "toml",
  "tonic",
+ "tonic-build",
  "tower",
  "x509-certificate",
 ]

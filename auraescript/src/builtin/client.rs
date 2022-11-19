@@ -33,8 +33,7 @@
 //! Manages authenticating with remove Aurae instances, as well as searching
 //! the local filesystem for configuration and authentication material.
 
-use crate::codes::*;
-use crate::config::*;
+use crate::builtin::config::*;
 use crate::runtime::*;
 
 use anyhow::{Context, Result};

@@ -51,24 +51,26 @@
 #![allow(clippy::extra_unused_lifetimes)]
 //#![warn(missing_docs)]
 
+pub mod builtin;
+pub mod runtime;
+
 use anyhow::anyhow;
 use deno_core::*;
 
 // --[ Main Standard Library Functions ]--
 
 #[op]
-fn ae_connect() -> Result<(), deno_core::error::AnyError> {
+fn ae_connect() -> Result<(), error::AnyError> {
     // Left off here
     // We need to get connect() working with X509 certs
     // and our new changes!
     // Start here, and remember to move pub mod builtin up!
-    //pub mod builtin;
-    //connect();
+    connect();
     Ok(())
 }
 
 #[op]
-fn ae_about() -> Result<(), deno_core::error::AnyError> {
+fn ae_about() -> Result<(), error::AnyError> {
     println!("About...");
     Ok(())
 }
