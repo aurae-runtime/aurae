@@ -70,6 +70,12 @@ fn generate_grpc_code() -> Result<()> {
             message,
             "#[allow(clippy::derive_partial_eq_without_eq)]",
         );
+        tonic_builder = tonic_builder.type_attribute(
+            message,
+            "#[derive(::serde::Serialize, ::serde::Deserialize)]",
+        );
+        tonic_builder =
+            tonic_builder.type_attribute(message, "#[serde(default)]");
     }
 
     tonic_builder.build_server(false).compile(

@@ -34,17 +34,10 @@ print(client);
 
 let cell = {
     name: "Example Cell",
-    cpu: 2,
+    cpus: "2",
 };
 
 let cells = cellService();
 cells.allocate(cell);
 // cells.start(cell);
 // cells.stop(cell);
-
-
-
-// runtime.cellService.allocate(cell);
-
-
-
