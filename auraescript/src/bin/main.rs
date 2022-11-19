@@ -46,7 +46,8 @@
         unused_extern_crates,
         unused_import_braces,
         unused_qualifications,
-        // TODO: unused_results
+        // TODO: enable this once we're out of the rhai game.
+        // unused_results
         )]
 #![warn(clippy::unwrap_used)]
 

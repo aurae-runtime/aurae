@@ -78,7 +78,7 @@ impl Observe for ObserveService {
 
         // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
         //  .. thus disabled logging here.
-        tokio::spawn(async move {
+        let _ = tokio::spawn(async move {
             // Log consumer will error if:
             //  the producer is closed (no more logs)
             //  the receiver is lagging

@@ -48,7 +48,7 @@
         unused_extern_crates,
         unused_import_braces,
         unused_qualifications,
-        // TODO: unused_results
+        unused_results
         )]
 
 use proc_macro::TokenStream;

@@ -73,7 +73,7 @@ pub(crate) struct Network(Handle);
 impl Network {
     pub(crate) fn connect() -> Result<Network, NetworkError> {
         let (connection, handle, _) = rtnetlink::new_connection()?;
-        tokio::spawn(connection);
+        let _ = tokio::spawn(connection);
         Ok(Self(handle))
     }
 
@@ -319,7 +319,7 @@ async fn get_links(
     'outer: while let Some(link_msg) = links.try_next().await? {
         for nla in link_msg.nlas.into_iter() {
             if let Nla::IfName(name) = nla {
-                result.insert(link_msg.header.index, name);
+                let _ = result.insert(link_msg.header.index, name);
                 continue 'outer;
             }
         }
