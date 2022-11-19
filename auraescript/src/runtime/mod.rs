@@ -30,13 +30,13 @@
 
 tonic::include_proto!("runtime");
 
-macros::client_wrapper!(
-    CellService,
-    allocate(AllocateCellRequest) -> AllocateCellResponse,
-    free(FreeCellRequest) -> FreeCellResponse,
-    start(StartCellRequest) -> StartCellResponse,
-    stop(StopCellRequest) -> StopCellResponse,
-);
+// macros::client_wrapper!(
+//     CellService,
+//     allocate(AllocateCellRequest) -> AllocateCellResponse,
+//     free(FreeCellRequest) -> FreeCellResponse,
+//     start(StartCellRequest) -> StartCellResponse,
+//     stop(StopCellRequest) -> StopCellResponse,
+// );
 
 // pub fn cmd(cmd: &str) -> Executable {
 //     Executable { command: cmd.to_string(), ..Executable::default() }

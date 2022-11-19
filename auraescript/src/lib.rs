@@ -56,6 +56,7 @@ pub mod runtime;
 
 use anyhow::anyhow;
 use deno_core::*;
+use crate::builtin::client::connect;
 
 // --[ Main Standard Library Functions ]--
 
@@ -65,6 +66,7 @@ fn ae_connect() -> Result<(), error::AnyError> {
     // We need to get connect() working with X509 certs
     // and our new changes!
     // Start here, and remember to move pub mod builtin up!
+    //connect();
     connect();
     Ok(())
 }

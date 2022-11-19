@@ -33,8 +33,10 @@
 //! Manages authenticating with remove Aurae instances, as well as searching
 //! the local filesystem for configuration and authentication material.
 
+#![allow(dead_code)]
+
 use crate::builtin::config::*;
-use crate::runtime::*;
+//use crate::runtime::*;
 
 use anyhow::{Context, Result};
 // use macros::Output;
@@ -47,6 +49,12 @@ use tower::service_fn;
 use x509_certificate::certificate::*;
 
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
+/// Connection failed.
+const EXIT_CONNECT_FAILURE: i32 = 1;
+/// Request failed.
+const EXIT_REQUEST_FAILURE: i32 = 2;
+/// Runtime error.
+const EXIT_RUNTIME_ERROR: i32 = 3;
 
 // TODO @kris-nova Once we have built out more client logic and we are confident this module is "good enough" come remove unwrap() statements
 
@@ -96,8 +104,7 @@ impl AuraeClient {
     }
 
     /// Initialize a new instance of the runtime subsystem.
-    pub fn runtime(&mut self) -> CellService {
-        CellService::new()
+    pub fn runtime(&mut self)  {
     }
 
     /// Convenience method for identifying the current service or client.
