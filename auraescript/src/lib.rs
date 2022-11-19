@@ -54,32 +54,21 @@
 pub mod builtin;
 pub mod runtime;
 
-use anyhow::anyhow;
-use deno_core::*;
 use crate::builtin::client::connect;
+use deno_core::*;
 
 // --[ Main Standard Library Functions ]--
 
 #[op]
-fn ae_connect() -> Result<(), error::AnyError> {
-    // Left off here
-    // We need to get connect() working with X509 certs
-    // and our new changes!
-    // Start here, and remember to move pub mod builtin up!
-    //connect();
-    connect();
-    Ok(())
+fn ae_connect() -> Result<String, error::AnyError> {
+    let mut client = connect();
+    let resp = serde_json::to_string_pretty(&client.info());
+    Ok(resp.unwrap_or("{}".parse()?))
 }
 
 #[op]
-fn ae_about() -> Result<(), error::AnyError> {
-    println!("About...");
-    Ok(())
-}
-
-#[op]
-fn op_example_error() -> Result<(), deno_core::error::AnyError> {
-    Err(anyhow!("Example error: {}", "value"))
+fn ae_cell_service() -> Result<String, error::AnyError> {
+    Ok("".parse()?)
 }
 
 // --[ Preloader ]--
@@ -98,7 +87,8 @@ fn middleware_intercept(decl: OpDecl) -> OpDecl {
 // All new functionality must go through here.
 pub fn register_stdlib() -> Extension {
     let ext = Extension::builder()
-        .ops(vec![ae_connect::decl(), ae_about::decl()])
+        // Standard Operations
+        .ops(vec![ae_connect::decl(), ae_cell_service::decl()])
         .middleware(middleware_intercept)
         .build();
     ext

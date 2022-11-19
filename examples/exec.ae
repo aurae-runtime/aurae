@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -28,25 +29,15 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-function print(value) {
-  Deno.core.print(value.toString()+"\n");
-}
+let details = connect();
+print(details);
 
-function connect() {
-  return Deno.core.ops.ae_connect();
-}
+let cell = {
+    name: "Example Cell",
+    cpu: 2,
+};
 
-function cellService() {
-  return Deno.core.ops.ae_cell_service();
-}
+// runtime.cellService.allocate(cell);
 
-//function exampleFunc(beeps, boops, meeps) {
-//  // Define desired object
-//  var obj = {
-//    meeps:  meeps,
-//    beeps: beeps,
-//    boops: boops
-//  };
-//  // Return it
-//  return obj;
-//}
+
+
