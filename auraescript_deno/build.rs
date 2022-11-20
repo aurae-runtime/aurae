@@ -33,10 +33,19 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn main() -> Result<()> {
+    let out_dir = match std::env::var("CARGO_MANIFEST_DIR") {
+        Ok(out_dir) => {
+            let mut out_dir = PathBuf::from(out_dir);
+            out_dir.push("lib");
+            out_dir
+        }
+        _ => PathBuf::from("lib"),
+    };
+
     println!("cargo:rerun-if-changed=\"src\"");
+    println!("cargo:rerun-if-changed=\"{:?}\"", out_dir);
 
-    let out_dir = PathBuf::from("./lib");
-
+    // https://github.com/stephenh/ts-proto
     match Command::new("npm").args(["install", "ts-proto"]).status()?.code() {
         Some(0) => {}
         _ => {
@@ -49,7 +58,7 @@ fn main() -> Result<()> {
     let proto_message_files = ["../api/v0/runtime.proto"];
 
     for file in proto_message_files {
-        println!("cargo:rerun-if-changed=\"{out_dir:?}\"");
+        println!("cargo:rerun-if-changed=\"{file}\"");
 
         let status = Command::new("protoc")
             .args([
