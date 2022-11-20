@@ -1,3 +1,3 @@
 [workspace]
 
-members = ["auraescript", "auraescript/macros", "auraed"]
+members = ["auraescript", "auraescript/macros", "auraed", "auraescript_deno", "auraescript_deno_macros"]
