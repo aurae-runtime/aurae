@@ -37,7 +37,15 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
     ts_funcs.push('}');
 
     let ts_path = {
-        let mut out_dir = PathBuf::from("./auraescript_deno/lib");
+        let mut out_dir = match std::env::var("CARGO_MANIFEST_DIR") {
+            Ok(out_dir) => {
+                let mut out_dir = PathBuf::from(out_dir);
+                out_dir.push("lib");
+                out_dir
+            }
+            _ => PathBuf::from("lib"),
+        };
+
         out_dir.push(format!("{module}.ts"));
         out_dir
     };

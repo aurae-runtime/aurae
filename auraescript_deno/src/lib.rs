@@ -30,6 +30,7 @@ fn stdlib() -> Vec<OpDecl> {
     ops
 }
 
+// From: https://github.com/denoland/deno/blob/main/core/examples/ts_module_loader.rs
 struct TypescriptModuleLoader;
 
 impl ModuleLoader for TypescriptModuleLoader {
