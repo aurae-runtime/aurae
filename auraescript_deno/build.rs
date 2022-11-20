@@ -49,10 +49,7 @@ fn main() -> Result<()> {
     let proto_message_files = ["../api/v0/runtime.proto"];
 
     for file in proto_message_files {
-        let mut out_path = out_dir.clone();
-        out_path.push(file.replace(".proto", ".ts"));
-
-        println!("cargo:rerun-if-changed=\"{out_path:?}\"");
+        println!("cargo:rerun-if-changed=\"{out_dir:?}\"");
 
         let status = Command::new("protoc")
             .args([
@@ -69,7 +66,7 @@ fn main() -> Result<()> {
             Some(0) => {}
             _ => {
                 return Err(anyhow!(
-                    "Failed to generate Typescript file '{out_path:?}'"
+                    "Failed to generate Typescript file for proto '{file}'"
                 ))
             }
         }
