@@ -33,11 +33,10 @@
 //! AuraeScript has a small amount of magic with regard to authentication and
 //! managing the client and requests, responses, and output.
 //!
-//! Most of the built in logic that makes AuraeScript useful to an end-user
+//! Most of the built-in logic that makes AuraeScript useful to an end-user
 //! lives in this module.
 
 pub mod client;
-pub mod codes;
 pub mod config;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
