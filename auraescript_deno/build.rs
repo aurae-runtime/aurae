@@ -28,26 +28,33 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::path::PathBuf;
 use std::process::Command;
 
 fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=\"src\"");
 
-    // let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let out_dir = PathBuf::from("./lib");
 
-    Command::new("npm").args(["install", "ts-proto"]).status()?;
+    match Command::new("npm").args(["install", "ts-proto"]).status()?.code() {
+        Some(0) => {}
+        _ => {
+            return Err(anyhow!(
+                "Command `npm install ts-proto` failed. Is npm installed?"
+            ));
+        }
+    }
 
     let proto_message_files = ["../api/v0/runtime.proto"];
 
     for file in proto_message_files {
         let mut out_path = out_dir.clone();
         out_path.push(file.replace(".proto", ".ts"));
-        let _ = std::fs::remove_file(out_path);
 
-        Command::new("protoc")
+        println!("cargo:rerun-if-changed=\"{out_path:?}\"");
+
+        let status = Command::new("protoc")
             .args([
                 "--plugin=./node_modules/.bin/protoc-gen-ts_proto",
                 &format!("--ts_proto_out={}", out_dir.display()),
@@ -57,6 +64,15 @@ fn main() -> Result<()> {
                 file,
             ])
             .status()?;
+
+        match status.code() {
+            Some(0) => {}
+            _ => {
+                return Err(anyhow!(
+                    "Failed to generate Typescript file '{out_path:?}'"
+                ))
+            }
+        }
     }
 
     generate_grpc_code()?;
