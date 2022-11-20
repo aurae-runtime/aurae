@@ -92,7 +92,7 @@ fn generate_grpc_code() -> Result<()> {
     // Generated services use unwrap. Add them here to suppress the warning.
     for service in ["observe", "runtime", "schedule"] {
         tonic_builder =
-            tonic_builder.server_attribute(service, "#[allow(missing_docs)]");
+            tonic_builder.client_attribute(service, "#[allow(missing_docs)]");
     }
 
     // Add proto messages here to add `#[derive(::serde::Serialize, ::serde::Deserialize)]` to the type.

@@ -39,11 +39,14 @@
 pub mod client;
 pub mod config;
 
+#[allow(dead_code)]
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+#[allow(dead_code)]
 const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 
 /// Show meta information about AuraeScript.
-pub fn about() {
+#[allow(dead_code)]
+fn about() {
     println!("\n");
     println!("Aurae. Distributed Runtime.");
     println!("Authors: {}", AUTHORS);
@@ -52,6 +55,7 @@ pub fn about() {
 }
 
 /// Show version information.
-pub fn version() {
+#[allow(dead_code)]
+fn version() {
     println!("Version: {}", VERSION);
 }

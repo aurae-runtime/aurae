@@ -161,11 +161,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "auraescript_deno"
+name = "auraescript"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "auraescript_deno_macros",
+ "auraescript_macros",
  "deno_ast",
  "deno_core",
  "prost",
@@ -179,7 +179,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "auraescript_deno_macros"
+name = "auraescript_macros"
 version = "0.1.0"
 dependencies = [
  "heck 0.4.0",
