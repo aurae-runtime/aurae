@@ -38,7 +38,7 @@ function to_string(value) {
         !Array.isArray(value) &&
         value !== null
     ){
-        return JSON.stringify(value, null, 2);
+        return JSON.stringify(value, null, 2)+"\n";
     }else {
         return value.toString()+"\n";
     }

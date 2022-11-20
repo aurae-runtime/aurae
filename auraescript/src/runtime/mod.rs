@@ -28,20 +28,53 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::new_client;
+use crate::runtime::cell_service_client::CellServiceClient;
 tonic::include_proto!("runtime");
 
-// macros::client_wrapper!(
-//     CellService,
-//     allocate(AllocateCellRequest) -> AllocateCellResponse,
-//     free(FreeCellRequest) -> FreeCellResponse,
-//     start(StartCellRequest) -> StartCellResponse,
-//     stop(StopCellRequest) -> StopCellResponse,
-// );
+#[derive(Debug, Clone)]
+pub struct CellService {}
 
-// pub fn cmd(cmd: &str) -> Executable {
-//     Executable { command: cmd.to_string(), ..Executable::default() }
-// }
-//
-// pub fn exec(x: &str) -> ExecutableStatus {
-//     Core::new().run_executable(cmd(x))
-// }
+impl Default for CellService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CellService {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub fn free(
+        &mut self,
+        _req: FreeCellRequest,
+    ) -> anyhow::Result<FreeCellResponse> {
+        todo!()
+    }
+
+    pub fn stop(
+        &mut self,
+        _req: StopCellRequest,
+    ) -> anyhow::Result<StopCellResponse> {
+        todo!()
+    }
+
+    pub fn start(
+        &mut self,
+        _req: StartCellRequest,
+    ) -> anyhow::Result<StartCellResponse> {
+        todo!()
+    }
+
+    pub fn allocate(
+        &mut self,
+        req: AllocateCellRequest,
+    ) -> anyhow::Result<AllocateCellResponse> {
+        let rt = tokio::runtime::Runtime::new().expect("runtime");
+        let client = rt.block_on(new_client()).expect("new client");
+        let mut service = CellServiceClient::new(client.channel);
+        let res = rt.block_on(service.allocate(req))?;
+        Ok(res.into_inner())
+    }
+}

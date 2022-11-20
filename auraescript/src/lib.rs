@@ -54,7 +54,7 @@
 pub mod builtin;
 pub mod runtime;
 use crate::builtin::client::*;
-use crate::runtime::Cell;
+use crate::runtime::*;
 use deno_core::*;
 
 // --[ Main Standard Library Functions ]--
@@ -68,9 +68,10 @@ fn ae_connect() -> Result<AuraeClient, error::AnyError> {
 #[op]
 fn ae_runtime_cell_service_allocate(
     cell: Cell,
-) -> Result<String, error::AnyError> {
-    println!("{:?}", cell);
-    Ok("".parse()?)
+) -> Result<AllocateCellResponse, error::AnyError> {
+    let req = AllocateCellRequest { cell: Some(cell) };
+    let mut svc = CellService::new();
+    svc.allocate(req)
 }
 
 #[op]
