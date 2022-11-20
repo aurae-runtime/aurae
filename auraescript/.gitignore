@@ -1,0 +1,3 @@
+lib/*
+!lib/.gitkeep
+node_modules/*

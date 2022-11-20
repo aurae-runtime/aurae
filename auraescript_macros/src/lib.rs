@@ -1,4 +1,3 @@
-#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -29,19 +28,41 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//   Example ~/.aurae/config (TOML)
+// The project prefers .expect("reason") instead of .unwrap() so we fail
+// on any .unwrap() statements in the code.
+#![warn(clippy::unwrap_used)]
+// Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
+#![warn(future_incompatible, nonstandard_style, unused)]
+#![warn(
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    unconditional_recursion,
+    unused_comparisons,
+    while_true
+)]
+#![warn(missing_debug_implementations,
+        // TODO: missing_docs,
+        trivial_casts,
+        trivial_numeric_casts,
+        unused_extern_crates,
+        unused_import_braces,
+        unused_qualifications,
+        // TODO: unused_results
+        )]
 
-//   [auth]
-//   ca_crt = "/home/nova/.aurae/pki/ca.crt"
-//   client_crt = "/home/nova/.aurae/pki/_signed.client.nova.crt"
-//   client_key = "/home/nova/.aurae/pki/client.nova.key"
-//
-//   [system]
-//   socket = "/var/run/aurae/aurae.sock"
+use proc_macro::TokenStream;
 
-let aurae = connect();
-aurae.info().json();
+mod ops;
 
-
-
-
+/// # Example:
+/// ```ignore
+/// macros::ops_generator!(
+///     ServiceName,
+///     snake_case_rpc_name(RequestMessageName) -> ResponseMessageName,
+///     other(OtherRequest) -> OtherResponse
+/// );
+#[proc_macro]
+pub fn ops_generator(input: TokenStream) -> TokenStream {
+    ops::ops_generator(input)
+}
