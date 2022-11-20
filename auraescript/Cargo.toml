@@ -2,7 +2,7 @@
 name = "auraescript"
 version = "0.1.0"
 edition = "2021"
-thors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
+authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
 
 [[bin]]
 name = "auraescript"
