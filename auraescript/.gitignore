@@ -1,4 +1,5 @@
 lib/*
 !lib/.gitkeep
+!lib/temp/
 !lib/temp/.gitkeep
 node_modules/*
