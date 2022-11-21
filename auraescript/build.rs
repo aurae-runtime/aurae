@@ -36,10 +36,10 @@ fn main() -> Result<()> {
     let out_dir = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(out_dir) => {
             let mut out_dir = PathBuf::from(out_dir);
-            out_dir.push("lib");
+            out_dir.push("lib/temp");
             out_dir
         }
-        _ => PathBuf::from("lib"),
+        _ => PathBuf::from("lib/temp"),
     };
 
     println!("cargo:rerun-if-changed=\"src\"");
