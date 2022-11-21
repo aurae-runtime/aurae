@@ -14,7 +14,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
         parse_macro_input!(input as OpsGeneratorInput);
 
     let mut ts_funcs: String =
-        format!("export class {name}Client implements CellService {{");
+        format!("export class {name}Client implements {name} {{");
     for FunctionInput { name: fn_name, arg, returns } in functions.iter() {
         let op_name = format!(
             "ae__{module}__{}__{}",
