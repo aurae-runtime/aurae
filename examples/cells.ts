@@ -29,8 +29,27 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+// TODO Add this to the "standard library" somehow
+function print(value) {
+    Deno.core.print(to_string(value));
+}
+
+// TODO Add this to the "standard library" somehow
+function to_string(value) {
+    if (
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        value !== null
+    ){
+        return JSON.stringify(value, null, 2)+"\n";
+    }else {
+        return value.toString()+"\n";
+    }
+}
+
 // @ts-ignore
 import {print} from "../auraescript/gen/helpers.ts";
+
 // @ts-ignore
 import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
 
@@ -43,4 +62,16 @@ cells.allocate(<AllocateCellRequest>{
     })
 }).then(r => {
     print("done")
+});
+let cell = <AllocateCellRequest>{
+    cell: Cell.fromPartial({
+        name: "test",
+        cpus: "2"
+    })};
+
+cells.Allocate(cell).then(r => {
+    print(r);
+    cells.Free(<FreeCellRequest>{
+        id: r.id,
+    }).then(r => print(r));
 });

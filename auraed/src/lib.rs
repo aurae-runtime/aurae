@@ -67,17 +67,21 @@ use anyhow::anyhow;
 use anyhow::Context;
 use log::*;
 use logging::log_channel::LogChannel;
+use logging::logchannel::LogChannel;
 use sea_orm::ConnectOptions;
 use sea_orm::ConnectionTrait;
 use sea_orm::Database;
 use sea_orm::Statement;
 use std::borrow::Cow;
+use std::collections::hash_map::DefaultHasher;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
+use std::time::SystemTime;
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
@@ -148,7 +152,6 @@ impl AuraedRuntime {
                 )
             })?;
         let server_key = tokio::fs::read(&self.server_key).await?;
-        let db_key = server_key.clone();
         let server_identity = Identity::from_pem(server_crt, server_key);
         info!("Register Server SSL Identity");
 
@@ -185,30 +188,6 @@ impl AuraedRuntime {
         fs::set_permissions(&self.socket, fs::Permissions::from_mode(0o766))?;
         info!("User Access Socket Created: {}", self.socket.display());
 
-        // SQLite
-        info!("Database Location:  /var/lib/aurae.db");
-        info!("Unlocking SQLite Database with Key: {:?}", self.server_key);
-
-        let mut opt =
-            ConnectOptions::new("sqlite:/var/lib/aurae.db".to_owned());
-        let _ = opt.sqlx_logging(false).sqlcipher_key(Cow::from(format!(
-            "{:?}",
-            db_key.to_ascii_lowercase()
-        )));
-
-        // Pragma initial connection
-        // TODO add sqlcipher_key
-        let mut opt = ConnectOptions::new("sqlite::memory:".to_owned());
-        let _ = opt.sqlx_logging(false);
-        let db = Database::connect(opt).await?;
-        let x = db
-            .execute(Statement::from_string(
-                db.get_database_backend(),
-                "PRAGMA database_list;".to_string(),
-            ))
-            .await?;
-        info!("Initializing: SQLite: {:?}", x);
-
         // Event loop
         handle.await??;
         info!("gRPC server exited successfully");
@@ -232,6 +211,40 @@ fn command_from_string(cmd: &str) -> Result<Command, anyhow::Error> {
         }
     }
     Ok(command)
+}
+
+#[derive(Hash)]
+struct CellID {
+    base: String,
+    command: String,
+    timestamp: SystemTime,
+}
+
+/// A nondeterminstic function used to create a unique ID from a cell name.
+/// The same cell name will produce a unique ID based on the time it was
+/// created.
+fn cell_name_from_string(command: &str) -> Result<String, anyhow::Error> {
+    let now = SystemTime::now();
+    let mut entries = command.split(' ');
+    let base = match entries.next() {
+        Some(base) => base,
+        None => {
+            return Err(anyhow!("empty base command string"));
+        }
+    };
+    let c = CellID {
+        base: base.to_string(),
+        command: command.to_string(),
+        timestamp: now,
+    };
+    let val = format!("{}-{:?}", base, cell_hash(&c));
+    Ok(val)
+}
+
+fn cell_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
 }
 
 #[cfg(test)]
