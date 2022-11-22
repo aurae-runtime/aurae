@@ -39,14 +39,13 @@
     while_true
 )]
 #![warn(missing_debug_implementations,
-// TODO: missing_docs,
-trivial_casts,
-trivial_numeric_casts,
-unused_extern_crates,
-unused_import_braces,
-unused_qualifications,
-// TODO: enable this once we're out of the rhai game.
-// unused_results
+    // TODO: missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications,
+    unused_results
 )]
 #![warn(clippy::unwrap_used)]
 
