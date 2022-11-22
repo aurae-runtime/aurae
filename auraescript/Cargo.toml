@@ -12,7 +12,7 @@ path = "src/bin/main.rs"
 anyhow = "1.0.66"
 deno_ast = { version = "0.21.0", features = ["transpiling"] }
 deno_core = "0.160.0"
-macros = { package = "auraescript_macros", path = "../auraescript_macros" }
+macros = { package = "auraescript_macros", path = "./macros" }
 prost = "0.11.2"
 serde = "1.0.147"
 tokio = { version = "1.22.0", features = ["fs", "rt-multi-thread"] }
