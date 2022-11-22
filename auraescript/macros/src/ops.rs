@@ -9,6 +9,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{parenthesized, parse_macro_input, Token, Type};
 
+#[allow(clippy::format_push_string)]
+
 pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
     let OpsGeneratorInput { module, name, functions } =
         parse_macro_input!(input as OpsGeneratorInput);
