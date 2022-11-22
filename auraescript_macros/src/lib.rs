@@ -58,6 +58,7 @@ mod ops;
 /// # Example:
 /// ```ignore
 /// macros::ops_generator!(
+///     module_name,
 ///     ServiceName,
 ///     snake_case_rpc_name(RequestMessageName) -> ResponseMessageName,
 ///     other(OtherRequest) -> OtherResponse

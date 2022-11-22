@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::{quote, ToTokens};
 use std::fs::OpenOptions;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::PathBuf;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
@@ -14,7 +14,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
         parse_macro_input!(input as OpsGeneratorInput);
 
     let mut ts_funcs: String =
-        format!("export class {name}Client implements CellService {{");
+        format!("export class {name}Client implements {name} {{");
     for FunctionInput { name: fn_name, arg, returns } in functions.iter() {
         let op_name = format!(
             "ae__{module}__{}__{}",
@@ -36,27 +36,55 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
     }
     ts_funcs.push('}');
 
-    let ts_path = {
-        let mut out_dir = match std::env::var("CARGO_MANIFEST_DIR") {
-            Ok(out_dir) => {
-                let mut out_dir = PathBuf::from(out_dir);
-                out_dir.push("lib");
-                out_dir
-            }
-            _ => PathBuf::from("lib"),
-        };
+    let lib_dir = match std::env::var("CARGO_MANIFEST_DIR") {
+        Ok(out_dir) => {
+            let mut out_dir = PathBuf::from(out_dir);
+            out_dir.push("lib");
+            out_dir
+        }
+        _ => PathBuf::from("lib"),
+    };
 
+    let ts_path = {
+        let mut out_dir = lib_dir.clone();
+        out_dir.push(format!("temp/{module}.ts"));
+        out_dir
+    };
+
+    let mut ts = OpenOptions::new()
+        .read(true)
+        .open(ts_path.clone())
+        .unwrap_or_else(|_| panic!("build.rs should generate {ts_path:?}"));
+
+    let mut ts_contents = {
+        let mut contents = String::new();
+        match ts.read_to_string(&mut contents) {
+            Ok(0) => panic!("{ts_path:?} is empty"),
+            Err(e) => panic!("Failed to read {ts_path:?}: {e}"),
+            _ => {}
+        };
+        contents
+    };
+
+    ts_contents.push_str(&ts_funcs);
+
+    let ts_path = {
+        let mut out_dir = lib_dir;
         out_dir.push(format!("{module}.ts"));
         out_dir
     };
 
     let mut ts = OpenOptions::new()
-        .append(true)
+        .write(true)
+        .truncate(true)
+        .create(true)
         .open(ts_path.clone())
-        .unwrap_or_else(|_| panic!("build.rs should generate {ts_path:?}"));
+        .unwrap_or_else(|_| {
+            panic!("Attempt to create or overwrite {ts_path:?}")
+        });
 
-    write!(ts, "{ts_funcs}")
-        .unwrap_or_else(|_| panic!("Could not write to {module}.ts"));
+    write!(ts, "{ts_contents}")
+        .unwrap_or_else(|_| panic!("Could not write to {ts_path:?}"));
 
     let client_namespace = Ident::new(
         &format!("{}_client", name.to_string().to_snake_case()),
