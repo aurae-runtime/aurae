@@ -3,6 +3,7 @@ name = "auraescript"
 version = "0.1.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
+license = "Apache-2.0"
 
 [[bin]]
 name = "auraescript"
@@ -10,6 +11,7 @@ path = "src/bin/main.rs"
 
 [dependencies]
 anyhow = "1.0.66"
+aurae-proto = { path = "../aurae-proto", version = "0.1.0" }
 deno_ast = { version = "0.21.0", features = ["transpiling"] }
 deno_core = "0.160.0"
 macros = { package = "auraescript_macros", path = "./macros" }
@@ -20,7 +22,3 @@ tonic = { version = "0.8.2", features = ["tls"] }
 tower = "0.4.13"
 x509-certificate = "0.15.0"
 toml = "0.5.9"
-
-[build-dependencies]
-anyhow = "1.0.66"
-tonic-build = "0.8.2"

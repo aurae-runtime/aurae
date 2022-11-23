@@ -29,40 +29,16 @@
 # ---------------------------------------------------------------------------- #
 
 [package]
-name = "auraed"
+name = "aurae-proto"
 version = "0.1.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
+license = "Apache-2.0"
 
-[[bin]]
-name = "auraed"
-path = "src/bin/main.rs"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.1.20", features = ["derive"] }
-log = "0.4.17"
-multi_log = "0.1.2"
-simplelog = "0.12.0"
-syslog = "6.0.1"
-tonic = { version = "0.8", features = ["tls"] }
-prost = "0.11"
-tokio-stream = { version = "0.1", features = ["net", "sync"] }
-tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
-futures = "0.3.23"
-h2 = "0.3.13"
-rustls = "0.20.6"
-anyhow = "1.0.65"
-libc = "0.2"
-walkdir = "2"
-sea-orm = { version = "^0.9.0", features = [
-  "sqlx-sqlite",
-  "runtime-tokio-rustls",
-  "macros",
-] }
-ipnetwork = "0.20.0"
-rtnetlink = "0.11.0"
-netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
-thiserror = "1.0.37"
-libcontainer     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
-liboci-cli     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
-aurae-proto = { path = "../aurae-proto", version="0.1.0" }
+pbjson = "0.5.1"
+prost = "0.11.2"
+serde = "1.0.147"
+tonic = "0.8.2"

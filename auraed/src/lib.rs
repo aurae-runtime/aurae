@@ -83,8 +83,8 @@ use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 
 // Cells
-use crate::runtime::cell_service_server::CellServiceServer;
 use crate::runtime::CellService;
+use aurae_proto::runtime::cell_service_server::CellServiceServer;
 
 pub mod init;
 pub mod logging;

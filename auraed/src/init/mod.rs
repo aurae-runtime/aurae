@@ -39,7 +39,7 @@ use crate::init::{
     network::NetworkError,
     system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
 };
-use crate::observe::LogItem;
+use aurae_proto::observe::LogItem;
 use log::Level;
 use tokio::sync::broadcast::Sender;
 

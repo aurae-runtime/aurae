@@ -41,22 +41,22 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
     let lib_dir = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(out_dir) => {
             let mut out_dir = PathBuf::from(out_dir);
-            out_dir.push("lib");
+            out_dir.push("gen");
             out_dir
         }
-        _ => PathBuf::from("lib"),
+        _ => PathBuf::from("gen"),
     };
 
     let ts_path = {
         let mut out_dir = lib_dir.clone();
-        out_dir.push(format!("temp/{module}.ts"));
+        out_dir.push(format!("v0/{module}.ts"));
         out_dir
     };
 
-    let mut ts = OpenOptions::new()
-        .read(true)
-        .open(ts_path.clone())
-        .unwrap_or_else(|_| panic!("build.rs should generate {ts_path:?}"));
+    let mut ts =
+        OpenOptions::new().read(true).open(ts_path.clone()).unwrap_or_else(
+            |_| panic!("protoc output should generate {ts_path:?}"),
+        );
 
     let mut ts_contents = {
         let mut contents = String::new();

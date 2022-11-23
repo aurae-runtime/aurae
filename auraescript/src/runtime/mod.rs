@@ -1,4 +1,4 @@
-tonic::include_proto!("runtime");
+use aurae_proto::runtime::*;
 
 macros::ops_generator!(
     runtime,

@@ -28,58 +28,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use anyhow::Result;
-//use std::process::Command;
+//! Generated Protobuf definitions for the Aurae Standard Library
 
-fn main() -> Result<()> {
-    // Example running "make command" during the build
-    //Command::new("make").args(&["command"]).status().unwrap();
+#![allow(clippy::derive_partial_eq_without_eq)]
+#![allow(clippy::match_single_binding)]
 
-    generate_grpc_code()?;
-
-    Ok(())
+pub mod observe {
+    include!("gen/observe.rs");
 }
 
-fn generate_grpc_code() -> Result<()> {
-    let mut tonic_builder = tonic_build::configure();
+pub mod runtime {
+    include!("gen/runtime.rs");
+}
 
-    // Generated services use unwrap. Add them here to suppress the warning.
-    for service in ["observe", "runtime", "schedule"] {
-        tonic_builder = tonic_builder
-            .server_mod_attribute(service, "#[allow(clippy::unwrap_used)]")
-            .server_mod_attribute(
-                service,
-                "#[allow(clippy::match_single_binding)]",
-            );
-    }
-
-    // Types generated from proto messages derive PartialEq without Eq. Add them here to suppress the warning.
-    for message in [
-        "runtime.Cell",
-        "runtime.Executable",
-        "runtime.ExecutableReference",
-        "runtime.AllocateCellRequest",
-        "runtime.AllocateCellResponse",
-        "runtime.FreeCellRequest",
-        "runtime.FreeCellResponse",
-        "runtime.StartCellRequest",
-        "runtime.StartCellResponse",
-        "runtime.StopCellRequest",
-        "runtime.StopCellResponse",
-        "observe.GetAuraeDaemonLogStreamRequest",
-        "observe.GetSubProcessStreamRequest",
-        "observe.LogItem",
-    ] {
-        tonic_builder = tonic_builder.type_attribute(
-            message,
-            "#[allow(clippy::derive_partial_eq_without_eq)]",
-        )
-    }
-
-    tonic_builder.compile(
-        &["../api/v0/runtime.proto", "../api/v0/observe.proto"],
-        &["../api/v0/"],
-    )?;
-
-    Ok(())
+pub mod schedule {
+    include!("gen/schedule.rs");
 }

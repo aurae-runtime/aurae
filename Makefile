@@ -124,6 +124,14 @@ clean-auraescript:
 clean-auraed:
 	cd auraed && make clean
 
+.PHONY: proto
+proto: ## Generate code from protobuf schemas
+	buf generate -v api
+
+.PHONY: proto-lint
+proto-lint: ## Lint protobuf schemas
+	buf lint api
+
 .PHONY: clean
 clean: clean-certs
 	@cargo clean
