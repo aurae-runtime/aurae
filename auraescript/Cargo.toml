@@ -3,6 +3,7 @@ name = "auraescript"
 version = "0.1.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
+license = "Apache-2.0"
 
 [[bin]]
 name = "auraescript"
