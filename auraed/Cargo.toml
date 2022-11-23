@@ -65,8 +65,4 @@ netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::
 thiserror = "1.0.37"
 libcontainer     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
 liboci-cli     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
-
-
-[build-dependencies]
-anyhow = "1.0.65"
-tonic-build = "0.8"
+aurae-proto = { path = "../aurae-proto", version="0.1.0" }

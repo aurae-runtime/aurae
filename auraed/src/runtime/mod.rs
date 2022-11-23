@@ -29,8 +29,12 @@
 \* -------------------------------------------------------------------------- */
 
 #![allow(dead_code)]
-tonic::include_proto!("runtime");
 
+use aurae_proto::runtime::{
+    cell_service_server, AllocateCellRequest, AllocateCellResponse,
+    FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
+    StopCellRequest, StopCellResponse,
+};
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default, Clone)]

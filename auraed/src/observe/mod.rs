@@ -31,10 +31,11 @@
 // @todo @krisnova remove this once logging is futher along
 #![allow(dead_code)]
 
-tonic::include_proto!("observe");
-
-use crate::observe::observe_server::Observe;
 use crate::LogChannel;
+use aurae_proto::observe::{
+    observe_server::Observe, GetAuraeDaemonLogStreamRequest,
+    GetSubProcessStreamRequest, LogItem,
+};
 use log::info;
 use std::sync::Arc;
 use tokio::sync::broadcast::Receiver;

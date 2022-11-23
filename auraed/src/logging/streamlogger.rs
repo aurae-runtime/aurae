@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::observe::LogItem;
+use aurae_proto::observe::LogItem;
 use log::Log;
 use tokio::sync::broadcast::Sender;
 

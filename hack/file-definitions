@@ -63,4 +63,4 @@ SOURCES=$(find . \( \
 ### Rust Sources
 RUSTSOURCES=$(find . \( \
   -iname '*.rs' \
-    \) -not -path '*/ignore/*')
+    \) -not -path '*/ignore/*' -not -path -'*/gen/*')
