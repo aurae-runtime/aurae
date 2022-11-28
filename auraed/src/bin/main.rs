@@ -49,7 +49,7 @@
         unused_results
         )]
 
-use auraed::{logging::logchannel::LogChannel, *};
+use auraed::{logging::log_channel::LogChannel, *};
 use clap::Parser;
 use log::*;
 use std::path::PathBuf;
