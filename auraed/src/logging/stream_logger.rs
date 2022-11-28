@@ -53,7 +53,8 @@ impl Log for StreamLogger {
     }
 
     fn log(&self, record: &log::Record) {
-        match self.producer.send(LogItem {
+        // send returns an Err if there are no receivers. We ignore that.
+        let _ = self.producer.send(LogItem {
             channel: "rust-logs".to_string(),
             line: format!(
                 "{}:{} -- {}",
@@ -62,12 +63,7 @@ impl Log for StreamLogger {
                 record.args()
             ),
             timestamp: 0,
-        }) {
-            Ok(_) => {}
-            Err(e) => {
-                println!("Failed to log message. Error: {:?}", e);
-            }
-        }
+        });
     }
 
     fn flush(&self) {}

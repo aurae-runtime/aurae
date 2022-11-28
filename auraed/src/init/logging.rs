@@ -1,4 +1,4 @@
-use crate::logging::streamlogger::StreamLogger;
+use crate::logging::stream_logger::StreamLogger;
 use aurae_proto::observe::LogItem;
 use log::{Level, SetLoggerError};
 use simplelog::SimpleLogger;

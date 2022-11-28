@@ -66,7 +66,7 @@
 use anyhow::anyhow;
 use anyhow::Context;
 use log::*;
-use logging::logchannel::LogChannel;
+use logging::log_channel::LogChannel;
 use sea_orm::ConnectOptions;
 use sea_orm::ConnectionTrait;
 use sea_orm::Database;
