@@ -34,12 +34,9 @@ import {print} from "../auraescript/gen/helpers.ts";
 // @ts-ignore
 import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
 
-// @ts-ignore
-Deno.core.initializeAsyncOps();
-
 let cells = new CellServiceClient();
 
-cells.Allocate(<AllocateCellRequest>{
+cells.allocate(<AllocateCellRequest>{
     cell: Cell.fromPartial({
         name: "test",
         cpus: "2"

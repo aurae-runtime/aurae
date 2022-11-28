@@ -63,6 +63,8 @@ fn main() -> anyhow::Result<()> {
 
     let mut js_runtime = init();
 
+    let _ = js_runtime.execute_script("", "Deno.core.initializeAsyncOps();")?;
+
     let main_module = resolve_path(&args[1].clone())?;
 
     let future = async move {
