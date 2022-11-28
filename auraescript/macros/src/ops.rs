@@ -140,7 +140,7 @@ fn typescript_generator(input: &OpsGeneratorInput) {
 
     ts_funcs.push('}');
 
-    let lib_dir = match std::env::var("CARGO_MANIFEST_DIR") {
+    let gen_dir = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(out_dir) => {
             let mut out_dir = PathBuf::from(out_dir);
             out_dir.push("gen");
@@ -150,7 +150,7 @@ fn typescript_generator(input: &OpsGeneratorInput) {
     };
 
     let ts_path = {
-        let mut out_dir = lib_dir.clone();
+        let mut out_dir = gen_dir.clone();
         out_dir.push(format!("v0/{module}.ts"));
         out_dir
     };
@@ -173,7 +173,7 @@ fn typescript_generator(input: &OpsGeneratorInput) {
     ts_contents.push_str(&ts_funcs);
 
     let ts_path = {
-        let mut out_dir = lib_dir;
+        let mut out_dir = gen_dir;
         out_dir.push(format!("{module}.ts"));
         out_dir
     };

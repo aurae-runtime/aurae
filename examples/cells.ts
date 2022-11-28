@@ -30,7 +30,8 @@
 \* -------------------------------------------------------------------------- */
 
 // @ts-ignore
-import {print} from "../auraescript/helpers.ts";
+import {print} from "../auraescript/gen/helpers.ts";
+// @ts-ignore
 import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
 
 // @ts-ignore
