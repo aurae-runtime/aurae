@@ -30,6 +30,7 @@
 \* -------------------------------------------------------------------------- */
 
 // @ts-ignore
+import {print} from "../auraescript/helpers.ts";
 import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
 
 // @ts-ignore
@@ -43,6 +44,5 @@ cells.Allocate(<AllocateCellRequest>{
         cpus: "2"
     })
 }).then(r => {
-    // @ts-ignore
-    Deno.core.print("done")
+    print("done")
 });
