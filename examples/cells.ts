@@ -30,7 +30,7 @@
 \* -------------------------------------------------------------------------- */
 
 // @ts-ignore
-import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/lib/runtime.ts";
+import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
 
 // @ts-ignore
 Deno.core.initializeAsyncOps();
