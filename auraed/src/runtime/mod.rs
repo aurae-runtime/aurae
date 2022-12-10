@@ -66,9 +66,7 @@ impl cell_service_server::CellService for CellService {
         let cell = r.cell.expect("cell");
         let id = cell_name_from_string(&cell.name)
             .expect("cell name hash calculation");
-
         let cgroup = create_cgroup(&id, cell.cpu_shares).expect("create");
-
         info!("CellService: allocate() id={:?}", id);
         Ok(Response::new(AllocateCellResponse { id, cgroup_v2: cgroup.v2() }))
     }
@@ -81,9 +79,7 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let id = r.id;
         info!("CellService: free() id={:?}", id);
-
         remove_cgroup(&id).expect("remove");
-
         Ok(Response::new(FreeCellResponse {}))
     }
 

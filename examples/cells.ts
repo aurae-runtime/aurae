@@ -38,17 +38,10 @@ import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
 
-cells.allocate(<runtime.AllocateCellRequest>{
-    cell: runtime.Cell.fromPartial({
-        name: "test",
-        cpus: "2"
-    })
-}).then(_r => helpers.print("done"));
-
 // Define Cell
 let cell = <runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
-        name: "test",
+        name: "my-cgroup",
         cpus: "2"
     })};
 
