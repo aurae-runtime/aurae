@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-// @todo @krisnova remove this once logging is futher along
+// @todo @krisnova remove this once logging is further along
 #![allow(dead_code)]
 
 use crate::LogChannel;
