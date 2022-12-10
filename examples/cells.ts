@@ -1,6 +1,4 @@
 #!/usr/bin/env auraescript
-/// <reference path="../auraescript/gen/helpers.ts" />
-/// <reference path="../auraescript/gen/runtime.ts" />
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -30,46 +28,118 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-
-// @ts-ignore
 import * as helpers from "../auraescript/gen/helpers.ts";
-// @ts-ignore
 import * as runtime from "../auraescript/gen/runtime.ts";
+
 
 let cells = new runtime.CellServiceClient();
 
-// Define Cell
-let cell = <runtime.AllocateCellRequest>{
+// [ Allocate ]
+let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
         name: "my-cell",
         cpus: "2"
-    })};
-
-// Allocate cell
-cells.allocate(cell).then(r => {
-    helpers.print(r);
-    let cell_name = r.cell_name;
-
-    // Start executable within a cell
-    cells.start(<runtime.StartCellRequest>{
-        executable: runtime.Executable.fromPartial({
-            name: "fstab-reader",
-            command: "cat /etc/fstab",
-            description: "Used to read the current filesystem tab (fstab) from disk.",
-            cellName: "my-cell",
-        })
-    }).then(r =>  {
-        helpers.print(r)
-        // Stop executable within a cell
-        cells.stop(<runtime.StopCellRequest>{
-            cellName: "my-cell",
-            executableName: "fstab-reader",
-        }).then(r => helpers.print(r));
-    });
-
-
-    // Free cell
-    cells.free(<runtime.FreeCellRequest>{
-        cell_name: cell_name,
-    }).then(r => helpers.print(r));
+    })
 });
+helpers.print(allocated)
+
+
+// [ Start ]
+let started = await cells.start(<runtime.StartCellRequest>{
+    executable: runtime.Executable.fromPartial({
+        cellName: "my-cell",
+        command: "sleep 45",
+        description: "Read the filesystem tab file.",
+        name: "cat-fstab"
+    })
+})
+helpers.print(started)
+
+
+// [ Stop ]
+let stopped = await cells.stop(<runtime.StopCellRequest>{
+    cellName: "my-cell",
+    executableName: "cat-fstab",
+})
+helpers.print(stopped)
+
+
+// [ Free ]
+// let freed = await cells.free(<runtime.FreeCellRequest>{
+//     cellName: "my-cell"
+// });
+// helpers.print(freed)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // @ts-ignore
+// import * as helpers from "../auraescript/gen/helpers.ts";
+// // @ts-ignore
+// import * as runtime from "../auraescript/gen/runtime.ts";
+//
+// let cells = new runtime.CellServiceClient();
+//
+// // Define Cell
+// let cell = <runtime.AllocateCellRequest>{
+//     cell: runtime.Cell.fromPartial({
+//         name: "my-cell",
+//         cpus: "2"
+//     })};
+//
+// // Allocate cell
+// cells.allocate(cell).then(r => {
+//     helpers.print(r);
+//     let cell_name = r.cell_name;
+//
+//     // Start executable within a cell
+//     cells.start(<runtime.StartCellRequest>{
+//         executable: runtime.Executable.fromPartial({
+//             name: "fstab-reader",
+//             command: "cat /etc/fstab",
+//             description: "Used to read the current filesystem tab (fstab) from disk.",
+//             cellName: "my-cell",
+//         })
+//     }).then(r =>  {
+//         helpers.print(r)
+//         // Stop executable within a cell
+//         cells.stop(<runtime.StopCellRequest>{
+//             cellName: "my-cell",
+//             executableName: "fstab-reader",
+//         }).then(r => helpers.print(r));
+//     });
+//
+//
+//     // Free cell
+//     cells.free(<runtime.FreeCellRequest>{
+//         cell_name: cell_name,
+//     }).then(r => helpers.print(r));
+// });

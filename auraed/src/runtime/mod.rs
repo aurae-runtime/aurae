@@ -30,7 +30,7 @@
 
 #![allow(dead_code)]
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
@@ -40,6 +40,7 @@ use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
 use log::{error, info};
 use std::io;
+use std::process::Command;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default, Clone)]
@@ -89,8 +90,20 @@ impl cell_service_server::CellService for CellService {
         request: Request<StartCellRequest>,
     ) -> Result<Response<StartCellResponse>, Status> {
         let r = request.into_inner();
-        let cell_name = r.executable.expect("executable").cell_name;
+        let exe = r.executable.expect("executable");
+        let cell_name = exe.cell_name;
+        let cgroup =
+            Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
+
+        // Start process
         info!("CellService: start() cell_name={:?}", cell_name);
+        let mut cmd =
+            command_from_string(&exe.command).expect("command from string");
+
+        let child = cmd.spawn().expect("spawning command");
+        let cgroup_pid = CgroupPid::from(&child);
+        cgroup.add_task(cgroup_pid).expect("adding executable to cell");
+        // TODO Buffer stdout/stderr
         Ok(Response::new(StartCellResponse {}))
     }
 
@@ -105,13 +118,24 @@ impl cell_service_server::CellService for CellService {
             "CellService: stop() cell_name={:?} executable_name={:?}",
             cell_name, executable_name
         );
+
+        // TODO find pid from cgroup
+
+        // 1. Find pid from cgroup.procs
+        //    /sys/fs/cgroup/<name>/cgroup.procs
+        //    These pids are \n delimited
+
+        // 2. Get process cmdline (exe) from pid from procfs()
+
+        // 3. Find the matching "base" name from
+
         Ok(Response::new(StopCellResponse {}))
     }
 }
 
 // Here is where we define the "default" cgroup parameters for Aurae cells
 fn create_cgroup(id: &str, cpu_shares: u64) -> Result<Cgroup, Error> {
-    let hierarchy = hierarchies::auto(); // v1/v2 cgroup switch automatically
+    let hierarchy = hierarchy();
     let cgroup: Cgroup = CgroupBuilder::new(id)
         .cpu()
         .shares(cpu_shares) // Use 10% of the CPU relative to other cgroups
@@ -135,6 +159,30 @@ fn remove_cgroup(id: &str) -> Result<(), Error> {
     } else {
         Ok(())
     }
+}
+
+fn hierarchy() -> Box<dyn Hierarchy> {
+    hierarchies::auto() // v1/v2 cgroup switch automatically
+}
+
+/// A deterministic function used to take an arbitrary shell string and attempt
+/// to convert to a Command which can be .spawn()'ed later.
+fn command_from_string(cmd: &str) -> Result<Command, Error> {
+    let mut entries = cmd.split(' ');
+    let base = match entries.next() {
+        Some(base) => base,
+        None => {
+            return Err(anyhow!("empty base command string"));
+        }
+    };
+
+    let mut command = Command::new(base);
+    for ent in entries {
+        if ent != base {
+            command.arg(ent);
+        }
+    }
+    Ok(command)
 }
 
 #[cfg(test)]

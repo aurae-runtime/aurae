@@ -73,7 +73,6 @@ use std::hash::{Hash, Hasher};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::net::UnixListener;
@@ -190,23 +189,6 @@ impl AuraedRuntime {
     }
 }
 
-fn command_from_string(cmd: &str) -> Result<Command, anyhow::Error> {
-    let mut entries = cmd.split(' ');
-    let base = match entries.next() {
-        Some(base) => base,
-        None => {
-            return Err(anyhow!("empty base command string"));
-        }
-    };
-    let mut command = Command::new(base);
-    for ent in entries {
-        if ent != base {
-            let _ = command.arg(ent);
-        }
-    }
-    Ok(command)
-}
-
 #[derive(Hash)]
 struct CellID {
     base: String,
@@ -214,7 +196,7 @@ struct CellID {
     timestamp: SystemTime,
 }
 
-/// A nondeterminstic function used to create a unique ID from a cell name.
+/// A nondeterministic function used to create a unique ID from a cell name.
 /// The same cell name will produce a unique ID based on the time it was
 /// created.
 fn cell_name_from_string(command: &str) -> Result<String, anyhow::Error> {
