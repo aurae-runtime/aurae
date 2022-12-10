@@ -30,19 +30,17 @@
 \* -------------------------------------------------------------------------- */
 
 // @ts-ignore
-import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
-
+import {print} from "../auraescript/gen/helpers.ts";
 // @ts-ignore
-Deno.core.initializeAsyncOps();
+import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
 
 let cells = new CellServiceClient();
 
-cells.Allocate(<AllocateCellRequest>{
+cells.allocate(<AllocateCellRequest>{
     cell: Cell.fromPartial({
         name: "test",
         cpus: "2"
     })
 }).then(r => {
-    // @ts-ignore
-    Deno.core.print("done")
+    print("done")
 });

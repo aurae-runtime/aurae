@@ -21,3 +21,4 @@ plugins:
     opt:
       - outputEncodeMethods=false
       - outputClientImpl=false
+      - lowerCaseServiceMethods=true

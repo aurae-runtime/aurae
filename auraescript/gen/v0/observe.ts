@@ -130,9 +130,9 @@ export const LogItem = {
 
 export interface Observe {
   /** request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ). */
-  GetAuraeDaemonLogStream(request: GetAuraeDaemonLogStreamRequest): Observable<LogItem>;
+  getAuraeDaemonLogStream(request: GetAuraeDaemonLogStreamRequest): Observable<LogItem>;
   /** TODO: request log stream for a sub process */
-  GetSubProcessStream(request: GetSubProcessStreamRequest): Observable<LogItem>;
+  getSubProcessStream(request: GetSubProcessStreamRequest): Observable<LogItem>;
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;

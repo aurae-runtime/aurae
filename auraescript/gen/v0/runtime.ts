@@ -400,19 +400,19 @@ export interface CellService {
    * / Reserve requested system resources for a new cell.
    * / For cells specifically this will allocate and reserve cgroup resources only.
    */
-  Allocate(request: AllocateCellRequest): Promise<AllocateCellResponse>;
+  allocate(request: AllocateCellRequest): Promise<AllocateCellResponse>;
   /** / Free up previously requested resources for an existing cell */
-  Free(request: FreeCellRequest): Promise<FreeCellResponse>;
+  free(request: FreeCellRequest): Promise<FreeCellResponse>;
   /**
    * / Start a new Executable inside of an existing cell. Can be called
    * / in serial to start more than one executable in the same cell.
    */
-  Start(request: StartCellRequest): Promise<StartCellResponse>;
+  start(request: StartCellRequest): Promise<StartCellResponse>;
   /**
    * / Stop one or more Executables inside of an existing cell.
    * / Can be called in serial to stop/retry more than one executable.
    */
-  Stop(request: StopCellRequest): Promise<StopCellResponse>;
+  stop(request: StopCellRequest): Promise<StopCellResponse>;
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;

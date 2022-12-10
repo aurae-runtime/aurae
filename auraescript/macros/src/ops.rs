@@ -1,4 +1,4 @@
-use heck::{ToSnakeCase, ToUpperCamelCase};
+use heck::{ToLowerCamelCase, ToSnakeCase};
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::{quote, ToTokens};
@@ -12,81 +12,11 @@ use syn::{parenthesized, parse_macro_input, Token, Type};
 #[allow(clippy::format_push_string)]
 
 pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
-    let OpsGeneratorInput { module, name, functions } =
-        parse_macro_input!(input as OpsGeneratorInput);
+    let input = parse_macro_input!(input as OpsGeneratorInput);
 
-    let mut ts_funcs: String =
-        format!("export class {name}Client implements {name} {{");
-    for FunctionInput { name: fn_name, arg, returns } in functions.iter() {
-        let op_name = format!(
-            "ae__{module}__{}__{}",
-            name.to_string().to_snake_case(),
-            fn_name.to_string().to_snake_case()
-        );
+    typescript_generator(&input);
 
-        let fn_name = fn_name.to_string().to_upper_camel_case();
-        let arg = arg.to_token_stream().to_string();
-        let returns = returns.to_token_stream().to_string();
-        ts_funcs.push_str(&format!(
-            r#"
-{fn_name}(request: {arg}): Promise<{returns}> {{
-    // @ts-ignore
-    return Deno.core.ops.{op_name}(request);
-}}      
-        "#
-        ));
-    }
-    ts_funcs.push('}');
-
-    let lib_dir = match std::env::var("CARGO_MANIFEST_DIR") {
-        Ok(out_dir) => {
-            let mut out_dir = PathBuf::from(out_dir);
-            out_dir.push("gen");
-            out_dir
-        }
-        _ => PathBuf::from("gen"),
-    };
-
-    let ts_path = {
-        let mut out_dir = lib_dir.clone();
-        out_dir.push(format!("v0/{module}.ts"));
-        out_dir
-    };
-
-    let mut ts =
-        OpenOptions::new().read(true).open(ts_path.clone()).unwrap_or_else(
-            |_| panic!("protoc output should generate {ts_path:?}"),
-        );
-
-    let mut ts_contents = {
-        let mut contents = String::new();
-        match ts.read_to_string(&mut contents) {
-            Ok(0) => panic!("{ts_path:?} is empty"),
-            Err(e) => panic!("Failed to read {ts_path:?}: {e}"),
-            _ => {}
-        };
-        contents
-    };
-
-    ts_contents.push_str(&ts_funcs);
-
-    let ts_path = {
-        let mut out_dir = lib_dir;
-        out_dir.push(format!("{module}.ts"));
-        out_dir
-    };
-
-    let mut ts = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(ts_path.clone())
-        .unwrap_or_else(|_| {
-            panic!("Attempt to create or overwrite {ts_path:?}")
-        });
-
-    write!(ts, "{ts_contents}")
-        .unwrap_or_else(|_| panic!("Could not write to {ts_path:?}"));
+    let OpsGeneratorInput { module, name, functions } = input;
 
     let client_namespace = Ident::new(
         &format!("{}_client", name.to_string().to_snake_case()),
@@ -180,4 +110,83 @@ impl Parse for FunctionInput {
 
         Ok(Self { name, arg, returns })
     }
+}
+
+fn typescript_generator(input: &OpsGeneratorInput) {
+    let OpsGeneratorInput { module, name, functions } = input;
+
+    let mut ts_funcs: String =
+        format!("export class {name}Client implements {name} {{");
+
+    for FunctionInput { name: fn_name, arg, returns } in functions.iter() {
+        let op_name = format!(
+            "ae__{module}__{}__{}",
+            name.to_string().to_snake_case(),
+            fn_name.to_string().to_snake_case()
+        );
+
+        let fn_name = fn_name.to_string().to_lower_camel_case();
+        let arg = arg.to_token_stream().to_string();
+        let returns = returns.to_token_stream().to_string();
+        ts_funcs.push_str(&format!(
+            r#"
+{fn_name}(request: {arg}): Promise<{returns}> {{
+    // @ts-ignore
+    return Deno.core.ops.{op_name}(request);
+}}      
+        "#
+        ));
+    }
+
+    ts_funcs.push('}');
+
+    let gen_dir = match std::env::var("CARGO_MANIFEST_DIR") {
+        Ok(out_dir) => {
+            let mut out_dir = PathBuf::from(out_dir);
+            out_dir.push("gen");
+            out_dir
+        }
+        _ => PathBuf::from("gen"),
+    };
+
+    let ts_path = {
+        let mut out_dir = gen_dir.clone();
+        out_dir.push(format!("v0/{module}.ts"));
+        out_dir
+    };
+
+    let mut ts =
+        OpenOptions::new().read(true).open(ts_path.clone()).unwrap_or_else(
+            |_| panic!("protoc output should generate {ts_path:?}"),
+        );
+
+    let mut ts_contents = {
+        let mut contents = String::new();
+        match ts.read_to_string(&mut contents) {
+            Ok(0) => panic!("{ts_path:?} is empty"),
+            Err(e) => panic!("Failed to read {ts_path:?}: {e}"),
+            _ => {}
+        };
+        contents
+    };
+
+    ts_contents.push_str(&ts_funcs);
+
+    let ts_path = {
+        let mut out_dir = gen_dir;
+        out_dir.push(format!("{module}.ts"));
+        out_dir
+    };
+
+    let mut ts = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open(ts_path.clone())
+        .unwrap_or_else(|_| {
+            panic!("Failed to create or overwrite {ts_path:?}")
+        });
+
+    write!(ts, "{ts_contents}")
+        .unwrap_or_else(|_| panic!("Could not write to {ts_path:?}"));
 }
