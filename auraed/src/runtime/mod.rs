@@ -31,6 +31,7 @@
 #![allow(dead_code)]
 
 use crate::cell_name_from_string;
+use anyhow::Error;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
@@ -66,14 +67,7 @@ impl cell_service_server::CellService for CellService {
         let id = cell_name_from_string(&cell.name)
             .expect("cell name hash calculation");
 
-        // Create the cgroup for the cell
-        let hierarchy = hierarchies::auto(); // v1/v2 cgroup switch automatically
-
-        let cgroup: Cgroup = CgroupBuilder::new(&id)
-            .cpu()
-            .shares(cell.cpu_shares) // Use 10% of the CPU relative to other cgroups
-            .done()
-            .build(hierarchy);
+        let cgroup = create_cgroup(&id, cell.cpu_shares).expect("create");
 
         info!("CellService: allocate() id={:?}", id);
         Ok(Response::new(AllocateCellResponse { id, cgroup_v2: cgroup.v2() }))
@@ -87,11 +81,9 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let id = r.id;
         info!("CellService: free() id={:?}", id);
-        // TODO Nova knows that remove_dir_all() will not actually remove the cgroups
-        if let Err(e) = remove_dir_all(format!("/sys/fs/cgroup/{}", id)) {
-            println!("{:?}", e);
-            todo!();
-        }
+
+        remove_cgroup(&id).expect("remove");
+
         Ok(Response::new(FreeCellResponse {}))
     }
 
@@ -107,5 +99,35 @@ impl cell_service_server::CellService for CellService {
         _request: Request<StopCellRequest>,
     ) -> Result<Response<StopCellResponse>, Status> {
         todo!()
+    }
+}
+
+// Here is where we define the "default" cgroup parameters for Aurae cells
+fn create_cgroup(id: &str, cpu_shares: u64) -> Result<Cgroup, Error> {
+    let hierarchy = hierarchies::auto(); // v1/v2 cgroup switch automatically
+    let cgroup: Cgroup = CgroupBuilder::new(&id)
+        .cpu()
+        .shares(cpu_shares) // Use 10% of the CPU relative to other cgroups
+        .done()
+        .build(hierarchy);
+    Ok(cgroup)
+}
+
+fn remove_cgroup(id: &str) -> Result<(), Error> {
+    // TODO Here is what we are testing!
+    remove_dir_all(format!("/sys/fs/cgroup/{}", id))?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_remove_cgroup() {
+        let id = cell_name_from_string("testing_aurae").expect("name");
+        let cgroup = create_cgroup(&id, 2).expect("create");
+        println!("Created cgroup: {}", id);
+        remove_cgroup(&id).expect("remove");
     }
 }

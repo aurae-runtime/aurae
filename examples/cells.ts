@@ -1,4 +1,6 @@
 #!/usr/bin/env auraescript
+/// <reference path="../auraescript/gen/helpers.ts" />
+/// <reference path="../auraescript/gen/runtime.ts" />
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -29,49 +31,32 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-// TODO Add this to the "standard library" somehow
-function print(value) {
-    Deno.core.print(to_string(value));
-}
-
-// TODO Add this to the "standard library" somehow
-function to_string(value) {
-    if (
-        typeof value === 'object' &&
-        !Array.isArray(value) &&
-        value !== null
-    ){
-        return JSON.stringify(value, null, 2)+"\n";
-    }else {
-        return value.toString()+"\n";
-    }
-}
-
 // @ts-ignore
-import {print} from "../auraescript/gen/helpers.ts";
-
+import * as helpers from "../auraescript/gen/helpers.ts";
 // @ts-ignore
-import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
+import * as runtime from "../auraescript/gen/runtime.ts";
 
-let cells = new CellServiceClient();
+let cells = new runtime.CellServiceClient();
 
-cells.allocate(<AllocateCellRequest>{
-    cell: Cell.fromPartial({
+cells.allocate(<runtime.AllocateCellRequest>{
+    cell: runtime.Cell.fromPartial({
         name: "test",
         cpus: "2"
     })
-}).then(r => {
-    print("done")
-});
-let cell = <AllocateCellRequest>{
-    cell: Cell.fromPartial({
+}).then(_r => helpers.print("done"));
+
+// Define Cell
+let cell = <runtime.AllocateCellRequest>{
+    cell: runtime.Cell.fromPartial({
         name: "test",
         cpus: "2"
     })};
 
-cells.Allocate(cell).then(r => {
-    print(r);
-    cells.Free(<FreeCellRequest>{
+// Allocate cell
+cells.allocate(cell).then(r => {
+    helpers.print(r);
+    // Free cell
+    cells.free(<runtime.FreeCellRequest>{
         id: r.id,
-    }).then(r => print(r));
+    }).then(r => helpers.print(r));
 });
