@@ -36,7 +36,7 @@ cargo         =  cargo
 # Configuration Options
 export GIT_PAGER = cat
 
-default: compile install
+default: proto compile install
 all: compile install
 
 compile: auraescript auraed ## Compile for the local architecture ⚙
@@ -58,12 +58,12 @@ release: ## Build and install (release) 🎉
 	@$(cargo) install --path ./auraed
 
 .PHONY: auraescript
-auraescript: proto ## Initialize and compile aurae
+auraescript: ## Initialize and compile aurae
 	@$(cargo) clippy -p auraescript
 	@$(cargo) install --path ./auraescript --debug --force
 
 .PHONY: auraed
-auraed: proto ## Initialize and compile auraed
+auraed: ## Initialize and compile auraed
 	@$(cargo) clippy -p auraed
 	@$(cargo) install --path ./auraed --debug --force
 
@@ -124,6 +124,7 @@ clean-auraed:
 
 .PHONY: proto
 proto: ## Generate code from protobuf schemas
+	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
 	buf generate -v api
 
 .PHONY: proto-lint
