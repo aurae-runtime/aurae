@@ -30,7 +30,6 @@
 
 #![allow(dead_code)]
 
-use crate::cell_name_from_string;
 use anyhow::Error;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
@@ -64,11 +63,13 @@ impl cell_service_server::CellService for CellService {
         // Initialize the cell
         let r = request.into_inner();
         let cell = r.cell.expect("cell");
-        let id = cell_name_from_string(&cell.name)
-            .expect("cell name hash calculation");
-        let cgroup = create_cgroup(&id, cell.cpu_shares).expect("create");
-        info!("CellService: allocate() id={:?}", id);
-        Ok(Response::new(AllocateCellResponse { id, cgroup_v2: cgroup.v2() }))
+        let cell_name = &cell.name;
+        let cgroup = create_cgroup(cell_name, cell.cpu_shares).expect("create");
+        info!("CellService: allocate() cell_name={:?}", cell_name);
+        Ok(Response::new(AllocateCellResponse {
+            cell_name: cell_name.to_string(),
+            cgroup_v2: cgroup.v2(),
+        }))
     }
 
     async fn free(
@@ -77,31 +78,41 @@ impl cell_service_server::CellService for CellService {
     ) -> Result<Response<FreeCellResponse>, Status> {
         // Initialize the cell
         let r = request.into_inner();
-        let id = r.id;
-        info!("CellService: free() id={:?}", id);
-        remove_cgroup(&id).expect("remove");
+        let cell_name = r.cell_name;
+        info!("CellService: free() cell_name={:?}", cell_name);
+        remove_cgroup(&cell_name).expect("remove");
         Ok(Response::new(FreeCellResponse {}))
     }
 
     async fn start(
         &self,
-        _request: Request<StartCellRequest>,
+        request: Request<StartCellRequest>,
     ) -> Result<Response<StartCellResponse>, Status> {
-        todo!()
+        let r = request.into_inner();
+        let cell_name = r.executable.expect("executable").cell_name;
+        info!("CellService: start() cell_name={:?}", cell_name);
+        Ok(Response::new(StartCellResponse {}))
     }
 
     async fn stop(
         &self,
-        _request: Request<StopCellRequest>,
+        request: Request<StopCellRequest>,
     ) -> Result<Response<StopCellResponse>, Status> {
-        todo!()
+        let r = request.into_inner();
+        let cell_name = r.cell_name;
+        let executable_name = r.executable_name;
+        info!(
+            "CellService: stop() cell_name={:?} executable_name={:?}",
+            cell_name, executable_name
+        );
+        Ok(Response::new(StopCellResponse {}))
     }
 }
 
 // Here is where we define the "default" cgroup parameters for Aurae cells
 fn create_cgroup(id: &str, cpu_shares: u64) -> Result<Cgroup, Error> {
     let hierarchy = hierarchies::auto(); // v1/v2 cgroup switch automatically
-    let cgroup: Cgroup = CgroupBuilder::new(&id)
+    let cgroup: Cgroup = CgroupBuilder::new(id)
         .cpu()
         .shares(cpu_shares) // Use 10% of the CPU relative to other cgroups
         .done()
@@ -132,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_create_remove_cgroup() {
-        let id = cell_name_from_string("testing-aurae").expect("name");
+        let id = "testing-aurae";
         let cgroup = create_cgroup(&id, 2).expect("create");
         println!("Created cgroup: {}", id);
         remove_cgroup(&id).expect("remove");

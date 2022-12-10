@@ -10,12 +10,6 @@ export interface Executable {
   cellName: string;
 }
 
-/** / A reference to an executable and it's parent cell. */
-export interface ExecutableReference {
-  cellName: string;
-  executableName: string;
-}
-
 /** / An isolation resource used to divide a system into smaller resource boundaries. */
 export interface Cell {
   /**
@@ -71,7 +65,8 @@ export interface StartCellResponse {
 }
 
 export interface StopCellRequest {
-  executableReference: ExecutableReference | undefined;
+  cellName: string;
+  executableName: string;
 }
 
 export interface StopCellResponse {
@@ -106,33 +101,6 @@ export const Executable = {
     message.command = object.command ?? "";
     message.description = object.description ?? "";
     message.cellName = object.cellName ?? "";
-    return message;
-  },
-};
-
-function createBaseExecutableReference(): ExecutableReference {
-  return { cellName: "", executableName: "" };
-}
-
-export const ExecutableReference = {
-  fromJSON(object: any): ExecutableReference {
-    return {
-      cellName: isSet(object.cellName) ? String(object.cellName) : "",
-      executableName: isSet(object.executableName) ? String(object.executableName) : "",
-    };
-  },
-
-  toJSON(message: ExecutableReference): unknown {
-    const obj: any = {};
-    message.cellName !== undefined && (obj.cellName = message.cellName);
-    message.executableName !== undefined && (obj.executableName = message.executableName);
-    return obj;
-  },
-
-  fromPartial<I extends Exact<DeepPartial<ExecutableReference>, I>>(object: I): ExecutableReference {
-    const message = createBaseExecutableReference();
-    message.cellName = object.cellName ?? "";
-    message.executableName = object.executableName ?? "";
     return message;
   },
 };
@@ -301,31 +269,28 @@ export const StartCellResponse = {
 };
 
 function createBaseStopCellRequest(): StopCellRequest {
-  return { executableReference: undefined };
+  return { cellName: "", executableName: "" };
 }
 
 export const StopCellRequest = {
   fromJSON(object: any): StopCellRequest {
     return {
-      executableReference: isSet(object.executableReference)
-        ? ExecutableReference.fromJSON(object.executableReference)
-        : undefined,
+      cellName: isSet(object.cellName) ? String(object.cellName) : "",
+      executableName: isSet(object.executableName) ? String(object.executableName) : "",
     };
   },
 
   toJSON(message: StopCellRequest): unknown {
     const obj: any = {};
-    message.executableReference !== undefined && (obj.executableReference = message.executableReference
-      ? ExecutableReference.toJSON(message.executableReference)
-      : undefined);
+    message.cellName !== undefined && (obj.cellName = message.cellName);
+    message.executableName !== undefined && (obj.executableName = message.executableName);
     return obj;
   },
 
   fromPartial<I extends Exact<DeepPartial<StopCellRequest>, I>>(object: I): StopCellRequest {
     const message = createBaseStopCellRequest();
-    message.executableReference = (object.executableReference !== undefined && object.executableReference !== null)
-      ? ExecutableReference.fromPartial(object.executableReference)
-      : undefined;
+    message.cellName = object.cellName ?? "";
+    message.executableName = object.executableName ?? "";
     return message;
   },
 };

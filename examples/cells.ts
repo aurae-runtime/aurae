@@ -41,15 +41,35 @@ let cells = new runtime.CellServiceClient();
 // Define Cell
 let cell = <runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
-        name: "my-cgroup",
+        name: "my-cell",
         cpus: "2"
     })};
 
 // Allocate cell
 cells.allocate(cell).then(r => {
     helpers.print(r);
+    let cell_name = r.cell_name;
+
+    // Start executable within a cell
+    cells.start(<runtime.StartCellRequest>{
+        executable: runtime.Executable.fromPartial({
+            name: "fstab-reader",
+            command: "cat /etc/fstab",
+            description: "Used to read the current filesystem tab (fstab) from disk.",
+            cellName: "my-cell",
+        })
+    }).then(r =>  {
+        helpers.print(r)
+        // Stop executable within a cell
+        cells.stop(<runtime.StopCellRequest>{
+            cellName: "my-cell",
+            executableName: "fstab-reader",
+        }).then(r => helpers.print(r));
+    });
+
+
     // Free cell
     cells.free(<runtime.FreeCellRequest>{
-        id: r.id,
+        cell_name: cell_name,
     }).then(r => helpers.print(r));
 });
