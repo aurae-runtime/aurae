@@ -39,8 +39,8 @@ use aurae_proto::runtime::{
 };
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
-use log::info;
-use std::fs::remove_dir_all;
+use log::{error, info};
+use std::io;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default, Clone)]
@@ -114,9 +114,20 @@ fn create_cgroup(id: &str, cpu_shares: u64) -> Result<Cgroup, Error> {
 }
 
 fn remove_cgroup(id: &str) -> Result<(), Error> {
-    // TODO Here is what we are testing!
-    remove_dir_all(format!("/sys/fs/cgroup/{}", id))?;
-    Ok(())
+    // The 'rmdir' command line tool from GNU coreutils calls the rmdir(2)
+    // system call directly using the 'unistd.h' header file.
+
+    // https://docs.rs/libc/latest/libc/fn.rmdir.html
+    let path = std::ffi::CString::new(format!("/sys/fs/cgroup/{}", id))
+        .expect("valid CString");
+    let ret = unsafe { libc::rmdir(path.as_ptr()) };
+    if ret < 0 {
+        let error = io::Error::last_os_error();
+        error!("Failed to remove cgroup ({})", error);
+        Err(Error::from(error))
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -125,7 +136,7 @@ mod tests {
 
     #[test]
     fn test_create_remove_cgroup() {
-        let id = cell_name_from_string("testing_aurae").expect("name");
+        let id = cell_name_from_string("testing-aurae").expect("name");
         let cgroup = create_cgroup(&id, 2).expect("create");
         println!("Created cgroup: {}", id);
         remove_cgroup(&id).expect("remove");
