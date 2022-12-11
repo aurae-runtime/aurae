@@ -81,14 +81,21 @@ impl CellService {
         // TODO: reconcile any executable states in the pids table.
     }
 
-    fn aurae_process_pre_exec(&self, exe: Executable) -> io::Result<()> {
+    fn aurae_process_pre_exec(
+        pids: &PidTable,
+        exe: Executable,
+    ) -> io::Result<()> {
         // Map process to cell
         info!("Pre-exec for process: {}", exe.name);
         let cell_name = &exe.cell_name;
-        let mut pids = self.pids.clone();
+
+        let mut pids = pids.clone();
         pids.write()
             .insert(cell_name.into(), vec![std::process::id()])
             .expect("failed to insert pids into table");
+
+        // just in case
+        drop(pids);
 
         Ok(())
     }
@@ -150,8 +157,12 @@ impl cell_service_server::CellService for CellService {
             command_from_string(&exe.command).expect("command from string");
         // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
 
+        let pids = self.pids.clone();
+
         let post_cmd = unsafe {
-            cmd.pre_exec(|| self.aurae_process_pre_exec(exe_clone.clone()))
+            cmd.pre_exec(move || {
+                CellService::aurae_process_pre_exec(&pids, exe_clone.clone())
+            })
         };
 
         let child = post_cmd.spawn().expect("spawning command");
