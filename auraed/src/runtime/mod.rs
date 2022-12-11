@@ -140,8 +140,9 @@ impl cell_service_server::CellService for CellService {
         // We have a special "pre_exec" process that all Aurae executables are started
         // with.
         // This is how we map names and future features such as ptrace to the process.
+        let mut pids = self.pids.clone();
         let post_cmd =
-            unsafe { cmd.pre_exec(move || aurae_process_pre_exec(&mut self.pids, &exe_clone)) };
+            unsafe { cmd.pre_exec(move || aurae_process_pre_exec(&mut pids, &exe_clone)) };
 
         let child = post_cmd.spawn().expect("spawning command");
 
