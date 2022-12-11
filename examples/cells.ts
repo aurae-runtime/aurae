@@ -48,9 +48,9 @@ helpers.print(allocated)
 let started = await cells.start(<runtime.StartCellRequest>{
     executable: runtime.Executable.fromPartial({
         cellName: "my-cell",
-        command: "sleep 45",
-        description: "Read the filesystem tab file.",
-        name: "cat-fstab"
+        command: "sleep 4000",
+        description: "Sleep for 4000 seconds",
+        name: "sleep-4000"
     })
 })
 helpers.print(started)

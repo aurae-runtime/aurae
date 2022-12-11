@@ -32,14 +32,18 @@
 
 use anyhow::{anyhow, Error};
 use aurae_proto::runtime::{
-    cell_service_server, AllocateCellRequest, AllocateCellResponse,
+    cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
     StopCellRequest, StopCellResponse,
 };
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
 use log::{error, info};
+use std::fs::File;
+use std::fs::OpenOptions;
 use std::io;
+use std::os::unix::io::{AsFd, IntoRawFd, RawFd};
+use std::os::unix::process::CommandExt;
 use std::process::Command;
 use tonic::{Request, Response, Status};
 
@@ -91,6 +95,7 @@ impl cell_service_server::CellService for CellService {
     ) -> Result<Response<StartCellResponse>, Status> {
         let r = request.into_inner();
         let exe = r.executable.expect("executable");
+        let exe_clone = exe.clone();
         let cell_name = exe.cell_name;
         let cgroup =
             Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
@@ -100,7 +105,14 @@ impl cell_service_server::CellService for CellService {
         let mut cmd =
             command_from_string(&exe.command).expect("command from string");
 
-        let child = cmd.spawn().expect("spawning command");
+        // We have a special "pre_exec" process that all Aurae executables are started
+        // with.
+        // This is how we map names and future features such as ptrace to the process.
+        let post_cmd =
+            unsafe { cmd.pre_exec(move || aurae_process_pre_exec(&exe_clone)) };
+
+        let child = post_cmd.spawn().expect("spawning command");
+
         let cgroup_pid = CgroupPid::from(&child);
         cgroup.add_task(cgroup_pid).expect("adding executable to cell");
         // TODO Buffer stdout/stderr
@@ -131,6 +143,23 @@ impl cell_service_server::CellService for CellService {
 
         Ok(Response::new(StopCellResponse {}))
     }
+}
+
+fn aurae_process_pre_exec(exe: &Executable) -> io::Result<()> {
+    // Map process to cell
+    // TODO ptrace
+
+    // TODO Left off here! We are experimenting mapping file descriptors to cells
+    info!("Pre-exec for process: {}", exe.name);
+    let cell_name = &exe.cell_name;
+    let cell_file = format!("/var/run/aurae/cells/{}", cell_name);
+    let file = OpenOptions::new().create(true).open(cell_file).expect("file");
+    let owned_fd = file.as_fd().try_clone_to_owned().expect("fd");
+
+    // let _ = File::create(cell_file.clone()).expect("create cell file"); // TODO only create if not exists
+    // let f = File::open(cell_file.clone()).expect("create cell mapping");
+    // let _: RawFd = f.into_raw_fd();
+    Ok(())
 }
 
 // Here is where we define the "default" cgroup parameters for Aurae cells
@@ -179,7 +208,7 @@ fn command_from_string(cmd: &str) -> Result<Command, Error> {
     let mut command = Command::new(base);
     for ent in entries {
         if ent != base {
-            command.arg(ent);
+            let _ = command.arg(ent);
         }
     }
     Ok(command)

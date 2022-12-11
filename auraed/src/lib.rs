@@ -99,6 +99,8 @@ mod schedule;
 /// a secure multi tenant system.
 pub const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
 
+pub const AURAE_CELLS_DIR: &str = "/var/run/aurae/cells";
+
 /// Each instance of Aurae holds internal state in memory. Below are the
 /// settings which can be configured for a given Aurae daemon instance.
 ///
@@ -129,12 +131,24 @@ impl AuraedRuntime {
         let sock_path = Path::new(&self.socket)
             .parent()
             .ok_or("unable to find socket path")?;
+        // Create socket directory
         tokio::fs::create_dir_all(sock_path).await.with_context(|| {
             format!(
                 "Failed to create directory for socket: {}",
                 self.socket.display()
             )
         })?;
+
+        // Create cells directory
+        // TODO Ensure this is dynamic based on runtime flags
+        tokio::fs::create_dir_all(AURAE_CELLS_DIR).await.with_context(
+            || {
+                format!(
+                    "Failed to create directory for cells: {}",
+                    AURAE_CELLS_DIR
+                )
+            },
+        )?;
         trace!("{:#?}", self);
 
         let server_crt =
