@@ -59,7 +59,7 @@ type PidTable = AcidJson<HashMap<String, Vec<u32>>>;
 
 #[derive(Debug, Clone)]
 pub struct CellService {
-    pids: mut PidTable,
+    pids: PidTable,
 }
 
 impl CellService {
@@ -80,17 +80,6 @@ impl CellService {
         // TODO: reconcile any executable states in the pids table.
     }
 
-    pub fn aurae_process_pre_exec(&self, exe: &Executable) -> io::Result<()> {
-        // Map process to cell
-
-        info!("Pre-exec for process: {}", exe.name);
-        let cell_name = &exe.cell_name;
-        let cell_file = format!("/var/run/aurae/cells/{}", cell_name);
-
-        self.pids.write().insert(cell_file, vec![std::process::id()]);
-
-        Ok(())
-    }
 }
 
 /// ### Mapping cgroup options to the Cell API
@@ -152,7 +141,7 @@ impl cell_service_server::CellService for CellService {
         // with.
         // This is how we map names and future features such as ptrace to the process.
         let post_cmd =
-            unsafe { cmd.pre_exec(move || self.aurae_process_pre_exec(&exe_clone)) };
+            unsafe { cmd.pre_exec(move || aurae_process_pre_exec(&mut self.pids, &exe_clone)) };
 
         let child = post_cmd.spawn().expect("spawning command");
 
@@ -186,6 +175,18 @@ impl cell_service_server::CellService for CellService {
 
         Ok(Response::new(StopCellResponse {}))
     }
+}
+
+pub fn aurae_process_pre_exec(pids: &mut PidTable, exe: &Executable) -> io::Result<()> {
+    // Map process to cell
+
+    info!("Pre-exec for process: {}", exe.name);
+    let cell_name = &exe.cell_name;
+    let cell_file = format!("/var/run/aurae/cells/{}", cell_name);
+
+    pids.write().insert(cell_file, vec![std::process::id()]);
+
+    Ok(())
 }
 
 // Here is where we define the "default" cgroup parameters for Aurae cells
