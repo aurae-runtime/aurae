@@ -74,12 +74,12 @@ impl CellService {
         }
 
         CellService {
-            pids: AcidJson::open(root.as_path()).expect("unable to open pidtable"),
+            pids: AcidJson::open(root.as_path())
+                .expect("unable to open pidtable"),
         }
 
         // TODO: reconcile any executable states in the pids table.
     }
-
 }
 
 /// ### Mapping cgroup options to the Cell API
@@ -141,8 +141,9 @@ impl cell_service_server::CellService for CellService {
         // with.
         // This is how we map names and future features such as ptrace to the process.
         let mut pids = self.pids.clone();
-        let post_cmd =
-            unsafe { cmd.pre_exec(move || aurae_process_pre_exec(&mut pids, &exe_clone)) };
+        let post_cmd = unsafe {
+            cmd.pre_exec(move || aurae_process_pre_exec(&mut pids, &exe_clone))
+        };
 
         let child = post_cmd.spawn().expect("spawning command");
 
@@ -178,14 +179,19 @@ impl cell_service_server::CellService for CellService {
     }
 }
 
-pub fn aurae_process_pre_exec(pids: &mut PidTable, exe: &Executable) -> io::Result<()> {
+pub fn aurae_process_pre_exec(
+    pids: &mut PidTable,
+    exe: &Executable,
+) -> io::Result<()> {
     // Map process to cell
 
     info!("Pre-exec for process: {}", exe.name);
     let cell_name = &exe.cell_name;
     let cell_file = format!("/var/run/aurae/cells/{}", cell_name);
 
-    pids.write().insert(cell_file, vec![std::process::id()]);
+    pids.write()
+        .insert(cell_file, vec![std::process::id()])
+        .expect("failed to insert pids into table");
 
     Ok(())
 }
