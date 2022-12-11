@@ -5,5 +5,5 @@ members = [
     "auraescript",
     "auraescript/macros",
     "crates/validation",
-    "crates/validation_macros"
+    "crates/validation/macros"
 ]

@@ -36,11 +36,6 @@ use aurae_proto::runtime::{
     StopCellRequest, StopCellResponse,
 };
 use tonic::{Request, Response, Status};
-use validation::ValidatingType;
-
-mod allocate;
-
-tonic::include_proto!("runtime");
 
 #[derive(Debug, Default, Clone)]
 pub struct CellService {}
@@ -49,25 +44,9 @@ pub struct CellService {}
 impl cell_service_server::CellService for CellService {
     async fn allocate(
         &self,
-        request: Request<AllocateCellRequest>,
+        _request: Request<AllocateCellRequest>,
     ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
-        // TODO: Try to generate boilerplate code that:
-        //  - extracts context (`request.extensions()`) from the request; we don't set this yet
-        //  - validates the request message
-        //  - calls `request.execute(&context)`
-        //      - references are used to allow for retrying the request on transient errors
-        //      - if we don't want to handle retries, we should pass ownership for efficiency
-        //  - ideally has variations for all rpc types (req/res, client/server/bidirectional streaming)
-        //
-        // *Feel free to delete this task. The intention of including it is to share my (future-highway) thoughts (spreading margarine 😂) on how to evolve the codebase to make "doing the right thing" easier.
-
-        let request = request.into_inner().validate(None).map_err(|e| {
-            // TODO: impl From<ValidationError> for Status
-            //  - Google suggests usage of their rich error model (https://grpc.io/docs/guides/error/)
-            Status::invalid_argument(format!("Validation failure: {e}"))
-        })?;
-
-        request.execute().await
+        todo!()
     }
 
     async fn free(
