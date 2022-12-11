@@ -80,6 +80,18 @@ impl CellService {
 
         // TODO: reconcile any executable states in the pids table.
     }
+
+    fn aurae_process_pre_exec(&self, exe: Executable) -> io::Result<()> {
+        // Map process to cell
+        info!("Pre-exec for process: {}", exe.name);
+        let cell_name = &exe.cell_name;
+        let mut pids = self.pids.clone();
+        pids.write()
+            .insert(cell_name.into(), vec![std::process::id()])
+            .expect("failed to insert pids into table");
+
+        Ok(())
+    }
 }
 
 /// ### Mapping cgroup options to the Cell API
@@ -132,17 +144,14 @@ impl cell_service_server::CellService for CellService {
         let cgroup =
             Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
 
-        // Start process
-        info!("CellService: start() cell_name={:?}", cell_name);
+        // Build the new child process
+        info!("CellService: start() cell_name={:?} executable_name={:?} command={:?}", cell_name, exe.name, exe.command);
         let mut cmd =
             command_from_string(&exe.command).expect("command from string");
+        // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
 
-        // We have a special "pre_exec" process that all Aurae executables are started
-        // with.
-        // This is how we map names and future features such as ptrace to the process.
-        let mut pids = self.pids.clone();
         let post_cmd = unsafe {
-            cmd.pre_exec(move || aurae_process_pre_exec(&mut pids, &exe_clone))
+            cmd.pre_exec(|| self.aurae_process_pre_exec(exe_clone.clone()))
         };
 
         let child = post_cmd.spawn().expect("spawning command");
@@ -177,23 +186,6 @@ impl cell_service_server::CellService for CellService {
 
         Ok(Response::new(StopCellResponse {}))
     }
-}
-
-pub fn aurae_process_pre_exec(
-    pids: &mut PidTable,
-    exe: &Executable,
-) -> io::Result<()> {
-    // Map process to cell
-
-    info!("Pre-exec for process: {}", exe.name);
-    let cell_name = &exe.cell_name;
-    let cell_file = format!("/var/run/aurae/cells/{}", cell_name);
-
-    pids.write()
-        .insert(cell_file, vec![std::process::id()])
-        .expect("failed to insert pids into table");
-
-    Ok(())
 }
 
 // Here is where we define the "default" cgroup parameters for Aurae cells
