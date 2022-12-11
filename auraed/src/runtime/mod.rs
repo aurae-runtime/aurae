@@ -30,6 +30,7 @@
 
 #![allow(dead_code)]
 
+use acidjson::AcidJson;
 use anyhow::{anyhow, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
@@ -39,16 +40,58 @@ use aurae_proto::runtime::{
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
 use log::{error, info};
-use std::fs::File;
-use std::fs::OpenOptions;
+use std::collections::HashMap;
 use std::io;
-use std::os::unix::io::{AsFd, IntoRawFd, RawFd};
 use std::os::unix::process::CommandExt;
 use std::process::Command;
 use tonic::{Request, Response, Status};
 
-#[derive(Debug, Default, Clone)]
-pub struct CellService {}
+/// maps from cell file to cell name (for now)
+type PidTable = AcidJson<HashMap<String, Vec<u32>>>;
+
+// TODO: implement for PidTable:
+//  - List all pids given a cell_name
+//  - List all pids given a cell_name and a more granular executable_name
+//  - Get Cgroup from cell_name
+//  - Get Cgroup from executable_name
+//  - Get Cgroup from pid
+//  - Get Cgroup and pids from exectuable_name
+
+#[derive(Debug, Clone)]
+pub struct CellService {
+    pids: mut PidTable,
+}
+
+impl CellService {
+    pub fn new() -> Self {
+        // TODO: probably need to have this path passed in instead so it's persistent across
+        // TODO: service restarts.
+        let mut root = std::env::temp_dir();
+        info!("Creating pid table in: {:?}", root);
+        root.push("pids.json");
+        if std::fs::read(&root).is_err() {
+            std::fs::write(&root, b"{}").expect("failed to create pidtable");
+        }
+
+        CellService {
+            pids: AcidJson::open(root.as_path()).expect("unable to open pidtable"),
+        }
+
+        // TODO: reconcile any executable states in the pids table.
+    }
+
+    pub fn aurae_process_pre_exec(&self, exe: &Executable) -> io::Result<()> {
+        // Map process to cell
+
+        info!("Pre-exec for process: {}", exe.name);
+        let cell_name = &exe.cell_name;
+        let cell_file = format!("/var/run/aurae/cells/{}", cell_name);
+
+        self.pids.write().insert(cell_file, vec![std::process::id()]);
+
+        Ok(())
+    }
+}
 
 /// ### Mapping cgroup options to the Cell API
 ///
@@ -109,7 +152,7 @@ impl cell_service_server::CellService for CellService {
         // with.
         // This is how we map names and future features such as ptrace to the process.
         let post_cmd =
-            unsafe { cmd.pre_exec(move || aurae_process_pre_exec(&exe_clone)) };
+            unsafe { cmd.pre_exec(move || self.aurae_process_pre_exec(&exe_clone)) };
 
         let child = post_cmd.spawn().expect("spawning command");
 
@@ -143,23 +186,6 @@ impl cell_service_server::CellService for CellService {
 
         Ok(Response::new(StopCellResponse {}))
     }
-}
-
-fn aurae_process_pre_exec(exe: &Executable) -> io::Result<()> {
-    // Map process to cell
-    // TODO ptrace
-
-    // TODO Left off here! We are experimenting mapping file descriptors to cells
-    info!("Pre-exec for process: {}", exe.name);
-    let cell_name = &exe.cell_name;
-    let cell_file = format!("/var/run/aurae/cells/{}", cell_name);
-    let file = OpenOptions::new().create(true).open(cell_file).expect("file");
-    let owned_fd = file.as_fd().try_clone_to_owned().expect("fd");
-
-    // let _ = File::create(cell_file.clone()).expect("create cell file"); // TODO only create if not exists
-    // let f = File::open(cell_file.clone()).expect("create cell mapping");
-    // let _: RawFd = f.into_raw_fd();
-    Ok(())
 }
 
 // Here is where we define the "default" cgroup parameters for Aurae cells

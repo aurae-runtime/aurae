@@ -176,10 +176,11 @@ impl AuraedRuntime {
         let _log_collector = self.log_collector.clone();
 
         // Run the server concurrently
+        // TODO: pass a known-good path to CellService to store any runtime data.
         let handle = tokio::spawn(async {
             Server::builder()
                 .tls_config(tls)?
-                .add_service(CellServiceServer::new(CellService::default()))
+                .add_service(CellServiceServer::new(CellService::new()))
                 // .add_service(ObserveServer::new(ObserveService::new(
                 //     log_collector,
                 // )))

@@ -39,6 +39,7 @@ name = "auraed"
 path = "src/bin/main.rs"
 
 [dependencies]
+acidjson = "0.1"
 clap = { version = "3.1.20", features = ["derive"] }
 log = "0.4.17"
 multi_log = "0.1.2"
