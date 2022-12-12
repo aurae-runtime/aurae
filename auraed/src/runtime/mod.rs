@@ -28,9 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+mod cgroup_table;
 mod error;
 
-use crate::runtime::error::CellServiceError;
+use crate::runtime::{cgroup_table::CgroupTable, error::CellServiceError};
 use anyhow::{anyhow, Context, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Cell,
@@ -53,17 +54,10 @@ mod free_cell;
 // TODO: Create an impl for ChildTable that exposes this functionality:
 // - List all pids given a cell_name
 // - List all pids given a cell_name and a more granular executable_name
-// - Get Cgroup from cell_name
-// - Get Cgroup from executable_name
-// - Get Cgroup from pid
-// - Get Cgroup and pids from exectuable_name
 
 /// ChildTable is the in-memory Arc<Mutex<HashMap<<>>> for the list of
 /// child processes spawned with Aurae.
 type ChildTable = Arc<Mutex<HashMap<String, Child>>>;
-
-/// CgroupTable is the in-memory store for the list of cgroups created with Aurae.
-type CgroupTable = Arc<Mutex<HashMap<String, Cgroup>>>;
 
 #[derive(Debug, Clone)]
 pub struct CellService {
@@ -103,26 +97,25 @@ impl CellService {
             // Final Build
             .build(hierarchy);
 
-        let mut cgroup_cache =
-            self.cgroup_table.lock().expect("lock cgroup_table");
-        // Check if there was already a cgroup in the table with this cell name as a key.
-        if let Some(_old_cgroup) =
-            cgroup_cache.insert(cell_name.into(), cgroup.clone())
-        {
-            return Err(anyhow!("cgroup already exists for {cell_name}"));
-        };
+        self.cgroup_table.insert(cell_name, &cgroup).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to insert {cell_name} into cgroup_table"),
+                err: e.to_string(),
+            }
+        })?;
+
         Ok(cgroup)
     }
 
     fn remove_cgroup(&self, cell_name: &str) -> Result<(), Error> {
-        let mut cgroup_cache =
-            self.cgroup_table.lock().expect("lock cgroup table");
-        let cgroup = cgroup_cache
+        self.cgroup_table
             .remove(cell_name)
-            .expect("find cell_name in cgroup_table");
-        cgroup
+            .map_err(|e| CellServiceError::Internal {
+                msg: format!("failed to remove {cell_name} from cgroup_table"),
+                err: e.to_string(),
+            })?
             .delete()
-            .context(format!("failed to delete {cell_name} from cgroup_table"))
+            .context(format!("failed to delete {cell_name}"))
     }
 }
 
@@ -341,7 +334,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_attempt_to_remove_unknown_cgroup_fails() {
         let service = CellService::new();
         let id = "testing-aurae-removal";
