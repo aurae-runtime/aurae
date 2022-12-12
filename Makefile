@@ -132,7 +132,7 @@ proto-lint: ## Lint protobuf schemas
 	buf lint api
 
 .PHONY: clean
-clean: clean-certs
+clean: clean-certs clean-auraed clean-auraescript
 	@cargo clean
 
 headers: headers-write ## Fix headers. Run this if you want to clobber things.
