@@ -186,6 +186,7 @@ impl cell_service_server::CellService for CellService {
                 err: e.to_string(),
             }
         })?;
+
         // Check that we don't already have the child registered in the cache.
         if let Some(old_child) = cache.insert(cell_name.clone(), child) {
             return Err(CellServiceError::Internal {
@@ -199,7 +200,6 @@ impl cell_service_server::CellService for CellService {
             .into());
         };
 
-        // Ok
         Ok(Response::new(StartCellResponse {}))
     }
 

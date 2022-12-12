@@ -1,3 +1,4 @@
+use log::error;
 use thiserror::Error;
 use tonic::Status;
 
@@ -14,12 +15,14 @@ impl From<CellServiceError> for Status {
     fn from(err: CellServiceError) -> Self {
         match err {
             CellServiceError::MissingArgument { arg } => {
-                Self::failed_precondition(format!(
-                    "bad request. expected {arg}"
-                ))
+                let msg = format!("missing argument in request: {arg}");
+                error!("{msg}");
+                Self::failed_precondition(msg)
             }
             CellServiceError::Internal { msg, err } => {
-                Self::internal(format!("internal error: {msg}: {err}"))
+                let msg = format!("internal error: {msg}: {err}");
+                error!("{msg}");
+                Self::internal(msg)
             }
         }
     }
