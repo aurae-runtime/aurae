@@ -19,14 +19,30 @@ export interface Cell {
    */
   name: string;
   /**
+   * / A comma-separated list of CPU IDs where the task in the control group
+   * can run. Dashes between numbers indicate ranges.
+   */
+  cpuCpus: string;
+  /**
    * /  Cgroups can be guaranteed a minimum number of "CPU shares"
-   * /              when a system is busy.  This does not limit a cgroup's CPU
-   * /              usage if the CPUs are not busy.  For further information,
-   * /              see Documentation/scheduler/sched-design-CFS.rst (or
-   * /              Documentation/scheduler/sched-design-CFS.txt in Linux 5.2
-   * /              and earlier).
+   * /  when a system is busy.  This does not limit a cgroup's CPU
+   * /  usage if the CPUs are not busy.  For further information,
+   * /  see Documentation/scheduler/sched-design-CFS.rst (or
+   * /  Documentation/scheduler/sched-design-CFS.txt in Linux 5.2
+   * /  and earlier).
+   * /
+   * / Weight of how much of the total CPU time should this control
+   *  group get. Note that this is hierarchical, so this is weighted
+   *  against the siblings of this control group.
    */
   cpuShares: number;
+  /**
+   * / Same syntax as the cpus field of this structure, but applies to
+   *  memory nodes instead of processors.
+   */
+  cpuMems: string;
+  /** In one period, how much can the tasks run in nanoseconds. */
+  cpuQuota: number;
 }
 
 export interface AllocateCellRequest {
@@ -99,28 +115,37 @@ export const Executable = {
 };
 
 function createBaseCell(): Cell {
-  return { name: "", cpuShares: 0 };
+  return { name: "", cpuCpus: "", cpuShares: 0, cpuMems: "", cpuQuota: 0 };
 }
 
 export const Cell = {
   fromJSON(object: any): Cell {
     return {
       name: isSet(object.name) ? String(object.name) : "",
+      cpuCpus: isSet(object.cpuCpus) ? String(object.cpuCpus) : "",
       cpuShares: isSet(object.cpuShares) ? Number(object.cpuShares) : 0,
+      cpuMems: isSet(object.cpuMems) ? String(object.cpuMems) : "",
+      cpuQuota: isSet(object.cpuQuota) ? Number(object.cpuQuota) : 0,
     };
   },
 
   toJSON(message: Cell): unknown {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
+    message.cpuCpus !== undefined && (obj.cpuCpus = message.cpuCpus);
     message.cpuShares !== undefined && (obj.cpuShares = Math.round(message.cpuShares));
+    message.cpuMems !== undefined && (obj.cpuMems = message.cpuMems);
+    message.cpuQuota !== undefined && (obj.cpuQuota = Math.round(message.cpuQuota));
     return obj;
   },
 
   fromPartial<I extends Exact<DeepPartial<Cell>, I>>(object: I): Cell {
     const message = createBaseCell();
     message.name = object.name ?? "";
+    message.cpuCpus = object.cpuCpus ?? "";
     message.cpuShares = object.cpuShares ?? 0;
+    message.cpuMems = object.cpuMems ?? "";
+    message.cpuQuota = object.cpuQuota ?? 0;
     return message;
   },
 };
