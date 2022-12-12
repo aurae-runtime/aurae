@@ -141,7 +141,9 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let cell_name = r.cell_name;
         info!("CellService: free() cell_name={:?}", cell_name);
-        remove_cgroup(&cell_name).expect("remove");
+        remove_cgroup(&cell_name).map_err(|e| CellServiceError::Internal {
+            msg: format!("failed to remove cgroup for {cell_name}: {e:?}"),
+        })?;
         Ok(Response::new(FreeCellResponse {}))
     }
 
@@ -150,7 +152,9 @@ impl cell_service_server::CellService for CellService {
         request: Request<StartCellRequest>,
     ) -> Result<Response<StartCellResponse>, Status> {
         let r = request.into_inner();
-        let exe = r.executable.expect("executable");
+        let exe = r.executable.ok_or(CellServiceError::InvalidArgument {
+            arg: "executable".into(),
+        })?;
         let exe_clone = exe.clone();
         let cell_name = exe.cell_name;
         let cgroup =
@@ -158,8 +162,14 @@ impl cell_service_server::CellService for CellService {
 
         // Create the new child process
         info!("CellService: start() cell_name={:?} executable_name={:?} command={:?}", cell_name, exe.name, exe.command);
-        let mut cmd =
-            command_from_string(&exe.command).expect("command from string");
+        let mut cmd = command_from_string(&exe.command).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!(
+                    "failed to get command from string {}: {e:?}",
+                    &exe.command
+                ),
+            }
+        })?;
 
         // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
         let post_cmd = unsafe {
@@ -169,7 +179,10 @@ impl cell_service_server::CellService for CellService {
         };
 
         // Start the child process
-        let child = post_cmd.spawn().expect("spawning command");
+        let child =
+            post_cmd.spawn().map_err(|e| CellServiceError::Internal {
+                msg: format!("failed to spawn child process: {e:?}"),
+            })?;
         let cgroup_pid = CgroupPid::from(child.id() as u64);
 
         // Add the newly started child process to the cgroup
