@@ -28,36 +28,27 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+mod cell_name;
 mod cgroup_table;
+mod child_table;
 mod error;
+mod free_cell;
 
-use crate::runtime::{cgroup_table::CgroupTable, error::CellServiceError};
+use crate::runtime::{
+    cgroup_table::CgroupTable, child_table::ChildTable, error::CellServiceError,
+};
 use anyhow::{anyhow, Context, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Cell,
     Executable, FreeCellRequest, FreeCellResponse, StartCellRequest,
     StartCellResponse, StopCellRequest, StopCellResponse,
 };
-use cgroups_rs::cgroup_builder::CgroupBuilder;
-use cgroups_rs::*;
+use cgroups_rs::{cgroup_builder::CgroupBuilder, *};
 use log::info;
-use std::collections::HashMap;
 use std::io;
 use std::os::unix::process::CommandExt;
-use std::process::{Child, Command};
-use std::sync::{Arc, Mutex};
+use std::process::Command;
 use tonic::{Request, Response, Status};
-
-mod cell_name;
-mod free_cell;
-
-// TODO: Create an impl for ChildTable that exposes this functionality:
-// - List all pids given a cell_name
-// - List all pids given a cell_name and a more granular executable_name
-
-/// ChildTable is the in-memory Arc<Mutex<HashMap<<>>> for the list of
-/// child processes spawned with Aurae.
-type ChildTable = Arc<Mutex<HashMap<String, Child>>>;
 
 #[derive(Debug, Clone)]
 pub struct CellService {
@@ -140,7 +131,7 @@ impl cell_service_server::CellService for CellService {
             .cell
             .ok_or(CellServiceError::MissingArgument { arg: "cell".into() })?;
         let cell_name = &cell.name;
-        let cgroup = self.create_cgroup(&cell.clone()).map_err(|e| {
+        let cgroup = self.create_cgroup(&cell).map_err(|e| {
             CellServiceError::Internal {
                 msg: format!("failed to create cgroup for {cell_name}"),
                 err: e.to_string(),
@@ -221,26 +212,12 @@ impl cell_service_server::CellService for CellService {
         })?;
         info!("CellService: spawn() -> pid={:?}", &child.id());
 
-        // Cache the Child in ChildTable
-        let mut cache = self.child_table.lock().map_err(|e| {
+        self.child_table.insert(&cell_name, child).map_err(|e| {
             CellServiceError::Internal {
-                msg: "failed to lock child_table".into(),
+                msg: format!("failed to insert {cell_name} into child_table"),
                 err: e.to_string(),
             }
         })?;
-
-        // Check that we don't already have the child registered in the cache.
-        if let Some(old_child) = cache.insert(cell_name.clone(), child) {
-            return Err(CellServiceError::Internal {
-                msg: format!(
-                    "{} already exists in child_table with pid {:?}",
-                    &cell_name,
-                    old_child.id()
-                ),
-                err: "".into(),
-            }
-            .into());
-        };
 
         Ok(Response::new(StartCellResponse {}))
     }
@@ -252,17 +229,14 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let cell_name = r.cell_name;
         let executable_name = r.executable_name;
-        let mut cache = self.child_table.lock().map_err(|e| {
+        let mut child = self.child_table.remove(&cell_name).map_err(|e| {
             CellServiceError::Internal {
-                msg: "failed to lock child table".into(),
+                msg: format!(
+                    "failed to remove child with cell_name {cell_name}"
+                ),
                 err: e.to_string(),
             }
         })?;
-        let mut child =
-            cache.remove(&cell_name).ok_or(CellServiceError::Internal {
-                msg: format!("failed to find child for cell_name {cell_name}"),
-                err: "".into(),
-            })?;
         let child_id = child.id();
         info!(
             "CellService: stop() cell_name={:?} executable_name={:?} pid={child_id}",
