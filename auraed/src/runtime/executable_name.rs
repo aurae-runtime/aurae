@@ -2,9 +2,9 @@ use std::ops::Deref;
 use validation::{ValidatedField, ValidationError};
 
 #[derive(Debug)]
-pub(crate) struct CellName(String);
+pub(crate) struct ExecutableName(String);
 
-impl CellName {
+impl ExecutableName {
     pub fn validate_for_creation(
         input: Option<String>,
         field_name: &str,
@@ -12,23 +12,23 @@ impl CellName {
     ) -> Result<Self, ValidationError> {
         let input = Self::validate(input, field_name, parent_name)?;
 
-        // TODO: what makes a valid cgroup name
-        // any valid path?
-        // do we want a restriction on length?
-        // anything else?
-        // Highly restrictive for now:
-        validation::allow_regex(
-            &input,
-            &validation::DOMAIN_NAME_LABEL_REGEX,
-            field_name,
-            parent_name,
-        )?;
+        // TODO: what makes a valid executable name
+        // Wasn't there something about 16 bytes (including terminating 0 byte) and anything more would be silently truncated.
+        // We don't want to silently truncate IMO, if that is the case.
+        //
+        // validation::maximum_length(
+        //     input.as_bytes(),
+        //     15,
+        //     "bytes",
+        //     field_name,
+        //     parent_name,
+        // )?;
 
         Ok(input)
     }
 }
 
-impl ValidatedField<String> for CellName {
+impl ValidatedField<String> for ExecutableName {
     fn validate(
         input: Option<String>,
         field_name: &str,
@@ -41,7 +41,7 @@ impl ValidatedField<String> for CellName {
     }
 }
 
-impl Deref for CellName {
+impl Deref for ExecutableName {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {

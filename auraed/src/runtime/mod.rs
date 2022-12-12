@@ -32,7 +32,8 @@ mod cell_name;
 mod cgroup_table;
 mod child_table;
 mod error;
-mod free_cell;
+mod executable_name;
+mod validation;
 
 use crate::runtime::{
     cgroup_table::CgroupTable, child_table::ChildTable, error::CellServiceError,
