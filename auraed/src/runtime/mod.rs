@@ -44,6 +44,14 @@ use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use tonic::{Request, Response, Status};
 
+// TODO: Create an impl for ChildTable that exposes this functionality:
+// - List all pids given a cell_name
+// - List all pids given a cell_name and a more granular executable_name
+// - Get Cgroup from cell_name
+// - Get Cgroup from executable_name
+// - Get Cgroup from pid
+// - Get Cgroup and pids from exectuable_name
+
 /// ChildTable is the in-memory Arc<Mutex<HashMap<<>>> for the list of
 /// child processes spawned with Aurae.
 type ChildTable = Arc<Mutex<HashMap<String, Child>>>;
@@ -68,6 +76,27 @@ impl CellService {
     }
 }
 
+#[derive(Debug)]
+pub enum CellServiceError {
+    InvalidArgument { arg: String },
+    Internal { msg: String },
+}
+
+impl From<CellServiceError> for Status {
+    fn from(err: CellServiceError) -> Self {
+        match err {
+            CellServiceError::InvalidArgument { arg } => {
+                Self::failed_precondition(format!(
+                    "bad request. expected {arg}"
+                ))
+            }
+            CellServiceError::Internal { msg } => {
+                Self::internal(format!("internal error: {msg}"))
+            }
+        }
+    }
+}
+
 /// ### Mapping cgroup options to the Cell API
 ///
 /// Here we *only* expose options from the CgroupBuilder
@@ -85,9 +114,18 @@ impl cell_service_server::CellService for CellService {
     ) -> Result<Response<AllocateCellResponse>, Status> {
         // Initialize the cell
         let r = request.into_inner();
-        let cell = r.cell.expect("cell");
+        let cell = r
+            .cell
+            .ok_or(CellServiceError::InvalidArgument { arg: "cell".into() })?;
         let cell_name = &cell.name;
-        let cgroup = create_cgroup(cell_name, cell.cpu_shares).expect("create");
+        let cgroup =
+            create_cgroup(cell_name, cell.cpu_shares).map_err(|e| {
+                CellServiceError::Internal {
+                    msg: format!(
+                        "failed to create cgroup for {cell_name}: {e:?}"
+                    ),
+                }
+            })?;
         info!("CellService: allocate() cell_name={:?}", cell_name);
         Ok(Response::new(AllocateCellResponse {
             cell_name: cell_name.to_string(),
@@ -115,7 +153,6 @@ impl cell_service_server::CellService for CellService {
         let exe = r.executable.expect("executable");
         let exe_clone = exe.clone();
         let cell_name = exe.cell_name;
-        let child_table = self.child_table.clone();
         let cgroup =
             Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
 
@@ -140,9 +177,11 @@ impl cell_service_server::CellService for CellService {
         info!("CellService: spawn() -> pid={:?}", &child.id());
 
         // Cache the Child in ChildTable
-        let mut cache = child_table.lock().expect("locking child_table mutex");
-        let _ = cache.insert(cell_name, child);
-        drop(cache);
+        let mut cache =
+            self.child_table.lock().expect("locking child_table mutex");
+        let _ = cache
+            .insert(cell_name, child)
+            .expect("insert child to child_table");
 
         // Ok
         Ok(Response::new(StartCellResponse {}))
@@ -155,18 +194,19 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let cell_name = r.cell_name;
         let executable_name = r.executable_name;
-        let child_table = self.child_table.clone();
-        let mut cache = child_table.lock().expect("locking child_table mutex");
-        let mut child = cache.remove(&cell_name).expect("getting child");
+        let mut cache =
+            self.child_table.lock().expect("locking child_table mutex");
+        let mut child =
+            cache.remove(&cell_name).expect("removing and retrieving child");
         info!(
             "CellService: stop() cell_name={:?} executable_name={:?} pid={:?}",
             &cell_name,
             &executable_name,
             &child.id()
         );
-        let _ = child.kill().expect("killing child");
+        child.kill().expect("killing child");
+        // TODO: something with the exit status
         let _ = child.wait().expect("waiting child");
-        drop(cache);
 
         // Ok
         Ok(Response::new(StopCellResponse {}))
@@ -231,9 +271,9 @@ mod tests {
 
     #[test]
     fn test_create_remove_cgroup() {
-        // let id = "testing-aurae";
-        // let _cgroup = create_cgroup(&id, 2).expect("create");
-        // println!("Created cgroup: {}", id);
-        // remove_cgroup(&id).expect("remove");
+        let id = "testing-aurae";
+        let _cgroup = create_cgroup(id, 2).expect("create");
+        println!("Created cgroup: {}", id);
+        remove_cgroup(id).expect("remove");
     }
 }
