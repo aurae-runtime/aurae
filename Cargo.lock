@@ -147,6 +147,8 @@ dependencies = [
  "tokio-stream",
  "tonic",
  "tonic-build",
+ "validation",
+ "validation_macros",
  "walkdir",
 ]
 
