@@ -190,11 +190,22 @@ impl cell_service_server::CellService for CellService {
         info!("CellService: spawn() -> pid={:?}", &child.id());
 
         // Cache the Child in ChildTable
-        let mut cache =
-            self.child_table.lock().expect("locking child_table mutex");
-        let _ = cache
-            .insert(cell_name, child)
-            .expect("insert child to child_table");
+        let mut cache = self.child_table.lock().map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to lock child_table: {e:?}"),
+            }
+        })?;
+        // Check that we don't already have the child registered in the cache.
+        if let Some(old_child) = cache.insert(cell_name.clone(), child) {
+            return Err(CellServiceError::Internal {
+                msg: format!(
+                    "{} already exists in child_table with pid {:?}",
+                    &cell_name,
+                    old_child.id()
+                ),
+            }
+            .into());
+        };
 
         // Ok
         Ok(Response::new(StartCellResponse {}))
