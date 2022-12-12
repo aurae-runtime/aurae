@@ -31,24 +31,21 @@
 mod error;
 
 use crate::runtime::error::CellServiceError;
-use crate::runtime::free_cell::ValidatedFreeCellRequest;
 use anyhow::{anyhow, Context, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
     StopCellRequest, StopCellResponse,
 };
-use cgroups_rs::{cgroup_builder::CgroupBuilder, *};
-use log::{error, info};
+use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
-use log::info;
+use log::{error, info};
 use std::collections::HashMap;
 use std::io;
 use std::os::unix::process::CommandExt;
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use tonic::{Request, Response, Status};
-use validation::ValidatedType;
 
 mod cell_name;
 mod free_cell;
@@ -176,7 +173,6 @@ impl cell_service_server::CellService for CellService {
             err: e.to_string(),
         })?;
         Ok(Response::new(FreeCellResponse {}))
-
     }
 
     async fn start(
@@ -328,7 +324,6 @@ fn remove_cgroup(id: &str) -> Result<(), Error> {
         Ok(())
     }
 }
-
 
 fn hierarchy() -> Box<dyn Hierarchy> {
     hierarchies::auto() // v1/v2 cgroup switch automatically
