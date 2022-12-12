@@ -28,14 +28,17 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+mod error;
+
+use crate::runtime::error::CellServiceError;
+
 use anyhow::{anyhow, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
     StopCellRequest, StopCellResponse,
 };
-use cgroups_rs::cgroup_builder::CgroupBuilder;
-use cgroups_rs::*;
+use cgroups_rs::{cgroup_builder::CgroupBuilder, *};
 use log::{error, info};
 use std::collections::HashMap;
 use std::io;
@@ -76,27 +79,6 @@ impl CellService {
     }
 }
 
-#[derive(Debug)]
-pub enum CellServiceError {
-    InvalidArgument { arg: String },
-    Internal { msg: String },
-}
-
-impl From<CellServiceError> for Status {
-    fn from(err: CellServiceError) -> Self {
-        match err {
-            CellServiceError::InvalidArgument { arg } => {
-                Self::failed_precondition(format!(
-                    "bad request. expected {arg}"
-                ))
-            }
-            CellServiceError::Internal { msg } => {
-                Self::internal(format!("internal error: {msg}"))
-            }
-        }
-    }
-}
-
 /// ### Mapping cgroup options to the Cell API
 ///
 /// Here we *only* expose options from the CgroupBuilder
@@ -116,14 +98,13 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let cell = r
             .cell
-            .ok_or(CellServiceError::InvalidArgument { arg: "cell".into() })?;
+            .ok_or(CellServiceError::MissingArgument { arg: "cell".into() })?;
         let cell_name = &cell.name;
         let cgroup =
             create_cgroup(cell_name, cell.cpu_shares).map_err(|e| {
                 CellServiceError::Internal {
-                    msg: format!(
-                        "failed to create cgroup for {cell_name}: {e:?}"
-                    ),
+                    msg: format!("failed to create cgroup for {cell_name}"),
+                    err: e.to_string(),
                 }
             })?;
         info!("CellService: allocate() cell_name={:?}", cell_name);
@@ -142,7 +123,8 @@ impl cell_service_server::CellService for CellService {
         let cell_name = r.cell_name;
         info!("CellService: free() cell_name={:?}", cell_name);
         remove_cgroup(&cell_name).map_err(|e| CellServiceError::Internal {
-            msg: format!("failed to remove cgroup for {cell_name}: {e:?}"),
+            msg: format!("failed to remove cgroup for {cell_name}"),
+            err: e.to_string(),
         })?;
         Ok(Response::new(FreeCellResponse {}))
     }
@@ -152,22 +134,24 @@ impl cell_service_server::CellService for CellService {
         request: Request<StartCellRequest>,
     ) -> Result<Response<StartCellResponse>, Status> {
         let r = request.into_inner();
-        let exe = r.executable.ok_or(CellServiceError::InvalidArgument {
+        let exe = r.executable.ok_or(CellServiceError::MissingArgument {
             arg: "executable".into(),
         })?;
         let exe_clone = exe.clone();
+        let exe_command = exe.command;
         let cell_name = exe.cell_name;
         let cgroup =
             Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
 
         // Create the new child process
-        info!("CellService: start() cell_name={:?} executable_name={:?} command={:?}", cell_name, exe.name, exe.command);
-        let mut cmd = command_from_string(&exe.command).map_err(|e| {
+        info!("CellService: start() cell_name={cell_name} executable_name={:?} command={exe_command}", exe.name);
+        let mut cmd = command_from_string(&exe_command).map_err(|e| {
             CellServiceError::Internal {
                 msg: format!(
-                    "failed to get command from string {}: {e:?}",
-                    &exe.command
+                    "failed to get command from string {}",
+                    &exe_command
                 ),
+                err: e.to_string(),
             }
         })?;
 
@@ -181,14 +165,16 @@ impl cell_service_server::CellService for CellService {
         // Start the child process
         let child =
             post_cmd.spawn().map_err(|e| CellServiceError::Internal {
-                msg: format!("failed to spawn child process: {e:?}"),
+                msg: "failed to spawn child process".into(),
+                err: e.to_string(),
             })?;
         let cgroup_pid = CgroupPid::from(child.id() as u64);
 
         // Add the newly started child process to the cgroup
         cgroup.add_task(cgroup_pid).map_err(|e| {
             CellServiceError::Internal {
-                msg: format!("failed to add child process to cgroup: {e:?}"),
+                msg: "failed to add child process to cgroup".into(),
+                err: e.to_string(),
             }
         })?;
         info!("CellService: spawn() -> pid={:?}", &child.id());
@@ -196,7 +182,8 @@ impl cell_service_server::CellService for CellService {
         // Cache the Child in ChildTable
         let mut cache = self.child_table.lock().map_err(|e| {
             CellServiceError::Internal {
-                msg: format!("failed to lock child_table: {e:?}"),
+                msg: "failed to lock child_table".into(),
+                err: e.to_string(),
             }
         })?;
         // Check that we don't already have the child registered in the cache.
@@ -207,6 +194,7 @@ impl cell_service_server::CellService for CellService {
                     &cell_name,
                     old_child.id()
                 ),
+                err: "".into(),
             }
             .into());
         };
@@ -224,12 +212,14 @@ impl cell_service_server::CellService for CellService {
         let executable_name = r.executable_name;
         let mut cache = self.child_table.lock().map_err(|e| {
             CellServiceError::Internal {
-                msg: format!("failed to lock child table: {e:?}"),
+                msg: "failed to lock child table".into(),
+                err: e.to_string(),
             }
         })?;
         let mut child =
             cache.remove(&cell_name).ok_or(CellServiceError::Internal {
                 msg: format!("failed to find child for cell_name {cell_name}"),
+                err: "".into(),
             })?;
         let child_id = child.id();
         info!(
@@ -239,13 +229,13 @@ impl cell_service_server::CellService for CellService {
         );
         // TODO: check for
         child.kill().map_err(|e| CellServiceError::Internal {
-            msg: format!("failed to kill child with pid {child_id}: {e:?}",),
+            msg: format!("failed to kill child with pid {child_id}"),
+            err: e.to_string(),
         })?;
         let exit_status =
             child.wait().map_err(|e| CellServiceError::Internal {
-                msg: format!(
-                "failed to wait for child with pid {child_id} to be killed: {e:?}",
-            ),
+                msg: format!("failed to wait for child with pid {child_id}"),
+                err: e.to_string(),
             })?;
         info!(
             "Child process with pid {child_id} exited with status {exit_status}",
@@ -268,6 +258,12 @@ fn create_cgroup(id: &str, cpu_shares: u64) -> Result<Cgroup, Error> {
 }
 
 fn remove_cgroup(id: &str) -> Result<(), Error> {
+    // TODO: create a cgroup_table mapping cell name to cgroup and do this instead
+    //if let Err(err) = cgroup.delete() {
+    //    return Err(Error::from(err))
+    //}
+    //Ok(())
+
     // The 'rmdir' command line tool from GNU coreutils calls the rmdir(2)
     // system call directly using the 'unistd.h' header file.
 
