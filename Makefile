@@ -36,7 +36,7 @@ cargo         =  cargo
 # Configuration Options
 export GIT_PAGER = cat
 
-default: proto compile install
+default: compile install
 all: compile install
 
 compile: auraescript auraed ## Compile for the local architecture ⚙
@@ -58,12 +58,12 @@ release: ## Build and install (release) 🎉
 	@$(cargo) install --path ./auraed
 
 .PHONY: auraescript
-auraescript: ## Initialize and compile aurae
+auraescript: proto ## Initialize and compile aurae
 	@$(cargo) clippy -p auraescript
 	@$(cargo) install --path ./auraescript --debug --force
 
 .PHONY: auraed
-auraed: ## Initialize and compile auraed
+auraed: proto ## Initialize and compile auraed
 	@$(cargo) clippy -p auraed
 	@$(cargo) install --path ./auraed --debug --force
 
