@@ -104,13 +104,28 @@ message Cell {
   /// See [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
   string name = 1;
 
+  /// A comma-separated list of CPU IDs where the task in the control group
+  // can run. Dashes between numbers indicate ranges.
+  string cpu_cpus = 2;
+
   ///  Cgroups can be guaranteed a minimum number of "CPU shares"
-  ///              when a system is busy.  This does not limit a cgroup's CPU
-  ///              usage if the CPUs are not busy.  For further information,
-  ///              see Documentation/scheduler/sched-design-CFS.rst (or
-  ///              Documentation/scheduler/sched-design-CFS.txt in Linux 5.2
-  ///              and earlier).
-  uint64 cpu_shares = 2;
+  ///  when a system is busy.  This does not limit a cgroup's CPU
+  ///  usage if the CPUs are not busy.  For further information,
+  ///  see Documentation/scheduler/sched-design-CFS.rst (or
+  ///  Documentation/scheduler/sched-design-CFS.txt in Linux 5.2
+  ///  and earlier).
+  ///
+  /// Weight of how much of the total CPU time should this control
+  //  group get. Note that this is hierarchical, so this is weighted
+  //  against the siblings of this control group.
+  uint64 cpu_shares = 3;
+
+  /// Same syntax as the cpus field of this structure, but applies to
+  //  memory nodes instead of processors.
+  string cpu_mems = 4;
+
+  // In one period, how much can the tasks run in nanoseconds.
+  int64 cpu_quota = 5;
 
   /// Linux namespaces to share with the calling process.
   /// If all values are set to false, the resulting cell

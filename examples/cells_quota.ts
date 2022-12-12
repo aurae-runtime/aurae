@@ -37,8 +37,7 @@ let cells = new runtime.CellServiceClient();
 // [ Allocate ]
 let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
-        cpuQuota: 41 * 10^10, // 41 seconds in nanoseconds
-        //cpuQuota: 42 * 10^10, // 42 seconds in nanoseconds
+        cpuQuota: 3,
         cpuShares: 2, // Percentage of CPUs
         name: "sleeper-cell",
     })
@@ -56,19 +55,3 @@ let started = await cells.start(<runtime.StartCellRequest>{
     })
 })
 helpers.print(started)
-
-
-// [ Stop ]
-let stopped = await cells.stop(<runtime.StopCellRequest>{
-    cellName: "sleeper-cell",
-    executableName: "sleep-42",
-})
-helpers.print(stopped)
-
-
-// [ Free ]
-let freed = await cells.free(<runtime.FreeCellRequest>{
-    cellName: "sleeper-cell"
-});
-helpers.print(freed)
-

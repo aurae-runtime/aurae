@@ -211,15 +211,33 @@ impl serde::Serialize for Cell {
         if !self.name.is_empty() {
             len += 1;
         }
+        if !self.cpu_cpus.is_empty() {
+            len += 1;
+        }
         if self.cpu_shares != 0 {
+            len += 1;
+        }
+        if !self.cpu_mems.is_empty() {
+            len += 1;
+        }
+        if self.cpu_quota != 0 {
             len += 1;
         }
         let mut struct_ser = serializer.serialize_struct("runtime.Cell", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
         }
+        if !self.cpu_cpus.is_empty() {
+            struct_ser.serialize_field("cpuCpus", &self.cpu_cpus)?;
+        }
         if self.cpu_shares != 0 {
             struct_ser.serialize_field("cpuShares", ToString::to_string(&self.cpu_shares).as_str())?;
+        }
+        if !self.cpu_mems.is_empty() {
+            struct_ser.serialize_field("cpuMems", &self.cpu_mems)?;
+        }
+        if self.cpu_quota != 0 {
+            struct_ser.serialize_field("cpuQuota", ToString::to_string(&self.cpu_quota).as_str())?;
         }
         struct_ser.end()
     }
@@ -232,14 +250,23 @@ impl<'de> serde::Deserialize<'de> for Cell {
     {
         const FIELDS: &[&str] = &[
             "name",
+            "cpu_cpus",
+            "cpuCpus",
             "cpu_shares",
             "cpuShares",
+            "cpu_mems",
+            "cpuMems",
+            "cpu_quota",
+            "cpuQuota",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Name,
+            CpuCpus,
             CpuShares,
+            CpuMems,
+            CpuQuota,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -262,7 +289,10 @@ impl<'de> serde::Deserialize<'de> for Cell {
                     {
                         match value {
                             "name" => Ok(GeneratedField::Name),
+                            "cpuCpus" | "cpu_cpus" => Ok(GeneratedField::CpuCpus),
                             "cpuShares" | "cpu_shares" => Ok(GeneratedField::CpuShares),
+                            "cpuMems" | "cpu_mems" => Ok(GeneratedField::CpuMems),
+                            "cpuQuota" | "cpu_quota" => Ok(GeneratedField::CpuQuota),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -283,7 +313,10 @@ impl<'de> serde::Deserialize<'de> for Cell {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut name__ = None;
+                let mut cpu_cpus__ = None;
                 let mut cpu_shares__ = None;
+                let mut cpu_mems__ = None;
+                let mut cpu_quota__ = None;
                 while let Some(k) = map.next_key()? {
                     match k {
                         GeneratedField::Name => {
@@ -291,6 +324,12 @@ impl<'de> serde::Deserialize<'de> for Cell {
                                 return Err(serde::de::Error::duplicate_field("name"));
                             }
                             name__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::CpuCpus => {
+                            if cpu_cpus__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cpuCpus"));
+                            }
+                            cpu_cpus__ = Some(map.next_value()?);
                         }
                         GeneratedField::CpuShares => {
                             if cpu_shares__.is_some() {
@@ -300,11 +339,28 @@ impl<'de> serde::Deserialize<'de> for Cell {
                                 Some(map.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
                             ;
                         }
+                        GeneratedField::CpuMems => {
+                            if cpu_mems__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cpuMems"));
+                            }
+                            cpu_mems__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::CpuQuota => {
+                            if cpu_quota__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cpuQuota"));
+                            }
+                            cpu_quota__ = 
+                                Some(map.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(Cell {
                     name: name__.unwrap_or_default(),
+                    cpu_cpus: cpu_cpus__.unwrap_or_default(),
                     cpu_shares: cpu_shares__.unwrap_or_default(),
+                    cpu_mems: cpu_mems__.unwrap_or_default(),
+                    cpu_quota: cpu_quota__.unwrap_or_default(),
                 })
             }
         }

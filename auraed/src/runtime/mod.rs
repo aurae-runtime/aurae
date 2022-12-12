@@ -33,13 +33,13 @@ mod error;
 use crate::runtime::error::CellServiceError;
 use anyhow::{anyhow, Context, Error};
 use aurae_proto::runtime::{
-    cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
-    FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
-    StopCellRequest, StopCellResponse,
+    cell_service_server, AllocateCellRequest, AllocateCellResponse, Cell,
+    Executable, FreeCellRequest, FreeCellResponse, StartCellRequest,
+    StartCellResponse, StopCellRequest, StopCellResponse,
 };
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::*;
-use log::{error, info};
+use log::info;
 use std::collections::HashMap;
 use std::io;
 use std::os::unix::process::CommandExt;
@@ -89,16 +89,18 @@ impl CellService {
     }
 
     // Here is where we define the "default" cgroup parameters for Aurae cells
-    fn create_cgroup(
-        &self,
-        cell_name: &str,
-        cpu_shares: u64,
-    ) -> Result<Cgroup, Error> {
+    fn create_cgroup(&self, cell: &Cell) -> Result<Cgroup, Error> {
         let hierarchy = hierarchy();
+        let cell_name = &cell.name;
         let cgroup: Cgroup = CgroupBuilder::new(cell_name)
+            // CPU Controller
             .cpu()
-            .shares(cpu_shares) // Use a relative share of CPU compared to other cgroups
+            .shares(cell.cpu_shares)
+            .mems(cell.cpu_mems.to_string())
+            .quota(cell.cpu_quota)
+            .cpus(cell.cpu_cpus.to_string())
             .done()
+            // Final Build
             .build(hierarchy);
 
         let mut cgroup_cache =
@@ -145,13 +147,12 @@ impl cell_service_server::CellService for CellService {
             .cell
             .ok_or(CellServiceError::MissingArgument { arg: "cell".into() })?;
         let cell_name = &cell.name;
-        let cgroup =
-            create_cgroup(cell_name, cell.cpu_shares).map_err(|e| {
-                CellServiceError::Internal {
-                    msg: format!("failed to create cgroup for {cell_name}"),
-                    err: e.to_string(),
-                }
-            })?;
+        let cgroup = self.create_cgroup(&cell.clone()).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to create cgroup for {cell_name}"),
+                err: e.to_string(),
+            }
+        })?;
 
         info!("CellService: allocate() cell_name={:?}", cell_name);
         Ok(Response::new(AllocateCellResponse {
@@ -168,9 +169,11 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let cell_name = r.cell_name;
         info!("CellService: free() cell_name={:?}", cell_name);
-        remove_cgroup(&cell_name).map_err(|e| CellServiceError::Internal {
-            msg: format!("failed to remove cgroup for {cell_name}"),
-            err: e.to_string(),
+        self.remove_cgroup(&cell_name).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to remove cgroup for {cell_name}"),
+                err: e.to_string(),
+            }
         })?;
         Ok(Response::new(FreeCellResponse {}))
     }
@@ -292,41 +295,15 @@ impl cell_service_server::CellService for CellService {
     }
 }
 
-// Here is where we define the "default" cgroup parameters for Aurae cells
-fn create_cgroup(id: &str, cpu_shares: u64) -> Result<Cgroup, Error> {
-    let hierarchy = hierarchy();
-    let cgroup: Cgroup = CgroupBuilder::new(id)
-        .cpu()
-        .shares(cpu_shares) // Use x% of the CPU relative to other cgroups
-        .done()
-        .build(hierarchy);
-    Ok(cgroup)
-}
-
-fn remove_cgroup(id: &str) -> Result<(), Error> {
-    // TODO: create a cgroup_table mapping cell name to cgroup and do this instead
-    //if let Err(err) = cgroup.delete() {
-    //    return Err(Error::from(err))
-    //}
-    //Ok(())
-
-    // The 'rmdir' command line tool from GNU coreutils calls the rmdir(2)
-    // system call directly using the 'unistd.h' header file.
-
-    // https://docs.rs/libc/latest/libc/fn.rmdir.html
-    let path = std::ffi::CString::new(format!("/sys/fs/cgroup/{}", id))?;
-    let ret = unsafe { libc::rmdir(path.as_ptr()) };
-    if ret < 0 {
-        let error = io::Error::last_os_error();
-        error!("Failed to remove cgroup ({})", error);
-        Err(Error::from(error))
-    } else {
-        Ok(())
-    }
-}
-
 fn hierarchy() -> Box<dyn Hierarchy> {
-    hierarchies::auto() // v1/v2 cgroup switch automatically
+    // Auraed will assume the V2 cgroup hierarchy by default.
+    // For now we do not change this, albeit in theory we could
+    // likely create backwards compatability for V1 hierarchy.
+    //
+    // For now, we simply... don't.
+    // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
+    // hierarchies::V2
+    Box::new(hierarchies::V2::new())
 }
 
 /// A deterministic function used to take an arbitrary shell string and attempt
