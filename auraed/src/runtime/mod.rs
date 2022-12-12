@@ -186,7 +186,11 @@ impl cell_service_server::CellService for CellService {
         let cgroup_pid = CgroupPid::from(child.id() as u64);
 
         // Add the newly started child process to the cgroup
-        cgroup.add_task(cgroup_pid).expect("adding executable to cell");
+        cgroup.add_task(cgroup_pid).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to add child process to cgroup: {e:?}"),
+            }
+        })?;
         info!("CellService: spawn() -> pid={:?}", &child.id());
 
         // Cache the Child in ChildTable
@@ -218,19 +222,34 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let cell_name = r.cell_name;
         let executable_name = r.executable_name;
-        let mut cache =
-            self.child_table.lock().expect("locking child_table mutex");
+        let mut cache = self.child_table.lock().map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to lock child table: {e:?}"),
+            }
+        })?;
         let mut child =
-            cache.remove(&cell_name).expect("removing and retrieving child");
+            cache.remove(&cell_name).ok_or(CellServiceError::Internal {
+                msg: format!("failed to find child for cell_name {cell_name}"),
+            })?;
+        let child_id = child.id();
         info!(
-            "CellService: stop() cell_name={:?} executable_name={:?} pid={:?}",
+            "CellService: stop() cell_name={:?} executable_name={:?} pid={child_id}",
             &cell_name,
             &executable_name,
-            &child.id()
         );
-        child.kill().expect("killing child");
-        // TODO: something with the exit status
-        let _ = child.wait().expect("waiting child");
+        // TODO: check for
+        child.kill().map_err(|e| CellServiceError::Internal {
+            msg: format!("failed to kill child with pid {child_id}: {e:?}",),
+        })?;
+        let exit_status =
+            child.wait().map_err(|e| CellServiceError::Internal {
+                msg: format!(
+                "failed to wait for child with pid {child_id} to be killed: {e:?}",
+            ),
+            })?;
+        info!(
+            "Child process with pid {child_id} exited with status {exit_status}",
+        );
 
         // Ok
         Ok(Response::new(StopCellResponse {}))
@@ -253,8 +272,7 @@ fn remove_cgroup(id: &str) -> Result<(), Error> {
     // system call directly using the 'unistd.h' header file.
 
     // https://docs.rs/libc/latest/libc/fn.rmdir.html
-    let path = std::ffi::CString::new(format!("/sys/fs/cgroup/{}", id))
-        .expect("valid CString");
+    let path = std::ffi::CString::new(format!("/sys/fs/cgroup/{}", id))?;
     let ret = unsafe { libc::rmdir(path.as_ptr()) };
     if ret < 0 {
         let error = io::Error::last_os_error();
