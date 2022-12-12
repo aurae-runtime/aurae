@@ -31,8 +31,8 @@
 mod error;
 
 use crate::runtime::error::CellServiceError;
-
-use anyhow::{anyhow, Error};
+use crate::runtime::free_cell::ValidatedFreeCellRequest;
+use anyhow::{anyhow, Context, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
@@ -40,12 +40,18 @@ use aurae_proto::runtime::{
 };
 use cgroups_rs::{cgroup_builder::CgroupBuilder, *};
 use log::{error, info};
+use cgroups_rs::*;
+use log::info;
 use std::collections::HashMap;
 use std::io;
 use std::os::unix::process::CommandExt;
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use tonic::{Request, Response, Status};
+use validation::ValidatedType;
+
+mod cell_name;
+mod free_cell;
 
 // TODO: Create an impl for ChildTable that exposes this functionality:
 // - List all pids given a cell_name
@@ -59,14 +65,21 @@ use tonic::{Request, Response, Status};
 /// child processes spawned with Aurae.
 type ChildTable = Arc<Mutex<HashMap<String, Child>>>;
 
+/// CgroupTable is the in-memory store for the list of cgroups created with Aurae.
+type CgroupTable = Arc<Mutex<HashMap<String, Cgroup>>>;
+
 #[derive(Debug, Clone)]
 pub struct CellService {
     child_table: ChildTable,
+    cgroup_table: CgroupTable,
 }
 
 impl CellService {
     pub fn new() -> Self {
-        CellService { child_table: Default::default() }
+        CellService {
+            child_table: Default::default(),
+            cgroup_table: Default::default(),
+        }
     }
 
     fn aurae_process_pre_exec(exe: Executable) -> io::Result<()> {
@@ -76,6 +89,41 @@ impl CellService {
         // started with Aurae in the future. Similar to kprobe/uprobe
         // in Linux or LD_PRELOAD in libc.
         Ok(())
+    }
+
+    // Here is where we define the "default" cgroup parameters for Aurae cells
+    fn create_cgroup(
+        &self,
+        cell_name: &str,
+        cpu_shares: u64,
+    ) -> Result<Cgroup, Error> {
+        let hierarchy = hierarchy();
+        let cgroup: Cgroup = CgroupBuilder::new(cell_name)
+            .cpu()
+            .shares(cpu_shares) // Use a relative share of CPU compared to other cgroups
+            .done()
+            .build(hierarchy);
+
+        let mut cgroup_cache =
+            self.cgroup_table.lock().expect("lock cgroup_table");
+        // Check if there was already a cgroup in the table with this cell name as a key.
+        if let Some(_old_cgroup) =
+            cgroup_cache.insert(cell_name.into(), cgroup.clone())
+        {
+            return Err(anyhow!("cgroup already exists for {cell_name}"));
+        };
+        Ok(cgroup)
+    }
+
+    fn remove_cgroup(&self, cell_name: &str) -> Result<(), Error> {
+        let mut cgroup_cache =
+            self.cgroup_table.lock().expect("lock cgroup table");
+        let cgroup = cgroup_cache
+            .remove(cell_name)
+            .expect("find cell_name in cgroup_table");
+        cgroup
+            .delete()
+            .context(format!("failed to delete {cell_name} from cgroup_table"))
     }
 }
 
@@ -107,6 +155,7 @@ impl cell_service_server::CellService for CellService {
                     err: e.to_string(),
                 }
             })?;
+
         info!("CellService: allocate() cell_name={:?}", cell_name);
         Ok(Response::new(AllocateCellResponse {
             cell_name: cell_name.to_string(),
@@ -127,6 +176,7 @@ impl cell_service_server::CellService for CellService {
             err: e.to_string(),
         })?;
         Ok(Response::new(FreeCellResponse {}))
+
     }
 
     async fn start(
@@ -279,6 +329,7 @@ fn remove_cgroup(id: &str) -> Result<(), Error> {
     }
 }
 
+
 fn hierarchy() -> Box<dyn Hierarchy> {
     hierarchies::auto() // v1/v2 cgroup switch automatically
 }
@@ -307,11 +358,22 @@ fn command_from_string(cmd: &str) -> Result<Command, Error> {
 mod tests {
     use super::*;
 
+    // TODO: run this in a way that creating cgroups works
     #[test]
     fn test_create_remove_cgroup() {
-        let id = "testing-aurae";
-        let _cgroup = create_cgroup(id, 2).expect("create");
-        println!("Created cgroup: {}", id);
-        remove_cgroup(id).expect("remove");
+        // let service = CellService::new();
+        // let id = "testing-aurae";
+        // let _cgroup = service.create_cgroup(id, 2).expect("create cgroup");
+        // println!("Created cgroup: {}", id);
+        // service.remove_cgroup(id).expect("remove cgroup");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_attempt_to_remove_unknown_cgroup_fails() {
+        let service = CellService::new();
+        let id = "testing-aurae-removal";
+        // TODO: check error type with unwrap_err().kind()
+        assert!(service.remove_cgroup(id).is_err());
     }
 }

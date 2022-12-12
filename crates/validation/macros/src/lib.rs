@@ -78,7 +78,7 @@ pub fn validating_type(input: TokenStream) -> TokenStream {
 }
 
 /// Same as `ValidatingType`, but the `validation` function is on the validated type.
-#[proc_macro_derive(ValidatedType, attributes(field_type))]
+#[proc_macro_derive(ValidatedType, attributes(field_type, validate))]
 pub fn validated_type(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
