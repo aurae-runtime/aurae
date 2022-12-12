@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::runtime::free_cell::ValidatedFreeCellRequest;
 use anyhow::{anyhow, Context, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
@@ -43,6 +44,10 @@ use std::os::unix::process::CommandExt;
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use tonic::{Request, Response, Status};
+use validation::ValidatedType;
+
+mod cell_name;
+mod free_cell;
 
 /// ChildTable is the in-memory Arc<Mutex<HashMap<<>>> for the list of
 /// child processes spawned with Aurae.
@@ -143,12 +148,12 @@ impl cell_service_server::CellService for CellService {
         &self,
         request: Request<FreeCellRequest>,
     ) -> Result<Response<FreeCellResponse>, Status> {
-        // Initialize the cell
-        let r = request.into_inner();
-        let cell_name = r.cell_name;
-        info!("CellService: free() cell_name={:?}", cell_name);
-        self.remove_cgroup(&cell_name).expect("remove cgroup");
-        Ok(Response::new(FreeCellResponse {}))
+        let request = request.into_inner();
+        let request = ValidatedFreeCellRequest::validate(request, None)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+
+        info!("CellService: free() cell_name={:?}", &request.cell_name);
+        request.handle(self).map(Response::new)
     }
 
     async fn start(
