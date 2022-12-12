@@ -13,19 +13,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "acidjson"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71dd62ffdfd2d3ef860e1780cde928988db68bd1c779e9065f8233c4a3aa5f56"
-dependencies = [
- "atomicwrites",
- "log",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -113,16 +100,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "atomicwrites"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb8f2cd6962fa53c0e2a9d3f97eaa7dbd1e3cbbeeb4745403515b42ae07b3ff6"
-dependencies = [
- "tempfile",
- "winapi",
-]
-
-[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -147,7 +124,6 @@ dependencies = [
 name = "auraed"
 version = "0.1.0"
 dependencies = [
- "acidjson",
  "anyhow",
  "aurae-proto",
  "cgroups-rs",
@@ -161,7 +137,6 @@ dependencies = [
  "log",
  "multi_log",
  "netlink-packet-route",
- "nix 0.26.1",
  "prost",
  "rtnetlink",
  "rustls",

@@ -28,9 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-#![allow(dead_code)]
-
-use acidjson::AcidJson;
 use anyhow::{anyhow, Error};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
@@ -47,46 +44,26 @@ use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use tonic::{Request, Response, Status};
 
-type ProcessTable = AcidJson<HashMap<String, Vec<u32>>>;
+/// ChildTable is the in-memory Arc<Mutex<HashMap<<>>> for the list of
+/// child processes spawned with Aurae.
 type ChildTable = Arc<Mutex<HashMap<String, Child>>>;
-
-// TODO: implement for PidTable:
-//  - List all pids given a cell_name
-//  - List all pids given a cell_name and a more granular executable_name
-//  - Get Cgroup from cell_name
-//  - Get Cgroup from executable_name
-//  - Get Cgroup from pid
-//  - Get Cgroup and pids from exectuable_name
 
 #[derive(Debug, Clone)]
 pub struct CellService {
-    // process_table: ProcessTable,
     child_table: ChildTable,
 }
 
 impl CellService {
     pub fn new() -> Self {
-        // TODO: probably need to have this path passed in instead so it's persistent across
-        // TODO: service restarts.
-        let mut root = std::env::temp_dir();
-        info!("Creating process table in: {:?}", root);
-        root.push("process_table.json");
-        if std::fs::read(&root).is_err() {
-            std::fs::write(&root, b"{}").expect("failed to create pidtable");
-        }
-
-        CellService {
-            // process_table: AcidJson::open(root.as_path())
-            //     .expect("unable to open process table"),
-            child_table: Default::default(),
-        }
-
-        // TODO: reconcile any executable states in the pids table.
+        CellService { child_table: Default::default() }
     }
 
     fn aurae_process_pre_exec(exe: Executable) -> io::Result<()> {
-        // Map process to cell
         info!("CellService: aurae_process_pre_exec(): {}", exe.name);
+        // Here we are executing as the new spawned pid.
+        // This is a place where we can "hook" into all processes
+        // started with Aurae in the future. Similar to kprobe/uprobe
+        // in Linux or LD_PRELOAD in libc.
         Ok(())
     }
 }
@@ -138,12 +115,11 @@ impl cell_service_server::CellService for CellService {
         let exe = r.executable.expect("executable");
         let exe_clone = exe.clone();
         let cell_name = exe.cell_name;
-        //let process_table = self.process_table.clone();
         let child_table = self.child_table.clone();
         let cgroup =
             Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
 
-        // Build the new child process
+        // Create the new child process
         info!("CellService: start() cell_name={:?} executable_name={:?} command={:?}", cell_name, exe.name, exe.command);
         let mut cmd =
             command_from_string(&exe.command).expect("command from string");
@@ -155,22 +131,20 @@ impl cell_service_server::CellService for CellService {
             })
         };
 
-        // Start the child process and add to the cgroup
+        // Start the child process
         let child = post_cmd.spawn().expect("spawning command");
         let cgroup_pid = CgroupPid::from(child.id() as u64);
+
+        // Add the newly started child process to the cgroup
         cgroup.add_task(cgroup_pid).expect("adding executable to cell");
         info!("CellService: spawn() -> pid={:?}", &child.id());
 
-        // Cache the PID details
-        //process_table.write().insert(cell_name.into(), vec![child.id()]);
-
-        // Cache the Child
-        // Insert mutex lock
+        // Cache the Child in ChildTable
         let mut cache = child_table.lock().expect("locking child_table mutex");
         let _ = cache.insert(cell_name, child);
         drop(cache);
 
-        // Insert mutex unlock
+        // Ok
         Ok(Response::new(StartCellResponse {}))
     }
 
@@ -193,6 +167,8 @@ impl cell_service_server::CellService for CellService {
         let _ = child.kill().expect("killing child");
         let _ = child.wait().expect("waiting child");
         drop(cache);
+
+        // Ok
         Ok(Response::new(StopCellResponse {}))
     }
 }
