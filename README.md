@@ -60,24 +60,34 @@ Aurae brings enterprise identity as low as the socket layer in a system, which u
 
 ## AuraeScript 
 
-Aurae offers a Turing complete scripting language written in Rust and similar to TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript).
+Aurae offers a Turing complete scripting language built on top of TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript). AuraeScript embeds the [Deno](https://deno.land) source code directly, and offers a remote client and SDK to interface directly with Aurae remotely. The AuraeScript library is automatically generated from the `.proto` files defined in the [Aurae Standard Library](https://aurae.io/stdlib/).
+
+Valid TypeScript files can be leveraged to replace static manifests, as well as interact directly with a running system.
 
 ```typescript
-let execute = true;    // Toggle execution
+#!/usr/bin/env auraescript
+let cells = new runtime.CellServiceClient();
 
-let aurae = connect(); // Connect to the daemon
-aurae.info().json();   // Show identity
+let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+    cell: runtime.Cell.fromPartial({
+        name: "my-cell",
+        cpus: "2"
+    })
+});
 
-if execute {
-    // Execute "cat /etc/resolv.conf"
-    let runtime = aurae.runtime();
-    exec("cat /etc/resolv.conf").json();
-}
+let started = await cells.start(<runtime.StartCellRequest>{
+    executable: runtime.Executable.fromPartial({
+        cellName: "my-cell",
+        command: "sleep 4000",
+        description: "Sleep for 4000 seconds",
+        name: "sleep-4000"
+    })
+})
 ```
 
-AuraeScript serves as one of many clients to the system and can be used to express workload manifests instead of YAML.
-AuraeScript can be used to control and gain visibility to the system.
-
 ## The Aurae Standard Library
+
+The Aurae Standard Library is expressed in `.proto` files and stored in this repository.
+Many components of the Aurae runtime system are automatically generated from this core definitions.
 
 See the [V0 API Reference](https://aurae.io/stdlib/v0/) for the current library definition.
