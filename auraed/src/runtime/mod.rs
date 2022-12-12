@@ -43,11 +43,12 @@ use log::{error, info};
 use std::collections::HashMap;
 use std::io;
 use std::os::unix::process::CommandExt;
-use std::process::Command;
+use std::process::{Child, Command};
+use std::sync::{Arc, Mutex};
 use tonic::{Request, Response, Status};
 
-/// maps from cell file to cell name (for now)
-type PidTable = AcidJson<HashMap<String, Vec<u32>>>;
+type ProcessTable = AcidJson<HashMap<String, Vec<u32>>>;
+type ChildTable = Arc<Mutex<HashMap<String, Child>>>;
 
 // TODO: implement for PidTable:
 //  - List all pids given a cell_name
@@ -59,7 +60,8 @@ type PidTable = AcidJson<HashMap<String, Vec<u32>>>;
 
 #[derive(Debug, Clone)]
 pub struct CellService {
-    pids: PidTable,
+    // process_table: ProcessTable,
+    child_table: ChildTable,
 }
 
 impl CellService {
@@ -67,36 +69,24 @@ impl CellService {
         // TODO: probably need to have this path passed in instead so it's persistent across
         // TODO: service restarts.
         let mut root = std::env::temp_dir();
-        info!("Creating pid table in: {:?}", root);
-        root.push("pids.json");
+        info!("Creating process table in: {:?}", root);
+        root.push("process_table.json");
         if std::fs::read(&root).is_err() {
             std::fs::write(&root, b"{}").expect("failed to create pidtable");
         }
 
         CellService {
-            pids: AcidJson::open(root.as_path())
-                .expect("unable to open pidtable"),
+            // process_table: AcidJson::open(root.as_path())
+            //     .expect("unable to open process table"),
+            child_table: Default::default(),
         }
 
         // TODO: reconcile any executable states in the pids table.
     }
 
-    fn aurae_process_pre_exec(
-        pids: &PidTable,
-        exe: Executable,
-    ) -> io::Result<()> {
+    fn aurae_process_pre_exec(exe: Executable) -> io::Result<()> {
         // Map process to cell
-        info!("Pre-exec for process: {}", exe.name);
-        let cell_name = &exe.cell_name;
-
-        let mut pids = pids.clone();
-        pids.write()
-            .insert(cell_name.into(), vec![std::process::id()])
-            .expect("failed to insert pids into table");
-
-        // just in case
-        drop(pids);
-
+        info!("CellService: aurae_process_pre_exec(): {}", exe.name);
         Ok(())
     }
 }
@@ -148,6 +138,8 @@ impl cell_service_server::CellService for CellService {
         let exe = r.executable.expect("executable");
         let exe_clone = exe.clone();
         let cell_name = exe.cell_name;
+        //let process_table = self.process_table.clone();
+        let child_table = self.child_table.clone();
         let cgroup =
             Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
 
@@ -155,21 +147,30 @@ impl cell_service_server::CellService for CellService {
         info!("CellService: start() cell_name={:?} executable_name={:?} command={:?}", cell_name, exe.name, exe.command);
         let mut cmd =
             command_from_string(&exe.command).expect("command from string");
+
         // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
-
-        let pids = self.pids.clone();
-
         let post_cmd = unsafe {
             cmd.pre_exec(move || {
-                CellService::aurae_process_pre_exec(&pids, exe_clone.clone())
+                CellService::aurae_process_pre_exec(exe_clone.clone())
             })
         };
 
+        // Start the child process and add to the cgroup
         let child = post_cmd.spawn().expect("spawning command");
-
-        let cgroup_pid = CgroupPid::from(&child);
+        let cgroup_pid = CgroupPid::from(child.id() as u64);
         cgroup.add_task(cgroup_pid).expect("adding executable to cell");
-        // TODO Buffer stdout/stderr
+        info!("CellService: spawn() -> pid={:?}", &child.id());
+
+        // Cache the PID details
+        //process_table.write().insert(cell_name.into(), vec![child.id()]);
+
+        // Cache the Child
+        // Insert mutex lock
+        let mut cache = child_table.lock().expect("locking child_table mutex");
+        let _ = cache.insert(cell_name, child);
+        drop(cache);
+
+        // Insert mutex unlock
         Ok(Response::new(StartCellResponse {}))
     }
 
@@ -180,21 +181,18 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let cell_name = r.cell_name;
         let executable_name = r.executable_name;
+        let child_table = self.child_table.clone();
+        let mut cache = child_table.lock().expect("locking child_table mutex");
+        let mut child = cache.remove(&cell_name).expect("getting child");
         info!(
-            "CellService: stop() cell_name={:?} executable_name={:?}",
-            cell_name, executable_name
+            "CellService: stop() cell_name={:?} executable_name={:?} pid={:?}",
+            &cell_name,
+            &executable_name,
+            &child.id()
         );
-
-        // TODO find pid from cgroup
-
-        // 1. Find pid from cgroup.procs
-        //    /sys/fs/cgroup/<name>/cgroup.procs
-        //    These pids are \n delimited
-
-        // 2. Get process cmdline (exe) from pid from procfs()
-
-        // 3. Find the matching "base" name from
-
+        let _ = child.kill().expect("killing child");
+        let _ = child.wait().expect("waiting child");
+        drop(cache);
         Ok(Response::new(StopCellResponse {}))
     }
 }

@@ -59,7 +59,7 @@ helpers.print(started)
 // [ Stop ]
 let stopped = await cells.stop(<runtime.StopCellRequest>{
     cellName: "my-cell",
-    executableName: "cat-fstab",
+    executableName: "sleep-4000",
 })
 helpers.print(stopped)
 

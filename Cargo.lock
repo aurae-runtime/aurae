@@ -161,6 +161,7 @@ dependencies = [
  "log",
  "multi_log",
  "netlink-packet-route",
+ "nix 0.26.1",
  "prost",
  "rtnetlink",
  "rustls",
