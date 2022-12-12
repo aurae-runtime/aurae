@@ -251,7 +251,7 @@ fn create_cgroup(id: &str, cpu_shares: u64) -> Result<Cgroup, Error> {
     let hierarchy = hierarchy();
     let cgroup: Cgroup = CgroupBuilder::new(id)
         .cpu()
-        .shares(cpu_shares) // Use 10% of the CPU relative to other cgroups
+        .shares(cpu_shares) // Use x% of the CPU relative to other cgroups
         .done()
         .build(hierarchy);
     Ok(cgroup)
