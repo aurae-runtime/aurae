@@ -28,6 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+mod error;
+
+use crate::runtime::error::CellServiceError;
 use crate::runtime::free_cell::ValidatedFreeCellRequest;
 use anyhow::{anyhow, Context, Error};
 use aurae_proto::runtime::{
@@ -35,7 +38,8 @@ use aurae_proto::runtime::{
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
     StopCellRequest, StopCellResponse,
 };
-use cgroups_rs::cgroup_builder::CgroupBuilder;
+use cgroups_rs::{cgroup_builder::CgroupBuilder, *};
+use log::{error, info};
 use cgroups_rs::*;
 use log::info;
 use std::collections::HashMap;
@@ -48,6 +52,14 @@ use validation::ValidatedType;
 
 mod cell_name;
 mod free_cell;
+
+// TODO: Create an impl for ChildTable that exposes this functionality:
+// - List all pids given a cell_name
+// - List all pids given a cell_name and a more granular executable_name
+// - Get Cgroup from cell_name
+// - Get Cgroup from executable_name
+// - Get Cgroup from pid
+// - Get Cgroup and pids from exectuable_name
 
 /// ChildTable is the in-memory Arc<Mutex<HashMap<<>>> for the list of
 /// child processes spawned with Aurae.
@@ -132,11 +144,18 @@ impl cell_service_server::CellService for CellService {
     ) -> Result<Response<AllocateCellResponse>, Status> {
         // Initialize the cell
         let r = request.into_inner();
-        let cell = r.cell.expect("cell");
+        let cell = r
+            .cell
+            .ok_or(CellServiceError::MissingArgument { arg: "cell".into() })?;
         let cell_name = &cell.name;
-        let cgroup = self
-            .create_cgroup(cell_name, cell.cpu_shares)
-            .expect("create cgroup");
+        let cgroup =
+            create_cgroup(cell_name, cell.cpu_shares).map_err(|e| {
+                CellServiceError::Internal {
+                    msg: format!("failed to create cgroup for {cell_name}"),
+                    err: e.to_string(),
+                }
+            })?;
+
         info!("CellService: allocate() cell_name={:?}", cell_name);
         Ok(Response::new(AllocateCellResponse {
             cell_name: cell_name.to_string(),
@@ -148,12 +167,16 @@ impl cell_service_server::CellService for CellService {
         &self,
         request: Request<FreeCellRequest>,
     ) -> Result<Response<FreeCellResponse>, Status> {
-        let request = request.into_inner();
-        let request = ValidatedFreeCellRequest::validate(request, None)
-            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        // Initialize the cell
+        let r = request.into_inner();
+        let cell_name = r.cell_name;
+        info!("CellService: free() cell_name={:?}", cell_name);
+        remove_cgroup(&cell_name).map_err(|e| CellServiceError::Internal {
+            msg: format!("failed to remove cgroup for {cell_name}"),
+            err: e.to_string(),
+        })?;
+        Ok(Response::new(FreeCellResponse {}))
 
-        info!("CellService: free() cell_name={:?}", &request.cell_name);
-        request.handle(self).map(Response::new)
     }
 
     async fn start(
@@ -161,17 +184,26 @@ impl cell_service_server::CellService for CellService {
         request: Request<StartCellRequest>,
     ) -> Result<Response<StartCellResponse>, Status> {
         let r = request.into_inner();
-        let exe = r.executable.expect("executable");
+        let exe = r.executable.ok_or(CellServiceError::MissingArgument {
+            arg: "executable".into(),
+        })?;
         let exe_clone = exe.clone();
+        let exe_command = exe.command;
         let cell_name = exe.cell_name;
-        let child_table = self.child_table.clone();
         let cgroup =
             Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
 
         // Create the new child process
-        info!("CellService: start() cell_name={:?} executable_name={:?} command={:?}", cell_name, exe.name, exe.command);
-        let mut cmd =
-            command_from_string(&exe.command).expect("command from string");
+        info!("CellService: start() cell_name={cell_name} executable_name={:?} command={exe_command}", exe.name);
+        let mut cmd = command_from_string(&exe_command).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!(
+                    "failed to get command from string {}",
+                    &exe_command
+                ),
+                err: e.to_string(),
+            }
+        })?;
 
         // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
         let post_cmd = unsafe {
@@ -181,19 +213,43 @@ impl cell_service_server::CellService for CellService {
         };
 
         // Start the child process
-        let child = post_cmd.spawn().expect("spawning command");
+        let child =
+            post_cmd.spawn().map_err(|e| CellServiceError::Internal {
+                msg: "failed to spawn child process".into(),
+                err: e.to_string(),
+            })?;
         let cgroup_pid = CgroupPid::from(child.id() as u64);
 
         // Add the newly started child process to the cgroup
-        cgroup.add_task(cgroup_pid).expect("adding executable to cell");
+        cgroup.add_task(cgroup_pid).map_err(|e| {
+            CellServiceError::Internal {
+                msg: "failed to add child process to cgroup".into(),
+                err: e.to_string(),
+            }
+        })?;
         info!("CellService: spawn() -> pid={:?}", &child.id());
 
         // Cache the Child in ChildTable
-        let mut cache = child_table.lock().expect("locking child_table mutex");
-        let _ = cache.insert(cell_name, child);
-        drop(cache);
+        let mut cache = self.child_table.lock().map_err(|e| {
+            CellServiceError::Internal {
+                msg: "failed to lock child_table".into(),
+                err: e.to_string(),
+            }
+        })?;
 
-        // Ok
+        // Check that we don't already have the child registered in the cache.
+        if let Some(old_child) = cache.insert(cell_name.clone(), child) {
+            return Err(CellServiceError::Internal {
+                msg: format!(
+                    "{} already exists in child_table with pid {:?}",
+                    &cell_name,
+                    old_child.id()
+                ),
+                err: "".into(),
+            }
+            .into());
+        };
+
         Ok(Response::new(StartCellResponse {}))
     }
 
@@ -204,23 +260,75 @@ impl cell_service_server::CellService for CellService {
         let r = request.into_inner();
         let cell_name = r.cell_name;
         let executable_name = r.executable_name;
-        let child_table = self.child_table.clone();
-        let mut cache = child_table.lock().expect("locking child_table mutex");
-        let mut child = cache.remove(&cell_name).expect("getting child");
+        let mut cache = self.child_table.lock().map_err(|e| {
+            CellServiceError::Internal {
+                msg: "failed to lock child table".into(),
+                err: e.to_string(),
+            }
+        })?;
+        let mut child =
+            cache.remove(&cell_name).ok_or(CellServiceError::Internal {
+                msg: format!("failed to find child for cell_name {cell_name}"),
+                err: "".into(),
+            })?;
+        let child_id = child.id();
         info!(
-            "CellService: stop() cell_name={:?} executable_name={:?} pid={:?}",
+            "CellService: stop() cell_name={:?} executable_name={:?} pid={child_id}",
             &cell_name,
             &executable_name,
-            &child.id()
         );
-        let _ = child.kill().expect("killing child");
-        let _ = child.wait().expect("waiting child");
-        drop(cache);
+        // TODO: check for
+        child.kill().map_err(|e| CellServiceError::Internal {
+            msg: format!("failed to kill child with pid {child_id}"),
+            err: e.to_string(),
+        })?;
+        let exit_status =
+            child.wait().map_err(|e| CellServiceError::Internal {
+                msg: format!("failed to wait for child with pid {child_id}"),
+                err: e.to_string(),
+            })?;
+        info!(
+            "Child process with pid {child_id} exited with status {exit_status}",
+        );
 
         // Ok
         Ok(Response::new(StopCellResponse {}))
     }
 }
+
+// Here is where we define the "default" cgroup parameters for Aurae cells
+fn create_cgroup(id: &str, cpu_shares: u64) -> Result<Cgroup, Error> {
+    let hierarchy = hierarchy();
+    let cgroup: Cgroup = CgroupBuilder::new(id)
+        .cpu()
+        .shares(cpu_shares) // Use x% of the CPU relative to other cgroups
+        .done()
+        .build(hierarchy);
+    Ok(cgroup)
+}
+
+fn remove_cgroup(id: &str) -> Result<(), Error> {
+    // TODO: create a cgroup_table mapping cell name to cgroup and do this instead
+    //if let Err(err) = cgroup.delete() {
+    //    return Err(Error::from(err))
+    //}
+    //Ok(())
+
+    // The 'rmdir' command line tool from GNU coreutils calls the rmdir(2)
+    // system call directly using the 'unistd.h' header file.
+
+    // https://docs.rs/libc/latest/libc/fn.rmdir.html
+    let path = std::ffi::CString::new(format!("/sys/fs/cgroup/{}", id))?;
+    let ret = unsafe { libc::rmdir(path.as_ptr()) };
+    if ret < 0 {
+        let error = io::Error::last_os_error();
+        error!("Failed to remove cgroup ({})", error);
+        Err(Error::from(error))
+    } else {
+        Ok(())
+    }
+}
+
 
 fn hierarchy() -> Box<dyn Hierarchy> {
     hierarchies::auto() // v1/v2 cgroup switch automatically
