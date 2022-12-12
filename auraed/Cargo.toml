@@ -54,11 +54,6 @@ rustls = "0.20.6"
 anyhow = "1.0.65"
 libc = "0.2"
 walkdir = "2"
-sea-orm = { version = "^0.9.0", features = [
-    "sqlx-sqlite",
-    "runtime-tokio-rustls",
-    "macros",
-] }
 ipnetwork = "0.20.0"
 rtnetlink = "0.11.0"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
@@ -66,3 +61,8 @@ thiserror = "1.0.37"
 libcontainer     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
 liboci-cli     = { git = "https://github.com/containers/youki.git", tag = "v0.0.2" }
 aurae-proto = { path = "../aurae-proto", version="0.1.0" }
+cgroups-rs =  { git = "https://github.com/kata-containers/cgroups-rs", branch = "main"}
+
+[build-dependencies]
+anyhow = "1.0.65"
+tonic-build = "0.8"

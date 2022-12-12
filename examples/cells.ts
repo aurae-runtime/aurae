@@ -28,19 +28,45 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+import * as helpers from "../auraescript/gen/helpers.ts";
+import * as runtime from "../auraescript/gen/runtime.ts";
 
-// @ts-ignore
-import {print} from "../auraescript/gen/helpers.ts";
-// @ts-ignore
-import {AllocateCellRequest, Cell, CellServiceClient} from "../auraescript/gen/runtime.ts";
 
-let cells = new CellServiceClient();
+let cells = new runtime.CellServiceClient();
 
-cells.allocate(<AllocateCellRequest>{
-    cell: Cell.fromPartial({
-        name: "test",
+// [ Allocate ]
+let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+    cell: runtime.Cell.fromPartial({
+        name: "my-cell",
         cpus: "2"
     })
-}).then(r => {
-    print("done")
 });
+helpers.print(allocated)
+
+
+// [ Start ]
+let started = await cells.start(<runtime.StartCellRequest>{
+    executable: runtime.Executable.fromPartial({
+        cellName: "my-cell",
+        command: "sleep 4000",
+        description: "Sleep for 4000 seconds",
+        name: "sleep-4000"
+    })
+})
+helpers.print(started)
+
+
+// [ Stop ]
+let stopped = await cells.stop(<runtime.StopCellRequest>{
+    cellName: "my-cell",
+    executableName: "sleep-4000",
+})
+helpers.print(stopped)
+
+
+// [ Free ]
+let freed = await cells.free(<runtime.FreeCellRequest>{
+    cellName: "my-cell"
+});
+helpers.print(freed)
+

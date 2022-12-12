@@ -10,12 +10,6 @@ export interface Executable {
   cellName: string;
 }
 
-/** / A reference to an executable and it's parent cell. */
-export interface ExecutableReference {
-  cellName: string;
-  executableName: string;
-}
-
 /** / An isolation resource used to divide a system into smaller resource boundaries. */
 export interface Cell {
   /**
@@ -24,23 +18,15 @@ export interface Cell {
    * / See [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
    */
   name: string;
-  cpus: string;
-  mems: string;
-  shares: number;
-  quota: number;
   /**
-   * / Linux namespaces to share with the calling process.
-   * / If all values are set to false, the resulting cell
-   * / will be as isolated as possible.
-   * /
-   * / Each shared namespace is a potential security risk.
+   * /  Cgroups can be guaranteed a minimum number of "CPU shares"
+   * /              when a system is busy.  This does not limit a cgroup's CPU
+   * /              usage if the CPUs are not busy.  For further information,
+   * /              see Documentation/scheduler/sched-design-CFS.rst (or
+   * /              Documentation/scheduler/sched-design-CFS.txt in Linux 5.2
+   * /              and earlier).
    */
-  nsShareMount: boolean;
-  nsShareUts: boolean;
-  nsShareIpc: boolean;
-  nsSharePid: boolean;
-  nsShareNet: boolean;
-  nsShareCgroup: boolean;
+  cpuShares: number;
 }
 
 export interface AllocateCellRequest {
@@ -48,16 +34,23 @@ export interface AllocateCellRequest {
 }
 
 export interface AllocateCellResponse {
+  cellName: string;
+  /**
+   * / A bool that will be set to true if the cgroup was created with
+   * / cgroup v2 controller.
+   */
+  cgroupV2: boolean;
 }
 
 export interface FreeCellRequest {
-  cell: Cell | undefined;
+  cellName: string;
 }
 
 export interface FreeCellResponse {
 }
 
 export interface StartCellRequest {
+  /** TODO Consider set of executables */
   executable: Executable | undefined;
 }
 
@@ -65,7 +58,8 @@ export interface StartCellResponse {
 }
 
 export interface StopCellRequest {
-  executableReference: ExecutableReference | undefined;
+  cellName: string;
+  executableName: string;
 }
 
 export interface StopCellResponse {
@@ -104,95 +98,29 @@ export const Executable = {
   },
 };
 
-function createBaseExecutableReference(): ExecutableReference {
-  return { cellName: "", executableName: "" };
-}
-
-export const ExecutableReference = {
-  fromJSON(object: any): ExecutableReference {
-    return {
-      cellName: isSet(object.cellName) ? String(object.cellName) : "",
-      executableName: isSet(object.executableName) ? String(object.executableName) : "",
-    };
-  },
-
-  toJSON(message: ExecutableReference): unknown {
-    const obj: any = {};
-    message.cellName !== undefined && (obj.cellName = message.cellName);
-    message.executableName !== undefined && (obj.executableName = message.executableName);
-    return obj;
-  },
-
-  fromPartial<I extends Exact<DeepPartial<ExecutableReference>, I>>(object: I): ExecutableReference {
-    const message = createBaseExecutableReference();
-    message.cellName = object.cellName ?? "";
-    message.executableName = object.executableName ?? "";
-    return message;
-  },
-};
-
 function createBaseCell(): Cell {
-  return {
-    name: "",
-    cpus: "",
-    mems: "",
-    shares: 0,
-    quota: 0,
-    nsShareMount: false,
-    nsShareUts: false,
-    nsShareIpc: false,
-    nsSharePid: false,
-    nsShareNet: false,
-    nsShareCgroup: false,
-  };
+  return { name: "", cpuShares: 0 };
 }
 
 export const Cell = {
   fromJSON(object: any): Cell {
     return {
       name: isSet(object.name) ? String(object.name) : "",
-      cpus: isSet(object.cpus) ? String(object.cpus) : "",
-      mems: isSet(object.mems) ? String(object.mems) : "",
-      shares: isSet(object.shares) ? Number(object.shares) : 0,
-      quota: isSet(object.quota) ? Number(object.quota) : 0,
-      nsShareMount: isSet(object.nsShareMount) ? Boolean(object.nsShareMount) : false,
-      nsShareUts: isSet(object.nsShareUts) ? Boolean(object.nsShareUts) : false,
-      nsShareIpc: isSet(object.nsShareIpc) ? Boolean(object.nsShareIpc) : false,
-      nsSharePid: isSet(object.nsSharePid) ? Boolean(object.nsSharePid) : false,
-      nsShareNet: isSet(object.nsShareNet) ? Boolean(object.nsShareNet) : false,
-      nsShareCgroup: isSet(object.nsShareCgroup) ? Boolean(object.nsShareCgroup) : false,
+      cpuShares: isSet(object.cpuShares) ? Number(object.cpuShares) : 0,
     };
   },
 
   toJSON(message: Cell): unknown {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
-    message.cpus !== undefined && (obj.cpus = message.cpus);
-    message.mems !== undefined && (obj.mems = message.mems);
-    message.shares !== undefined && (obj.shares = Math.round(message.shares));
-    message.quota !== undefined && (obj.quota = Math.round(message.quota));
-    message.nsShareMount !== undefined && (obj.nsShareMount = message.nsShareMount);
-    message.nsShareUts !== undefined && (obj.nsShareUts = message.nsShareUts);
-    message.nsShareIpc !== undefined && (obj.nsShareIpc = message.nsShareIpc);
-    message.nsSharePid !== undefined && (obj.nsSharePid = message.nsSharePid);
-    message.nsShareNet !== undefined && (obj.nsShareNet = message.nsShareNet);
-    message.nsShareCgroup !== undefined && (obj.nsShareCgroup = message.nsShareCgroup);
+    message.cpuShares !== undefined && (obj.cpuShares = Math.round(message.cpuShares));
     return obj;
   },
 
   fromPartial<I extends Exact<DeepPartial<Cell>, I>>(object: I): Cell {
     const message = createBaseCell();
     message.name = object.name ?? "";
-    message.cpus = object.cpus ?? "";
-    message.mems = object.mems ?? "";
-    message.shares = object.shares ?? 0;
-    message.quota = object.quota ?? 0;
-    message.nsShareMount = object.nsShareMount ?? false;
-    message.nsShareUts = object.nsShareUts ?? false;
-    message.nsShareIpc = object.nsShareIpc ?? false;
-    message.nsSharePid = object.nsSharePid ?? false;
-    message.nsShareNet = object.nsShareNet ?? false;
-    message.nsShareCgroup = object.nsShareCgroup ?? false;
+    message.cpuShares = object.cpuShares ?? 0;
     return message;
   },
 };
@@ -220,43 +148,50 @@ export const AllocateCellRequest = {
 };
 
 function createBaseAllocateCellResponse(): AllocateCellResponse {
-  return {};
+  return { cellName: "", cgroupV2: false };
 }
 
 export const AllocateCellResponse = {
-  fromJSON(_: any): AllocateCellResponse {
-    return {};
+  fromJSON(object: any): AllocateCellResponse {
+    return {
+      cellName: isSet(object.cellName) ? String(object.cellName) : "",
+      cgroupV2: isSet(object.cgroupV2) ? Boolean(object.cgroupV2) : false,
+    };
   },
 
-  toJSON(_: AllocateCellResponse): unknown {
+  toJSON(message: AllocateCellResponse): unknown {
     const obj: any = {};
+    message.cellName !== undefined && (obj.cellName = message.cellName);
+    message.cgroupV2 !== undefined && (obj.cgroupV2 = message.cgroupV2);
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<AllocateCellResponse>, I>>(_: I): AllocateCellResponse {
+  fromPartial<I extends Exact<DeepPartial<AllocateCellResponse>, I>>(object: I): AllocateCellResponse {
     const message = createBaseAllocateCellResponse();
+    message.cellName = object.cellName ?? "";
+    message.cgroupV2 = object.cgroupV2 ?? false;
     return message;
   },
 };
 
 function createBaseFreeCellRequest(): FreeCellRequest {
-  return { cell: undefined };
+  return { cellName: "" };
 }
 
 export const FreeCellRequest = {
   fromJSON(object: any): FreeCellRequest {
-    return { cell: isSet(object.cell) ? Cell.fromJSON(object.cell) : undefined };
+    return { cellName: isSet(object.cellName) ? String(object.cellName) : "" };
   },
 
   toJSON(message: FreeCellRequest): unknown {
     const obj: any = {};
-    message.cell !== undefined && (obj.cell = message.cell ? Cell.toJSON(message.cell) : undefined);
+    message.cellName !== undefined && (obj.cellName = message.cellName);
     return obj;
   },
 
   fromPartial<I extends Exact<DeepPartial<FreeCellRequest>, I>>(object: I): FreeCellRequest {
     const message = createBaseFreeCellRequest();
-    message.cell = (object.cell !== undefined && object.cell !== null) ? Cell.fromPartial(object.cell) : undefined;
+    message.cellName = object.cellName ?? "";
     return message;
   },
 };
@@ -327,31 +262,28 @@ export const StartCellResponse = {
 };
 
 function createBaseStopCellRequest(): StopCellRequest {
-  return { executableReference: undefined };
+  return { cellName: "", executableName: "" };
 }
 
 export const StopCellRequest = {
   fromJSON(object: any): StopCellRequest {
     return {
-      executableReference: isSet(object.executableReference)
-        ? ExecutableReference.fromJSON(object.executableReference)
-        : undefined,
+      cellName: isSet(object.cellName) ? String(object.cellName) : "",
+      executableName: isSet(object.executableName) ? String(object.executableName) : "",
     };
   },
 
   toJSON(message: StopCellRequest): unknown {
     const obj: any = {};
-    message.executableReference !== undefined && (obj.executableReference = message.executableReference
-      ? ExecutableReference.toJSON(message.executableReference)
-      : undefined);
+    message.cellName !== undefined && (obj.cellName = message.cellName);
+    message.executableName !== undefined && (obj.executableName = message.executableName);
     return obj;
   },
 
   fromPartial<I extends Exact<DeepPartial<StopCellRequest>, I>>(object: I): StopCellRequest {
     const message = createBaseStopCellRequest();
-    message.executableReference = (object.executableReference !== undefined && object.executableReference !== null)
-      ? ExecutableReference.fromPartial(object.executableReference)
-      : undefined;
+    message.cellName = object.cellName ?? "";
+    message.executableName = object.executableName ?? "";
     return message;
   },
 };
