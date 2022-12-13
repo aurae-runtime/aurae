@@ -32,16 +32,25 @@ mod cell_name;
 mod cgroup_table;
 mod child_table;
 mod error;
-mod free_cell;
+mod executable_name;
+mod validation;
 
+use crate::runtime::cell_name::CellName;
+use crate::runtime::executable_name::ExecutableName;
+use crate::runtime::validation::{
+    ValidatedAllocateCellRequest, ValidatedCell, ValidatedExecutable,
+    ValidatedFreeCellRequest, ValidatedStartCellRequest,
+    ValidatedStopCellRequest,
+};
 use crate::runtime::{
     cgroup_table::CgroupTable, child_table::ChildTable, error::CellServiceError,
 };
+use ::validation::ValidatedType;
 use anyhow::{anyhow, Context, Error};
 use aurae_proto::runtime::{
-    cell_service_server, AllocateCellRequest, AllocateCellResponse, Cell,
-    Executable, FreeCellRequest, FreeCellResponse, StartCellRequest,
-    StartCellResponse, StopCellRequest, StopCellResponse,
+    cell_service_server, AllocateCellRequest, AllocateCellResponse,
+    FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
+    StopCellRequest, StopCellResponse,
 };
 use cgroups_rs::{cgroup_builder::CgroupBuilder, *};
 use log::info;
@@ -64,8 +73,8 @@ impl CellService {
         }
     }
 
-    fn aurae_process_pre_exec(exe: Executable) -> io::Result<()> {
-        info!("CellService: aurae_process_pre_exec(): {}", exe.name);
+    fn aurae_process_pre_exec(exe_name: &ExecutableName) -> io::Result<()> {
+        info!("CellService: aurae_process_pre_exec(): {exe_name}");
         // Here we are executing as the new spawned pid.
         // This is a place where we can "hook" into all processes
         // started with Aurae in the future. Similar to kprobe/uprobe
@@ -73,32 +82,177 @@ impl CellService {
         Ok(())
     }
 
+    fn allocate(
+        &self,
+        request: ValidatedAllocateCellRequest,
+    ) -> Result<Response<AllocateCellResponse>, Status> {
+        // Initialize the cell
+        let ValidatedAllocateCellRequest { cell } = request;
+
+        let cell_name = cell.name.clone();
+        let cgroup = self.create_cgroup(cell).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to create cgroup for {cell_name}"),
+                err: e.to_string(),
+            }
+        })?;
+
+        info!("CellService: allocate() cell_name={:?}", cell_name);
+        Ok(Response::new(AllocateCellResponse {
+            cell_name: cell_name.into_inner(),
+            cgroup_v2: cgroup.v2(),
+        }))
+    }
+
+    fn free(
+        &self,
+        request: ValidatedFreeCellRequest,
+    ) -> Result<Response<FreeCellResponse>, Status> {
+        let ValidatedFreeCellRequest { cell_name } = request;
+
+        info!("CellService: free() cell_name={:?}", cell_name);
+        self.remove_cgroup(&cell_name).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to remove cgroup for {cell_name}"),
+                err: e.to_string(),
+            }
+        })?;
+
+        Ok(Response::new(FreeCellResponse {}))
+    }
+
+    fn start(
+        &self,
+        request: ValidatedStartCellRequest,
+    ) -> Result<Response<StartCellResponse>, Status> {
+        let ValidatedStartCellRequest { executable } = request;
+
+        let cgroup = Cgroup::load(
+            hierarchy(),
+            format!("/sys/fs/cgroup/{}", executable.cell_name),
+        );
+
+        // Create the new child process
+        info!(
+            "CellService: start() cell_name={} executable_name={} command={:?}",
+            executable.cell_name, executable.name, executable.command
+        );
+
+        let ValidatedExecutable {
+            name,
+            mut command,
+            description: _,
+            cell_name,
+        } = executable;
+
+        // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
+        let command = unsafe {
+            command.pre_exec(move || CellService::aurae_process_pre_exec(&name))
+        };
+
+        // Start the child process
+        let child =
+            command.spawn().map_err(|e| CellServiceError::Internal {
+                msg: "failed to spawn child process".into(),
+                err: e.to_string(),
+            })?;
+
+        let cgroup_pid = CgroupPid::from(child.id() as u64);
+
+        // Add the newly started child process to the cgroup
+        cgroup.add_task(cgroup_pid).map_err(|e| {
+            CellServiceError::Internal {
+                msg: "failed to add child process to cgroup".into(),
+                err: e.to_string(),
+            }
+        })?;
+        info!("CellService: spawn() -> pid={:?}", &child.id());
+
+        self.child_table.insert(cell_name.to_string(), child).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!("failed to insert {cell_name} into child_table"),
+                err: e.to_string(),
+            }
+        })?;
+
+        Ok(Response::new(StartCellResponse {}))
+    }
+
+    fn stop(
+        &self,
+        request: ValidatedStopCellRequest,
+    ) -> Result<Response<StopCellResponse>, Status> {
+        let ValidatedStopCellRequest { cell_name, executable_name } = request;
+
+        let mut child = self.child_table.remove(&cell_name).map_err(|e| {
+            CellServiceError::Internal {
+                msg: format!(
+                    "failed to remove child with cell_name {cell_name}"
+                ),
+                err: e.to_string(),
+            }
+        })?;
+
+        let child_id = child.id();
+        info!(
+            "CellService: stop() cell_name={:?} executable_name={:?} pid={child_id}",
+            cell_name,
+            executable_name,
+        );
+
+        // TODO: check for
+        child.kill().map_err(|e| CellServiceError::Internal {
+            msg: format!("failed to kill child with pid {child_id}"),
+            err: e.to_string(),
+        })?;
+
+        let exit_status =
+            child.wait().map_err(|e| CellServiceError::Internal {
+                msg: format!("failed to wait for child with pid {child_id}"),
+                err: e.to_string(),
+            })?;
+
+        info!(
+            "Child process with pid {child_id} exited with status {exit_status}",
+        );
+
+        Ok(Response::new(StopCellResponse {}))
+    }
+
     // Here is where we define the "default" cgroup parameters for Aurae cells
-    fn create_cgroup(&self, cell: &Cell) -> Result<Cgroup, Error> {
+    fn create_cgroup(&self, cell: ValidatedCell) -> Result<Cgroup, Error> {
+        let ValidatedCell {
+            name: _,
+            cpu_cpus,
+            cpu_shares,
+            cpu_mems,
+            cpu_quota,
+        } = cell;
+
         let hierarchy = hierarchy();
         let cell_name = &cell.name;
         let cgroup: Cgroup = CgroupBuilder::new(cell_name)
             // CPU Controller
             .cpu()
-            .shares(cell.cpu_shares)
-            .mems(cell.cpu_mems.to_string())
-            .quota(cell.cpu_quota)
-            .cpus(cell.cpu_cpus.to_string())
+            .shares(cpu_shares)
+            .mems(cpu_mems)
+            .quota(cpu_quota)
+            .cpus(cpu_cpus)
             .done()
             // Final Build
             .build(hierarchy);
 
-        self.cgroup_table.insert(cell_name, &cgroup).map_err(|e| {
-            CellServiceError::Internal {
+        self.cgroup_table
+            .insert(cell_name.to_string(), cgroup.clone())
+            .map_err(|e| CellServiceError::Internal {
                 msg: format!("failed to insert {cell_name} into cgroup_table"),
                 err: e.to_string(),
-            }
-        })?;
+            })?;
 
         Ok(cgroup)
     }
 
-    fn remove_cgroup(&self, cell_name: &str) -> Result<(), Error> {
+    fn remove_cgroup(&self, cell_name: &CellName) -> Result<(), Error> {
         self.cgroup_table
             .remove(cell_name)
             .map_err(|e| CellServiceError::Internal {
@@ -125,140 +279,40 @@ impl cell_service_server::CellService for CellService {
         &self,
         request: Request<AllocateCellRequest>,
     ) -> Result<Response<AllocateCellResponse>, Status> {
-        // Initialize the cell
-        let r = request.into_inner();
-        let cell = r
-            .cell
-            .ok_or(CellServiceError::MissingArgument { arg: "cell".into() })?;
-        let cell_name = &cell.name;
-        let cgroup = self.create_cgroup(&cell).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!("failed to create cgroup for {cell_name}"),
-                err: e.to_string(),
-            }
-        })?;
-
-        info!("CellService: allocate() cell_name={:?}", cell_name);
-        Ok(Response::new(AllocateCellResponse {
-            cell_name: cell_name.to_string(),
-            cgroup_v2: cgroup.v2(),
-        }))
+        let request = request.into_inner();
+        let request = ValidatedAllocateCellRequest::validate(request, None)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        self.allocate(request)
     }
 
     async fn free(
         &self,
         request: Request<FreeCellRequest>,
     ) -> Result<Response<FreeCellResponse>, Status> {
-        // Initialize the cell
-        let r = request.into_inner();
-        let cell_name = r.cell_name;
-        info!("CellService: free() cell_name={:?}", cell_name);
-        self.remove_cgroup(&cell_name).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!("failed to remove cgroup for {cell_name}"),
-                err: e.to_string(),
-            }
-        })?;
-        Ok(Response::new(FreeCellResponse {}))
+        let request = request.into_inner();
+        let request = ValidatedFreeCellRequest::validate(request, None)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        self.free(request)
     }
 
     async fn start(
         &self,
         request: Request<StartCellRequest>,
     ) -> Result<Response<StartCellResponse>, Status> {
-        let r = request.into_inner();
-        let exe = r.executable.ok_or(CellServiceError::MissingArgument {
-            arg: "executable".into(),
-        })?;
-        let exe_clone = exe.clone();
-        let exe_command = exe.command;
-        let cell_name = exe.cell_name;
-        let cgroup =
-            Cgroup::load(hierarchy(), format!("/sys/fs/cgroup/{}", cell_name));
-
-        // Create the new child process
-        info!("CellService: start() cell_name={cell_name} executable_name={:?} command={exe_command}", exe.name);
-        let mut cmd = command_from_string(&exe_command).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!(
-                    "failed to get command from string {}",
-                    &exe_command
-                ),
-                err: e.to_string(),
-            }
-        })?;
-
-        // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
-        let post_cmd = unsafe {
-            cmd.pre_exec(move || {
-                CellService::aurae_process_pre_exec(exe_clone.clone())
-            })
-        };
-
-        // Start the child process
-        let child =
-            post_cmd.spawn().map_err(|e| CellServiceError::Internal {
-                msg: "failed to spawn child process".into(),
-                err: e.to_string(),
-            })?;
-        let cgroup_pid = CgroupPid::from(child.id() as u64);
-
-        // Add the newly started child process to the cgroup
-        cgroup.add_task(cgroup_pid).map_err(|e| {
-            CellServiceError::Internal {
-                msg: "failed to add child process to cgroup".into(),
-                err: e.to_string(),
-            }
-        })?;
-        info!("CellService: spawn() -> pid={:?}", &child.id());
-
-        self.child_table.insert(&cell_name, child).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!("failed to insert {cell_name} into child_table"),
-                err: e.to_string(),
-            }
-        })?;
-
-        Ok(Response::new(StartCellResponse {}))
+        let request = request.into_inner();
+        let request = ValidatedStartCellRequest::validate(request, None)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        self.start(request)
     }
 
     async fn stop(
         &self,
         request: Request<StopCellRequest>,
     ) -> Result<Response<StopCellResponse>, Status> {
-        let r = request.into_inner();
-        let cell_name = r.cell_name;
-        let executable_name = r.executable_name;
-        let mut child = self.child_table.remove(&cell_name).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!(
-                    "failed to remove child with cell_name {cell_name}"
-                ),
-                err: e.to_string(),
-            }
-        })?;
-        let child_id = child.id();
-        info!(
-            "CellService: stop() cell_name={:?} executable_name={:?} pid={child_id}",
-            &cell_name,
-            &executable_name,
-        );
-        // TODO: check for
-        child.kill().map_err(|e| CellServiceError::Internal {
-            msg: format!("failed to kill child with pid {child_id}"),
-            err: e.to_string(),
-        })?;
-        let exit_status =
-            child.wait().map_err(|e| CellServiceError::Internal {
-                msg: format!("failed to wait for child with pid {child_id}"),
-                err: e.to_string(),
-            })?;
-        info!(
-            "Child process with pid {child_id} exited with status {exit_status}",
-        );
-
-        // Ok
-        Ok(Response::new(StopCellResponse {}))
+        let request = request.into_inner();
+        let request = ValidatedStopCellRequest::validate(request, None)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        self.stop(request)
     }
 }
 
@@ -310,8 +364,8 @@ mod tests {
     #[test]
     fn test_attempt_to_remove_unknown_cgroup_fails() {
         let service = CellService::new();
-        let id = "testing-aurae-removal";
+        let id = CellName::new("testing-aurae-removal".into());
         // TODO: check error type with unwrap_err().kind()
-        assert!(service.remove_cgroup(id).is_err());
+        assert!(service.remove_cgroup(&id).is_err());
     }
 }

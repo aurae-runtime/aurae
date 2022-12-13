@@ -18,15 +18,15 @@ impl ChildTable {
     /// when it is removed from the cache.
     /// Returns an error if there is already a child keyed by that cell_name in
     /// the cache.
-    pub(crate) fn insert(&self, cell_name: &str, child: Child) -> Result<()> {
+    pub(crate) fn insert(&self, cell_name: String, child: Child) -> Result<()> {
         // Cache the Child in ChildTable
         let mut cache = self.cache.lock().map_err(|e| anyhow!("{e:?}"))?;
 
         // Check that we don't already have the child registered in the cache.
-        if let Some(old_child) = cache.insert(cell_name.into(), child) {
+        if let Some(old_child) = cache.insert(cell_name.clone(), child) {
             return Err(anyhow!(format!(
                 "{} already exists in child_table with pid {:?}",
-                &cell_name,
+                cell_name,
                 old_child.id()
             )));
         };
@@ -64,7 +64,7 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", child).expect("inserted in table");
+        table.insert("test".to_string(), child).expect("inserted in table");
         {
             let mut cache = table.cache.lock().expect("lock table");
             assert!(cache.contains_key("test"));
@@ -87,8 +87,8 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", child).expect("inserted in table");
-        assert!(table.insert("test", child2).is_err());
+        table.insert("test".to_string(), child).expect("inserted in table");
+        assert!(table.insert("test".to_string(), child2).is_err());
         {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();
@@ -106,7 +106,7 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", child).expect("inserted in table");
+        table.insert("test".to_string(), child).expect("inserted in table");
         let _ = table.remove("test").expect("removed from table");
         {
             let mut cache = table.cache.lock().expect("lock table");

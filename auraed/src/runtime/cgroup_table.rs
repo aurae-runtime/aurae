@@ -15,7 +15,7 @@ pub(crate) struct CgroupTable {
 // - Get Cgroup from cell_name
 // - Get Cgroup from executable_name
 // - Get Cgroup from pid
-// - Get Cgroup and pids from exectuable_name
+// - Get Cgroup and pids from executable_name
 
 impl CgroupTable {
     /// Add the [cgroup] to the cache with key [cell_name].
@@ -24,17 +24,16 @@ impl CgroupTable {
     /// Returns an error if a duplicate [cell_name] already exists in the cache.
     pub(crate) fn insert(
         &self,
-        cell_name: &str,
-        cgroup: &Cgroup,
+        cell_name: String,
+        cgroup: Cgroup,
     ) -> Result<()> {
         let mut cache = self
             .cache
             .lock()
             .map_err(|e| anyhow!("failed to lock cgroup_table: {e:?}"))?;
         // Check if there was already a cgroup in the table with this cell name as a key.
-        if let Some(_old_cgroup) =
-            cache.insert(cell_name.into(), cgroup.clone())
-        {
+        // TODO: This seems like a bug since it potentially replaces an existing value. Guard against this scenario.
+        if let Some(_old_cgroup) = cache.insert(cell_name.clone(), cgroup) {
             return Err(anyhow!("cgroup already exists for {cell_name}"));
         };
         Ok(())
@@ -68,7 +67,7 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", &cgroup).expect("inserted in table");
+        table.insert("test".to_string(), cgroup).expect("inserted in table");
         {
             let mut cache = table.cache.lock().expect("lock table");
             assert!(cache.contains_key("test"));
@@ -85,8 +84,10 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", &cgroup).expect("inserted in table");
-        assert!(table.insert("test", &cgroup).is_err());
+        table
+            .insert("test".to_string(), cgroup.clone())
+            .expect("inserted in table");
+        assert!(table.insert("test".to_string(), cgroup).is_err());
         {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();
@@ -102,7 +103,7 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", &cgroup).expect("inserted in table");
+        table.insert("test".to_string(), cgroup).expect("inserted in table");
         let _ = table.remove("test").expect("removed from table");
         {
             let mut cache = table.cache.lock().expect("lock table");
