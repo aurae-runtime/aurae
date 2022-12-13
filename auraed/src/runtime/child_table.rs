@@ -64,7 +64,7 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", child).expect("inserted in table");
+        table.insert("test".to_string(), child).expect("inserted in table");
         {
             let mut cache = table.cache.lock().expect("lock table");
             assert!(cache.contains_key("test"));
@@ -87,8 +87,8 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", child).expect("inserted in table");
-        assert!(table.insert("test", child2).is_err());
+        table.insert("test".to_string(), child).expect("inserted in table");
+        assert!(table.insert("test".to_string(), child2).is_err());
         {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();
@@ -106,7 +106,7 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test", child).expect("inserted in table");
+        table.insert("test".to_string(), child).expect("inserted in table");
         let _ = table.remove("test").expect("removed from table");
         {
             let mut cache = table.cache.lock().expect("lock table");
