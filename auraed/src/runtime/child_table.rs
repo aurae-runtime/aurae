@@ -18,15 +18,15 @@ impl ChildTable {
     /// when it is removed from the cache.
     /// Returns an error if there is already a child keyed by that cell_name in
     /// the cache.
-    pub(crate) fn insert(&self, cell_name: &str, child: Child) -> Result<()> {
+    pub(crate) fn insert(&self, cell_name: String, child: Child) -> Result<()> {
         // Cache the Child in ChildTable
         let mut cache = self.cache.lock().map_err(|e| anyhow!("{e:?}"))?;
 
         // Check that we don't already have the child registered in the cache.
-        if let Some(old_child) = cache.insert(cell_name.into(), child) {
+        if let Some(old_child) = cache.insert(cell_name.clone(), child) {
             return Err(anyhow!(format!(
                 "{} already exists in child_table with pid {:?}",
-                &cell_name,
+                cell_name,
                 old_child.id()
             )));
         };

@@ -1,10 +1,16 @@
+use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 use validation::{ValidatedField, ValidationError};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub(crate) struct CellName(String);
 
 impl CellName {
+    #[cfg(test)]
+    pub fn new(name: String) -> Self {
+        Self(name)
+    }
+
     pub fn validate_for_creation(
         input: Option<String>,
         field_name: &str,
@@ -26,6 +32,10 @@ impl CellName {
 
         Ok(input)
     }
+
+    pub fn into_inner(self) -> String {
+        self.0
+    }
 }
 
 impl ValidatedField<String> for CellName {
@@ -46,5 +56,11 @@ impl Deref for CellName {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl Display for CellName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }

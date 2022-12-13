@@ -1,7 +1,8 @@
+use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 use validation::{ValidatedField, ValidationError};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub(crate) struct ExecutableName(String);
 
 impl ExecutableName {
@@ -26,6 +27,10 @@ impl ExecutableName {
 
         Ok(input)
     }
+
+    pub fn into_inner(self) -> String {
+        self.0
+    }
 }
 
 impl ValidatedField<String> for ExecutableName {
@@ -46,5 +51,11 @@ impl Deref for ExecutableName {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl Display for ExecutableName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }

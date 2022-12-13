@@ -80,15 +80,15 @@ impl StopCellRequestTypeValidator for StopCellRequestValidator {}
 #[derive(ValidatedType)]
 pub(crate) struct ValidatedCell {
     #[field_type(String)]
-    name: CellName,
+    pub name: CellName,
     #[validate(none)]
-    cpu_cpus: String,
+    pub cpu_cpus: String,
     #[validate(none)]
-    cpu_shares: u64,
+    pub cpu_shares: u64,
     #[validate(none)]
-    cpu_mems: String,
+    pub cpu_mems: String,
     #[validate(none)]
-    cpu_quota: i64,
+    pub cpu_quota: i64,
 }
 
 impl CellTypeValidator for CellValidator {
@@ -104,15 +104,15 @@ impl CellTypeValidator for CellValidator {
 #[derive(ValidatedType)]
 pub(crate) struct ValidatedExecutable {
     #[field_type(String)]
-    name: ExecutableName,
+    pub name: ExecutableName,
     #[field_type(String)]
-    command: Command,
+    pub command: Command,
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
-    description: String,
+    pub description: String,
     #[field_type(String)]
     #[validate]
-    cell_name: CellName,
+    pub cell_name: CellName,
 }
 
 impl ExecutableTypeValidator for ExecutableValidator {
