@@ -74,6 +74,8 @@ where
         parent_name: Option<&str>,
     ) -> Result<Self, ValidationError>;
 
+    /// Default implementation returns immediately when input is `None`.
+    /// Otherwise, calls `Self::validate`.
     fn validate_optional(
         input: Option<T>,
         field_name: &str,
@@ -84,6 +86,18 @@ where
         }
 
         Ok(Some(Self::validate(input, field_name, parent_name)?))
+    }
+
+    /// Default implementation calls `Self::validate`.
+    ///
+    /// The purpose of this validate function is to provide a place to run stricter validation,
+    /// which is often wanted when creating things.
+    fn validate_for_creation(
+        input: Option<T>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Self, ValidationError> {
+        Self::validate(input, field_name, parent_name)
     }
 }
 

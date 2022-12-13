@@ -6,7 +6,24 @@ use validation::{ValidatedField, ValidationError};
 pub(crate) struct ExecutableName(String);
 
 impl ExecutableName {
-    pub fn validate_for_creation(
+    pub fn into_inner(self) -> String {
+        self.0
+    }
+}
+
+impl ValidatedField<String> for ExecutableName {
+    fn validate(
+        input: Option<String>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Self, ValidationError> {
+        let input =
+            validation::required_not_empty(input, field_name, parent_name)?;
+
+        Ok(Self(input))
+    }
+
+    fn validate_for_creation(
         input: Option<String>,
         field_name: &str,
         parent_name: Option<&str>,
@@ -26,23 +43,6 @@ impl ExecutableName {
         // )?;
 
         Ok(input)
-    }
-
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl ValidatedField<String> for ExecutableName {
-    fn validate(
-        input: Option<String>,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<Self, ValidationError> {
-        let input =
-            validation::required_not_empty(input, field_name, parent_name)?;
-
-        Ok(Self(input))
     }
 }
 

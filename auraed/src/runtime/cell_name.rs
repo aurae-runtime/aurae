@@ -10,8 +10,25 @@ impl CellName {
     pub fn new(name: String) -> Self {
         Self(name)
     }
+    
+    pub fn into_inner(self) -> String {
+        self.0
+    }
+}
 
-    pub fn validate_for_creation(
+impl ValidatedField<String> for CellName {
+    fn validate(
+        input: Option<String>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Self, ValidationError> {
+        let input =
+            validation::required_not_empty(input, field_name, parent_name)?;
+
+        Ok(Self(input))
+    }
+
+    fn validate_for_creation(
         input: Option<String>,
         field_name: &str,
         parent_name: Option<&str>,
@@ -31,23 +48,6 @@ impl CellName {
         )?;
 
         Ok(input)
-    }
-
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl ValidatedField<String> for CellName {
-    fn validate(
-        input: Option<String>,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<Self, ValidationError> {
-        let input =
-            validation::required_not_empty(input, field_name, parent_name)?;
-
-        Ok(Self(input))
     }
 }
 
