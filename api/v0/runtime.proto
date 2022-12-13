@@ -164,6 +164,11 @@ message StartCellRequest {
 }
 
 message StartCellResponse {
+  int64 pid = 1;
+  int64 gid = 2;
+  int64 uid = 3;
+  string user = 4;
+  string group = 5;
 }
 
 message StopCellRequest {

@@ -210,7 +210,8 @@ impl cell_service_server::CellService for CellService {
                 err: e.to_string(),
             }
         })?;
-        info!("CellService: spawn() -> pid={:?}", &child.id());
+        let child_pid = &child.id();
+        info!("CellService: spawn() -> pid={:?}", child_pid);
 
         self.child_table.insert(&cell_name, child).map_err(|e| {
             CellServiceError::Internal {
@@ -219,7 +220,14 @@ impl cell_service_server::CellService for CellService {
             }
         })?;
 
-        Ok(Response::new(StartCellResponse {}))
+        let start_response = StartCellResponse {
+            pid: child_pid.clone() as i64,
+            gid: 0,
+            uid: 0,
+            user: "".to_string(),
+            group: "".to_string(),
+        };
+        Ok(Response::new(start_response))
     }
 
     async fn stop(
