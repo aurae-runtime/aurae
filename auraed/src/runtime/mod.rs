@@ -239,7 +239,7 @@ impl CellService {
             .shares(cpu_shares)
             .mems(cpu_mems)
             .period(1000000) // microseconds in a second
-            .quota(*cpu_quota)
+            .quota(cpu_quota.into_inner())
             .cpus(cpu_cpus)
             .done()
             // Final Build
