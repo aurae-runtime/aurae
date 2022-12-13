@@ -57,6 +57,33 @@ impl Deref for CpuQuota {
 
 impl Display for CpuQuota {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        self.0.fmt(f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validation_success() {
+        let input: CpuQuota = CpuQuota::new(100000);
+        assert!(CpuQuota::validate_for_creation(
+            Some(input.into_inner()),
+            "cpu_quota",
+            None
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn test_validation_failure() {
+        let input: CpuQuota = CpuQuota::new(2000000);
+        assert!(CpuQuota::validate_for_creation(
+            Some(input.into_inner()),
+            "cpu_quota",
+            None
+        )
+        .is_err());
     }
 }

@@ -1,5 +1,6 @@
 use crate::runtime::{
-    cell_name::CellName, cpu_quota::CpuQuota, executable_name::ExecutableName,
+    cell_name::CellName, cpu_cpus::CpuCpus, cpu_quota::CpuQuota,
+    executable_name::ExecutableName,
 };
 use aurae_proto::runtime::{
     AllocateCellRequest, Cell, Executable, FreeCellRequest, StartCellRequest,
@@ -83,12 +84,17 @@ pub(crate) struct ValidatedCell {
     #[field_type(String)]
     #[validate(create)]
     pub name: CellName,
-    #[validate(none)]
-    pub cpu_cpus: String,
+
+    #[field_type(String)]
+    #[validate(create)]
+    pub cpu_cpus: CpuCpus,
+
     #[validate(none)]
     pub cpu_shares: u64,
+
     #[validate(none)]
     pub cpu_mems: String,
+
     #[field_type(i64)]
     #[validate(create)]
     pub cpu_quota: CpuQuota,

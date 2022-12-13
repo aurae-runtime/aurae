@@ -31,6 +31,7 @@
 mod cell_name;
 mod cgroup_table;
 mod child_table;
+mod cpu_cpus;
 mod cpu_quota;
 mod error;
 mod executable_name;
@@ -240,7 +241,7 @@ impl CellService {
             .mems(cpu_mems)
             .period(1000000) // microseconds in a second
             .quota(cpu_quota.into_inner())
-            .cpus(cpu_cpus)
+            .cpus(cpu_cpus.into_inner())
             .done()
             // Final Build
             .build(hierarchy);
