@@ -5,7 +5,7 @@ use aurae_proto::runtime::{
     StopCellRequest,
 };
 use std::process::Command;
-use validation::{ValidatedType, ValidationError};
+use validation::{ValidatedField, ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
 
 // TODO: Following the discord discussion of wanting to keep the logic on CellService,
