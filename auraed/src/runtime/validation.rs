@@ -5,7 +5,7 @@ use aurae_proto::runtime::{
     StopCellRequest,
 };
 use std::process::Command;
-use validation::{ValidatedField, ValidatedType, ValidationError};
+use validation::{ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
 
 // TODO: Following the discord discussion of wanting to keep the logic on CellService,
@@ -80,6 +80,7 @@ impl StopCellRequestTypeValidator for StopCellRequestValidator {}
 #[derive(ValidatedType)]
 pub(crate) struct ValidatedCell {
     #[field_type(String)]
+    #[validate(create)]
     pub name: CellName,
     #[validate(none)]
     pub cpu_cpus: String,
@@ -91,19 +92,12 @@ pub(crate) struct ValidatedCell {
     pub cpu_quota: i64,
 }
 
-impl CellTypeValidator for CellValidator {
-    fn validate_name(
-        name: String,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<CellName, ValidationError> {
-        CellName::validate_for_creation(Some(name), field_name, parent_name)
-    }
-}
+impl CellTypeValidator for CellValidator {}
 
 #[derive(ValidatedType)]
 pub(crate) struct ValidatedExecutable {
     #[field_type(String)]
+    #[validate(create)]
     pub name: ExecutableName,
     #[field_type(String)]
     pub command: Command,
@@ -116,18 +110,6 @@ pub(crate) struct ValidatedExecutable {
 }
 
 impl ExecutableTypeValidator for ExecutableValidator {
-    fn validate_name(
-        name: String,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<ExecutableName, ValidationError> {
-        ExecutableName::validate_for_creation(
-            Some(name),
-            field_name,
-            parent_name,
-        )
-    }
-
     fn validate_command(
         command: String,
         field_name: &str,
