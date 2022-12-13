@@ -37,7 +37,7 @@ let cells = new runtime.CellServiceClient();
 // [ Allocate ]
 let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
-        cpuQuota: 3,
+        cpuQuota: 300000, // 30% of the CPU
         cpuShares: 2, // Percentage of CPUs
         name: "sleeper-cell",
     })
