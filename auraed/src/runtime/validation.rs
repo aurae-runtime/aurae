@@ -1,5 +1,6 @@
-use crate::runtime::cell_name::CellName;
-use crate::runtime::executable_name::ExecutableName;
+use crate::runtime::{
+    cell_name::CellName, cpu_quota::CpuQuota, executable_name::ExecutableName,
+};
 use aurae_proto::runtime::{
     AllocateCellRequest, Cell, Executable, FreeCellRequest, StartCellRequest,
     StopCellRequest,
@@ -77,7 +78,7 @@ pub(crate) struct ValidatedStopCellRequest {
 impl StopCellRequestTypeValidator for StopCellRequestValidator {}
 
 // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
-#[derive(ValidatedType)]
+#[derive(Debug, ValidatedType)]
 pub(crate) struct ValidatedCell {
     #[field_type(String)]
     #[validate(create)]
@@ -88,8 +89,9 @@ pub(crate) struct ValidatedCell {
     pub cpu_shares: u64,
     #[validate(none)]
     pub cpu_mems: String,
-    #[validate(none)]
-    pub cpu_quota: i64,
+    #[field_type(i64)]
+    #[validate(create)]
+    pub cpu_quota: CpuQuota,
 }
 
 impl CellTypeValidator for CellValidator {}

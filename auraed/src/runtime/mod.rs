@@ -31,6 +31,7 @@
 mod cell_name;
 mod cgroup_table;
 mod child_table;
+mod cpu_quota;
 mod error;
 mod executable_name;
 mod validation;
@@ -89,6 +90,8 @@ impl CellService {
         // Initialize the cell
         let ValidatedAllocateCellRequest { cell } = request;
 
+        info!("CellService: allocate() cell={:?}", cell);
+
         let cell_name = cell.name.clone();
         let cgroup = self.create_cgroup(cell).map_err(|e| {
             CellServiceError::Internal {
@@ -97,7 +100,6 @@ impl CellService {
             }
         })?;
 
-        info!("CellService: allocate() cell_name={:?}", cell_name);
         Ok(Response::new(AllocateCellResponse {
             cell_name: cell_name.into_inner(),
             cgroup_v2: cgroup.v2(),
@@ -236,7 +238,8 @@ impl CellService {
             .cpu()
             .shares(cpu_shares)
             .mems(cpu_mems)
-            .quota(cpu_quota)
+            .period(1000000) // microseconds in a second
+            .quota(cpu_quota.into_inner())
             .cpus(cpu_cpus)
             .done()
             // Final Build

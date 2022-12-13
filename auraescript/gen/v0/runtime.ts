@@ -10,17 +10,21 @@ export interface Executable {
   cellName: string;
 }
 
-/** / An isolation resource used to divide a system into smaller resource boundaries. */
+/**
+ * / An isolation resource used to divide a system into smaller resource
+ * / boundaries.
+ */
 export interface Cell {
   /**
    * / Resource parameters for control groups (cgroups)
-   * / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) crate.
-   * / See [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
+   * / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs)
+   * / crate. See
+   * / [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
    */
   name: string;
   /**
    * / A comma-separated list of CPU IDs where the task in the control group
-   * can run. Dashes between numbers indicate ranges.
+   * / can run. Dashes between numbers indicate ranges.
    */
   cpuCpus: string;
   /**
@@ -32,16 +36,16 @@ export interface Cell {
    * /  and earlier).
    * /
    * / Weight of how much of the total CPU time should this control
-   *  group get. Note that this is hierarchical, so this is weighted
-   *  against the siblings of this control group.
+   * /  group get. Note that this is hierarchical, so this is weighted
+   * /  against the siblings of this control group.
    */
   cpuShares: number;
   /**
    * / Same syntax as the cpus field of this structure, but applies to
-   *  memory nodes instead of processors.
+   * /  memory nodes instead of processors.
    */
   cpuMems: string;
-  /** In one period, how much can the tasks run in nanoseconds. */
+  /** / In one period, how much can the tasks run in microseconds. */
   cpuQuota: number;
 }
 
@@ -350,12 +354,14 @@ export interface Spawn {
  * / A cell is an isolate set of resources of the system which can be
  * / used to run workloads.
  * /
- * / A cell is composed of a unique cgroup namespace, and unshared kernel namespaces.
+ * / A cell is composed of a unique cgroup namespace, and unshared kernel
+ * / namespaces.
  */
 export interface CellService {
   /**
    * / Reserve requested system resources for a new cell.
-   * / For cells specifically this will allocate and reserve cgroup resources only.
+   * / For cells specifically this will allocate and reserve cgroup resources
+   * / only.
    */
   allocate(request: AllocateCellRequest): Promise<AllocateCellResponse>;
   /** / Free up previously requested resources for an existing cell */
