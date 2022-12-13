@@ -14,7 +14,22 @@ impl CpuQuota {
         Self(cpu_quota)
     }
 
-    pub fn validate_for_creation(
+    pub fn into_inner(self) -> i64 {
+        self.0
+    }
+}
+
+impl ValidatedField<i64> for CpuQuota {
+    fn validate(
+        input: Option<i64>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Self, ValidationError> {
+        let input = validation::required(input, field_name, parent_name)?;
+        Ok(Self(input))
+    }
+
+    fn validate_for_creation(
         input: Option<i64>,
         field_name: &str,
         parent_name: Option<&str>,
@@ -29,21 +44,6 @@ impl CpuQuota {
             parent_name,
         )?;
         Ok(input)
-    }
-
-    pub fn into_inner(self) -> i64 {
-        self.0
-    }
-}
-
-impl ValidatedField<i64> for CpuQuota {
-    fn validate(
-        input: Option<i64>,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<Self, ValidationError> {
-        let input = validation::required(input, field_name, parent_name)?;
-        Ok(Self(input))
     }
 }
 

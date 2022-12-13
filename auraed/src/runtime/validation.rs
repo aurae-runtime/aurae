@@ -90,6 +90,7 @@ pub(crate) struct ValidatedCell {
     #[validate(none)]
     pub cpu_mems: String,
     #[field_type(i64)]
+    #[validate(create)]
     pub cpu_quota: CpuQuota,
 }
 
