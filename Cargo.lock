@@ -128,6 +128,7 @@ dependencies = [
  "aurae-proto",
  "cgroups-rs",
  "clap",
+ "fancy-regex",
  "futures",
  "h2",
  "ipnetwork",
@@ -140,6 +141,7 @@ dependencies = [
  "prost",
  "rtnetlink",
  "rustls",
+ "simple_test_case",
  "simplelog",
  "syslog",
  "thiserror",
@@ -2356,6 +2358,17 @@ name = "signature"
 version = "1.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74233d3b3b2f6d4b006dc19dee745e73e2a6bfb6f93607cd3b02bd5b00797d7c"
+
+[[package]]
+name = "simple_test_case"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e28ef0b01435ca8679e00e76b31d32aa7cc596614b49e58b3bc5e2fcf685fa5a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "simplelog"

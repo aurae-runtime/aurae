@@ -10,7 +10,7 @@ impl CellName {
     pub fn new(name: String) -> Self {
         Self(name)
     }
-    
+
     pub fn into_inner(self) -> String {
         self.0
     }
@@ -61,6 +61,6 @@ impl Deref for CellName {
 
 impl Display for CellName {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        self.0.fmt(f)
     }
 }
