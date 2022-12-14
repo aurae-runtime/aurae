@@ -9,6 +9,11 @@ impl CellName {
     pub fn into_inner(self) -> String {
         self.0
     }
+
+    #[cfg(test)]
+    pub fn random() -> Self {
+        Self(uuid::Uuid::new_v4().to_string())
+    }
 }
 
 impl ValidatedField<String> for CellName {

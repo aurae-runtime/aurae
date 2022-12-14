@@ -28,26 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-mod cell_name;
-mod cgroup_table;
-mod child_table;
+mod cells_table;
 mod cpu_cpus;
 mod cpu_quota;
 mod cpu_weight;
 mod error;
-mod executable_name;
 mod validation;
 
-use crate::runtime::cell_name::CellName;
-use crate::runtime::error::Result;
-use crate::runtime::executable_name::ExecutableName;
+pub(crate) use self::validation::ValidatedCell;
+use crate::cells::Cell;
+use crate::runtime::cells_table::CellsTable;
+use crate::runtime::error::RuntimeError;
 use crate::runtime::validation::{
-    ValidatedAllocateCellRequest, ValidatedCell, ValidatedExecutable,
+    ValidatedAllocateCellRequest, ValidatedExecutable,
     ValidatedFreeCellRequest, ValidatedStartCellRequest,
     ValidatedStopCellRequest,
-};
-use crate::runtime::{
-    cgroup_table::CgroupTable, child_table::ChildTable, error::RuntimeError,
 };
 use ::validation::ValidatedType;
 use anyhow::anyhow;
@@ -56,60 +51,55 @@ use aurae_proto::runtime::{
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
     StopCellRequest, StopCellResponse,
 };
-use cgroups_rs::{cgroup_builder::CgroupBuilder, *};
 use log::info;
-use std::{io, os::unix::process::CommandExt, process::Command};
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Clone)]
 pub struct CellService {
-    child_table: ChildTable,
-    cgroup_table: CgroupTable,
+    cells: CellsTable,
 }
 
 impl CellService {
     pub fn new() -> Self {
-        CellService {
-            child_table: Default::default(),
-            cgroup_table: Default::default(),
-        }
-    }
-
-    fn aurae_process_pre_exec(exe_name: &ExecutableName) -> io::Result<()> {
-        info!("CellService: aurae_process_pre_exec(): {exe_name}");
-        // Here we are executing as the new spawned pid.
-        // This is a place where we can "hook" into all processes
-        // started with Aurae in the future. Similar to kprobe/uprobe
-        // in Linux or LD_PRELOAD in libc.
-        Ok(())
+        CellService { cells: Default::default() }
     }
 
     fn allocate(
         &self,
         request: ValidatedAllocateCellRequest,
-    ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
+    ) -> Result<Response<AllocateCellResponse>, Status> {
         // Initialize the cell
         let ValidatedAllocateCellRequest { cell } = request;
-
         info!("CellService: allocate() cell={:?}", cell);
 
+        if self.cells.contains(&cell.name).map_err(RuntimeError::from)? {
+            return Err(RuntimeError::Other(anyhow!(
+                "cell '{}' already exists",
+                cell.name
+            ))
+            .into());
+        }
+
         let cell_name = cell.name.clone();
-        let cgroup = self.create_cgroup(cell)?;
+
+        let cell = Cell::allocate(cell);
+        let cgroup_v2 = cell.v2();
+        self.cells.insert(cell_name.clone(), cell)?;
 
         Ok(Response::new(AllocateCellResponse {
             cell_name: cell_name.into_inner(),
-            cgroup_v2: cgroup.v2(),
+            cgroup_v2,
         }))
     }
 
     fn free(
         &self,
         request: ValidatedFreeCellRequest,
-    ) -> std::result::Result<Response<FreeCellResponse>, Status> {
+    ) -> Result<Response<FreeCellResponse>, Status> {
         let ValidatedFreeCellRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
-        self.remove_cgroup(&cell_name)?;
+        self.cells.remove(&cell_name)?.free().map_err(RuntimeError::from)?;
 
         Ok(Response::new(FreeCellResponse::default()))
     }
@@ -117,7 +107,7 @@ impl CellService {
     fn start(
         &self,
         request: ValidatedStartCellRequest,
-    ) -> std::result::Result<Response<StartCellResponse>, Status> {
+    ) -> Result<Response<StartCellResponse>, Status> {
         let ValidatedStartCellRequest { cell_name, executables } = request;
 
         for executable in executables {
@@ -136,36 +126,10 @@ impl CellService {
                 cell_name, executable_name, command
             );
 
-            // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
-            let _ = {
-                let executable_name_clone = executable_name.clone();
-                unsafe {
-                    command.pre_exec(move || {
-                        CellService::aurae_process_pre_exec(
-                            &executable_name_clone,
-                        )
-                    })
-                }
-            };
-
-            // Start the child process
-            let child = command.spawn()?;
-
-            let cgroup =
-                self.cgroup_table.get(&cell_name)?.ok_or_else(|| {
-                    RuntimeError::Unallocated { resource: "cgroup".into() }
-                })?;
-
-            // Add the newly started child process to the cgroup
-            let cgroup_pid = CgroupPid::from(child.id() as u64);
-            cgroup.add_task(cgroup_pid).map_err(RuntimeError::from)?;
-
-            info!(
-                "CellService: cell_name={cell_name} executable_name={executable_name} spawn() -> pid={:?}",
-                &child.id()
-            );
-
-            self.child_table.insert(cell_name.clone(), child)?;
+            self.cells.get_then(&cell_name, move |cell| {
+                cell.spawn_executable(executable_name, command)
+                    .map_err(RuntimeError::from)
+            })?;
         }
 
         Ok(Response::new(StartCellResponse::default()))
@@ -174,62 +138,19 @@ impl CellService {
     fn stop(
         &self,
         request: ValidatedStopCellRequest,
-    ) -> std::result::Result<Response<StopCellResponse>, Status> {
+    ) -> Result<Response<StopCellResponse>, Status> {
         let ValidatedStopCellRequest { cell_name, executable_name } = request;
 
-        let mut child = self.child_table.remove(&cell_name)?;
-
-        let child_id = child.id();
         info!(
-            "CellService: stop() cell_name={:?} executable_name={:?} pid={child_id}",
-            cell_name,
-            executable_name,
+            "CellService: stop() cell_name={:?} executable_name={:?}",
+            cell_name, executable_name,
         );
 
-        child.kill()?;
-
-        let exit_status = child.wait()?;
-
-        info!(
-            "Child process with pid {child_id} exited with status {exit_status}",
-        );
+        let _exit_status = self.cells.get_then(&cell_name, move |cell| {
+            cell.kill_executable(&executable_name).map_err(RuntimeError::from)
+        })?;
 
         Ok(Response::new(StopCellResponse::default()))
-    }
-
-    // Here is where we define the "default" cgroup parameters for Aurae cells
-    fn create_cgroup(&self, cell: ValidatedCell) -> Result<Cgroup> {
-        let ValidatedCell {
-            name: cell_name,
-            cpu_cpus,
-            cpu_shares,
-            cpu_mems,
-            cpu_quota,
-        } = cell;
-
-        let hierarchy = hierarchy();
-        let cgroup: Cgroup = CgroupBuilder::new(&cell_name)
-            // CPU Controller
-            .cpu()
-            .shares(cpu_shares.into_inner())
-            .mems(cpu_mems)
-            .period(1000000) // microseconds in a second
-            .quota(cpu_quota.into_inner())
-            .cpus(cpu_cpus.into_inner())
-            .done()
-            // Final Build
-            .build(hierarchy);
-
-        self.cgroup_table.insert(cell_name, cgroup.clone())?;
-
-        Ok(cgroup)
-    }
-
-    fn remove_cgroup(&self, cell_name: &CellName) -> Result<()> {
-        self.cgroup_table
-            .remove(cell_name)?
-            .delete()
-            .map_err(RuntimeError::from)
     }
 }
 
@@ -247,7 +168,7 @@ impl cell_service_server::CellService for CellService {
     async fn allocate(
         &self,
         request: Request<AllocateCellRequest>,
-    ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
+    ) -> Result<Response<AllocateCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedAllocateCellRequest::validate(request, None)?;
         self.allocate(request)
@@ -256,7 +177,7 @@ impl cell_service_server::CellService for CellService {
     async fn free(
         &self,
         request: Request<FreeCellRequest>,
-    ) -> std::result::Result<Response<FreeCellResponse>, Status> {
+    ) -> Result<Response<FreeCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedFreeCellRequest::validate(request, None)?;
         self.free(request)
@@ -265,7 +186,7 @@ impl cell_service_server::CellService for CellService {
     async fn start(
         &self,
         request: Request<StartCellRequest>,
-    ) -> std::result::Result<Response<StartCellResponse>, Status> {
+    ) -> Result<Response<StartCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStartCellRequest::validate(request, None)?;
         self.start(request)
@@ -274,47 +195,17 @@ impl cell_service_server::CellService for CellService {
     async fn stop(
         &self,
         request: Request<StopCellRequest>,
-    ) -> std::result::Result<Response<StopCellResponse>, Status> {
+    ) -> Result<Response<StopCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStopCellRequest::validate(request, None)?;
         self.stop(request)
     }
 }
 
-fn hierarchy() -> Box<dyn Hierarchy> {
-    // Auraed will assume the V2 cgroup hierarchy by default.
-    // For now we do not change this, albeit in theory we could
-    // likely create backwards compatability for V1 hierarchy.
-    //
-    // For now, we simply... don't.
-    // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
-    // hierarchies::V2
-    Box::new(hierarchies::V2::new())
-}
-
-/// A deterministic function used to take an arbitrary shell string and attempt
-/// to convert to a Command which can be .spawn()'ed later.
-fn command_from_string(cmd: &str) -> Result<Command> {
-    let mut entries = cmd.split(' ');
-    let base = match entries.next() {
-        Some(base) => base,
-        None => {
-            return Err(anyhow!("empty base command string").into());
-        }
-    };
-
-    let mut command = Command::new(base);
-    for ent in entries {
-        if ent != base {
-            let _ = command.arg(ent);
-        }
-    }
-    Ok(command)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cells::CellName;
 
     // TODO: run this in a way that creating cgroups works
     #[test]
@@ -327,10 +218,10 @@ mod tests {
     }
 
     #[test]
-    fn test_attempt_to_remove_unknown_cgroup_fails() {
+    fn test_attempt_to_remove_unknown_cell_fails() {
         let service = CellService::new();
-        let cell_name = "testing-aurae-removal".into();
+        let cell_name = CellName::random();
         // TODO: check error type with unwrap_err().kind()
-        assert!(service.remove_cgroup(&cell_name).is_err());
+        assert!(service.free(ValidatedFreeCellRequest { cell_name }).is_err());
     }
 }

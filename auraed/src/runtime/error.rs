@@ -1,3 +1,4 @@
+use crate::cells::CellsError;
 use log::error;
 use thiserror::Error;
 use tonic::Status;
@@ -9,8 +10,6 @@ pub(crate) enum RuntimeError {
     #[error("missing argument in request: {arg}")]
     MissingArgument { arg: String },
 
-    //#[error(transparent)]
-    //ValidationError(#[from] validation::ValidationError),
     #[error("internal error: {msg}: {err}")]
     Internal { msg: String, err: String },
 
@@ -18,7 +17,7 @@ pub(crate) enum RuntimeError {
     Unallocated { resource: String },
 
     #[error(transparent)]
-    CgroupsError(#[from] cgroups_rs::error::Error),
+    CellsError(#[from] CellsError),
 
     #[error(transparent)]
     Other(#[from] anyhow::Error),
@@ -29,14 +28,13 @@ impl From<RuntimeError> for Status {
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            RuntimeError::MissingArgument { arg: _ } => {
-                //| RuntimeError::ValidationError { 0: _ } => {
+            RuntimeError::MissingArgument { .. } => {
                 Self::failed_precondition(msg)
             }
-            RuntimeError::Internal { msg: _, err: _ }
-            | RuntimeError::CgroupsError { 0: _ }
-            | RuntimeError::Other { 0: _ } => Self::internal(msg),
-            RuntimeError::Unallocated { resource: _ } => Self::not_found(msg),
+            RuntimeError::Internal { .. }
+            | RuntimeError::CellsError { .. }
+            | RuntimeError::Other { .. } => Self::internal(msg),
+            RuntimeError::Unallocated { .. } => Self::not_found(msg),
         }
     }
 }
