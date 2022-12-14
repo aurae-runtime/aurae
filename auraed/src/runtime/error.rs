@@ -27,17 +27,17 @@ pub(crate) enum RuntimeError {
 
 impl From<RuntimeError> for Status {
     fn from(err: RuntimeError) -> Self {
-        let err_msg = err.to_string();
-        error!("{err_msg}");
+        let msg = err.to_string();
+        error!("{msg}");
         match err {
             RuntimeError::MissingArgument { arg: _ }
             | RuntimeError::ValidationError { 0: _ } => {
-                Self::failed_precondition(err_msg)
+                Self::failed_precondition(msg)
             }
             RuntimeError::Internal { msg: _, err: _ }
             | RuntimeError::CgroupsError { 0: _ }
-            | RuntimeError::Other { 0: _ } => Self::internal(err_msg),
-            RuntimeError::Unallocated { resource } => Self::not_found(msg),
+            | RuntimeError::Other { 0: _ } => Self::internal(msg),
+            RuntimeError::Unallocated { resource: _ } => Self::not_found(msg),
         }
     }
 }

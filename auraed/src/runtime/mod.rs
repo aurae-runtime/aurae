@@ -140,16 +140,9 @@ impl CellService {
         // Start the child process
         let child = command.spawn()?;
 
-        let cgroup = self
-            .cgroup_table
-            .get(&cell_name)
-            .map_err(|e| CellServiceError::Internal {
-                msg: "failed to add child process to cgroup".into(),
-                err: e.to_string(),
-            })?
-            .ok_or_else(|| CellServiceError::Unallocated {
-                resource: "cgroup".into(),
-            })?;
+        let cgroup = self.cgroup_table.get(&cell_name)?.ok_or_else(|| {
+            RuntimeError::Unallocated { resource: "cgroup".into() }
+        })?;
 
         // Add the newly started child process to the cgroup
         let cgroup_pid = CgroupPid::from(child.id() as u64);
