@@ -6,11 +6,6 @@ use validation::{ValidatedField, ValidationError};
 pub(crate) struct CellName(String);
 
 impl CellName {
-    #[cfg(test)]
-    pub fn new(name: String) -> Self {
-        Self(name)
-    }
-
     pub fn into_inner(self) -> String {
         self.0
     }
@@ -62,5 +57,12 @@ impl Deref for CellName {
 impl Display for CellName {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+#[cfg(test)]
+impl From<&str> for CellName {
+    fn from(x: &str) -> Self {
+        CellName(x.into())
     }
 }
