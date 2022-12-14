@@ -56,7 +56,7 @@ pub fn validating_type(input: TokenStream) -> TokenStream {
                 #validated_type_ident,
                 ::validation::ValidationError
             > {
-                #validator_struct_ident::validate_fields(
+                #validator_struct_ident::pre_validate(
                     &self,
                     parent_name
                 )?;
@@ -65,9 +65,16 @@ pub fn validating_type(input: TokenStream) -> TokenStream {
 
                 #(#field_validations)*
 
-                Ok(#validated_type_ident {
+                let output = #validated_type_ident {
                     #(#field_names,)*
-                })
+                };
+
+                #validator_struct_ident::post_validate(
+                    &output,
+                    parent_name
+                )?;
+
+                Ok(output)
             }
         }
 
@@ -100,7 +107,7 @@ pub fn validated_type(input: TokenStream) -> TokenStream {
                 #validated_type_ident,
                 ::validation::ValidationError
             > {
-                #validator_struct_ident::validate_fields(
+                #validator_struct_ident::pre_validate(
                     &input,
                     parent_name
                 )?;
@@ -109,9 +116,16 @@ pub fn validated_type(input: TokenStream) -> TokenStream {
 
                 #(#field_validations)*
 
-                Ok(#validated_type_ident {
+                let mut output = #validated_type_ident {
                     #(#field_names,)*
-                })
+                };
+
+                #validator_struct_ident::post_validate(
+                    &output,
+                    parent_name
+                )?;
+
+                Ok(output)
             }
         }
 

@@ -123,8 +123,11 @@ impl CellService {
             let ValidatedExecutable {
                 name: executable_name,
                 mut command,
+                args,
                 description: _,
             } = executable;
+
+            let _ = command.args(args);
 
             // Create the new child process
             info!(
@@ -133,7 +136,7 @@ impl CellService {
             );
 
             // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
-            let command = {
+            let _ = {
                 let executable_name_clone = executable_name.clone();
                 unsafe {
                     command.pre_exec(move || {
