@@ -38,6 +38,7 @@ mod executable_name;
 mod validation;
 
 use crate::runtime::cell_name::CellName;
+use crate::runtime::error::Result;
 use crate::runtime::executable_name::ExecutableName;
 use crate::runtime::validation::{
     ValidatedAllocateCellRequest, ValidatedCell, ValidatedExecutable,
@@ -45,10 +46,10 @@ use crate::runtime::validation::{
     ValidatedStopCellRequest,
 };
 use crate::runtime::{
-    cgroup_table::CgroupTable, child_table::ChildTable, error::CellServiceError,
+    cgroup_table::CgroupTable, child_table::ChildTable, error::RuntimeError,
 };
 use ::validation::ValidatedType;
-use anyhow::{anyhow, Context, Error};
+use anyhow::anyhow;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
@@ -85,19 +86,14 @@ impl CellService {
     fn allocate(
         &self,
         request: ValidatedAllocateCellRequest,
-    ) -> Result<Response<AllocateCellResponse>, Status> {
+    ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
         // Initialize the cell
         let ValidatedAllocateCellRequest { cell } = request;
 
         info!("CellService: allocate() cell={:?}", cell);
 
         let cell_name = cell.name.clone();
-        let cgroup = self.create_cgroup(cell).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!("failed to create cgroup for {cell_name}"),
-                err: e.to_string(),
-            }
-        })?;
+        let cgroup = self.create_cgroup(cell)?;
 
         Ok(Response::new(AllocateCellResponse {
             cell_name: cell_name.into_inner(),
@@ -108,16 +104,11 @@ impl CellService {
     fn free(
         &self,
         request: ValidatedFreeCellRequest,
-    ) -> Result<Response<FreeCellResponse>, Status> {
+    ) -> std::result::Result<Response<FreeCellResponse>, Status> {
         let ValidatedFreeCellRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
-        self.remove_cgroup(&cell_name).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!("failed to remove cgroup for {cell_name}"),
-                err: e.to_string(),
-            }
-        })?;
+        self.remove_cgroup(&cell_name)?;
 
         Ok(Response::new(FreeCellResponse::default()))
     }
@@ -125,7 +116,7 @@ impl CellService {
     fn start(
         &self,
         request: ValidatedStartCellRequest,
-    ) -> Result<Response<StartCellResponse>, Status> {
+    ) -> std::result::Result<Response<StartCellResponse>, Status> {
         let ValidatedStartCellRequest { executable } = request;
 
         // Create the new child process
@@ -147,40 +138,19 @@ impl CellService {
         };
 
         // Start the child process
-        let child =
-            command.spawn().map_err(|e| CellServiceError::Internal {
-                msg: "failed to spawn child process".into(),
-                err: e.to_string(),
-            })?;
+        let child = command.spawn()?;
 
-        let cgroup_pid = CgroupPid::from(child.id() as u64);
-
-        let cgroup = self
-            .cgroup_table
-            .get(&cell_name)
-            .map_err(|e| CellServiceError::Internal {
-                msg: "failed to add child process to cgroup".into(),
-                err: e.to_string(),
-            })?
-            .ok_or_else(|| CellServiceError::Unallocated {
-                resource: "cgroup".into(),
-            })?;
+        let cgroup = self.cgroup_table.get(&cell_name)?.ok_or_else(|| {
+            RuntimeError::Unallocated { resource: "cgroup".into() }
+        })?;
 
         // Add the newly started child process to the cgroup
-        cgroup.add_task(cgroup_pid).map_err(|e| {
-            CellServiceError::Internal {
-                msg: "failed to add child process to cgroup".into(),
-                err: e.to_string(),
-            }
-        })?;
+        let cgroup_pid = CgroupPid::from(child.id() as u64);
+        cgroup.add_task(cgroup_pid).map_err(RuntimeError::from)?;
+
         info!("CellService: spawn() -> pid={:?}", &child.id());
 
-        self.child_table.insert(cell_name.to_string(), child).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!("failed to insert {cell_name} into child_table"),
-                err: e.to_string(),
-            }
-        })?;
+        self.child_table.insert(cell_name.to_string(), child)?;
 
         Ok(Response::new(StartCellResponse::default()))
     }
@@ -188,17 +158,10 @@ impl CellService {
     fn stop(
         &self,
         request: ValidatedStopCellRequest,
-    ) -> Result<Response<StopCellResponse>, Status> {
+    ) -> std::result::Result<Response<StopCellResponse>, Status> {
         let ValidatedStopCellRequest { cell_name, executable_name } = request;
 
-        let mut child = self.child_table.remove(&cell_name).map_err(|e| {
-            CellServiceError::Internal {
-                msg: format!(
-                    "failed to remove child with cell_name {cell_name}"
-                ),
-                err: e.to_string(),
-            }
-        })?;
+        let mut child = self.child_table.remove(&cell_name)?;
 
         let child_id = child.id();
         info!(
@@ -207,17 +170,9 @@ impl CellService {
             executable_name,
         );
 
-        // TODO: check for
-        child.kill().map_err(|e| CellServiceError::Internal {
-            msg: format!("failed to kill child with pid {child_id}"),
-            err: e.to_string(),
-        })?;
+        child.kill()?;
 
-        let exit_status =
-            child.wait().map_err(|e| CellServiceError::Internal {
-                msg: format!("failed to wait for child with pid {child_id}"),
-                err: e.to_string(),
-            })?;
+        let exit_status = child.wait()?;
 
         info!(
             "Child process with pid {child_id} exited with status {exit_status}",
@@ -227,7 +182,7 @@ impl CellService {
     }
 
     // Here is where we define the "default" cgroup parameters for Aurae cells
-    fn create_cgroup(&self, cell: ValidatedCell) -> Result<Cgroup, Error> {
+    fn create_cgroup(&self, cell: ValidatedCell) -> Result<Cgroup> {
         let ValidatedCell {
             name: _,
             cpu_cpus,
@@ -250,25 +205,16 @@ impl CellService {
             // Final Build
             .build(hierarchy);
 
-        self.cgroup_table
-            .insert(cell_name.to_string(), cgroup.clone())
-            .map_err(|e| CellServiceError::Internal {
-                msg: format!("failed to insert {cell_name} into cgroup_table"),
-                err: e.to_string(),
-            })?;
+        self.cgroup_table.insert(cell_name.to_string(), cgroup.clone())?;
 
         Ok(cgroup)
     }
 
-    fn remove_cgroup(&self, cell_name: &CellName) -> Result<(), Error> {
+    fn remove_cgroup(&self, cell_name: &CellName) -> Result<()> {
         self.cgroup_table
-            .remove(cell_name)
-            .map_err(|e| CellServiceError::Internal {
-                msg: format!("failed to remove {cell_name} from cgroup_table"),
-                err: e.to_string(),
-            })?
+            .remove(cell_name)?
             .delete()
-            .context(format!("failed to delete {cell_name}"))
+            .map_err(RuntimeError::from)
     }
 }
 
@@ -286,40 +232,36 @@ impl cell_service_server::CellService for CellService {
     async fn allocate(
         &self,
         request: Request<AllocateCellRequest>,
-    ) -> Result<Response<AllocateCellResponse>, Status> {
+    ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedAllocateCellRequest::validate(request, None)
-            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        let request = ValidatedAllocateCellRequest::validate(request, None)?;
         self.allocate(request)
     }
 
     async fn free(
         &self,
         request: Request<FreeCellRequest>,
-    ) -> Result<Response<FreeCellResponse>, Status> {
+    ) -> std::result::Result<Response<FreeCellResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedFreeCellRequest::validate(request, None)
-            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        let request = ValidatedFreeCellRequest::validate(request, None)?;
         self.free(request)
     }
 
     async fn start(
         &self,
         request: Request<StartCellRequest>,
-    ) -> Result<Response<StartCellResponse>, Status> {
+    ) -> std::result::Result<Response<StartCellResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStartCellRequest::validate(request, None)
-            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        let request = ValidatedStartCellRequest::validate(request, None)?;
         self.start(request)
     }
 
     async fn stop(
         &self,
         request: Request<StopCellRequest>,
-    ) -> Result<Response<StopCellResponse>, Status> {
+    ) -> std::result::Result<Response<StopCellResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStopCellRequest::validate(request, None)
-            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        let request = ValidatedStopCellRequest::validate(request, None)?;
         self.stop(request)
     }
 }
@@ -337,12 +279,12 @@ fn hierarchy() -> Box<dyn Hierarchy> {
 
 /// A deterministic function used to take an arbitrary shell string and attempt
 /// to convert to a Command which can be .spawn()'ed later.
-fn command_from_string(cmd: &str) -> Result<Command, Error> {
+fn command_from_string(cmd: &str) -> Result<Command> {
     let mut entries = cmd.split(' ');
     let base = match entries.next() {
         Some(base) => base,
         None => {
-            return Err(anyhow!("empty base command string"));
+            return Err(anyhow!("empty base command string").into());
         }
     };
 

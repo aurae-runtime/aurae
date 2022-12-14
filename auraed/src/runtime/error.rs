@@ -2,36 +2,41 @@ use log::error;
 use thiserror::Error;
 use tonic::Status;
 
-#[derive(Error, Debug, PartialEq, Eq)]
-pub enum CellServiceError {
+pub(crate) type Result<T> = std::result::Result<T, RuntimeError>;
+
+#[derive(Error, Debug)]
+pub(crate) enum RuntimeError {
     #[error("missing argument in request: {arg}")]
     MissingArgument { arg: String },
 
+    //#[error(transparent)]
+    //ValidationError(#[from] validation::ValidationError),
     #[error("internal error: {msg}: {err}")]
     Internal { msg: String, err: String },
 
     #[error("{resource} was not allocated")]
     Unallocated { resource: String },
+
+    #[error(transparent)]
+    CgroupsError(#[from] cgroups_rs::error::Error),
+
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }
 
-impl From<CellServiceError> for Status {
-    fn from(err: CellServiceError) -> Self {
+impl From<RuntimeError> for Status {
+    fn from(err: RuntimeError) -> Self {
+        let msg = err.to_string();
+        error!("{msg}");
         match err {
-            CellServiceError::MissingArgument { arg } => {
-                let msg = format!("missing argument in request: {arg}");
-                error!("{msg}");
+            RuntimeError::MissingArgument { arg: _ } => {
+                //| RuntimeError::ValidationError { 0: _ } => {
                 Self::failed_precondition(msg)
             }
-            CellServiceError::Internal { msg, err } => {
-                let msg = format!("internal error: {msg}: {err}");
-                error!("{msg}");
-                Self::internal(msg)
-            }
-            CellServiceError::Unallocated { resource } => {
-                let msg = format!("{resource} was not allocated before use");
-                error!("{msg}");
-                Self::not_found(msg)
-            }
+            RuntimeError::Internal { msg: _, err: _ }
+            | RuntimeError::CgroupsError { 0: _ }
+            | RuntimeError::Other { 0: _ } => Self::internal(msg),
+            RuntimeError::Unallocated { resource: _ } => Self::not_found(msg),
         }
     }
 }

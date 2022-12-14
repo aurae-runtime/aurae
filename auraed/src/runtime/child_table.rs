@@ -1,4 +1,5 @@
-use anyhow::{anyhow, Result};
+use crate::runtime::error::Result;
+use anyhow::anyhow;
 use std::{
     collections::HashMap,
     process::Child,
@@ -20,25 +21,32 @@ impl ChildTable {
     /// the cache.
     pub(crate) fn insert(&self, cell_name: String, child: Child) -> Result<()> {
         // Cache the Child in ChildTable
-        let mut cache = self.cache.lock().map_err(|e| anyhow!("{e:?}"))?;
+        let mut cache = self
+            .cache
+            .lock()
+            .map_err(|_| anyhow!("failed to lock child cache"))?;
 
-        // Check that we don't already have the child registered in the cache.
-        if let Some(old_child) = cache.insert(cell_name.clone(), child) {
-            return Err(anyhow!(format!(
-                "{} already exists in child_table with pid {:?}",
-                cell_name,
-                old_child.id()
-            )));
-        };
+        // TODO: replace with this when it becomes stable
+        // cache.try_insert(cell_name.clone(), child)
+
+        // Check if there was already a cgroup in the table with this cell name as a key.
+        if cache.contains_key(&cell_name) {
+            return Err(anyhow!("child already exists for {cell_name}").into());
+        }
+        // Ignoring return value as we've already assured ourselves that the key does not exist.
+        let _ = cache.insert(cell_name, child);
         Ok(())
     }
 
     /// Remove and return the Child process inserted with key [cell_name].
     /// Returns an error if the process cannot be found.
     pub(crate) fn remove(&self, cell_name: &str) -> Result<Child> {
-        let mut cache = self.cache.lock().map_err(|e| anyhow!("{e:?}"))?;
+        let mut cache = self
+            .cache
+            .lock()
+            .map_err(|_| anyhow!("failed to lock child cache"))?;
         cache.remove(cell_name).ok_or_else(|| {
-            anyhow!("failed to find child for cell_name {cell_name}")
+            anyhow!("failed to find child for cell_name {cell_name}").into()
         })
     }
 }
