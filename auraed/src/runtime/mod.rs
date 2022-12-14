@@ -150,7 +150,7 @@ impl CellService {
 
         info!("CellService: spawn() -> pid={:?}", &child.id());
 
-        self.child_table.insert(cell_name.to_string(), child)?;
+        self.child_table.insert(cell_name, child)?;
 
         Ok(Response::new(StartCellResponse::default()))
     }
@@ -184,7 +184,7 @@ impl CellService {
     // Here is where we define the "default" cgroup parameters for Aurae cells
     fn create_cgroup(&self, cell: ValidatedCell) -> Result<Cgroup> {
         let ValidatedCell {
-            name: _,
+            name: cell_name,
             cpu_cpus,
             cpu_shares,
             cpu_mems,
@@ -192,8 +192,7 @@ impl CellService {
         } = cell;
 
         let hierarchy = hierarchy();
-        let cell_name = &cell.name;
-        let cgroup: Cgroup = CgroupBuilder::new(cell_name)
+        let cgroup: Cgroup = CgroupBuilder::new(&cell_name)
             // CPU Controller
             .cpu()
             .shares(cpu_shares)
@@ -205,7 +204,7 @@ impl CellService {
             // Final Build
             .build(hierarchy);
 
-        self.cgroup_table.insert(cell_name.to_string(), cgroup.clone())?;
+        self.cgroup_table.insert(cell_name, cgroup.clone())?;
 
         Ok(cgroup)
     }
@@ -314,8 +313,8 @@ mod tests {
     #[test]
     fn test_attempt_to_remove_unknown_cgroup_fails() {
         let service = CellService::new();
-        let id = CellName::new("testing-aurae-removal".into());
+        let cell_name = "testing-aurae-removal".into();
         // TODO: check error type with unwrap_err().kind()
-        assert!(service.remove_cgroup(&id).is_err());
+        assert!(service.remove_cgroup(&cell_name).is_err());
     }
 }

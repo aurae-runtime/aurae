@@ -1,3 +1,4 @@
+use crate::runtime::cell_name::CellName;
 use crate::runtime::error::Result;
 use anyhow::anyhow;
 use std::{
@@ -10,7 +11,7 @@ use std::{
 /// child processes spawned with Aurae.
 #[derive(Debug, Default, Clone)]
 pub(crate) struct ChildTable {
-    cache: Arc<Mutex<HashMap<String, Child>>>,
+    cache: Arc<Mutex<HashMap<CellName, Child>>>,
 }
 
 impl ChildTable {
@@ -19,7 +20,11 @@ impl ChildTable {
     /// when it is removed from the cache.
     /// Returns an error if there is already a child keyed by that cell_name in
     /// the cache.
-    pub(crate) fn insert(&self, cell_name: String, child: Child) -> Result<()> {
+    pub(crate) fn insert(
+        &self,
+        cell_name: CellName,
+        child: Child,
+    ) -> Result<()> {
         // Cache the Child in ChildTable
         let mut cache = self
             .cache
@@ -40,7 +45,7 @@ impl ChildTable {
 
     /// Remove and return the Child process inserted with key [cell_name].
     /// Returns an error if the process cannot be found.
-    pub(crate) fn remove(&self, cell_name: &str) -> Result<Child> {
+    pub(crate) fn remove(&self, cell_name: &CellName) -> Result<Child> {
         let mut cache = self
             .cache
             .lock()
@@ -72,16 +77,16 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test".to_string(), child).expect("inserted in table");
+        table.insert("test".into(), child).expect("inserted in table");
         {
             let mut cache = table.cache.lock().expect("lock table");
-            assert!(cache.contains_key("test"));
+            assert!(cache.contains_key(&"test".into()));
             cache.clear();
         }
     }
 
     #[test]
-    fn test_dublicate_insert_is_error() {
+    fn test_duplicate_insert_is_error() {
         let table = ChildTable::default();
         let child = Command::new("sleep")
             .arg("3000")
@@ -95,8 +100,8 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test".to_string(), child).expect("inserted in table");
-        assert!(table.insert("test".to_string(), child2).is_err());
+        table.insert("test".into(), child).expect("inserted in table");
+        assert!(table.insert("test".into(), child2).is_err());
         {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();
@@ -114,8 +119,8 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test".to_string(), child).expect("inserted in table");
-        let _ = table.remove("test").expect("removed from table");
+        table.insert("test".into(), child).expect("inserted in table");
+        let _ = table.remove(&"test".into()).expect("removed from table");
         {
             let mut cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
@@ -130,7 +135,7 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        assert!(table.remove("test").is_err());
+        assert!(table.remove(&"test".into()).is_err());
         {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();

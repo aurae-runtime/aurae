@@ -1,3 +1,4 @@
+use crate::runtime::cell_name::CellName;
 use crate::runtime::error::Result;
 use anyhow::anyhow;
 use cgroups_rs::Cgroup;
@@ -9,7 +10,7 @@ use std::{
 /// CgroupTable is the in-memory store for the list of cgroups created with Aurae.
 #[derive(Debug, Default, Clone)]
 pub(crate) struct CgroupTable {
-    cache: Arc<Mutex<HashMap<String, Cgroup>>>,
+    cache: Arc<Mutex<HashMap<CellName, Cgroup>>>,
 }
 
 // TODO: add to the impl
@@ -25,7 +26,7 @@ impl CgroupTable {
     /// Returns an error if a duplicate [cell_name] already exists in the cache.
     pub(crate) fn insert(
         &self,
-        cell_name: String,
+        cell_name: CellName,
         cgroup: Cgroup,
     ) -> Result<()> {
         let mut cache = self
@@ -48,7 +49,7 @@ impl CgroupTable {
     /// Return a clone of the cgroup keyed by [cell_name] from the cache or None if it is not found.
     /// Does not relinquish ownership.
     /// Returns an error if we fail to lock the cache.
-    pub(crate) fn get(&self, cell_name: &str) -> Result<Option<Cgroup>> {
+    pub(crate) fn get(&self, cell_name: &CellName) -> Result<Option<Cgroup>> {
         let cache = self
             .cache
             .lock()
@@ -59,7 +60,7 @@ impl CgroupTable {
 
     /// Remove and return the cgroup keyed by [cell_name] from the cache.
     /// Returns an error if the cell_name does not exist in the cache.
-    pub(crate) fn remove(&self, cell_name: &str) -> Result<Cgroup> {
+    pub(crate) fn remove(&self, cell_name: &CellName) -> Result<Cgroup> {
         let mut cache = self
             .cache
             .lock()
@@ -85,16 +86,16 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test".to_string(), cgroup).expect("inserted in table");
+        table.insert("test".into(), cgroup).expect("inserted in table");
         {
             let mut cache = table.cache.lock().expect("lock table");
-            assert!(cache.contains_key("test"));
+            assert!(cache.contains_key(&"test".into()));
             cache.clear();
         }
     }
 
     #[test]
-    fn test_dublicate_insert_is_error() {
+    fn test_duplicate_insert_is_error() {
         let table = CgroupTable::default();
         let cgroup = CgroupBuilder::new("test-cell")
             .build(Box::new(hierarchies::V2::new()));
@@ -102,10 +103,8 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table
-            .insert("test".to_string(), cgroup.clone())
-            .expect("inserted in table");
-        assert!(table.insert("test".to_string(), cgroup).is_err());
+        table.insert("test".into(), cgroup.clone()).expect("inserted in table");
+        assert!(table.insert("test".into(), cgroup).is_err());
         {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();
@@ -121,8 +120,11 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test".to_string(), cgroup).expect("inserted in table");
-        assert!(table.get("test").expect("getting from cache").is_some());
+        table.insert("test".into(), cgroup).expect("inserted in table");
+        assert!(table
+            .get(&"test".into())
+            .expect("getting from cache")
+            .is_some());
         {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();
@@ -137,7 +139,10 @@ mod tests {
             assert!(cache.is_empty());
         }
 
-        assert!(table.get("test").expect("getting from cache").is_none());
+        assert!(table
+            .get(&"test".into())
+            .expect("getting from cache")
+            .is_none());
     }
 
     #[test]
@@ -149,8 +154,8 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        table.insert("test".to_string(), cgroup).expect("inserted in table");
-        let _ = table.remove("test").expect("removed from table");
+        table.insert("test".into(), cgroup).expect("inserted in table");
+        let _ = table.remove(&"test".into()).expect("removed from table");
         {
             let mut cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
@@ -165,7 +170,7 @@ mod tests {
             let cache = table.cache.lock().expect("lock table");
             assert!(cache.is_empty());
         }
-        assert!(table.remove("test").is_err());
+        assert!(table.remove(&"test".into()).is_err());
         {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();
