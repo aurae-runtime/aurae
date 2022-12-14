@@ -174,8 +174,15 @@ impl From<DeriveInput> for ValidateInput {
             trait #validator_trait_ident {
                 #(#validator_trait_fns)*
 
-                fn validate_fields(
-                    fields: &#type_ident,
+                fn pre_validate(
+                    input: &#type_ident,
+                    parent_name: Option<&str>
+                ) -> ::std::result::Result<(), ::validation::ValidationError> {
+                    Ok(())
+                }
+
+                fn post_validate(
+                    output: &mut #validated_type_ident,
                     parent_name: Option<&str>
                 ) -> ::std::result::Result<(), ::validation::ValidationError> {
                     Ok(())

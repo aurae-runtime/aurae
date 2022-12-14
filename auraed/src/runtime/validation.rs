@@ -125,6 +125,10 @@ pub(crate) struct ValidatedExecutable {
     pub name: ExecutableName,
     #[field_type(String)]
     pub command: Command,
+    #[field_type(Vec<String>)]
+    // TODO: Someone with knowledge confirm that args don't require validation.
+    #[validate(none)]
+    pub command_args: Vec<String>,
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
     pub description: String,
@@ -142,12 +146,30 @@ impl ExecutableTypeValidator for ExecutableValidator {
             parent_name,
         )?;
 
-        let command = super::command_from_string(&command).map_err(|_| {
-            ValidationError::Invalid {
-                field: validation::field_name(field_name, parent_name),
-            }
-        })?;
+        Ok(Command::new(command))
+    }
 
-        Ok(command)
+    fn post_validate(
+        output: &mut ValidatedExecutable,
+        _parent_name: Option<&str>,
+    ) -> Result<(), ValidationError> {
+        // NOTE: I'm (future-highway) using this post-validation hook to add the args to the Command.
+        //  Usually, I prefer a 1 to 1 mapping of the unvalidated to validated struct. Adding the args
+        //    to the command here kind of breaks that expectation.
+        //  A consequence is that now we have a Command with the args already set,
+        //    but also a field on the validated struct with the args still there.
+        //  That seems wierd. We could have `command_args` always be empty (the macro
+        //    currently doesn't have a way to not output all the fields in the input struct)
+        //    but that also seems wierd.
+        //  This problem mainly stems from how I chose to design the `Executable` message in the proto
+        //   (i.e., separate fields for the program and args). This problem could be avoided by having
+        //   a single field (`repeated string command`), but that seemed like a worse api.
+        let command = &mut output.command;
+
+        for arg in &output.command_args {
+            let _ = command.arg(arg);
+        }
+
+        Ok(())
     }
 }
