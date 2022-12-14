@@ -46,23 +46,39 @@ impl FreeCellRequestTypeValidator for FreeCellRequestValidator {}
 
 #[derive(ValidatedType)]
 pub(crate) struct ValidatedStartCellRequest {
-    #[field_type(Option<Executable>)]
-    pub executable: ValidatedExecutable,
+    #[field_type(String)]
+    #[validate]
+    pub cell_name: CellName,
+    #[field_type(Vec<Executable>)]
+    pub executables: Vec<ValidatedExecutable>,
 }
 
 impl StartCellRequestTypeValidator for StartCellRequestValidator {
-    fn validate_executable(
-        executable: Option<Executable>,
+    fn validate_executables(
+        executables: Vec<Executable>,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<ValidatedExecutable, ValidationError> {
-        let executable =
-            validation::required(executable, field_name, parent_name)?;
+    ) -> Result<Vec<ValidatedExecutable>, ValidationError> {
+        validation::minimum_length(
+            &executables,
+            1,
+            field_name,
+            field_name,
+            parent_name,
+        )?;
 
-        ValidatedExecutable::validate(
-            executable,
-            Some(&validation::field_name(field_name, parent_name)),
-        )
+        let base_parent_name = validation::field_name(field_name, parent_name);
+
+        let executables: Vec<_> = executables
+            .into_iter()
+            .enumerate()
+            .flat_map(|(i, executable)| {
+                let parent_name = format!("{base_parent_name}[{i}]");
+                ValidatedExecutable::validate(executable, Some(&parent_name))
+            })
+            .collect();
+
+        Ok(executables)
     }
 }
 
@@ -112,9 +128,6 @@ pub(crate) struct ValidatedExecutable {
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
     pub description: String,
-    #[field_type(String)]
-    #[validate]
-    pub cell_name: CellName,
 }
 
 impl ExecutableTypeValidator for ExecutableValidator {

@@ -117,40 +117,44 @@ impl CellService {
         &self,
         request: ValidatedStartCellRequest,
     ) -> std::result::Result<Response<StartCellResponse>, Status> {
-        let ValidatedStartCellRequest { executable } = request;
+        let ValidatedStartCellRequest { cell_name, executables } = request;
 
-        // Create the new child process
-        info!(
-            "CellService: start() cell_name={} executable_name={} command={:?}",
-            executable.cell_name, executable.name, executable.command
-        );
+        for executable in executables {
+            let ValidatedExecutable {
+                name: executable_name,
+                mut command,
+                description: _,
+            } = executable;
 
-        let ValidatedExecutable {
-            name,
-            mut command,
-            description: _,
-            cell_name,
-        } = executable;
+            // Create the new child process
+            info!(
+                "CellService: start() cell_name={} executable_name={} command={:?}",
+                cell_name, executable_name, command
+            );
 
-        // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
-        let command = unsafe {
-            command.pre_exec(move || CellService::aurae_process_pre_exec(&name))
-        };
+            // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
+            let command = unsafe {
+                command.pre_exec(move || {
+                    CellService::aurae_process_pre_exec(&executable_name)
+                })
+            };
 
-        // Start the child process
-        let child = command.spawn()?;
+            // Start the child process
+            let child = command.spawn()?;
 
-        let cgroup = self.cgroup_table.get(&cell_name)?.ok_or_else(|| {
-            RuntimeError::Unallocated { resource: "cgroup".into() }
-        })?;
+            let cgroup =
+                self.cgroup_table.get(&cell_name)?.ok_or_else(|| {
+                    RuntimeError::Unallocated { resource: "cgroup".into() }
+                })?;
 
-        // Add the newly started child process to the cgroup
-        let cgroup_pid = CgroupPid::from(child.id() as u64);
-        cgroup.add_task(cgroup_pid).map_err(RuntimeError::from)?;
+            // Add the newly started child process to the cgroup
+            let cgroup_pid = CgroupPid::from(child.id() as u64);
+            cgroup.add_task(cgroup_pid).map_err(RuntimeError::from)?;
 
-        info!("CellService: spawn() -> pid={:?}", &child.id());
+            info!("CellService: spawn() -> pid={:?}", &child.id());
 
-        self.child_table.insert(cell_name, child)?;
+            self.child_table.insert(cell_name.clone(), child)?;
+        }
 
         Ok(Response::new(StartCellResponse::default()))
     }

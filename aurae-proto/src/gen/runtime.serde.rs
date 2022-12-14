@@ -384,9 +384,6 @@ impl serde::Serialize for Executable {
         if !self.description.is_empty() {
             len += 1;
         }
-        if !self.cell_name.is_empty() {
-            len += 1;
-        }
         let mut struct_ser = serializer.serialize_struct("runtime.Executable", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
@@ -396,9 +393,6 @@ impl serde::Serialize for Executable {
         }
         if !self.description.is_empty() {
             struct_ser.serialize_field("description", &self.description)?;
-        }
-        if !self.cell_name.is_empty() {
-            struct_ser.serialize_field("cellName", &self.cell_name)?;
         }
         struct_ser.end()
     }
@@ -413,8 +407,6 @@ impl<'de> serde::Deserialize<'de> for Executable {
             "name",
             "command",
             "description",
-            "cell_name",
-            "cellName",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -422,7 +414,6 @@ impl<'de> serde::Deserialize<'de> for Executable {
             Name,
             Command,
             Description,
-            CellName,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -447,7 +438,6 @@ impl<'de> serde::Deserialize<'de> for Executable {
                             "name" => Ok(GeneratedField::Name),
                             "command" => Ok(GeneratedField::Command),
                             "description" => Ok(GeneratedField::Description),
-                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -470,7 +460,6 @@ impl<'de> serde::Deserialize<'de> for Executable {
                 let mut name__ = None;
                 let mut command__ = None;
                 let mut description__ = None;
-                let mut cell_name__ = None;
                 while let Some(k) = map.next_key()? {
                     match k {
                         GeneratedField::Name => {
@@ -491,19 +480,12 @@ impl<'de> serde::Deserialize<'de> for Executable {
                             }
                             description__ = Some(map.next_value()?);
                         }
-                        GeneratedField::CellName => {
-                            if cell_name__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("cellName"));
-                            }
-                            cell_name__ = Some(map.next_value()?);
-                        }
                     }
                 }
                 Ok(Executable {
                     name: name__.unwrap_or_default(),
                     command: command__.unwrap_or_default(),
                     description: description__.unwrap_or_default(),
-                    cell_name: cell_name__.unwrap_or_default(),
                 })
             }
         }
@@ -681,12 +663,18 @@ impl serde::Serialize for StartCellRequest {
     {
         use serde::ser::SerializeStruct;
         let mut len = 0;
-        if self.executable.is_some() {
+        if !self.cell_name.is_empty() {
+            len += 1;
+        }
+        if !self.executables.is_empty() {
             len += 1;
         }
         let mut struct_ser = serializer.serialize_struct("runtime.StartCellRequest", len)?;
-        if let Some(v) = self.executable.as_ref() {
-            struct_ser.serialize_field("executable", v)?;
+        if !self.cell_name.is_empty() {
+            struct_ser.serialize_field("cellName", &self.cell_name)?;
+        }
+        if !self.executables.is_empty() {
+            struct_ser.serialize_field("executables", &self.executables)?;
         }
         struct_ser.end()
     }
@@ -698,12 +686,15 @@ impl<'de> serde::Deserialize<'de> for StartCellRequest {
         D: serde::Deserializer<'de>,
     {
         const FIELDS: &[&str] = &[
-            "executable",
+            "cell_name",
+            "cellName",
+            "executables",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
-            Executable,
+            CellName,
+            Executables,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -725,7 +716,8 @@ impl<'de> serde::Deserialize<'de> for StartCellRequest {
                         E: serde::de::Error,
                     {
                         match value {
-                            "executable" => Ok(GeneratedField::Executable),
+                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
+                            "executables" => Ok(GeneratedField::Executables),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -745,19 +737,27 @@ impl<'de> serde::Deserialize<'de> for StartCellRequest {
                 where
                     V: serde::de::MapAccess<'de>,
             {
-                let mut executable__ = None;
+                let mut cell_name__ = None;
+                let mut executables__ = None;
                 while let Some(k) = map.next_key()? {
                     match k {
-                        GeneratedField::Executable => {
-                            if executable__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("executable"));
+                        GeneratedField::CellName => {
+                            if cell_name__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cellName"));
                             }
-                            executable__ = map.next_value()?;
+                            cell_name__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::Executables => {
+                            if executables__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("executables"));
+                            }
+                            executables__ = Some(map.next_value()?);
                         }
                     }
                 }
                 Ok(StartCellRequest {
-                    executable: executable__,
+                    cell_name: cell_name__.unwrap_or_default(),
+                    executables: executables__.unwrap_or_default(),
                 })
             }
         }
