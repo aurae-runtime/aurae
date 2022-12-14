@@ -315,13 +315,13 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "cgroups-rs"
 version = "0.2.11"
-source = "git+https://github.com/kata-containers/cgroups-rs?branch=main#0348f0a95ed7d6084d1df840dd1884b2f928bc0f"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3845d8ddaca63e9975f07b7a32262afe284561c2f0f620aa968913a65f671fd2"
 dependencies = [
  "libc",
  "log",
- "nix 0.25.1",
+ "nix",
  "regex",
- "thiserror",
 ]
 
 [[package]]
@@ -1328,18 +1328,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nix"
-version = "0.25.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f346ff70e7dbfd675fe90590b92d59ef2de15a8779ae305ebcbfd3f0caf59be4"
-dependencies = [
- "autocfg",
- "bitflags",
- "cfg-if",
- "libc",
-]
-
-[[package]]
 name = "num-bigint"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1744,7 +1732,7 @@ dependencies = [
  "log",
  "netlink-packet-route",
  "netlink-proto",
- "nix 0.24.3",
+ "nix",
  "thiserror",
  "tokio",
 ]
