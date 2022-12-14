@@ -9,9 +9,8 @@ pub(crate) enum RuntimeError {
     #[error("missing argument in request: {arg}")]
     MissingArgument { arg: String },
 
-    #[error(transparent)]
-    ValidationError(#[from] validation::ValidationError),
-
+    //#[error(transparent)]
+    //ValidationError(#[from] validation::ValidationError),
     #[error("internal error: {msg}: {err}")]
     Internal { msg: String, err: String },
 
@@ -30,8 +29,8 @@ impl From<RuntimeError> for Status {
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            RuntimeError::MissingArgument { arg: _ }
-            | RuntimeError::ValidationError { 0: _ } => {
+            RuntimeError::MissingArgument { arg: _ } => {
+                //| RuntimeError::ValidationError { 0: _ } => {
                 Self::failed_precondition(msg)
             }
             RuntimeError::Internal { msg: _, err: _ }

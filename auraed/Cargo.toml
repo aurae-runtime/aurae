@@ -54,11 +54,11 @@ netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::
 rtnetlink = "0.11.0"
 simplelog = "0.12.0"
 syslog = "6.0.1"
-thiserror = "1.0.37"
+thiserror = { workspace = true }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
 tokio-stream = { version = "0.1", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
-validation = { path = "../crates/validation", features=["regex"] }
+validation = { path = "../crates/validation", features=["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
 

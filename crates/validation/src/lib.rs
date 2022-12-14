@@ -135,3 +135,10 @@ impl ValidationError {
         }
     }
 }
+
+#[cfg(feature = "tonic")]
+impl From<ValidationError> for tonic::Status {
+    fn from(e: ValidationError) -> Self {
+        Self::failed_precondition(e.to_string())
+    }
+}

@@ -234,8 +234,7 @@ impl cell_service_server::CellService for CellService {
         request: Request<AllocateCellRequest>,
     ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedAllocateCellRequest::validate(request, None)
-            .map_err(RuntimeError::from)?;
+        let request = ValidatedAllocateCellRequest::validate(request, None)?;
         self.allocate(request)
     }
 
@@ -244,8 +243,7 @@ impl cell_service_server::CellService for CellService {
         request: Request<FreeCellRequest>,
     ) -> std::result::Result<Response<FreeCellResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedFreeCellRequest::validate(request, None)
-            .map_err(RuntimeError::from)?;
+        let request = ValidatedFreeCellRequest::validate(request, None)?;
         self.free(request)
     }
 
@@ -254,8 +252,7 @@ impl cell_service_server::CellService for CellService {
         request: Request<StartCellRequest>,
     ) -> std::result::Result<Response<StartCellResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStartCellRequest::validate(request, None)
-            .map_err(RuntimeError::from)?;
+        let request = ValidatedStartCellRequest::validate(request, None)?;
         self.start(request)
     }
 
@@ -264,8 +261,7 @@ impl cell_service_server::CellService for CellService {
         request: Request<StopCellRequest>,
     ) -> std::result::Result<Response<StopCellResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStopCellRequest::validate(request, None)
-            .map_err(RuntimeError::from)?;
+        let request = ValidatedStopCellRequest::validate(request, None)?;
         self.stop(request)
     }
 }
