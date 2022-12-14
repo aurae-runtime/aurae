@@ -98,7 +98,6 @@ message Executable {
   string name = 1;
   string command = 2;
   string description = 3;
-  string cell_name = 4;
 }
 
 /// An isolation resource used to divide a system into smaller resource
@@ -161,8 +160,8 @@ message FreeCellRequest { string cell_name = 1; }
 message FreeCellResponse {}
 
 message StartCellRequest {
-  // TODO Consider set of executables
-  Executable executable = 1;
+  string cell_name = 1;
+  repeated Executable executables = 2;
 }
 
 message StartCellResponse {}

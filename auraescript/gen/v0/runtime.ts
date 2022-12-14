@@ -7,7 +7,6 @@ export interface Executable {
   name: string;
   command: string;
   description: string;
-  cellName: string;
 }
 
 /**
@@ -70,8 +69,8 @@ export interface FreeCellResponse {
 }
 
 export interface StartCellRequest {
-  /** TODO Consider set of executables */
-  executable: Executable | undefined;
+  cellName: string;
+  executables: Executable[];
 }
 
 export interface StartCellResponse {
@@ -86,7 +85,7 @@ export interface StopCellResponse {
 }
 
 function createBaseExecutable(): Executable {
-  return { name: "", command: "", description: "", cellName: "" };
+  return { name: "", command: "", description: "" };
 }
 
 export const Executable = {
@@ -95,7 +94,6 @@ export const Executable = {
       name: isSet(object.name) ? String(object.name) : "",
       command: isSet(object.command) ? String(object.command) : "",
       description: isSet(object.description) ? String(object.description) : "",
-      cellName: isSet(object.cellName) ? String(object.cellName) : "",
     };
   },
 
@@ -104,7 +102,6 @@ export const Executable = {
     message.name !== undefined && (obj.name = message.name);
     message.command !== undefined && (obj.command = message.command);
     message.description !== undefined && (obj.description = message.description);
-    message.cellName !== undefined && (obj.cellName = message.cellName);
     return obj;
   },
 
@@ -113,7 +110,6 @@ export const Executable = {
     message.name = object.name ?? "";
     message.command = object.command ?? "";
     message.description = object.description ?? "";
-    message.cellName = object.cellName ?? "";
     return message;
   },
 };
@@ -246,26 +242,32 @@ export const FreeCellResponse = {
 };
 
 function createBaseStartCellRequest(): StartCellRequest {
-  return { executable: undefined };
+  return { cellName: "", executables: [] };
 }
 
 export const StartCellRequest = {
   fromJSON(object: any): StartCellRequest {
-    return { executable: isSet(object.executable) ? Executable.fromJSON(object.executable) : undefined };
+    return {
+      cellName: isSet(object.cellName) ? String(object.cellName) : "",
+      executables: Array.isArray(object?.executables) ? object.executables.map((e: any) => Executable.fromJSON(e)) : [],
+    };
   },
 
   toJSON(message: StartCellRequest): unknown {
     const obj: any = {};
-    message.executable !== undefined &&
-      (obj.executable = message.executable ? Executable.toJSON(message.executable) : undefined);
+    message.cellName !== undefined && (obj.cellName = message.cellName);
+    if (message.executables) {
+      obj.executables = message.executables.map((e) => e ? Executable.toJSON(e) : undefined);
+    } else {
+      obj.executables = [];
+    }
     return obj;
   },
 
   fromPartial<I extends Exact<DeepPartial<StartCellRequest>, I>>(object: I): StartCellRequest {
     const message = createBaseStartCellRequest();
-    message.executable = (object.executable !== undefined && object.executable !== null)
-      ? Executable.fromPartial(object.executable)
-      : undefined;
+    message.cellName = object.cellName ?? "";
+    message.executables = object.executables?.map((e) => Executable.fromPartial(e)) || [];
     return message;
   },
 };
