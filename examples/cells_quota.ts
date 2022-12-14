@@ -50,7 +50,7 @@ let started = await cells.start(<runtime.StartCellRequest>{
     cellName: "sleeper-cell",
     executables: [runtime.Executable.fromPartial({
         command: "sleep",
-        commandArgs: ["42"],
+        args: ["42"],
         description: "Sleep for 42 seconds",
         name: "sleep-42"
     })]

@@ -123,7 +123,7 @@ impl CellService {
             let ValidatedExecutable {
                 name: executable_name,
                 mut command,
-                command_args: _,
+                args: _,
                 description: _,
             } = executable;
 

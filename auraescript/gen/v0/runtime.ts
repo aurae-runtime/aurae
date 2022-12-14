@@ -6,7 +6,7 @@ export const protobufPackage = "runtime";
 export interface Executable {
   name: string;
   command: string;
-  commandArgs: string[];
+  args: string[];
   description: string;
 }
 
@@ -86,7 +86,7 @@ export interface StopCellResponse {
 }
 
 function createBaseExecutable(): Executable {
-  return { name: "", command: "", commandArgs: [], description: "" };
+  return { name: "", command: "", args: [], description: "" };
 }
 
 export const Executable = {
@@ -94,7 +94,7 @@ export const Executable = {
     return {
       name: isSet(object.name) ? String(object.name) : "",
       command: isSet(object.command) ? String(object.command) : "",
-      commandArgs: Array.isArray(object?.commandArgs) ? object.commandArgs.map((e: any) => String(e)) : [],
+      args: Array.isArray(object?.args) ? object.args.map((e: any) => String(e)) : [],
       description: isSet(object.description) ? String(object.description) : "",
     };
   },
@@ -103,10 +103,10 @@ export const Executable = {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
     message.command !== undefined && (obj.command = message.command);
-    if (message.commandArgs) {
-      obj.commandArgs = message.commandArgs.map((e) => e);
+    if (message.args) {
+      obj.args = message.args.map((e) => e);
     } else {
-      obj.commandArgs = [];
+      obj.args = [];
     }
     message.description !== undefined && (obj.description = message.description);
     return obj;
@@ -116,7 +116,7 @@ export const Executable = {
     const message = createBaseExecutable();
     message.name = object.name ?? "";
     message.command = object.command ?? "";
-    message.commandArgs = object.commandArgs?.map((e) => e) || [];
+    message.args = object.args?.map((e) => e) || [];
     message.description = object.description ?? "";
     return message;
   },

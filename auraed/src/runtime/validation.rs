@@ -128,7 +128,7 @@ pub(crate) struct ValidatedExecutable {
     #[field_type(Vec<String>)]
     // TODO: Someone with knowledge confirm that args don't require validation.
     #[validate(none)]
-    pub command_args: Vec<String>,
+    pub args: Vec<String>,
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
     pub description: String,
@@ -166,7 +166,7 @@ impl ExecutableTypeValidator for ExecutableValidator {
         //   a single field (`repeated string command`), but that seemed like a worse api.
         let command = &mut output.command;
 
-        for arg in &output.command_args {
+        for arg in &output.args {
             let _ = command.arg(arg);
         }
 
