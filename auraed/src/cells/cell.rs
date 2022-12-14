@@ -49,6 +49,8 @@ impl Cell {
         &mut self,
         exe_name: ExecutableName,
         mut command: Command,
+        args: Vec<String>,
+        _description: String,
     ) -> Result<()> {
         // Check if there was already an executable with the same name.
         if self.executables.contains_key(&exe_name) {
@@ -58,6 +60,8 @@ impl Cell {
             )
             .into());
         }
+
+        let _ = command.args(args);
 
         // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
         let _ = {

@@ -113,12 +113,10 @@ impl CellService {
         for executable in executables {
             let ValidatedExecutable {
                 name: executable_name,
-                mut command,
+                command,
                 args,
-                description: _,
+                description,
             } = executable;
-
-            let _ = command.args(args);
 
             // Create the new child process
             info!(
@@ -127,8 +125,13 @@ impl CellService {
             );
 
             self.cells.get_then(&cell_name, move |cell| {
-                cell.spawn_executable(executable_name, command)
-                    .map_err(RuntimeError::from)
+                cell.spawn_executable(
+                    executable_name,
+                    command,
+                    args,
+                    description,
+                )
+                .map_err(RuntimeError::from)
             })?;
         }
 
