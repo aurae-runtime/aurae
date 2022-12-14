@@ -1,4 +1,5 @@
-use anyhow::{anyhow, Result};
+use crate::runtime::error::Result;
+use anyhow::anyhow;
 use cgroups_rs::Cgroup;
 use std::{
     collections::HashMap,
@@ -30,14 +31,14 @@ impl CgroupTable {
         let mut cache = self
             .cache
             .lock()
-            .map_err(|e| anyhow!("failed to lock cgroup_table: {e:?}"))?;
+            .map_err(|_| anyhow!("failed to lock cgroup cache"))?;
 
         // TODO: replace with this when it becomes stable
         // cache.try_insert(cell_name.clone(), cgroup)
 
         // Check if there was already a cgroup in the table with this cell name as a key.
         if cache.contains_key(&cell_name) {
-            return Err(anyhow!("cgroup already exists for {cell_name}"));
+            return Err(anyhow!("cgroup already exists for {cell_name}").into());
         }
         // Ignoring return value as we've already assured ourselves that the key does not exist.
         let _ = cache.insert(cell_name, cgroup);
@@ -62,9 +63,9 @@ impl CgroupTable {
         let mut cache = self
             .cache
             .lock()
-            .map_err(|e| anyhow!("failed to lock cgroup_table: {e:?}"))?;
+            .map_err(|_| anyhow!("failed to lock cgroup cache"))?;
         cache.remove(cell_name).ok_or_else(|| {
-            anyhow!("failed to find {cell_name} in cgroup_table")
+            anyhow!("failed to find {cell_name} in cgroup_table").into()
         })
     }
 }
