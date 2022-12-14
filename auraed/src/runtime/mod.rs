@@ -29,6 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 mod cell_name;
+mod cell_table;
 mod cgroup_table;
 mod child_table;
 mod cpu_cpus;
