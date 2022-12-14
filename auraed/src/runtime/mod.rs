@@ -133,10 +133,15 @@ impl CellService {
             );
 
             // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
-            let command = unsafe {
-                command.pre_exec(move || {
-                    CellService::aurae_process_pre_exec(&executable_name)
-                })
+            let command = {
+                let executable_name_clone = executable_name.clone();
+                unsafe {
+                    command.pre_exec(move || {
+                        CellService::aurae_process_pre_exec(
+                            &executable_name_clone,
+                        )
+                    })
+                }
             };
 
             // Start the child process
@@ -151,7 +156,10 @@ impl CellService {
             let cgroup_pid = CgroupPid::from(child.id() as u64);
             cgroup.add_task(cgroup_pid).map_err(RuntimeError::from)?;
 
-            info!("CellService: spawn() -> pid={:?}", &child.id());
+            info!(
+                "CellService: cell_name={cell_name} executable_name={executable_name} spawn() -> pid={:?}",
+                &child.id()
+            );
 
             self.child_table.insert(cell_name.clone(), child)?;
         }
