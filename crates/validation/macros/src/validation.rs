@@ -182,7 +182,7 @@ impl From<DeriveInput> for ValidateInput {
                 }
 
                 fn post_validate(
-                    output: &mut #validated_type_ident,
+                    output: &#validated_type_ident,
                     parent_name: Option<&str>
                 ) -> ::std::result::Result<(), ::validation::ValidationError> {
                     Ok(())

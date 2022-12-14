@@ -70,7 +70,7 @@ pub fn validating_type(input: TokenStream) -> TokenStream {
                 };
 
                 #validator_struct_ident::post_validate(
-                    &mut output,
+                    &output,
                     parent_name
                 )?;
 
@@ -121,7 +121,7 @@ pub fn validated_type(input: TokenStream) -> TokenStream {
                 };
 
                 #validator_struct_ident::post_validate(
-                    &mut output,
+                    &output,
                     parent_name
                 )?;
 
