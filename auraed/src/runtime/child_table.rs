@@ -26,14 +26,15 @@ impl ChildTable {
             .lock()
             .map_err(|_| anyhow!("failed to lock child cache"))?;
 
-        // Check that we don't already have the child registered in the cache.
-        if let Some(old_child) = cache.insert(cell_name.clone(), child) {
-            return Err(anyhow!(format!(
-                "{cell_name} already exists in child_table with pid {:?}",
-                old_child.id()
-            ))
-            .into());
-        };
+        // TODO: replace with this when it becomes stable
+        // cache.try_insert(cell_name.clone(), child)
+
+        // Check if there was already a cgroup in the table with this cell name as a key.
+        if cache.contains_key(&cell_name) {
+            return Err(anyhow!("child already exists for {cell_name}").into());
+        }
+        // Ignoring return value as we've already assured ourselves that the key does not exist.
+        let _ = cache.insert(cell_name, child);
         Ok(())
     }
 
