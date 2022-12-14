@@ -56,9 +56,7 @@ use aurae_proto::runtime::{
 };
 use cgroups_rs::{cgroup_builder::CgroupBuilder, *};
 use log::info;
-use std::io;
-use std::os::unix::process::CommandExt;
-use std::process::Command;
+use std::{io, os::unix::process::CommandExt, process::Command};
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Clone)]
@@ -121,7 +119,7 @@ impl CellService {
             }
         })?;
 
-        Ok(Response::new(FreeCellResponse {}))
+        Ok(Response::new(FreeCellResponse::default()))
     }
 
     fn start(
@@ -129,11 +127,6 @@ impl CellService {
         request: ValidatedStartCellRequest,
     ) -> Result<Response<StartCellResponse>, Status> {
         let ValidatedStartCellRequest { executable } = request;
-
-        let cgroup = Cgroup::load(
-            hierarchy(),
-            format!("/sys/fs/cgroup/{}", executable.cell_name),
-        );
 
         // Create the new child process
         info!(
@@ -162,6 +155,17 @@ impl CellService {
 
         let cgroup_pid = CgroupPid::from(child.id() as u64);
 
+        let cgroup = self
+            .cgroup_table
+            .get(&cell_name)
+            .map_err(|e| CellServiceError::Internal {
+                msg: "failed to add child process to cgroup".into(),
+                err: e.to_string(),
+            })?
+            .ok_or_else(|| CellServiceError::Unallocated {
+                resource: "cgroup".into(),
+            })?;
+
         // Add the newly started child process to the cgroup
         cgroup.add_task(cgroup_pid).map_err(|e| {
             CellServiceError::Internal {
@@ -178,7 +182,7 @@ impl CellService {
             }
         })?;
 
-        Ok(Response::new(StartCellResponse {}))
+        Ok(Response::new(StartCellResponse::default()))
     }
 
     fn stop(
@@ -219,7 +223,7 @@ impl CellService {
             "Child process with pid {child_id} exited with status {exit_status}",
         );
 
-        Ok(Response::new(StopCellResponse {}))
+        Ok(Response::new(StopCellResponse::default()))
     }
 
     // Here is where we define the "default" cgroup parameters for Aurae cells

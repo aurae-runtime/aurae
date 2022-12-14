@@ -31,12 +31,29 @@ impl CgroupTable {
             .cache
             .lock()
             .map_err(|e| anyhow!("failed to lock cgroup_table: {e:?}"))?;
+
+        // TODO: replace with this when it becomes stable
+        // cache.try_insert(cell_name.clone(), cgroup)
+
         // Check if there was already a cgroup in the table with this cell name as a key.
-        // TODO: This seems like a bug since it potentially replaces an existing value. Guard against this scenario.
-        if let Some(_old_cgroup) = cache.insert(cell_name.clone(), cgroup) {
+        if cache.contains_key(&cell_name) {
             return Err(anyhow!("cgroup already exists for {cell_name}"));
-        };
+        }
+        // Ignoring return value as we've already assured ourselves that the key does not exist.
+        let _ = cache.insert(cell_name, cgroup);
         Ok(())
+    }
+
+    /// Return a clone of the cgroup keyed by [cell_name] from the cache or None if it is not found.
+    /// Does not relinquish ownership.
+    /// Returns an error if we fail to lock the cache.
+    pub(crate) fn get(&self, cell_name: &str) -> Result<Option<Cgroup>> {
+        let cache = self
+            .cache
+            .lock()
+            .map_err(|e| anyhow!("failed to lock cgroup_table: {e:?}"))?;
+        let cgroup = cache.get(cell_name).cloned();
+        Ok(cgroup)
     }
 
     /// Remove and return the cgroup keyed by [cell_name] from the cache.
@@ -92,6 +109,34 @@ mod tests {
             let mut cache = table.cache.lock().expect("lock table");
             cache.clear();
         }
+    }
+
+    #[test]
+    fn test_get() {
+        let table = CgroupTable::default();
+        let cgroup = CgroupBuilder::new("test-cell")
+            .build(Box::new(hierarchies::V2::new()));
+        {
+            let cache = table.cache.lock().expect("lock table");
+            assert!(cache.is_empty());
+        }
+        table.insert("test".to_string(), cgroup).expect("inserted in table");
+        assert!(table.get("test").expect("getting from cache").is_some());
+        {
+            let mut cache = table.cache.lock().expect("lock table");
+            cache.clear();
+        }
+    }
+
+    #[test]
+    fn test_get_missing_returns_none() {
+        let table = CgroupTable::default();
+        {
+            let cache = table.cache.lock().expect("lock table");
+            assert!(cache.is_empty());
+        }
+
+        assert!(table.get("test").expect("getting from cache").is_none());
     }
 
     #[test]

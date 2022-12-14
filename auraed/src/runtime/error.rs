@@ -9,6 +9,9 @@ pub enum CellServiceError {
 
     #[error("internal error: {msg}: {err}")]
     Internal { msg: String, err: String },
+
+    #[error("{resource} was not allocated")]
+    Unallocated { resource: String },
 }
 
 impl From<CellServiceError> for Status {
@@ -23,6 +26,11 @@ impl From<CellServiceError> for Status {
                 let msg = format!("internal error: {msg}: {err}");
                 error!("{msg}");
                 Self::internal(msg)
+            }
+            CellServiceError::Unallocated { resource } => {
+                let msg = format!("{resource} was not allocated before use");
+                error!("{msg}");
+                Self::not_found(msg)
             }
         }
     }
