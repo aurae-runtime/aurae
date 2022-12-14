@@ -1,3 +1,33 @@
+# ---------------------------------------------------------------------------- #
+#             Apache 2.0 License Copyright © 2022 The Aurae Authors            #
+#                                                                              #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#   Licensed under the Apache License, Version 2.0 (the "License");            #
+#   you may not use this file except in compliance with the License.           #
+#   You may obtain a copy of the License at                                    #
+#                                                                              #
+#       http://www.apache.org/licenses/LICENSE-2.0                             #
+#                                                                              #
+#   Unless required by applicable law or agreed to in writing, software        #
+#   distributed under the License is distributed on an "AS IS" BASIS,          #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+#   See the License for the specific language governing permissions and        #
+#   limitations under the License.                                             #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
 [package]
 name = "auraescript"
 version = "0.1.0"
@@ -10,15 +40,14 @@ name = "auraescript"
 path = "src/bin/main.rs"
 
 [dependencies]
-anyhow = "1.0.66"
-aurae-proto = { path = "../aurae-proto", version = "0.1.0" }
+anyhow = {workspace = true}
+aurae-proto = { workspace = true }
 deno_ast = { version = "0.21.0", features = ["transpiling"] }
 deno_core = "0.160.0"
 macros = { package = "auraescript_macros", path = "./macros" }
-prost = "0.11.2"
 serde = "1.0.147"
-tokio = { version = "1.22.0", features = ["fs", "rt-multi-thread"] }
-tonic = { version = "0.8.2", features = ["tls"] }
+tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
+toml = "0.5.9"
+tonic = { workspace = true, features = ["tls"] }
 tower = "0.4.13"
 x509-certificate = "0.15.0"
-toml = "0.5.9"
