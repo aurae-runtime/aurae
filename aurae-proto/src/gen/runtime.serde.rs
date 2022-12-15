@@ -381,6 +381,9 @@ impl serde::Serialize for Executable {
         if !self.command.is_empty() {
             len += 1;
         }
+        if !self.args.is_empty() {
+            len += 1;
+        }
         if !self.description.is_empty() {
             len += 1;
         }
@@ -390,6 +393,9 @@ impl serde::Serialize for Executable {
         }
         if !self.command.is_empty() {
             struct_ser.serialize_field("command", &self.command)?;
+        }
+        if !self.args.is_empty() {
+            struct_ser.serialize_field("args", &self.args)?;
         }
         if !self.description.is_empty() {
             struct_ser.serialize_field("description", &self.description)?;
@@ -406,6 +412,7 @@ impl<'de> serde::Deserialize<'de> for Executable {
         const FIELDS: &[&str] = &[
             "name",
             "command",
+            "args",
             "description",
         ];
 
@@ -413,6 +420,7 @@ impl<'de> serde::Deserialize<'de> for Executable {
         enum GeneratedField {
             Name,
             Command,
+            Args,
             Description,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
@@ -437,6 +445,7 @@ impl<'de> serde::Deserialize<'de> for Executable {
                         match value {
                             "name" => Ok(GeneratedField::Name),
                             "command" => Ok(GeneratedField::Command),
+                            "args" => Ok(GeneratedField::Args),
                             "description" => Ok(GeneratedField::Description),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
@@ -459,6 +468,7 @@ impl<'de> serde::Deserialize<'de> for Executable {
             {
                 let mut name__ = None;
                 let mut command__ = None;
+                let mut args__ = None;
                 let mut description__ = None;
                 while let Some(k) = map.next_key()? {
                     match k {
@@ -474,6 +484,12 @@ impl<'de> serde::Deserialize<'de> for Executable {
                             }
                             command__ = Some(map.next_value()?);
                         }
+                        GeneratedField::Args => {
+                            if args__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("args"));
+                            }
+                            args__ = Some(map.next_value()?);
+                        }
                         GeneratedField::Description => {
                             if description__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("description"));
@@ -485,6 +501,7 @@ impl<'de> serde::Deserialize<'de> for Executable {
                 Ok(Executable {
                     name: name__.unwrap_or_default(),
                     command: command__.unwrap_or_default(),
+                    args: args__.unwrap_or_default(),
                     description: description__.unwrap_or_default(),
                 })
             }

@@ -49,7 +49,8 @@ helpers.print(allocated)
 let started = await cells.start(<runtime.StartCellRequest>{
     cellName: "sleeper-cell",
     executables: [runtime.Executable.fromPartial({
-        command: "sleep 42",
+        command: "sleep",
+        args: ["42"],
         description: "Sleep for 42 seconds",
         name: "sleep-42"
     })]

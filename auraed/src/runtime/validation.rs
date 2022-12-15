@@ -126,6 +126,10 @@ pub(crate) struct ValidatedExecutable {
     pub name: ExecutableName,
     #[field_type(String)]
     pub command: Command,
+    #[field_type(Vec<String>)]
+    // TODO: Someone with knowledge confirm that args don't require validation.
+    #[validate(none)]
+    pub args: Vec<String>,
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
     pub description: String,
@@ -143,12 +147,6 @@ impl ExecutableTypeValidator for ExecutableValidator {
             parent_name,
         )?;
 
-        let command = super::command_from_string(&command).map_err(|_| {
-            ValidationError::Invalid {
-                field: validation::field_name(field_name, parent_name),
-            }
-        })?;
-
-        Ok(command)
+        Ok(Command::new(command))
     }
 }
