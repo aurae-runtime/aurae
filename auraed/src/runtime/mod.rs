@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+mod cells;
 mod cells_table;
 mod cpu_cpus;
 mod cpu_quota;
@@ -36,7 +37,6 @@ mod error;
 mod validation;
 
 pub(crate) use self::validation::ValidatedCell;
-use crate::cells::Cell;
 use crate::runtime::cells_table::CellsTable;
 use crate::runtime::error::RuntimeError;
 use crate::runtime::validation::{
@@ -51,6 +51,7 @@ use aurae_proto::runtime::{
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
     StopCellRequest, StopCellResponse,
 };
+use cells::Cell;
 use log::info;
 use tonic::{Request, Response, Status};
 
@@ -208,7 +209,7 @@ impl cell_service_server::CellService for CellService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cells::CellName;
+    use crate::runtime::cells::CellName;
 
     // TODO: run this in a way that creating cgroups works
     #[test]

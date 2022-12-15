@@ -1,4 +1,4 @@
-use crate::cells::{CellName, ExecutableName};
+use crate::runtime::cells::{CellName, ExecutableName};
 use crate::runtime::{
     cpu_cpus::CpuCpus, cpu_quota::CpuQuota, cpu_weight::CpuWeight,
 };

@@ -1,4 +1,4 @@
-use crate::cells::CellsError;
+use crate::runtime::cells::CellsError;
 use log::error;
 use thiserror::Error;
 use tonic::Status;

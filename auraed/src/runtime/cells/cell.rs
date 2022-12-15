@@ -1,5 +1,5 @@
 use super::Result;
-use crate::cells::{CellName, CellsError, Executable, ExecutableName};
+use crate::runtime::cells::{CellName, CellsError, Executable, ExecutableName};
 use crate::runtime::ValidatedCell;
 use anyhow::anyhow;
 use cgroups_rs::cgroup_builder::CgroupBuilder;

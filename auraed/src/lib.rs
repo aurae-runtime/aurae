@@ -88,7 +88,6 @@ pub mod logging;
 mod observe;
 mod runtime;
 mod schedule;
-mod cells;
 
 /// Default Unix domain socket path for `auraed`.
 ///
