@@ -1,8 +1,37 @@
+/* -------------------------------------------------------------------------- *\
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *                                                                            *
+ *                +--------------------------------------------+              *
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * -------------------------------------------------------------------------- *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+\* -------------------------------------------------------------------------- */
+
 use super::Result;
 use crate::runtime::cells::{
     validation::ValidatedCell, CellName, CellsError, Executable, ExecutableName,
 };
-use anyhow::anyhow;
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
 use log::info;
@@ -55,11 +84,10 @@ impl Cell {
     ) -> Result<()> {
         // Check if there was already an executable with the same name.
         if self.executables.contains_key(&exe_name) {
-            return Err(anyhow!(
-                "executable '{exe_name}' already exists in {}",
-                self.name
-            )
-            .into());
+            return Err(CellsError::ExecutableExists {
+                cell_name: self.name.clone(),
+                executable_name: exe_name,
+            });
         }
 
         let _ = command.args(args);
@@ -98,10 +126,10 @@ impl Cell {
         if let Some(exe) = self.executables.remove(exe_name) {
             Ok(exe.kill()?)
         } else {
-            Err(CellsError::Other(anyhow!(
-                "failed to find executable '{exe_name}' in cell '{}'",
-                self.name
-            )))
+            Err(CellsError::ExecutableNotFound {
+                cell_name: self.name.clone(),
+                executable_name: exe_name.clone(),
+            })
         }
     }
 
