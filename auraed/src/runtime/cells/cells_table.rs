@@ -65,7 +65,7 @@ impl CellsTable {
 
         // Check if there was already a cgroup in the table with this cell name as a key.
         if cache.contains_key(&cell_name) {
-            return Err(CellError::Exists { cell_name }.into());
+            return Err(CellError::CellExists { cell_name }.into());
         }
         // Ignoring return value as we've already assured ourselves that the key does not exist.
         let _ = cache.insert(cell_name, cell);
@@ -105,7 +105,7 @@ impl CellsTable {
         if let Some(cell) = cache.get_mut(cell_name) {
             f(cell)
         } else {
-            Err(CellError::NotFound { cell_name: cell_name.clone() }.into())
+            Err(CellError::CellNotFound { cell_name: cell_name.clone() }.into())
         }
     }
 
@@ -118,7 +118,7 @@ impl CellsTable {
             .map_err(|_| CellServiceError::FailedToObtainLock())?;
 
         cache.remove(cell_name).ok_or_else(|| {
-            CellError::NotFound { cell_name: cell_name.clone() }.into()
+            CellError::CellNotFound { cell_name: cell_name.clone() }.into()
         })
     }
 }

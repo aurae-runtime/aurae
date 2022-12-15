@@ -63,7 +63,7 @@ impl CellService {
         info!("CellService: allocate() cell={:?}", cell);
 
         if self.cells.contains(&cell.name)? {
-            return Err(CellError::Exists { cell_name: cell.name }.into());
+            return Err(CellError::CellExists { cell_name: cell.name }.into());
         }
 
         let cell_name = cell.name.clone();

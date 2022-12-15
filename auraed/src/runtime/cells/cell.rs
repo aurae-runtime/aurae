@@ -73,7 +73,7 @@ impl Cell {
     }
 
     pub fn free(self) -> Result<()> {
-        self.cgroup.delete().map_err(|e| CellError::FailedToFree {
+        self.cgroup.delete().map_err(|e| CellError::FailedToFreeCell {
             cell_name: self.name.clone(),
             source: e,
         })?;
@@ -106,15 +106,12 @@ impl Cell {
 
         // Add the newly started child process to the cgroup
         let exe_pid = exe.pid();
-        match self.cgroup.add_task(exe.pid()) {
-            Ok(_) => {}
-            Err(e) => {
-                return Err(CellError::FailedToAddExecutable {
-                    cell_name: self.name.clone(),
-                    executable: exe,
-                    source: e,
-                });
-            }
+        if let Err(e) = self.cgroup.add_task(exe.pid()) {
+            return Err(CellError::FailedToAddExecutable {
+                cell_name: self.name.clone(),
+                executable: exe,
+                source: e,
+            });
         }
 
         info!(
@@ -172,11 +169,11 @@ fn hierarchy() -> Box<dyn Hierarchy> {
 #[derive(Error, Debug)]
 pub(crate) enum CellError {
     #[error("cell '{cell_name}' already exists'")]
-    Exists { cell_name: CellName },
+    CellExists { cell_name: CellName },
     #[error("cell '{cell_name}' not found'")]
-    NotFound { cell_name: CellName },
+    CellNotFound { cell_name: CellName },
     #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFree { cell_name: CellName, source: cgroups_rs::error::Error },
+    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
     #[error(
         "cell '{cell_name}' already has an executable '{executable_name}'"
     )]
@@ -198,17 +195,16 @@ impl From<CellError> for Status {
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            CellError::Exists { .. } | CellError::ExecutableExists { .. } => {
-                Status::already_exists(msg)
-            }
-            CellError::NotFound { .. }
+            CellError::CellExists { .. }
+            | CellError::ExecutableExists { .. } => Status::already_exists(msg),
+            CellError::CellNotFound { .. }
             | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
             // TODO (future-highway): I don't know what the conventions are of revealing
             //  messages that reveal the workings of the system to the api consumer
             //  in this type of application.
             //  For now, taking the safe route and not exposing the error messages for the below errors.
             CellError::ExecutableError { .. }
-            | CellError::FailedToFree { .. }
+            | CellError::FailedToFreeCell { .. }
             | CellError::FailedToAddExecutable { .. } => Status::internal(""),
         }
     }
