@@ -36,4 +36,5 @@ pub(crate) mod cells;
 mod cpu_cpus;
 mod cpu_quota;
 mod cpu_weight;
+mod cpuset_mems;
 mod error;
