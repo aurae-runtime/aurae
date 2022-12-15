@@ -28,7 +28,7 @@ impl Cell {
         let cgroup: Cgroup = CgroupBuilder::new(&name)
             // CPU Controller
             .cpu()
-            .shares(cpu_shares)
+            .shares(cpu_shares.into_inner())
             .mems(cpu_mems)
             .period(1000000) // microseconds in a second
             .quota(cpu_quota.into_inner())
