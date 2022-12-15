@@ -71,7 +71,11 @@ impl Cell {
     }
 
     pub fn free(self) -> Result<()> {
-        self.cgroup.delete()?;
+        self.cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
+            cell_name: self.name.clone(),
+            source: e,
+        })?;
+
         Ok(())
     }
 
@@ -106,7 +110,14 @@ impl Cell {
 
         // Add the newly started child process to the cgroup
         let exe_pid = exe.pid();
-        self.cgroup.add_task(exe.pid()).map_err(CellsError::from)?;
+        self.cgroup.add_task(exe.pid()).map_err(|e| {
+            CellsError::FailedToAddExecutableToCell {
+                cell_name: self.name.clone(),
+                executable_name: exe_name.clone(),
+                executable_pid: exe_pid.pid.into(),
+                source: e,
+            }
+        })?;
 
         info!(
             "Cells: cell_name={} executable_name={exe_name} spawn() -> pid={}",
