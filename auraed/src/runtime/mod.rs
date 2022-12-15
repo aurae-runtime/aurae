@@ -33,6 +33,7 @@ mod cgroup_table;
 mod child_table;
 mod cpu_cpus;
 mod cpu_quota;
+mod cpu_weight;
 mod error;
 mod executable_name;
 mod validation;
@@ -210,7 +211,7 @@ impl CellService {
         let cgroup: Cgroup = CgroupBuilder::new(&cell_name)
             // CPU Controller
             .cpu()
-            .shares(cpu_shares)
+            .shares(cpu_shares.into_inner())
             .mems(cpu_mems)
             .period(1000000) // microseconds in a second
             .quota(cpu_quota.into_inner())
