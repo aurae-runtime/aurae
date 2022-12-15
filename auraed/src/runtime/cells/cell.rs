@@ -79,7 +79,7 @@ impl Cell {
         Ok(())
     }
 
-    pub fn spawn_executable(
+    pub fn start_executable(
         &mut self,
         exe_name: ExecutableName,
         mut command: Command,
@@ -106,7 +106,13 @@ impl Cell {
         };
 
         // Start the child process
-        let exe = Executable::spawn(command)?;
+        let exe = Executable::start(command).map_err(|e| {
+            CellsError::FailedToStartExecutable {
+                cell_name: self.name.clone(),
+                executable_name: exe_name.clone(),
+                source: e,
+            }
+        })?;
 
         // Add the newly started child process to the cgroup
         let exe_pid = exe.pid();
@@ -130,12 +136,26 @@ impl Cell {
         Ok(())
     }
 
-    pub fn kill_executable(
+    pub fn stop_executable(
         &mut self,
         exe_name: &ExecutableName,
     ) -> Result<ExitStatus> {
-        if let Some(exe) = self.executables.remove(exe_name) {
-            Ok(exe.kill()?)
+        if let Some(mut exe) = self.executables.remove(exe_name) {
+            match exe.kill() {
+                Ok(exit_status) => Ok(exit_status),
+                Err(e) => {
+                    // Failed to kill, put it back in cache
+                    let pid = exe.pid();
+                    let _ = self.executables.insert(exe_name.clone(), exe);
+
+                    Err(CellsError::FailedToStopExecutable {
+                        cell_name: self.name.clone(),
+                        executable_name: exe_name.clone(),
+                        executable_pid: pid,
+                        source: e,
+                    })
+                }
+            }
         } else {
             Err(CellsError::ExecutableNotFound {
                 cell_name: self.name.clone(),

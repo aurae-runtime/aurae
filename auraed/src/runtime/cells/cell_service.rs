@@ -110,7 +110,7 @@ impl CellService {
             );
 
             self.cells.get_then(&cell_name, move |cell| {
-                cell.spawn_executable(
+                cell.start_executable(
                     executable_name,
                     command,
                     args,
@@ -134,7 +134,7 @@ impl CellService {
         );
 
         let _exit_status = self.cells.get_then(&cell_name, move |cell| {
-            cell.kill_executable(&executable_name)
+            cell.stop_executable(&executable_name)
         })?;
 
         Ok(Response::new(StopCellResponse::default()))

@@ -7,12 +7,12 @@ use std::process::{Child, Command, ExitStatus};
 pub(crate) struct Executable(Child);
 
 impl Executable {
-    pub fn spawn(mut command: Command) -> io::Result<Self> {
+    pub fn start(mut command: Command) -> io::Result<Self> {
         let child = command.spawn()?;
         Ok(Self(child))
     }
 
-    pub fn kill(mut self) -> io::Result<ExitStatus> {
+    pub fn kill(&mut self) -> io::Result<ExitStatus> {
         let id = self.0.id();
         self.0.kill()?;
         let exit_status = self.0.wait()?;
