@@ -42,6 +42,8 @@ use std::process::{Command, ExitStatus};
 use thiserror::Error;
 use tonic::Status;
 
+type Result<T> = std::result::Result<T, CellError>;
+
 #[derive(Debug)]
 pub(crate) struct Cell {
     name: CellName,
@@ -72,7 +74,7 @@ impl Cell {
         Self { name, cgroup, executables: Default::default() }
     }
 
-    pub fn free(self) -> Result<(), CellError> {
+    pub fn free(self) -> Result<()> {
         self.cgroup.delete().map_err(|e| CellError::FailedToFree {
             cell_name: self.name.clone(),
             source: e,
@@ -87,7 +89,7 @@ impl Cell {
         mut command: Command,
         args: Vec<String>,
         _description: String,
-    ) -> Result<(), CellError> {
+    ) -> Result<()> {
         // Check if there was already an executable with the same name.
         if self.executables.contains_key(&exe_name) {
             return Err(CellError::ExecutableExists {
@@ -143,7 +145,7 @@ impl Cell {
     pub fn stop_executable(
         &mut self,
         exe_name: &ExecutableName,
-    ) -> Result<ExitStatus, CellError> {
+    ) -> Result<ExitStatus> {
         if let Some(mut exe) = self.executables.remove(exe_name) {
             match exe.kill() {
                 Ok(exit_status) => Ok(exit_status),
