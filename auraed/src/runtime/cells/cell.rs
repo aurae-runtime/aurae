@@ -186,7 +186,7 @@ pub(crate) enum CellError {
     ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
     #[error("cell '{cell_name}': {source}")]
     ExecutableError { cell_name: CellName, source: ExecutableError },
-    #[error("cell '{cell_name}' failed to add executable (executable:?)")]
+    #[error("cell '{cell_name}' failed to add executable (executable:?): {source}")]
     FailedToAddExecutable {
         cell_name: CellName,
         executable: Executable,
@@ -203,13 +203,9 @@ impl From<CellError> for Status {
             | CellError::ExecutableExists { .. } => Status::already_exists(msg),
             CellError::CellNotFound { .. }
             | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
-            // TODO (future-highway): I don't know what the conventions are of revealing
-            //  messages that reveal the workings of the system to the api consumer
-            //  in this type of application.
-            //  For now, taking the safe route and not exposing the error messages for the below errors.
             CellError::ExecutableError { .. }
             | CellError::FailedToFreeCell { .. }
-            | CellError::FailedToAddExecutable { .. } => Status::internal(""),
+            | CellError::FailedToAddExecutable { .. } => Status::internal(msg),
         }
     }
 }

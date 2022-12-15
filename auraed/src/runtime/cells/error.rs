@@ -9,7 +9,7 @@ pub(crate) type Result<T> = std::result::Result<T, CellServiceError>;
 pub(crate) enum CellServiceError {
     #[error(transparent)]
     CellError(#[from] CellError),
-    #[error("failed to lock cells cache")]
+    #[error("failed to lock cells table")]
     FailedToObtainLock(),
 }
 
@@ -17,7 +17,9 @@ impl From<CellServiceError> for Status {
     fn from(err: CellServiceError) -> Self {
         match err {
             CellServiceError::CellError(err) => err.into(),
-            CellServiceError::FailedToObtainLock() => Status::aborted(""),
+            CellServiceError::FailedToObtainLock() => {
+                Status::aborted(err.to_string())
+            }
         }
     }
 }
