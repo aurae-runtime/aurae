@@ -36,8 +36,6 @@ use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
 use log::{error, info};
 use std::collections::HashMap;
-use std::io;
-use std::os::unix::process::CommandExt;
 use std::process::{Command, ExitStatus};
 use thiserror::Error;
 use tonic::Status;
@@ -86,9 +84,9 @@ impl Cell {
     pub fn start_executable(
         &mut self,
         exe_name: ExecutableName,
-        mut command: Command,
+        command: Command,
         args: Vec<String>,
-        _description: String,
+        description: String,
     ) -> Result<()> {
         // Check if there was already an executable with the same name.
         if self.executables.contains_key(&exe_name) {
@@ -98,25 +96,13 @@ impl Cell {
             });
         }
 
-        let _ = command.args(args);
-
-        // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
-        let _ = {
-            let exe_name_clone = exe_name.clone();
-            unsafe {
-                command
-                    .pre_exec(move || aurae_process_pre_exec(&exe_name_clone))
-            }
-        };
-
         // Start the child process
         let exe =
-            Executable::start(exe_name.clone(), command).map_err(|e| {
-                CellError::ExecutableError {
+            Executable::start(exe_name.clone(), command, args, description)
+                .map_err(|e| CellError::ExecutableError {
                     cell_name: self.name.clone(),
                     source: e,
-                }
-            })?;
+                })?;
 
         // Add the newly started child process to the cgroup
         let exe_pid = exe.pid();
@@ -170,15 +156,6 @@ impl Cell {
     pub fn v2(&self) -> bool {
         self.cgroup.v2()
     }
-}
-
-fn aurae_process_pre_exec(exe_name: &ExecutableName) -> io::Result<()> {
-    info!("CellService: aurae_process_pre_exec(): {exe_name}");
-    // Here we are executing as the new spawned pid.
-    // This is a place where we can "hook" into all processes
-    // started with Aurae in the future. Similar to kprobe/uprobe
-    // in Linux or LD_PRELOAD in libc.
-    Ok(())
 }
 
 fn hierarchy() -> Box<dyn Hierarchy> {
