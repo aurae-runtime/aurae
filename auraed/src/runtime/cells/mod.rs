@@ -2,7 +2,7 @@ use cell::Cell;
 use cell_name::CellName;
 pub(crate) use cell_service::CellService;
 use cells_table::CellsTable;
-use error::{CellsError, Result};
+use error::{CellError, Result};
 use executable::Executable;
 use executable_name::ExecutableName;
 

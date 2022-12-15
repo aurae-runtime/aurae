@@ -33,7 +33,7 @@ use crate::runtime::cells::validation::{
     ValidatedFreeCellRequest, ValidatedStartCellRequest,
     ValidatedStopCellRequest,
 };
-use crate::runtime::cells::{Cell, CellsError, CellsTable};
+use crate::runtime::cells::{Cell, CellError, CellsTable};
 use ::validation::ValidatedType;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
@@ -62,7 +62,7 @@ impl CellService {
         info!("CellService: allocate() cell={:?}", cell);
 
         if self.cells.contains(&cell.name)? {
-            return Err(CellsError::CellExists { cell_name: cell.name }.into());
+            return Err(CellError::Exists { cell_name: cell.name }.into());
         }
 
         let cell_name = cell.name.clone();

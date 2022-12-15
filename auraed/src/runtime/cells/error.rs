@@ -4,16 +4,16 @@ use log::error;
 use thiserror::Error;
 use tonic::Status;
 
-pub(crate) type Result<T> = std::result::Result<T, CellsError>;
+pub(crate) type Result<T> = std::result::Result<T, CellError>;
 
 #[derive(Error, Debug)]
-pub(crate) enum CellsError {
+pub(crate) enum CellError {
     #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
+    Exists { cell_name: CellName },
     #[error("cell '{cell_name}' not found'")]
-    CellNotFound { cell_name: CellName },
+    NotFound { cell_name: CellName },
     #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
+    FailedToFree { cell_name: CellName, source: cgroups_rs::error::Error },
     #[error(
         "cell '{cell_name}' already has an executable '{executable_name}'"
     )]
@@ -23,36 +23,34 @@ pub(crate) enum CellsError {
     #[error("cell '{cell_name}': {source}")]
     ExecutableError { cell_name: CellName, source: ExecutableError },
     #[error("cell '{cell_name}' failed to add executable (executable:?)")]
-    FailedToAddExecutableToCell {
+    FailedToAddExecutable {
         cell_name: CellName,
         executable: Executable,
         source: cgroups_rs::error::Error,
     },
+    // TODO: this error seems out of place
     #[error("failed to lock cells cache")]
     FailedToObtainLock(),
 }
 
-impl From<CellsError> for Status {
-    fn from(err: CellsError) -> Self {
+impl From<CellError> for Status {
+    fn from(err: CellError) -> Self {
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            CellsError::CellExists { .. }
-            | CellsError::ExecutableExists { .. } => {
+            CellError::Exists { .. } | CellError::ExecutableExists { .. } => {
                 Status::already_exists(msg)
             }
-            CellsError::CellNotFound { .. }
-            | CellsError::ExecutableNotFound { .. } => Status::not_found(msg),
+            CellError::NotFound { .. }
+            | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
             // TODO (future-highway): I don't know what the conventions are of revealing
             //  messages that reveal the workings of the system to the api consumer
             //  in this type of application.
             //  For now, taking the safe route and not exposing the error messages for the below errors.
-            CellsError::FailedToObtainLock() => Status::aborted(""),
-            CellsError::ExecutableError { .. }
-            | CellsError::FailedToFreeCell { .. }
-            | CellsError::FailedToAddExecutableToCell { .. } => {
-                Status::internal("")
-            }
+            CellError::FailedToObtainLock() => Status::aborted(""),
+            CellError::ExecutableError { .. }
+            | CellError::FailedToFree { .. }
+            | CellError::FailedToAddExecutable { .. } => Status::internal(""),
         }
     }
 }

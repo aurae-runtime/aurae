@@ -30,7 +30,7 @@
 
 use super::Result;
 use crate::runtime::cells::{
-    validation::ValidatedCell, CellName, CellsError, Executable, ExecutableName,
+    validation::ValidatedCell, CellError, CellName, Executable, ExecutableName,
 };
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
@@ -71,7 +71,7 @@ impl Cell {
     }
 
     pub fn free(self) -> Result<()> {
-        self.cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
+        self.cgroup.delete().map_err(|e| CellError::FailedToFree {
             cell_name: self.name.clone(),
             source: e,
         })?;
@@ -88,7 +88,7 @@ impl Cell {
     ) -> Result<()> {
         // Check if there was already an executable with the same name.
         if self.executables.contains_key(&exe_name) {
-            return Err(CellsError::ExecutableExists {
+            return Err(CellError::ExecutableExists {
                 cell_name: self.name.clone(),
                 executable_name: exe_name,
             });
@@ -108,7 +108,7 @@ impl Cell {
         // Start the child process
         let exe =
             Executable::start(exe_name.clone(), command).map_err(|e| {
-                CellsError::ExecutableError {
+                CellError::ExecutableError {
                     cell_name: self.name.clone(),
                     source: e,
                 }
@@ -119,7 +119,7 @@ impl Cell {
         match self.cgroup.add_task(exe.pid()) {
             Ok(_) => {}
             Err(e) => {
-                return Err(CellsError::FailedToAddExecutableToCell {
+                return Err(CellError::FailedToAddExecutable {
                     cell_name: self.name.clone(),
                     executable: exe,
                     source: e,
@@ -149,14 +149,14 @@ impl Cell {
                     // Failed to kill, put it back in cache
                     let _ = self.executables.insert(exe_name.clone(), exe);
 
-                    Err(CellsError::ExecutableError {
+                    Err(CellError::ExecutableError {
                         cell_name: self.name.clone(),
                         source: e,
                     })
                 }
             }
         } else {
-            Err(CellsError::ExecutableNotFound {
+            Err(CellError::ExecutableNotFound {
                 cell_name: self.name.clone(),
                 executable_name: exe_name.clone(),
             })
