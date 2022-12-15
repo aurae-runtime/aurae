@@ -104,6 +104,8 @@ impl Cell {
                     source: e,
                 })?;
 
+        // TODO: If we start the exe above and fail the add below...bad...solution???
+
         // Add the newly started child process to the cgroup
         let exe_pid = exe.pid();
         if let Err(e) = self.cgroup.add_task(exe.pid()) {
@@ -129,18 +131,20 @@ impl Cell {
         &mut self,
         exe_name: &ExecutableName,
     ) -> Result<ExitStatus> {
-        if let Some(mut exe) = self.executables.remove(exe_name) {
+        if let Some(exe) = self.executables.get_mut(exe_name) {
             match exe.kill() {
-                Ok(exit_status) => Ok(exit_status),
-                Err(e) => {
-                    // Failed to kill, put it back in cache
-                    let _ = self.executables.insert(exe_name.clone(), exe);
+                Ok(exit_status) => {
+                    let _ = self
+                        .executables
+                        .remove(exe_name)
+                        .expect("asserted above");
 
-                    Err(CellError::ExecutableError {
-                        cell_name: self.name.clone(),
-                        source: e,
-                    })
+                    Ok(exit_status)
                 }
+                Err(e) => Err(CellError::ExecutableError {
+                    cell_name: self.name.clone(),
+                    source: e,
+                }),
             }
         } else {
             Err(CellError::ExecutableNotFound {
