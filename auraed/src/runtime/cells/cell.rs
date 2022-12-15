@@ -106,24 +106,26 @@ impl Cell {
         };
 
         // Start the child process
-        let exe = Executable::start(command).map_err(|e| {
-            CellsError::FailedToStartExecutable {
-                cell_name: self.name.clone(),
-                executable_name: exe_name.clone(),
-                source: e,
-            }
-        })?;
+        let exe =
+            Executable::start(exe_name.clone(), command).map_err(|e| {
+                CellsError::ExecutableError {
+                    cell_name: self.name.clone(),
+                    source: e,
+                }
+            })?;
 
         // Add the newly started child process to the cgroup
         let exe_pid = exe.pid();
-        self.cgroup.add_task(exe.pid()).map_err(|e| {
-            CellsError::FailedToAddExecutableToCell {
-                cell_name: self.name.clone(),
-                executable_name: exe_name.clone(),
-                executable_pid: exe_pid.pid.into(),
-                source: e,
+        match self.cgroup.add_task(exe.pid()) {
+            Ok(_) => {}
+            Err(e) => {
+                return Err(CellsError::FailedToAddExecutableToCell {
+                    cell_name: self.name.clone(),
+                    executable: exe,
+                    source: e,
+                });
             }
-        })?;
+        }
 
         info!(
             "Cells: cell_name={} executable_name={exe_name} spawn() -> pid={}",
@@ -145,13 +147,10 @@ impl Cell {
                 Ok(exit_status) => Ok(exit_status),
                 Err(e) => {
                     // Failed to kill, put it back in cache
-                    let pid = exe.pid();
                     let _ = self.executables.insert(exe_name.clone(), exe);
 
-                    Err(CellsError::FailedToStopExecutable {
+                    Err(CellsError::ExecutableError {
                         cell_name: self.name.clone(),
-                        executable_name: exe_name.clone(),
-                        executable_pid: pid,
                         source: e,
                     })
                 }
