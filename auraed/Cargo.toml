@@ -64,3 +64,4 @@ walkdir = "2"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
+uuid = { version = "1.2.2", features=["v4"] }
