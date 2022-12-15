@@ -1,7 +1,5 @@
 use crate::runtime::cells::{CellName, ExecutableName};
-use crate::runtime::{
-    cpu_cpus::CpuCpus, cpu_quota::CpuQuota, cpu_weight::CpuWeight,
-};
+use crate::runtime::{CpuCpus, CpuQuota, CpuWeight};
 use aurae_proto::runtime::{
     AllocateCellRequest, Cell, Executable, FreeCellRequest, StartCellRequest,
     StopCellRequest,

@@ -1,24 +1,16 @@
-pub(crate) use cell::Cell;
-pub(crate) use cell_name::CellName;
-pub(crate) use executable::Executable;
-pub(crate) use executable_name::ExecutableName;
-use std::io;
-use thiserror::Error;
+use cell::Cell;
+use cell_name::CellName;
+pub(crate) use cell_service::CellService;
+use cells_table::CellsTable;
+use error::{CellsError, Result};
+use executable::Executable;
+use executable_name::ExecutableName;
 
 mod cell;
 mod cell_name;
+mod cell_service;
+mod cells_table;
+mod error;
 mod executable;
 mod executable_name;
-
-pub(crate) type Result<T> = std::result::Result<T, CellsError>;
-
-#[derive(Error, Debug)]
-pub(crate) enum CellsError {
-    // TODO: define the errors better
-    #[error(transparent)]
-    CgroupsError(#[from] cgroups_rs::error::Error),
-    #[error(transparent)]
-    Io(#[from] io::Error),
-    #[error(transparent)]
-    Other(#[from] anyhow::Error),
-}
+mod validation;

@@ -1,5 +1,4 @@
-use crate::runtime::cells::{Cell, CellName};
-use crate::runtime::error::Result;
+use crate::runtime::cells::{Cell, CellName, Result};
 use anyhow::anyhow;
 use std::{
     collections::HashMap,

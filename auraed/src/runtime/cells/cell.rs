@@ -1,6 +1,7 @@
 use super::Result;
-use crate::runtime::cells::{CellName, CellsError, Executable, ExecutableName};
-use crate::runtime::ValidatedCell;
+use crate::runtime::cells::{
+    validation::ValidatedCell, CellName, CellsError, Executable, ExecutableName,
+};
 use anyhow::anyhow;
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
