@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::runtime::cells::error::CellServiceError;
 use crate::runtime::cells::validation::{
     ValidatedAllocateCellRequest, ValidatedExecutable,
     ValidatedFreeCellRequest, ValidatedStartCellRequest,
@@ -116,6 +117,7 @@ impl CellService {
                     args,
                     description,
                 )
+                .map_err(CellServiceError::from)
             })?;
         }
 
@@ -135,6 +137,7 @@ impl CellService {
 
         let _exit_status = self.cells.get_then(&cell_name, move |cell| {
             cell.stop_executable(&executable_name)
+                .map_err(CellServiceError::from)
         })?;
 
         Ok(Response::new(StopCellResponse::default()))

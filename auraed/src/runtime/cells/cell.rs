@@ -28,17 +28,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::Result;
+use crate::runtime::cells::executable::ExecutableError;
 use crate::runtime::cells::{
-    validation::ValidatedCell, CellError, CellName, Executable, ExecutableName,
+    validation::ValidatedCell, CellName, Executable, ExecutableName,
 };
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
-use log::info;
+use log::{error, info};
 use std::collections::HashMap;
 use std::io;
 use std::os::unix::process::CommandExt;
 use std::process::{Command, ExitStatus};
+use thiserror::Error;
+use tonic::Status;
 
 #[derive(Debug)]
 pub(crate) struct Cell {
@@ -70,7 +72,7 @@ impl Cell {
         Self { name, cgroup, executables: Default::default() }
     }
 
-    pub fn free(self) -> Result<()> {
+    pub fn free(self) -> Result<(), CellError> {
         self.cgroup.delete().map_err(|e| CellError::FailedToFree {
             cell_name: self.name.clone(),
             source: e,
@@ -85,7 +87,7 @@ impl Cell {
         mut command: Command,
         args: Vec<String>,
         _description: String,
-    ) -> Result<()> {
+    ) -> Result<(), CellError> {
         // Check if there was already an executable with the same name.
         if self.executables.contains_key(&exe_name) {
             return Err(CellError::ExecutableExists {
@@ -141,7 +143,7 @@ impl Cell {
     pub fn stop_executable(
         &mut self,
         exe_name: &ExecutableName,
-    ) -> Result<ExitStatus> {
+    ) -> Result<ExitStatus, CellError> {
         if let Some(mut exe) = self.executables.remove(exe_name) {
             match exe.kill() {
                 Ok(exit_status) => Ok(exit_status),
@@ -186,4 +188,49 @@ fn hierarchy() -> Box<dyn Hierarchy> {
     // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
     // hierarchies::V2
     Box::new(hierarchies::V2::new())
+}
+
+#[derive(Error, Debug)]
+pub(crate) enum CellError {
+    #[error("cell '{cell_name}' already exists'")]
+    Exists { cell_name: CellName },
+    #[error("cell '{cell_name}' not found'")]
+    NotFound { cell_name: CellName },
+    #[error("cell '{cell_name}' could not be freed: {source}")]
+    FailedToFree { cell_name: CellName, source: cgroups_rs::error::Error },
+    #[error(
+        "cell '{cell_name}' already has an executable '{executable_name}'"
+    )]
+    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
+    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
+    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
+    #[error("cell '{cell_name}': {source}")]
+    ExecutableError { cell_name: CellName, source: ExecutableError },
+    #[error("cell '{cell_name}' failed to add executable (executable:?)")]
+    FailedToAddExecutable {
+        cell_name: CellName,
+        executable: Executable,
+        source: cgroups_rs::error::Error,
+    },
+}
+
+impl From<CellError> for Status {
+    fn from(err: CellError) -> Self {
+        let msg = err.to_string();
+        error!("{msg}");
+        match err {
+            CellError::Exists { .. } | CellError::ExecutableExists { .. } => {
+                Status::already_exists(msg)
+            }
+            CellError::NotFound { .. }
+            | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
+            // TODO (future-highway): I don't know what the conventions are of revealing
+            //  messages that reveal the workings of the system to the api consumer
+            //  in this type of application.
+            //  For now, taking the safe route and not exposing the error messages for the below errors.
+            CellError::ExecutableError { .. }
+            | CellError::FailedToFree { .. }
+            | CellError::FailedToAddExecutable { .. } => Status::internal(""),
+        }
+    }
 }

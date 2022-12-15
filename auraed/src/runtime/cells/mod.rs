@@ -1,8 +1,8 @@
-use cell::Cell;
+use cell::{Cell, CellError};
 use cell_name::CellName;
 pub(crate) use cell_service::CellService;
 use cells_table::CellsTable;
-use error::{CellError, Result};
+use error::{CellServiceError, Result};
 use executable::Executable;
 use executable_name::ExecutableName;
 
