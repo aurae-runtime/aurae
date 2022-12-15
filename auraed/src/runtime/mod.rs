@@ -31,6 +31,7 @@
 use cpu_cpus::CpuCpus;
 use cpu_quota::CpuQuota;
 use cpu_weight::CpuWeight;
+use cpuset_mems::CpusetMems;
 
 pub(crate) mod cells;
 mod cpu_cpus;
