@@ -28,14 +28,14 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::runtime::cells::error::CellServiceError;
 use crate::runtime::cells::validation::{
     ValidatedAllocateCellRequest, ValidatedExecutable,
     ValidatedFreeCellRequest, ValidatedStartCellRequest,
     ValidatedStopCellRequest,
 };
-use crate::runtime::cells::{Cell, CellsError, CellsTable};
+use crate::runtime::cells::{Cell, CellError, CellsTable};
 use ::validation::ValidatedType;
-use anyhow::anyhow;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
     FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
@@ -63,11 +63,7 @@ impl CellService {
         info!("CellService: allocate() cell={:?}", cell);
 
         if self.cells.contains(&cell.name)? {
-            return Err(CellsError::Other(anyhow!(
-                "cell '{}' already exists",
-                cell.name
-            ))
-            .into());
+            return Err(CellError::CellExists { cell_name: cell.name }.into());
         }
 
         let cell_name = cell.name.clone();
@@ -115,12 +111,13 @@ impl CellService {
             );
 
             self.cells.get_then(&cell_name, move |cell| {
-                cell.spawn_executable(
+                cell.start_executable(
                     executable_name,
                     command,
                     args,
                     description,
                 )
+                .map_err(CellServiceError::from)
             })?;
         }
 
@@ -139,7 +136,8 @@ impl CellService {
         );
 
         let _exit_status = self.cells.get_then(&cell_name, move |cell| {
-            cell.kill_executable(&executable_name)
+            cell.stop_executable(&executable_name)
+                .map_err(CellServiceError::from)
         })?;
 
         Ok(Response::new(StopCellResponse::default()))

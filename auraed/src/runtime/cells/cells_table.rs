@@ -1,5 +1,36 @@
+/* -------------------------------------------------------------------------- *\
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *                                                                            *
+ *                +--------------------------------------------+              *
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * -------------------------------------------------------------------------- *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+\* -------------------------------------------------------------------------- */
+
+use crate::runtime::cells::cell::CellError;
+use crate::runtime::cells::CellServiceError;
 use crate::runtime::cells::{Cell, CellName, Result};
-use anyhow::anyhow;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -27,14 +58,14 @@ impl CellsTable {
         let mut cache = self
             .cache
             .lock()
-            .map_err(|_| anyhow!("failed to lock cells cache"))?;
+            .map_err(|_| CellServiceError::FailedToObtainLock())?;
 
         // TODO: replace with this when it becomes stable
         // cache.try_insert(cell_name.clone(), cgroup)
 
         // Check if there was already a cgroup in the table with this cell name as a key.
         if cache.contains_key(&cell_name) {
-            return Err(anyhow!("cell '{cell_name}' already exists").into());
+            return Err(CellError::CellExists { cell_name }.into());
         }
         // Ignoring return value as we've already assured ourselves that the key does not exist.
         let _ = cache.insert(cell_name, cell);
@@ -45,7 +76,7 @@ impl CellsTable {
         let cache = self
             .cache
             .lock()
-            .map_err(|e| anyhow!("failed to lock cells cache: {e:?}"))?;
+            .map_err(|_| CellServiceError::FailedToObtainLock())?;
 
         Ok(cache.contains_key(cell_name))
     }
@@ -69,12 +100,12 @@ impl CellsTable {
         let mut cache = self
             .cache
             .lock()
-            .map_err(|e| anyhow!("failed to lock cgroup_table: {e:?}"))?;
+            .map_err(|_| CellServiceError::FailedToObtainLock())?;
 
         if let Some(cell) = cache.get_mut(cell_name) {
             f(cell)
         } else {
-            Err(anyhow!("failed to find '{cell_name}' in cells").into())
+            Err(CellError::CellNotFound { cell_name: cell_name.clone() }.into())
         }
     }
 
@@ -84,9 +115,10 @@ impl CellsTable {
         let mut cache = self
             .cache
             .lock()
-            .map_err(|_| anyhow!("failed to lock cgroup cache"))?;
+            .map_err(|_| CellServiceError::FailedToObtainLock())?;
+
         cache.remove(cell_name).ok_or_else(|| {
-            anyhow!("failed to find '{cell_name}' in cells").into()
+            CellError::CellNotFound { cell_name: cell_name.clone() }.into()
         })
     }
 }

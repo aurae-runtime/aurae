@@ -1,29 +1,25 @@
+use crate::runtime::cells::cell::CellError;
 use log::error;
-use std::io;
 use thiserror::Error;
 use tonic::Status;
 
-pub(crate) type Result<T> = std::result::Result<T, CellsError>;
+pub(crate) type Result<T> = std::result::Result<T, CellServiceError>;
 
 #[derive(Error, Debug)]
-pub(crate) enum CellsError {
-    // TODO: define the errors better
+pub(crate) enum CellServiceError {
     #[error(transparent)]
-    CgroupsError(#[from] cgroups_rs::error::Error),
-    #[error(transparent)]
-    Io(#[from] io::Error),
-    #[error(transparent)]
-    Other(#[from] anyhow::Error),
+    CellError(#[from] CellError),
+    #[error("failed to lock cells table")]
+    FailedToObtainLock(),
 }
 
-impl From<CellsError> for Status {
-    fn from(err: CellsError) -> Self {
-        let msg = err.to_string();
-        error!("{msg}");
+impl From<CellServiceError> for Status {
+    fn from(err: CellServiceError) -> Self {
         match err {
-            CellsError::CgroupsError { .. }
-            | CellsError::Io { .. }
-            | CellsError::Other { .. } => Self::internal(msg),
+            CellServiceError::CellError(err) => err.into(),
+            CellServiceError::FailedToObtainLock() => {
+                Status::aborted(err.to_string())
+            }
         }
     }
 }

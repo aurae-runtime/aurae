@@ -1,15 +1,46 @@
-use super::Result;
+/* -------------------------------------------------------------------------- *\
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *                                                                            *
+ *                +--------------------------------------------+              *
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * -------------------------------------------------------------------------- *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+\* -------------------------------------------------------------------------- */
+
+use crate::runtime::cells::executable::ExecutableError;
 use crate::runtime::cells::{
-    validation::ValidatedCell, CellName, CellsError, Executable, ExecutableName,
+    validation::ValidatedCell, CellName, Executable, ExecutableName,
 };
-use anyhow::anyhow;
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
-use log::info;
+use log::{error, info};
 use std::collections::HashMap;
-use std::io;
-use std::os::unix::process::CommandExt;
 use std::process::{Command, ExitStatus};
+use thiserror::Error;
+use tonic::Status;
+
+type Result<T> = std::result::Result<T, CellError>;
 
 #[derive(Debug)]
 pub(crate) struct Cell {
@@ -42,43 +73,48 @@ impl Cell {
     }
 
     pub fn free(self) -> Result<()> {
-        self.cgroup.delete()?;
+        self.cgroup.delete().map_err(|e| CellError::FailedToFreeCell {
+            cell_name: self.name.clone(),
+            source: e,
+        })?;
+
         Ok(())
     }
 
-    pub fn spawn_executable(
+    pub fn start_executable(
         &mut self,
         exe_name: ExecutableName,
-        mut command: Command,
+        command: Command,
         args: Vec<String>,
-        _description: String,
+        description: String,
     ) -> Result<()> {
         // Check if there was already an executable with the same name.
         if self.executables.contains_key(&exe_name) {
-            return Err(anyhow!(
-                "executable '{exe_name}' already exists in {}",
-                self.name
-            )
-            .into());
+            return Err(CellError::ExecutableExists {
+                cell_name: self.name.clone(),
+                executable_name: exe_name,
+            });
         }
 
-        let _ = command.args(args);
-
-        // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
-        let _ = {
-            let exe_name_clone = exe_name.clone();
-            unsafe {
-                command
-                    .pre_exec(move || aurae_process_pre_exec(&exe_name_clone))
-            }
-        };
-
         // Start the child process
-        let exe = Executable::spawn(command)?;
+        let exe =
+            Executable::start(exe_name.clone(), command, args, description)
+                .map_err(|e| CellError::ExecutableError {
+                    cell_name: self.name.clone(),
+                    source: e,
+                })?;
+
+        // TODO: If we start the exe above and fail the add below...bad...solution???
 
         // Add the newly started child process to the cgroup
         let exe_pid = exe.pid();
-        self.cgroup.add_task(exe.pid()).map_err(CellsError::from)?;
+        if let Err(e) = self.cgroup.add_task(exe.pid()) {
+            return Err(CellError::FailedToAddExecutable {
+                cell_name: self.name.clone(),
+                executable: exe,
+                source: e,
+            });
+        }
 
         info!(
             "Cells: cell_name={} executable_name={exe_name} spawn() -> pid={}",
@@ -91,32 +127,36 @@ impl Cell {
         Ok(())
     }
 
-    pub fn kill_executable(
+    pub fn stop_executable(
         &mut self,
         exe_name: &ExecutableName,
     ) -> Result<ExitStatus> {
-        if let Some(exe) = self.executables.remove(exe_name) {
-            Ok(exe.kill()?)
+        if let Some(exe) = self.executables.get_mut(exe_name) {
+            match exe.kill() {
+                Ok(exit_status) => {
+                    let _ = self
+                        .executables
+                        .remove(exe_name)
+                        .expect("asserted above");
+
+                    Ok(exit_status)
+                }
+                Err(e) => Err(CellError::ExecutableError {
+                    cell_name: self.name.clone(),
+                    source: e,
+                }),
+            }
         } else {
-            Err(CellsError::Other(anyhow!(
-                "failed to find executable '{exe_name}' in cell '{}'",
-                self.name
-            )))
+            Err(CellError::ExecutableNotFound {
+                cell_name: self.name.clone(),
+                executable_name: exe_name.clone(),
+            })
         }
     }
 
     pub fn v2(&self) -> bool {
         self.cgroup.v2()
     }
-}
-
-fn aurae_process_pre_exec(exe_name: &ExecutableName) -> io::Result<()> {
-    info!("CellService: aurae_process_pre_exec(): {exe_name}");
-    // Here we are executing as the new spawned pid.
-    // This is a place where we can "hook" into all processes
-    // started with Aurae in the future. Similar to kprobe/uprobe
-    // in Linux or LD_PRELOAD in libc.
-    Ok(())
 }
 
 fn hierarchy() -> Box<dyn Hierarchy> {
@@ -128,4 +168,44 @@ fn hierarchy() -> Box<dyn Hierarchy> {
     // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
     // hierarchies::V2
     Box::new(hierarchies::V2::new())
+}
+
+#[derive(Error, Debug)]
+pub(crate) enum CellError {
+    #[error("cell '{cell_name}' already exists'")]
+    CellExists { cell_name: CellName },
+    #[error("cell '{cell_name}' not found'")]
+    CellNotFound { cell_name: CellName },
+    #[error("cell '{cell_name}' could not be freed: {source}")]
+    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
+    #[error(
+        "cell '{cell_name}' already has an executable '{executable_name}'"
+    )]
+    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
+    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
+    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
+    #[error("cell '{cell_name}': {source}")]
+    ExecutableError { cell_name: CellName, source: ExecutableError },
+    #[error("cell '{cell_name}' failed to add executable (executable:?): {source}")]
+    FailedToAddExecutable {
+        cell_name: CellName,
+        executable: Executable,
+        source: cgroups_rs::error::Error,
+    },
+}
+
+impl From<CellError> for Status {
+    fn from(err: CellError) -> Self {
+        let msg = err.to_string();
+        error!("{msg}");
+        match err {
+            CellError::CellExists { .. }
+            | CellError::ExecutableExists { .. } => Status::already_exists(msg),
+            CellError::CellNotFound { .. }
+            | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
+            CellError::ExecutableError { .. }
+            | CellError::FailedToFreeCell { .. }
+            | CellError::FailedToAddExecutable { .. } => Status::internal(msg),
+        }
+    }
 }
