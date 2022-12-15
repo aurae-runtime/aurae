@@ -60,7 +60,6 @@
         )]
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
-#![warn(rustdoc::missing_doc_code_examples)]
 #![allow(dead_code)]
 
 use anyhow::anyhow;

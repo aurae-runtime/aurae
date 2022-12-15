@@ -30,7 +30,7 @@ impl Cell {
             // CPU Controller
             .cpu()
             .shares(cpu_shares.into_inner())
-            .mems(cpu_mems)
+            .mems(cpu_mems.into_inner())
             .period(1000000) // microseconds in a second
             .quota(cpu_quota.into_inner())
             .cpus(cpu_cpus.into_inner())
