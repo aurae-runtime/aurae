@@ -28,17 +28,15 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{validation::ValidatedCell, CellName, Executable, ExecutableName};
+use super::{
+    validation::ValidatedCell, CellName, Executable, ExecutableName, Result,
+};
+use crate::runtime::cells::error::CellsError;
 use cgroups_rs::cgroup_builder::CgroupBuilder;
-use cgroups_rs::{hierarchies, Cgroup, CgroupPid, Hierarchy};
-use log::{error, info};
+use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
+use log::info;
 use std::collections::HashMap;
-use std::io;
 use std::process::ExitStatus;
-use thiserror::Error;
-use tonic::Status;
-
-pub(crate) type Result<T> = std::result::Result<T, CellError>;
 
 #[derive(Debug)]
 pub(crate) struct Cell {
@@ -70,7 +68,7 @@ impl Cell {
     }
 
     pub fn free(self) -> Result<()> {
-        self.cgroup.delete().map_err(|e| CellError::FailedToFreeCell {
+        self.cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
             cell_name: self.name.clone(),
             source: e,
         })?;
@@ -88,7 +86,7 @@ impl Cell {
         // TODO: replace with try_insert when it becomes stable
         // Check if there was already an executable with the same name.
         if self.executables.contains_key(&executable_name) {
-            return Err(CellError::ExecutableExists {
+            return Err(CellsError::ExecutableExists {
                 cell_name: self.name.clone(),
                 executable_name,
             });
@@ -104,7 +102,7 @@ impl Cell {
         // Start the child process
         if let Some(executable) = self.executables.get_mut(&executable_name) {
             let pid = executable.start().map_err(|e| {
-                CellError::FailedToStartExecutable {
+                CellsError::FailedToStartExecutable {
                     cell_name: self.name.clone(),
                     executable_name: executable.name.clone(),
                     command: executable.command.clone(),
@@ -116,7 +114,7 @@ impl Cell {
             // TODO: We've inserted the executable into our in-memory cache, and started it,
             //   but we've failed to move it to the Cell...bad...solution?
             if let Err(e) = self.cgroup.add_task(pid.pid.into()) {
-                return Err(CellError::FailedToAddExecutableToCell {
+                return Err(CellsError::FailedToAddExecutableToCell {
                     cell_name: self.name.clone(),
                     executable_name,
                     source: e,
@@ -146,7 +144,7 @@ impl Cell {
 
                     Ok(exit_status)
                 }
-                Err(e) => Err(CellError::FailedToStopExecutable {
+                Err(e) => Err(CellsError::FailedToStopExecutable {
                     cell_name: self.name.clone(),
                     executable_name: executable.name.clone(),
                     executable_pid: executable.pid().expect("pid"),
@@ -154,7 +152,7 @@ impl Cell {
                 }),
             }
         } else {
-            Err(CellError::ExecutableNotFound {
+            Err(CellsError::ExecutableNotFound {
                 cell_name: self.name.clone(),
                 executable_name: executable_name.clone(),
             })
@@ -163,64 +161,6 @@ impl Cell {
 
     pub fn v2(&self) -> bool {
         self.cgroup.v2()
-    }
-}
-
-#[derive(Error, Debug)]
-pub(crate) enum CellError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found'")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cell '{cell_name}' already has an executable '{executable_name}'"
-    )]
-    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
-    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
-    FailedToStartExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        command: String,
-        args: Vec<String>,
-        source: io::Error,
-    },
-    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]
-    FailedToStopExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        executable_pid: CgroupPid,
-        source: io::Error,
-    },
-    #[error(
-        "cell '{cell_name}' failed to add executable (executable:?): {source}"
-    )]
-    FailedToAddExecutableToCell {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: cgroups_rs::error::Error,
-    },
-}
-
-impl From<CellError> for Status {
-    fn from(err: CellError) -> Self {
-        let msg = err.to_string();
-        error!("{msg}");
-        match err {
-            CellError::CellExists { .. }
-            | CellError::ExecutableExists { .. } => Status::already_exists(msg),
-            CellError::CellNotFound { .. }
-            | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
-            CellError::FailedToFreeCell { .. }
-            | CellError::FailedToStartExecutable { .. }
-            | CellError::FailedToStopExecutable { .. }
-            | CellError::FailedToAddExecutableToCell { .. } => {
-                Status::internal(msg)
-            }
-        }
     }
 }
 

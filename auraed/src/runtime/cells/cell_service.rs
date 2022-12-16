@@ -33,7 +33,8 @@ use super::validation::{
     ValidatedFreeCellRequest, ValidatedStartCellRequest,
     ValidatedStopCellRequest,
 };
-use super::{Cell, CellError, CellsTable};
+use super::{Cell, CellsTable, Result};
+use crate::runtime::cells::error::CellsError;
 use ::validation::ValidatedType;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
@@ -41,10 +42,7 @@ use aurae_proto::runtime::{
     StopCellRequest, StopCellResponse,
 };
 use log::info;
-use thiserror::Error;
 use tonic::{Request, Response, Status};
-
-pub(crate) type Result<T> = std::result::Result<T, CellServiceError>;
 
 #[derive(Debug, Clone)]
 pub struct CellService {
@@ -65,7 +63,7 @@ impl CellService {
         info!("CellService: allocate() cell={:?}", cell);
 
         if self.cells.contains(&cell.name)? {
-            return Err(CellError::CellExists { cell_name: cell.name }.into());
+            return Err(CellsError::CellExists { cell_name: cell.name });
         }
 
         let cell_name = cell.name.clone();
@@ -121,7 +119,7 @@ impl CellService {
                     args,
                     description,
                 )
-                .map_err(CellServiceError::from)
+                .map_err(CellsError::from)
             })?;
         }
 
@@ -140,8 +138,7 @@ impl CellService {
         );
 
         let _exit_status = self.cells.get_then(&cell_name, move |cell| {
-            cell.stop_executable(&executable_name)
-                .map_err(CellServiceError::from)
+            cell.stop_executable(&executable_name).map_err(CellsError::from)
         })?;
 
         Ok(StopCellResponse::default())
@@ -193,25 +190,6 @@ impl cell_service_server::CellService for CellService {
         let request = request.into_inner();
         let request = ValidatedStopCellRequest::validate(request, None)?;
         Ok(Response::new(self.stop(request)?))
-    }
-}
-
-#[derive(Error, Debug)]
-pub(crate) enum CellServiceError {
-    #[error(transparent)]
-    CellError(#[from] CellError),
-    #[error("failed to lock cells table")]
-    FailedToObtainLock(),
-}
-
-impl From<CellServiceError> for Status {
-    fn from(err: CellServiceError) -> Self {
-        match err {
-            CellServiceError::CellError(err) => err.into(),
-            CellServiceError::FailedToObtainLock() => {
-                Status::aborted(err.to_string())
-            }
-        }
     }
 }
 
