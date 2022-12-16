@@ -28,15 +28,13 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{
-    validation::ValidatedCell, CellName, Executable, ExecutableError,
-    ExecutableName,
-};
+use super::{validation::ValidatedCell, CellName, Executable, ExecutableName};
 use cgroups_rs::cgroup_builder::CgroupBuilder;
-use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
+use cgroups_rs::{hierarchies, Cgroup, CgroupPid, Hierarchy};
 use log::{error, info};
 use std::collections::HashMap;
-use std::process::{Command, ExitStatus};
+use std::io;
+use std::process::ExitStatus;
 use thiserror::Error;
 use tonic::Status;
 
@@ -82,73 +80,83 @@ impl Cell {
 
     pub fn start_executable(
         &mut self,
-        exe_name: ExecutableName,
-        command: Command,
+        executable_name: ExecutableName,
+        command: String,
         args: Vec<String>,
         description: String,
     ) -> Result<()> {
+        // TODO: replace with try_insert when it becomes stable
         // Check if there was already an executable with the same name.
-        if self.executables.contains_key(&exe_name) {
+        if self.executables.contains_key(&executable_name) {
             return Err(CellError::ExecutableExists {
                 cell_name: self.name.clone(),
-                executable_name: exe_name,
+                executable_name,
             });
         }
 
-        // Start the child process
-        let exe =
-            Executable::start(exe_name.clone(), command, args, description)
-                .map_err(|e| CellError::ExecutableError {
-                    cell_name: self.name.clone(),
-                    source: e,
-                })?;
-
-        // TODO: If we start the exe above and fail the add below...bad...solution???
-
-        // Add the newly started child process to the cgroup
-        let exe_pid = exe.pid();
-        if let Err(e) = self.cgroup.add_task(exe.pid()) {
-            return Err(CellError::FailedToAddExecutable {
-                cell_name: self.name.clone(),
-                executable: exe,
-                source: e,
-            });
-        }
-
-        info!(
-            "Cells: cell_name={} executable_name={exe_name} spawn() -> pid={}",
-            self.name, exe_pid.pid
-        );
+        let executable =
+            Executable::new(executable_name, command, args, description);
+        let executable_name = executable.name.clone();
 
         // Ignoring return value as we've already assured ourselves that the key does not exist.
-        let _ = self.executables.insert(exe_name, exe);
+        let _ = self.executables.insert(executable_name.clone(), executable);
+
+        // Start the child process
+        if let Some(executable) = self.executables.get_mut(&executable_name) {
+            let pid = executable.start().map_err(|e| {
+                CellError::FailedToStartExecutable {
+                    cell_name: self.name.clone(),
+                    executable_name: executable.name.clone(),
+                    command: executable.command.clone(),
+                    args: executable.args.clone(),
+                    source: e,
+                }
+            })?;
+
+            // TODO: We've inserted the executable into our in-memory cache, and started it,
+            //   but we've failed to move it to the Cell...bad...solution?
+            if let Err(e) = self.cgroup.add_task(pid.pid.into()) {
+                return Err(CellError::FailedToAddExecutableToCell {
+                    cell_name: self.name.clone(),
+                    executable_name,
+                    source: e,
+                });
+            }
+
+            info!(
+                "Cells: cell_name={} executable_name={executable_name} spawn() -> pid={pid:?}",
+                self.name
+            );
+        };
 
         Ok(())
     }
 
     pub fn stop_executable(
         &mut self,
-        exe_name: &ExecutableName,
-    ) -> Result<ExitStatus> {
-        if let Some(exe) = self.executables.get_mut(exe_name) {
-            match exe.kill() {
+        executable_name: &ExecutableName,
+    ) -> Result<Option<ExitStatus>> {
+        if let Some(executable) = self.executables.get_mut(executable_name) {
+            match executable.kill() {
                 Ok(exit_status) => {
                     let _ = self
                         .executables
-                        .remove(exe_name)
+                        .remove(executable_name)
                         .expect("asserted above");
 
                     Ok(exit_status)
                 }
-                Err(e) => Err(CellError::ExecutableError {
+                Err(e) => Err(CellError::FailedToStopExecutable {
                     cell_name: self.name.clone(),
+                    executable_name: executable.name.clone(),
+                    executable_pid: executable.pid().expect("pid"),
                     source: e,
                 }),
             }
         } else {
             Err(CellError::ExecutableNotFound {
                 cell_name: self.name.clone(),
-                executable_name: exe_name.clone(),
+                executable_name: executable_name.clone(),
             })
         }
     }
@@ -172,14 +180,27 @@ pub(crate) enum CellError {
     ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
     #[error("cell '{cell_name} could not find executable '{executable_name}'")]
     ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}': {source}")]
-    ExecutableError { cell_name: CellName, source: ExecutableError },
+    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
+    FailedToStartExecutable {
+        cell_name: CellName,
+        executable_name: ExecutableName,
+        command: String,
+        args: Vec<String>,
+        source: io::Error,
+    },
+    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]
+    FailedToStopExecutable {
+        cell_name: CellName,
+        executable_name: ExecutableName,
+        executable_pid: CgroupPid,
+        source: io::Error,
+    },
     #[error(
         "cell '{cell_name}' failed to add executable (executable:?): {source}"
     )]
-    FailedToAddExecutable {
+    FailedToAddExecutableToCell {
         cell_name: CellName,
-        executable: Executable,
+        executable_name: ExecutableName,
         source: cgroups_rs::error::Error,
     },
 }
@@ -193,9 +214,12 @@ impl From<CellError> for Status {
             | CellError::ExecutableExists { .. } => Status::already_exists(msg),
             CellError::CellNotFound { .. }
             | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
-            CellError::ExecutableError { .. }
-            | CellError::FailedToFreeCell { .. }
-            | CellError::FailedToAddExecutable { .. } => Status::internal(msg),
+            CellError::FailedToFreeCell { .. }
+            | CellError::FailedToStartExecutable { .. }
+            | CellError::FailedToStopExecutable { .. }
+            | CellError::FailedToAddExecutableToCell { .. } => {
+                Status::internal(msg)
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+use std::ffi::OsStr;
 use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 use validation::{ValidatedField, ValidationError};
@@ -57,5 +58,11 @@ impl Deref for ExecutableName {
 impl Display for ExecutableName {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<OsStr> for ExecutableName {
+    fn as_ref(&self) -> &OsStr {
+        self.0.deref().as_ref()
     }
 }
