@@ -39,10 +39,10 @@ use aurae_proto::runtime::{
     FreeCellRequest, FreeCellResponse, StartExecutableRequest,
     StartExecutableResponse, StopExecutableRequest, StopExecutableResponse,
 };
-use log::info;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
+use tracing::info;
 
 #[derive(Debug, Clone)]
 pub struct CellService {
@@ -54,6 +54,7 @@ impl CellService {
         CellService { cells: Default::default() }
     }
 
+    #[tracing::instrument]
     async fn allocate(
         &self,
         request: ValidatedAllocateCellRequest,
@@ -79,6 +80,7 @@ impl CellService {
         })
     }
 
+    #[tracing::instrument]
     async fn free(
         &self,
         request: ValidatedFreeCellRequest,
@@ -92,6 +94,7 @@ impl CellService {
         Ok(FreeCellResponse::default())
     }
 
+    #[tracing::instrument]
     async fn start(
         &self,
         request: ValidatedStartExecutableRequest,
@@ -113,6 +116,7 @@ impl CellService {
         Ok(StartExecutableResponse { pid })
     }
 
+    #[tracing::instrument]
     async fn stop(
         &self,
         request: ValidatedStopExecutableRequest,
