@@ -46,25 +46,6 @@ use tonic::{Request, Response, Status};
 
 pub(crate) type Result<T> = std::result::Result<T, CellServiceError>;
 
-#[derive(Error, Debug)]
-pub(crate) enum CellServiceError {
-    #[error(transparent)]
-    CellError(#[from] CellError),
-    #[error("failed to lock cells table")]
-    FailedToObtainLock(),
-}
-
-impl From<CellServiceError> for Status {
-    fn from(err: CellServiceError) -> Self {
-        match err {
-            CellServiceError::CellError(err) => err.into(),
-            CellServiceError::FailedToObtainLock() => {
-                Status::aborted(err.to_string())
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct CellService {
     cells: CellsTable,
@@ -212,6 +193,25 @@ impl cell_service_server::CellService for CellService {
         let request = request.into_inner();
         let request = ValidatedStopCellRequest::validate(request, None)?;
         Ok(Response::new(self.stop(request)?))
+    }
+}
+
+#[derive(Error, Debug)]
+pub(crate) enum CellServiceError {
+    #[error(transparent)]
+    CellError(#[from] CellError),
+    #[error("failed to lock cells table")]
+    FailedToObtainLock(),
+}
+
+impl From<CellServiceError> for Status {
+    fn from(err: CellServiceError) -> Self {
+        match err {
+            CellServiceError::CellError(err) => err.into(),
+            CellServiceError::FailedToObtainLock() => {
+                Status::aborted(err.to_string())
+            }
+        }
     }
 }
 

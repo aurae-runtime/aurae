@@ -8,27 +8,6 @@ use thiserror::Error;
 
 type Result<T> = std::result::Result<T, ExecutableError>;
 
-// TODO: I don't know how I (future-highway) feel about this now that I've spun out
-//   `ExecutableError` from `CellsError`. It allows for consuming `Command` on `start`
-//   (slight safety gain) but probably at the expense of mapping our errors to `Status`.
-//   If there are no security concerns with exposing the underlying errors, then the dev overhead
-//   of mapping to `Status` is no much, but I'm thinking under the assumption that we won't expose.
-#[derive(Error, Debug)]
-pub(crate) enum ExecutableError {
-    #[error("failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
-    FailedToStart {
-        executable_name: ExecutableName,
-        command: Command,
-        source: io::Error,
-    },
-    #[error("failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]
-    FailedToStopExecutable {
-        executable_name: ExecutableName,
-        executable_pid: CgroupPid,
-        source: io::Error,
-    },
-}
-
 #[derive(Debug)]
 pub(crate) struct Executable {
     name: ExecutableName,
@@ -96,6 +75,22 @@ impl Executable {
     pub fn pid(&self) -> CgroupPid {
         (self.child.id() as u64).into()
     }
+}
+
+#[derive(Error, Debug)]
+pub(crate) enum ExecutableError {
+    #[error("failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
+    FailedToStart {
+        executable_name: ExecutableName,
+        command: Command,
+        source: io::Error,
+    },
+    #[error("failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]
+    FailedToStopExecutable {
+        executable_name: ExecutableName,
+        executable_pid: CgroupPid,
+        source: io::Error,
+    },
 }
 
 fn aurae_process_pre_exec(exe_name: &ExecutableName) -> io::Result<()> {

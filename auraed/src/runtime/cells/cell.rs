@@ -34,56 +34,13 @@ use super::{
 };
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
-use log::error;
-use log::info;
+use log::{error, info};
 use std::collections::HashMap;
 use std::process::{Command, ExitStatus};
 use thiserror::Error;
 use tonic::Status;
 
 pub(crate) type Result<T> = std::result::Result<T, CellError>;
-
-#[derive(Error, Debug)]
-pub(crate) enum CellError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found'")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cell '{cell_name}' already has an executable '{executable_name}'"
-    )]
-    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
-    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}': {source}")]
-    ExecutableError { cell_name: CellName, source: ExecutableError },
-    #[error(
-        "cell '{cell_name}' failed to add executable (executable:?): {source}"
-    )]
-    FailedToAddExecutable {
-        cell_name: CellName,
-        executable: Executable,
-        source: cgroups_rs::error::Error,
-    },
-}
-
-impl From<CellError> for Status {
-    fn from(err: CellError) -> Self {
-        let msg = err.to_string();
-        error!("{msg}");
-        match err {
-            CellError::CellExists { .. }
-            | CellError::ExecutableExists { .. } => Status::already_exists(msg),
-            CellError::CellNotFound { .. }
-            | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
-            CellError::ExecutableError { .. }
-            | CellError::FailedToFreeCell { .. }
-            | CellError::FailedToAddExecutable { .. } => Status::internal(msg),
-        }
-    }
-}
 
 #[derive(Debug)]
 pub(crate) struct Cell {
@@ -198,6 +155,48 @@ impl Cell {
 
     pub fn v2(&self) -> bool {
         self.cgroup.v2()
+    }
+}
+
+#[derive(Error, Debug)]
+pub(crate) enum CellError {
+    #[error("cell '{cell_name}' already exists'")]
+    CellExists { cell_name: CellName },
+    #[error("cell '{cell_name}' not found'")]
+    CellNotFound { cell_name: CellName },
+    #[error("cell '{cell_name}' could not be freed: {source}")]
+    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
+    #[error(
+        "cell '{cell_name}' already has an executable '{executable_name}'"
+    )]
+    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
+    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
+    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
+    #[error("cell '{cell_name}': {source}")]
+    ExecutableError { cell_name: CellName, source: ExecutableError },
+    #[error(
+        "cell '{cell_name}' failed to add executable (executable:?): {source}"
+    )]
+    FailedToAddExecutable {
+        cell_name: CellName,
+        executable: Executable,
+        source: cgroups_rs::error::Error,
+    },
+}
+
+impl From<CellError> for Status {
+    fn from(err: CellError) -> Self {
+        let msg = err.to_string();
+        error!("{msg}");
+        match err {
+            CellError::CellExists { .. }
+            | CellError::ExecutableExists { .. } => Status::already_exists(msg),
+            CellError::CellNotFound { .. }
+            | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
+            CellError::ExecutableError { .. }
+            | CellError::FailedToFreeCell { .. }
+            | CellError::FailedToAddExecutable { .. } => Status::internal(msg),
+        }
     }
 }
 
