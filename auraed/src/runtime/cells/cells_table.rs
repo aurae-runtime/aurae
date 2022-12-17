@@ -29,10 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{Cell, CellName, CellsError, Result};
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::Mutex;
 
 /// CellsTable is the in-memory store for the list of cells created with Aurae.
 #[derive(Debug, Default, Clone)]
@@ -50,9 +48,8 @@ pub(crate) struct CellsTable {
 impl CellsTable {
     /// Add the [cell] to the cache with key [cell_name].
     /// Returns an error if a duplicate [cell_name] already exists in the cache.
-    pub(crate) fn insert(&self, cell_name: CellName, cell: Cell) -> Result<()> {
-        let mut cache =
-            self.cache.lock().map_err(|_| CellsError::FailedToObtainLock())?;
+    pub async fn insert(&self, cell_name: CellName, cell: Cell) -> Result<()> {
+        let mut cache = self.cache.lock().await;
 
         // TODO: replace with this when it becomes stable
         // cache.try_insert(cell_name.clone(), cgroup)
@@ -66,19 +63,17 @@ impl CellsTable {
         Ok(())
     }
 
-    pub(crate) fn contains(&self, cell_name: &CellName) -> Result<bool> {
-        let cache =
-            self.cache.lock().map_err(|_| CellsError::FailedToObtainLock())?;
+    pub async fn contains(&self, cell_name: &CellName) -> Result<bool> {
+        let cache = self.cache.lock().await;
 
         Ok(cache.contains_key(cell_name))
     }
 
-    pub(crate) fn get_then<F, R>(&self, cell_name: &CellName, f: F) -> Result<R>
+    pub async fn get_mut<F, R>(&self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: FnOnce(&mut Cell) -> Result<R>,
     {
-        let mut cache =
-            self.cache.lock().map_err(|_| CellsError::FailedToObtainLock())?;
+        let mut cache = self.cache.lock().await;
 
         if let Some(cell) = cache.get_mut(cell_name) {
             f(cell)
@@ -89,9 +84,8 @@ impl CellsTable {
 
     /// Remove and return the cgroup keyed by [cell_name] from the cache.
     /// Returns an error if the cell_name does not exist in the cache.
-    pub(crate) fn remove(&self, cell_name: &CellName) -> Result<Cell> {
-        let mut cache =
-            self.cache.lock().map_err(|_| CellsError::FailedToObtainLock())?;
+    pub async fn remove(&self, cell_name: &CellName) -> Result<Cell> {
+        let mut cache = self.cache.lock().await;
 
         cache.remove(cell_name).ok_or_else(|| CellsError::CellNotFound {
             cell_name: cell_name.clone(),
