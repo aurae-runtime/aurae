@@ -28,15 +28,13 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cells::cell::CellError;
-use crate::runtime::cells::CellServiceError;
-use crate::runtime::cells::{Cell, CellName, Result};
+use super::{Cell, CellName, CellsError, Result};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
 
-/// CgroupTable is the in-memory store for the list of cgroups created with Aurae.
+/// CellsTable is the in-memory store for the list of cells created with Aurae.
 #[derive(Debug, Default, Clone)]
 pub(crate) struct CellsTable {
     // TODO (future-highway): would a RWLock be more performant?
@@ -50,22 +48,18 @@ pub(crate) struct CellsTable {
 // - Get Cgroup and pids from executable_name
 
 impl CellsTable {
-    /// Add the [cgroup] to the cache with key [cell_name].
-    /// Note that this does not take ownership of the cgroup and instead clones it.
-    /// The clone can be retrieved once it's removed from the cache.
+    /// Add the [cell] to the cache with key [cell_name].
     /// Returns an error if a duplicate [cell_name] already exists in the cache.
     pub(crate) fn insert(&self, cell_name: CellName, cell: Cell) -> Result<()> {
-        let mut cache = self
-            .cache
-            .lock()
-            .map_err(|_| CellServiceError::FailedToObtainLock())?;
+        let mut cache =
+            self.cache.lock().map_err(|_| CellsError::FailedToObtainLock())?;
 
         // TODO: replace with this when it becomes stable
         // cache.try_insert(cell_name.clone(), cgroup)
 
         // Check if there was already a cgroup in the table with this cell name as a key.
         if cache.contains_key(&cell_name) {
-            return Err(CellError::CellExists { cell_name }.into());
+            return Err(CellsError::CellExists { cell_name });
         }
         // Ignoring return value as we've already assured ourselves that the key does not exist.
         let _ = cache.insert(cell_name, cell);
@@ -73,52 +67,34 @@ impl CellsTable {
     }
 
     pub(crate) fn contains(&self, cell_name: &CellName) -> Result<bool> {
-        let cache = self
-            .cache
-            .lock()
-            .map_err(|_| CellServiceError::FailedToObtainLock())?;
+        let cache =
+            self.cache.lock().map_err(|_| CellsError::FailedToObtainLock())?;
 
         Ok(cache.contains_key(cell_name))
     }
-
-    // /// Return a clone of the cgroup keyed by [cell_name] from the cache or None if it is not found.
-    // /// Does not relinquish ownership.
-    // /// Returns an error if we fail to lock the cache.
-    // pub(crate) fn get(&self, cell_name: &CellName) -> Result<Option<Cgroup>> {
-    //     let cache = self
-    //         .cache
-    //         .lock()
-    //         .map_err(|e| anyhow!("failed to lock cgroup_table: {e:?}"))?;
-    //     let cgroup = cache.get(cell_name).cloned();
-    //     Ok(cgroup)
-    // }
 
     pub(crate) fn get_then<F, R>(&self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: FnOnce(&mut Cell) -> Result<R>,
     {
-        let mut cache = self
-            .cache
-            .lock()
-            .map_err(|_| CellServiceError::FailedToObtainLock())?;
+        let mut cache =
+            self.cache.lock().map_err(|_| CellsError::FailedToObtainLock())?;
 
         if let Some(cell) = cache.get_mut(cell_name) {
             f(cell)
         } else {
-            Err(CellError::CellNotFound { cell_name: cell_name.clone() }.into())
+            Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
         }
     }
 
     /// Remove and return the cgroup keyed by [cell_name] from the cache.
     /// Returns an error if the cell_name does not exist in the cache.
     pub(crate) fn remove(&self, cell_name: &CellName) -> Result<Cell> {
-        let mut cache = self
-            .cache
-            .lock()
-            .map_err(|_| CellServiceError::FailedToObtainLock())?;
+        let mut cache =
+            self.cache.lock().map_err(|_| CellsError::FailedToObtainLock())?;
 
-        cache.remove(cell_name).ok_or_else(|| {
-            CellError::CellNotFound { cell_name: cell_name.clone() }.into()
+        cache.remove(cell_name).ok_or_else(|| CellsError::CellNotFound {
+            cell_name: cell_name.clone(),
         })
     }
 }

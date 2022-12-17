@@ -4,7 +4,6 @@ use aurae_proto::runtime::{
     AllocateCellRequest, Cell, Executable, FreeCellRequest, StartCellRequest,
     StopCellRequest,
 };
-use std::process::Command;
 use validation::{ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
 
@@ -118,17 +117,18 @@ pub(crate) struct ValidatedCell {
 
 impl CellTypeValidator for CellValidator {}
 
-#[derive(ValidatedType)]
+#[derive(ValidatedType, Debug)]
 pub(crate) struct ValidatedExecutable {
     #[field_type(String)]
     #[validate(create)]
     pub name: ExecutableName,
-    #[field_type(String)]
-    pub command: Command,
+
+    pub command: String,
+
     #[field_type(Vec<String>)]
-    // TODO: Someone with knowledge confirm that args don't require validation.
     #[validate(none)]
     pub args: Vec<String>,
+
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
     pub description: String,
@@ -139,13 +139,14 @@ impl ExecutableTypeValidator for ExecutableValidator {
         command: String,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<Command, ValidationError> {
-        let command = validation::required_not_empty(
-            Some(command),
-            field_name,
-            parent_name,
-        )?;
+    ) -> Result<String, ValidationError> {
+        validation::required_not_empty(Some(command), field_name, parent_name)
+    }
+}
 
-        Ok(Command::new(command))
+impl From<ValidatedExecutable> for crate::runtime::cells::Executable {
+    fn from(x: ValidatedExecutable) -> Self {
+        let ValidatedExecutable { name, command, args, description } = x;
+        Self::new(name, command, args, description)
     }
 }

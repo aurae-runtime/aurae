@@ -28,13 +28,13 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cells::error::CellServiceError;
-use crate::runtime::cells::validation::{
-    ValidatedAllocateCellRequest, ValidatedExecutable,
+use super::validation::{
+    ValidatedAllocateCellRequest,
     ValidatedFreeCellRequest, ValidatedStartCellRequest,
     ValidatedStopCellRequest,
 };
-use crate::runtime::cells::{Cell, CellError, CellsTable};
+use super::{Cell, CellsTable, Result};
+use crate::runtime::cells::error::CellsError;
 use ::validation::ValidatedType;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
@@ -57,77 +57,66 @@ impl CellService {
     fn allocate(
         &self,
         request: ValidatedAllocateCellRequest,
-    ) -> Result<Response<AllocateCellResponse>, Status> {
+    ) -> Result<AllocateCellResponse> {
         // Initialize the cell
         let ValidatedAllocateCellRequest { cell } = request;
         info!("CellService: allocate() cell={:?}", cell);
 
         if self.cells.contains(&cell.name)? {
-            return Err(CellError::CellExists { cell_name: cell.name }.into());
+            return Err(CellsError::CellExists { cell_name: cell.name });
         }
 
         let cell_name = cell.name.clone();
 
+        // TODO: We allocate and then insert, which could fail, losing the ref to the cell
         let cell = Cell::allocate(cell);
         let cgroup_v2 = cell.v2();
         self.cells.insert(cell_name.clone(), cell)?;
 
-        Ok(Response::new(AllocateCellResponse {
+        Ok(AllocateCellResponse {
             cell_name: cell_name.into_inner(),
             cgroup_v2,
-        }))
+        })
     }
 
     fn free(
         &self,
         request: ValidatedFreeCellRequest,
-    ) -> Result<Response<FreeCellResponse>, Status> {
+    ) -> Result<FreeCellResponse> {
         let ValidatedFreeCellRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
+        // TODO: We remove and then free, which could fail, losing the ref to the cell
         self.cells.remove(&cell_name)?.free()?;
 
-        Ok(Response::new(FreeCellResponse::default()))
+        Ok(FreeCellResponse::default())
     }
 
     fn start(
         &self,
         request: ValidatedStartCellRequest,
-    ) -> Result<Response<StartCellResponse>, Status> {
+    ) -> Result<StartCellResponse> {
         let ValidatedStartCellRequest { cell_name, executables } = request;
 
         for executable in executables {
-            let ValidatedExecutable {
-                name: executable_name,
-                command,
-                args,
-                description,
-            } = executable;
-
             // Create the new child process
             info!(
-                "CellService: start() cell_name={} executable_name={} command={:?}",
-                cell_name, executable_name, command
+                "CellService: start() cell_name={} executable={:?}",
+                cell_name, executable
             );
 
             self.cells.get_then(&cell_name, move |cell| {
-                cell.start_executable(
-                    executable_name,
-                    command,
-                    args,
-                    description,
-                )
-                .map_err(CellServiceError::from)
+                cell.start_executable(executable).map_err(CellsError::from)
             })?;
         }
 
-        Ok(Response::new(StartCellResponse::default()))
+        Ok(StartCellResponse::default())
     }
 
     fn stop(
         &self,
         request: ValidatedStopCellRequest,
-    ) -> Result<Response<StopCellResponse>, Status> {
+    ) -> Result<StopCellResponse> {
         let ValidatedStopCellRequest { cell_name, executable_name } = request;
 
         info!(
@@ -136,11 +125,10 @@ impl CellService {
         );
 
         let _exit_status = self.cells.get_then(&cell_name, move |cell| {
-            cell.stop_executable(&executable_name)
-                .map_err(CellServiceError::from)
+            cell.stop_executable(&executable_name).map_err(CellsError::from)
         })?;
 
-        Ok(Response::new(StopCellResponse::default()))
+        Ok(StopCellResponse::default())
     }
 }
 
@@ -158,37 +146,37 @@ impl cell_service_server::CellService for CellService {
     async fn allocate(
         &self,
         request: Request<AllocateCellRequest>,
-    ) -> Result<Response<AllocateCellResponse>, Status> {
+    ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedAllocateCellRequest::validate(request, None)?;
-        self.allocate(request)
+        Ok(Response::new(self.allocate(request)?))
     }
 
     async fn free(
         &self,
         request: Request<FreeCellRequest>,
-    ) -> Result<Response<FreeCellResponse>, Status> {
+    ) -> std::result::Result<Response<FreeCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedFreeCellRequest::validate(request, None)?;
-        self.free(request)
+        Ok(Response::new(self.free(request)?))
     }
 
     async fn start(
         &self,
         request: Request<StartCellRequest>,
-    ) -> Result<Response<StartCellResponse>, Status> {
+    ) -> std::result::Result<Response<StartCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStartCellRequest::validate(request, None)?;
-        self.start(request)
+        Ok(Response::new(self.start(request)?))
     }
 
     async fn stop(
         &self,
         request: Request<StopCellRequest>,
-    ) -> Result<Response<StopCellResponse>, Status> {
+    ) -> std::result::Result<Response<StopCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStopCellRequest::validate(request, None)?;
-        self.stop(request)
+        Ok(Response::new(self.stop(request)?))
     }
 }
 

@@ -28,19 +28,15 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cells::executable::ExecutableError;
-use crate::runtime::cells::{
-    validation::ValidatedCell, CellName, Executable, ExecutableName,
+use super::{
+    validation::ValidatedCell, CellName, Executable, ExecutableName, Result,
 };
+use crate::runtime::cells::error::CellsError;
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
-use log::{error, info};
+use log::info;
 use std::collections::HashMap;
-use std::process::{Command, ExitStatus};
-use thiserror::Error;
-use tonic::Status;
-
-type Result<T> = std::result::Result<T, CellError>;
+use std::process::ExitStatus;
 
 #[derive(Debug)]
 pub(crate) struct Cell {
@@ -50,7 +46,6 @@ pub(crate) struct Cell {
 }
 
 impl Cell {
-    // TODO: This fn signature ties cells module to runtime module (refactor to better solution)
     // Here is where we define the "default" cgroup parameters for Aurae cells
     pub fn allocate(cell_spec: ValidatedCell) -> Self {
         let ValidatedCell { name, cpu_cpus, cpu_shares, cpu_mems, cpu_quota } =
@@ -73,7 +68,7 @@ impl Cell {
     }
 
     pub fn free(self) -> Result<()> {
-        self.cgroup.delete().map_err(|e| CellError::FailedToFreeCell {
+        self.cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
             cell_name: self.name.clone(),
             source: e,
         })?;
@@ -81,75 +76,84 @@ impl Cell {
         Ok(())
     }
 
-    pub fn start_executable(
+    pub fn start_executable<T: Into<Executable>>(
         &mut self,
-        exe_name: ExecutableName,
-        command: Command,
-        args: Vec<String>,
-        description: String,
+        executable: T,
     ) -> Result<()> {
+        let executable = executable.into();
+
+        // TODO: replace with try_insert when it becomes stable
         // Check if there was already an executable with the same name.
-        if self.executables.contains_key(&exe_name) {
-            return Err(CellError::ExecutableExists {
+        if self.executables.contains_key(&executable.name) {
+            return Err(CellsError::ExecutableExists {
                 cell_name: self.name.clone(),
-                executable_name: exe_name,
+                executable_name: executable.name,
             });
         }
 
-        // Start the child process
-        let exe =
-            Executable::start(exe_name.clone(), command, args, description)
-                .map_err(|e| CellError::ExecutableError {
-                    cell_name: self.name.clone(),
-                    source: e,
-                })?;
-
-        // TODO: If we start the exe above and fail the add below...bad...solution???
-
-        // Add the newly started child process to the cgroup
-        let exe_pid = exe.pid();
-        if let Err(e) = self.cgroup.add_task(exe.pid()) {
-            return Err(CellError::FailedToAddExecutable {
-                cell_name: self.name.clone(),
-                executable: exe,
-                source: e,
-            });
-        }
-
-        info!(
-            "Cells: cell_name={} executable_name={exe_name} spawn() -> pid={}",
-            self.name, exe_pid.pid
-        );
+        let executable_name = executable.name.clone();
 
         // Ignoring return value as we've already assured ourselves that the key does not exist.
-        let _ = self.executables.insert(exe_name, exe);
+        let _ = self.executables.insert(executable_name.clone(), executable);
+
+        // Start the child process
+        if let Some(executable) = self.executables.get_mut(&executable_name) {
+            let pid = executable.start().map_err(|e| {
+                CellsError::FailedToStartExecutable {
+                    cell_name: self.name.clone(),
+                    executable_name: executable.name.clone(),
+                    command: executable.command.clone(),
+                    args: executable.args.clone(),
+                    source: e,
+                }
+            })?;
+
+            // TODO: We've inserted the executable into our in-memory cache, and started it,
+            //   but we've failed to move it to the Cell...bad...solution?
+            if let Err(e) = self.cgroup.add_task(pid.pid.into()) {
+                return Err(CellsError::FailedToAddExecutableToCell {
+                    cell_name: self.name.clone(),
+                    executable_name,
+                    source: e,
+                });
+            }
+
+            info!(
+                "Cells: cell_name={} executable_name={executable_name} spawn() -> pid={pid:?}",
+                self.name
+            );
+        } else {
+            unreachable!("executable is guaranteed to be in the HashMap; we just inserted and there is a MutexGuard");
+        };
 
         Ok(())
     }
 
     pub fn stop_executable(
         &mut self,
-        exe_name: &ExecutableName,
-    ) -> Result<ExitStatus> {
-        if let Some(exe) = self.executables.get_mut(exe_name) {
-            match exe.kill() {
+        executable_name: &ExecutableName,
+    ) -> Result<Option<ExitStatus>> {
+        if let Some(executable) = self.executables.get_mut(executable_name) {
+            match executable.kill() {
                 Ok(exit_status) => {
                     let _ = self
                         .executables
-                        .remove(exe_name)
+                        .remove(executable_name)
                         .expect("asserted above");
 
                     Ok(exit_status)
                 }
-                Err(e) => Err(CellError::ExecutableError {
+                Err(e) => Err(CellsError::FailedToStopExecutable {
                     cell_name: self.name.clone(),
+                    executable_name: executable.name.clone(),
+                    executable_pid: executable.pid().expect("pid"),
                     source: e,
                 }),
             }
         } else {
-            Err(CellError::ExecutableNotFound {
+            Err(CellsError::ExecutableNotFound {
                 cell_name: self.name.clone(),
-                executable_name: exe_name.clone(),
+                executable_name: executable_name.clone(),
             })
         }
     }
@@ -168,44 +172,4 @@ fn hierarchy() -> Box<dyn Hierarchy> {
     // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
     // hierarchies::V2
     Box::new(hierarchies::V2::new())
-}
-
-#[derive(Error, Debug)]
-pub(crate) enum CellError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found'")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cell '{cell_name}' already has an executable '{executable_name}'"
-    )]
-    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
-    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}': {source}")]
-    ExecutableError { cell_name: CellName, source: ExecutableError },
-    #[error("cell '{cell_name}' failed to add executable (executable:?): {source}")]
-    FailedToAddExecutable {
-        cell_name: CellName,
-        executable: Executable,
-        source: cgroups_rs::error::Error,
-    },
-}
-
-impl From<CellError> for Status {
-    fn from(err: CellError) -> Self {
-        let msg = err.to_string();
-        error!("{msg}");
-        match err {
-            CellError::CellExists { .. }
-            | CellError::ExecutableExists { .. } => Status::already_exists(msg),
-            CellError::CellNotFound { .. }
-            | CellError::ExecutableNotFound { .. } => Status::not_found(msg),
-            CellError::ExecutableError { .. }
-            | CellError::FailedToFreeCell { .. }
-            | CellError::FailedToAddExecutable { .. } => Status::internal(msg),
-        }
-    }
 }
