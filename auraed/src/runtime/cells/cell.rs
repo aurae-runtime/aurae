@@ -122,6 +122,8 @@ impl Cell {
                 "Cells: cell_name={} executable_name={executable_name} spawn() -> pid={pid:?}",
                 self.name
             );
+        } else {
+            unreachable!("executable is guaranteed to be in the HashMap; we just inserted and there is a MutexGuard");
         };
 
         Ok(())
