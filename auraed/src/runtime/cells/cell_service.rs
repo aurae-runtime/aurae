@@ -84,8 +84,8 @@ impl CellService {
         let ValidatedFreeCellRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
-        // TODO: We remove and then free, which could fail, losing the ref to the cell
-        self.cells.remove(&cell_name).await?.free()?;
+        self.cells.get_mut(&cell_name, |cell| cell.free()).await?;
+        let _ = self.cells.remove(&cell_name).await?;
 
         Ok(FreeCellResponse::default())
     }

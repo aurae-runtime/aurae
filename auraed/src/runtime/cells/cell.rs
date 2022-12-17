@@ -29,8 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    validation::ValidatedCell, CellName, CellsError, Executable,
-    ExecutableName, Result,
+    validation::ValidatedCell, CellsError, Executable, ExecutableName, Result,
 };
 use cgroups_rs::{
     cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
@@ -40,13 +39,13 @@ use std::{collections::HashMap, process::ExitStatus};
 
 #[derive(Debug)]
 pub(crate) struct Cell {
-    name: CellName,
+    spec: ValidatedCell,
     state: CellState,
 }
 
 #[derive(Debug)]
 enum CellState {
-    Unallocated(ValidatedCell),
+    Unallocated,
     Allocated {
         cgroup: Cgroup,
         executables: HashMap<ExecutableName, Executable>,
@@ -55,50 +54,48 @@ enum CellState {
 
 impl Cell {
     pub fn new(cell_spec: ValidatedCell) -> Self {
-        Self {
-            name: cell_spec.name.clone(),
-            state: CellState::Unallocated(cell_spec),
-        }
+        Self { spec: cell_spec, state: CellState::Unallocated }
     }
 
     /// Creates the underlying cgroup. Does nothing if the `Cell` has already been allocated.
     // Here is where we define the "default" cgroup parameters for Aurae cells
     pub fn allocate(&mut self) {
-        if let CellState::Unallocated(spec) = &self.state {
-            self.state = {
-                let ValidatedCell {
-                    name,
-                    cpu_cpus,
-                    cpu_shares,
-                    cpu_mems,
-                    cpu_quota,
-                } = (*spec).clone();
+        if let CellState::Unallocated = &self.state {
+            let ValidatedCell {
+                name,
+                cpu_cpus,
+                cpu_shares,
+                cpu_mems,
+                cpu_quota,
+            } = self.spec.clone();
 
-                let hierarchy = hierarchy();
-                let cgroup = CgroupBuilder::new(&name)
-                    // CPU Controller
-                    .cpu()
-                    .shares(cpu_shares.into_inner())
-                    .mems(cpu_mems.into_inner())
-                    .period(1000000) // microseconds in a second
-                    .quota(cpu_quota.into_inner())
-                    .cpus(cpu_cpus.into_inner())
-                    .done()
-                    // Final Build
-                    .build(hierarchy);
+            let hierarchy = hierarchy();
+            let cgroup = CgroupBuilder::new(&name)
+                // CPU Controller
+                .cpu()
+                .shares(cpu_shares.into_inner())
+                .mems(cpu_mems.into_inner())
+                .period(1000000) // microseconds in a second
+                .quota(cpu_quota.into_inner())
+                .cpus(cpu_cpus.into_inner())
+                .done()
+                // Final Build
+                .build(hierarchy);
 
+            self.state =
                 CellState::Allocated { cgroup, executables: Default::default() }
-            }
         }
     }
 
-    pub fn free(mut self) -> Result<()> {
+    pub fn free(&mut self) -> Result<()> {
         if let CellState::Allocated { cgroup, executables: _ } = &mut self.state
         {
             cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
-                cell_name: self.name.clone(),
+                cell_name: self.spec.name.clone(),
                 source: e,
             })?;
+
+            self.state = CellState::Unallocated;
         }
 
         Ok(())
@@ -109,10 +106,10 @@ impl Cell {
         executable: T,
     ) -> Result<()> {
         match &mut self.state {
-            CellState::Unallocated(_) => {
+            CellState::Unallocated => {
                 // TODO: Do we want to check the system to confirm?
                 Err(CellsError::CellUnallocated {
-                    cell_name: self.name.clone(),
+                    cell_name: self.spec.name.clone(),
                 })
             }
             CellState::Allocated { cgroup, executables } => {
@@ -122,7 +119,7 @@ impl Cell {
                 // Check if there was already an executable with the same name.
                 if executables.contains_key(&executable.name) {
                     return Err(CellsError::ExecutableExists {
-                        cell_name: self.name.clone(),
+                        cell_name: self.spec.name.clone(),
                         executable_name: executable.name,
                     });
                 }
@@ -137,7 +134,7 @@ impl Cell {
                 {
                     let pid = executable.start().map_err(|e| {
                         CellsError::FailedToStartExecutable {
-                            cell_name: self.name.clone(),
+                            cell_name: self.spec.name.clone(),
                             executable_name: executable.name.clone(),
                             command: executable.command.clone(),
                             args: executable.args.clone(),
@@ -149,7 +146,7 @@ impl Cell {
                     //   but we've failed to move it to the Cell...bad...solution?
                     if let Err(e) = cgroup.add_task(pid.pid.into()) {
                         return Err(CellsError::FailedToAddExecutableToCell {
-                            cell_name: self.name.clone(),
+                            cell_name: self.spec.name.clone(),
                             executable_name,
                             source: e,
                         });
@@ -157,7 +154,7 @@ impl Cell {
 
                     info!(
                         "Cells: cell_name={} executable_name={executable_name} spawn() -> pid={pid:?}",
-                        self.name
+                        self.spec.name
                     );
                 } else {
                     unreachable!("executable is guaranteed to be in the HashMap; we just inserted and there is a MutexGuard");
@@ -173,10 +170,10 @@ impl Cell {
         executable_name: &ExecutableName,
     ) -> Result<Option<ExitStatus>> {
         match &mut self.state {
-            CellState::Unallocated(_) => {
+            CellState::Unallocated => {
                 // TODO: Do we want to check the system to confirm?
                 Err(CellsError::CellUnallocated {
-                    cell_name: self.name.clone(),
+                    cell_name: self.spec.name.clone(),
                 })
             }
             CellState::Allocated { executables, .. } => {
@@ -190,7 +187,7 @@ impl Cell {
                             Ok(exit_status)
                         }
                         Err(e) => Err(CellsError::FailedToStopExecutable {
-                            cell_name: self.name.clone(),
+                            cell_name: self.spec.name.clone(),
                             executable_name: executable.name.clone(),
                             executable_pid: executable.pid().expect("pid"),
                             source: e,
@@ -198,7 +195,7 @@ impl Cell {
                     }
                 } else {
                     Err(CellsError::ExecutableNotFound {
-                        cell_name: self.name.clone(),
+                        cell_name: self.spec.name.clone(),
                         executable_name: executable_name.clone(),
                     })
                 }
