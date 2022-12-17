@@ -29,9 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 use super::validation::{
-    ValidatedAllocateCellRequest,
-    ValidatedFreeCellRequest, ValidatedStartCellRequest,
-    ValidatedStopCellRequest,
+    ValidatedAllocateCellRequest, ValidatedFreeCellRequest,
+    ValidatedStartCellRequest, ValidatedStopCellRequest,
 };
 use super::{Cell, CellsTable, Result};
 use crate::runtime::cells::error::CellsError;
@@ -54,7 +53,7 @@ impl CellService {
         CellService { cells: Default::default() }
     }
 
-    fn allocate(
+    async fn allocate(
         &self,
         request: ValidatedAllocateCellRequest,
     ) -> Result<AllocateCellResponse> {
@@ -62,7 +61,7 @@ impl CellService {
         let ValidatedAllocateCellRequest { cell } = request;
         info!("CellService: allocate() cell={:?}", cell);
 
-        if self.cells.contains(&cell.name)? {
+        if self.cells.contains(&cell.name).await? {
             return Err(CellsError::CellExists { cell_name: cell.name });
         }
 
@@ -71,7 +70,7 @@ impl CellService {
         // TODO: We allocate and then insert, which could fail, losing the ref to the cell
         let cell = Cell::allocate(cell);
         let cgroup_v2 = cell.v2();
-        self.cells.insert(cell_name.clone(), cell)?;
+        self.cells.insert(cell_name.clone(), cell).await?;
 
         Ok(AllocateCellResponse {
             cell_name: cell_name.into_inner(),
@@ -79,7 +78,7 @@ impl CellService {
         })
     }
 
-    fn free(
+    async fn free(
         &self,
         request: ValidatedFreeCellRequest,
     ) -> Result<FreeCellResponse> {
@@ -87,12 +86,12 @@ impl CellService {
 
         info!("CellService: free() cell_name={:?}", cell_name);
         // TODO: We remove and then free, which could fail, losing the ref to the cell
-        self.cells.remove(&cell_name)?.free()?;
+        self.cells.remove(&cell_name).await?.free()?;
 
         Ok(FreeCellResponse::default())
     }
 
-    fn start(
+    async fn start(
         &self,
         request: ValidatedStartCellRequest,
     ) -> Result<StartCellResponse> {
@@ -105,15 +104,17 @@ impl CellService {
                 cell_name, executable
             );
 
-            self.cells.get_then(&cell_name, move |cell| {
-                cell.start_executable(executable).map_err(CellsError::from)
-            })?;
+            self.cells
+                .get_mut(&cell_name, move |cell| {
+                    cell.start_executable(executable).map_err(CellsError::from)
+                })
+                .await?;
         }
 
         Ok(StartCellResponse::default())
     }
 
-    fn stop(
+    async fn stop(
         &self,
         request: ValidatedStopCellRequest,
     ) -> Result<StopCellResponse> {
@@ -124,9 +125,12 @@ impl CellService {
             cell_name, executable_name,
         );
 
-        let _exit_status = self.cells.get_then(&cell_name, move |cell| {
-            cell.stop_executable(&executable_name).map_err(CellsError::from)
-        })?;
+        let _exit_status = self
+            .cells
+            .get_mut(&cell_name, move |cell| {
+                cell.stop_executable(&executable_name).map_err(CellsError::from)
+            })
+            .await?;
 
         Ok(StopCellResponse::default())
     }
@@ -149,7 +153,7 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedAllocateCellRequest::validate(request, None)?;
-        Ok(Response::new(self.allocate(request)?))
+        Ok(Response::new(self.allocate(request).await?))
     }
 
     async fn free(
@@ -158,7 +162,7 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<FreeCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedFreeCellRequest::validate(request, None)?;
-        Ok(Response::new(self.free(request)?))
+        Ok(Response::new(self.free(request).await?))
     }
 
     async fn start(
@@ -167,7 +171,7 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<StartCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStartCellRequest::validate(request, None)?;
-        Ok(Response::new(self.start(request)?))
+        Ok(Response::new(self.start(request).await?))
     }
 
     async fn stop(
@@ -176,12 +180,13 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<StopCellResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStopCellRequest::validate(request, None)?;
-        Ok(Response::new(self.stop(request)?))
+        Ok(Response::new(self.stop(request).await?))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::cell_service_server::CellService as GrpcCellService;
     use super::*;
     use crate::runtime::cells::CellName;
 
@@ -195,11 +200,19 @@ mod tests {
         // service.remove_cgroup(id).expect("remove cgroup");
     }
 
-    #[test]
-    fn test_attempt_to_remove_unknown_cell_fails() {
+    #[tokio::test]
+    async fn test_attempt_to_remove_unknown_cell_fails() {
         let service = CellService::new();
-        let cell_name = CellName::random();
-        // TODO: check error type with unwrap_err().kind()
-        assert!(service.free(ValidatedFreeCellRequest { cell_name }).is_err());
+        let random_cell_name = CellName::random();
+
+        let res = service
+            .free(ValidatedFreeCellRequest {
+                cell_name: random_cell_name.clone(),
+            })
+            .await;
+
+        assert!(
+            matches!(res, Err(CellsError::CellNotFound { cell_name }) if cell_name == random_cell_name)
+        );
     }
 }
