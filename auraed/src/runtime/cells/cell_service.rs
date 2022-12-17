@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::validation::{
-    ValidatedAllocateCellRequest, ValidatedExecutable,
+    ValidatedAllocateCellRequest,
     ValidatedFreeCellRequest, ValidatedStartCellRequest,
     ValidatedStopCellRequest,
 };
@@ -99,27 +99,14 @@ impl CellService {
         let ValidatedStartCellRequest { cell_name, executables } = request;
 
         for executable in executables {
-            let ValidatedExecutable {
-                name: executable_name,
-                command,
-                args,
-                description,
-            } = executable;
-
             // Create the new child process
             info!(
-                "CellService: start() cell_name={} executable_name={} command={:?}",
-                cell_name, executable_name, command
+                "CellService: start() cell_name={} executable={:?}",
+                cell_name, executable
             );
 
             self.cells.get_then(&cell_name, move |cell| {
-                cell.start_executable(
-                    executable_name,
-                    command,
-                    args,
-                    description,
-                )
-                .map_err(CellsError::from)
+                cell.start_executable(executable).map_err(CellsError::from)
             })?;
         }
 

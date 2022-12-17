@@ -76,24 +76,21 @@ impl Cell {
         Ok(())
     }
 
-    pub fn start_executable(
+    pub fn start_executable<T: Into<Executable>>(
         &mut self,
-        executable_name: ExecutableName,
-        command: String,
-        args: Vec<String>,
-        description: String,
+        executable: T,
     ) -> Result<()> {
+        let executable = executable.into();
+
         // TODO: replace with try_insert when it becomes stable
         // Check if there was already an executable with the same name.
-        if self.executables.contains_key(&executable_name) {
+        if self.executables.contains_key(&executable.name) {
             return Err(CellsError::ExecutableExists {
                 cell_name: self.name.clone(),
-                executable_name,
+                executable_name: executable.name,
             });
         }
 
-        let executable =
-            Executable::new(executable_name, command, args, description);
         let executable_name = executable.name.clone();
 
         // Ignoring return value as we've already assured ourselves that the key does not exist.

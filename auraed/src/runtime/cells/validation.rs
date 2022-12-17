@@ -117,7 +117,7 @@ pub(crate) struct ValidatedCell {
 
 impl CellTypeValidator for CellValidator {}
 
-#[derive(ValidatedType)]
+#[derive(ValidatedType, Debug)]
 pub(crate) struct ValidatedExecutable {
     #[field_type(String)]
     #[validate(create)]
@@ -141,5 +141,12 @@ impl ExecutableTypeValidator for ExecutableValidator {
         parent_name: Option<&str>,
     ) -> Result<String, ValidationError> {
         validation::required_not_empty(Some(command), field_name, parent_name)
+    }
+}
+
+impl From<ValidatedExecutable> for crate::runtime::cells::Executable {
+    fn from(x: ValidatedExecutable) -> Self {
+        let ValidatedExecutable { name, command, args, description } = x;
+        Self::new(name, command, args, description)
     }
 }
