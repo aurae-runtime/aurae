@@ -29,49 +29,77 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    validation::ValidatedCell, CellName, Executable, ExecutableName, Result,
+    validation::ValidatedCell, CellName, CellsError, Executable,
+    ExecutableName, Result,
 };
-use crate::runtime::cells::error::CellsError;
-use cgroups_rs::cgroup_builder::CgroupBuilder;
-use cgroups_rs::{hierarchies, Cgroup, Hierarchy};
+use cgroups_rs::{
+    cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
+};
 use log::info;
-use std::collections::HashMap;
-use std::process::ExitStatus;
+use std::{collections::HashMap, process::ExitStatus};
 
 #[derive(Debug)]
 pub(crate) struct Cell {
     name: CellName,
-    cgroup: Cgroup,
-    executables: HashMap<ExecutableName, Executable>,
+    state: CellState,
+}
+
+#[derive(Debug)]
+enum CellState {
+    Unallocated(ValidatedCell),
+    Allocated {
+        cgroup: Cgroup,
+        executables: HashMap<ExecutableName, Executable>,
+    },
 }
 
 impl Cell {
-    // Here is where we define the "default" cgroup parameters for Aurae cells
-    pub fn allocate(cell_spec: ValidatedCell) -> Self {
-        let ValidatedCell { name, cpu_cpus, cpu_shares, cpu_mems, cpu_quota } =
-            cell_spec;
-
-        let hierarchy = hierarchy();
-        let cgroup: Cgroup = CgroupBuilder::new(&name)
-            // CPU Controller
-            .cpu()
-            .shares(cpu_shares.into_inner())
-            .mems(cpu_mems.into_inner())
-            .period(1000000) // microseconds in a second
-            .quota(cpu_quota.into_inner())
-            .cpus(cpu_cpus.into_inner())
-            .done()
-            // Final Build
-            .build(hierarchy);
-
-        Self { name, cgroup, executables: Default::default() }
+    pub fn new(cell_spec: ValidatedCell) -> Self {
+        Self {
+            name: cell_spec.name.clone(),
+            state: CellState::Unallocated(cell_spec),
+        }
     }
 
-    pub fn free(self) -> Result<()> {
-        self.cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
-            cell_name: self.name.clone(),
-            source: e,
-        })?;
+    /// Creates the underlying cgroup. Does nothing if the `Cell` has already been allocated.
+    // Here is where we define the "default" cgroup parameters for Aurae cells
+    pub fn allocate(&mut self) {
+        if let CellState::Unallocated(spec) = &self.state {
+            self.state = {
+                let ValidatedCell {
+                    name,
+                    cpu_cpus,
+                    cpu_shares,
+                    cpu_mems,
+                    cpu_quota,
+                } = (*spec).clone();
+
+                let hierarchy = hierarchy();
+                let cgroup = CgroupBuilder::new(&name)
+                    // CPU Controller
+                    .cpu()
+                    .shares(cpu_shares.into_inner())
+                    .mems(cpu_mems.into_inner())
+                    .period(1000000) // microseconds in a second
+                    .quota(cpu_quota.into_inner())
+                    .cpus(cpu_cpus.into_inner())
+                    .done()
+                    // Final Build
+                    .build(hierarchy);
+
+                CellState::Allocated { cgroup, executables: Default::default() }
+            }
+        }
+    }
+
+    pub fn free(mut self) -> Result<()> {
+        if let CellState::Allocated { cgroup, executables: _ } = &mut self.state
+        {
+            cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
+                cell_name: self.name.clone(),
+                source: e,
+            })?;
+        }
 
         Ok(())
     }
@@ -80,86 +108,104 @@ impl Cell {
         &mut self,
         executable: T,
     ) -> Result<()> {
-        let executable = executable.into();
-
-        // TODO: replace with try_insert when it becomes stable
-        // Check if there was already an executable with the same name.
-        if self.executables.contains_key(&executable.name) {
-            return Err(CellsError::ExecutableExists {
-                cell_name: self.name.clone(),
-                executable_name: executable.name,
-            });
-        }
-
-        let executable_name = executable.name.clone();
-
-        // Ignoring return value as we've already assured ourselves that the key does not exist.
-        let _ = self.executables.insert(executable_name.clone(), executable);
-
-        // Start the child process
-        if let Some(executable) = self.executables.get_mut(&executable_name) {
-            let pid = executable.start().map_err(|e| {
-                CellsError::FailedToStartExecutable {
-                    cell_name: self.name.clone(),
-                    executable_name: executable.name.clone(),
-                    command: executable.command.clone(),
-                    args: executable.args.clone(),
-                    source: e,
-                }
-            })?;
-
-            // TODO: We've inserted the executable into our in-memory cache, and started it,
-            //   but we've failed to move it to the Cell...bad...solution?
-            if let Err(e) = self.cgroup.add_task(pid.pid.into()) {
-                return Err(CellsError::FailedToAddExecutableToCell {
-                    cell_name: self.name.clone(),
-                    executable_name,
-                    source: e,
-                });
+        match &mut self.state {
+            CellState::Unallocated(_) => {
+                Err(CellsError::CellNotFound { cell_name: self.name.clone() })
             }
+            CellState::Allocated { cgroup, executables } => {
+                let executable = executable.into();
 
-            info!(
-                "Cells: cell_name={} executable_name={executable_name} spawn() -> pid={pid:?}",
-                self.name
-            );
-        } else {
-            unreachable!("executable is guaranteed to be in the HashMap; we just inserted and there is a MutexGuard");
-        };
+                // TODO: replace with try_insert when it becomes stable
+                // Check if there was already an executable with the same name.
+                if executables.contains_key(&executable.name) {
+                    return Err(CellsError::ExecutableExists {
+                        cell_name: self.name.clone(),
+                        executable_name: executable.name,
+                    });
+                }
 
-        Ok(())
+                let executable_name = executable.name.clone();
+
+                // Ignoring return value as we've already assured ourselves that the key does not exist.
+                let _ = executables.insert(executable_name.clone(), executable);
+
+                // Start the child process
+                if let Some(executable) = executables.get_mut(&executable_name)
+                {
+                    let pid = executable.start().map_err(|e| {
+                        CellsError::FailedToStartExecutable {
+                            cell_name: self.name.clone(),
+                            executable_name: executable.name.clone(),
+                            command: executable.command.clone(),
+                            args: executable.args.clone(),
+                            source: e,
+                        }
+                    })?;
+
+                    // TODO: We've inserted the executable into our in-memory cache, and started it,
+                    //   but we've failed to move it to the Cell...bad...solution?
+                    if let Err(e) = cgroup.add_task(pid.pid.into()) {
+                        return Err(CellsError::FailedToAddExecutableToCell {
+                            cell_name: self.name.clone(),
+                            executable_name,
+                            source: e,
+                        });
+                    }
+
+                    info!(
+                        "Cells: cell_name={} executable_name={executable_name} spawn() -> pid={pid:?}",
+                        self.name
+                    );
+                } else {
+                    unreachable!("executable is guaranteed to be in the HashMap; we just inserted and there is a MutexGuard");
+                };
+
+                Ok(())
+            }
+        }
     }
 
     pub fn stop_executable(
         &mut self,
         executable_name: &ExecutableName,
     ) -> Result<Option<ExitStatus>> {
-        if let Some(executable) = self.executables.get_mut(executable_name) {
-            match executable.kill() {
-                Ok(exit_status) => {
-                    let _ = self
-                        .executables
-                        .remove(executable_name)
-                        .expect("asserted above");
-
-                    Ok(exit_status)
-                }
-                Err(e) => Err(CellsError::FailedToStopExecutable {
-                    cell_name: self.name.clone(),
-                    executable_name: executable.name.clone(),
-                    executable_pid: executable.pid().expect("pid"),
-                    source: e,
-                }),
+        match &mut self.state {
+            CellState::Unallocated(_) => {
+                Err(CellsError::CellNotFound { cell_name: self.name.clone() })
             }
-        } else {
-            Err(CellsError::ExecutableNotFound {
-                cell_name: self.name.clone(),
-                executable_name: executable_name.clone(),
-            })
+            CellState::Allocated { executables, .. } => {
+                if let Some(executable) = executables.get_mut(executable_name) {
+                    match executable.kill() {
+                        Ok(exit_status) => {
+                            let _ = executables
+                                .remove(executable_name)
+                                .expect("asserted above");
+
+                            Ok(exit_status)
+                        }
+                        Err(e) => Err(CellsError::FailedToStopExecutable {
+                            cell_name: self.name.clone(),
+                            executable_name: executable.name.clone(),
+                            executable_pid: executable.pid().expect("pid"),
+                            source: e,
+                        }),
+                    }
+                } else {
+                    Err(CellsError::ExecutableNotFound {
+                        cell_name: self.name.clone(),
+                        executable_name: executable_name.clone(),
+                    })
+                }
+            }
         }
     }
 
-    pub fn v2(&self) -> bool {
-        self.cgroup.v2()
+    /// Returns `None` if the `Cell` has not been allocated.
+    pub fn v2(&self) -> Option<bool> {
+        match &self.state {
+            CellState::Allocated { cgroup, .. } => Some(cgroup.v2()),
+            _ => None,
+        }
     }
 }
 
