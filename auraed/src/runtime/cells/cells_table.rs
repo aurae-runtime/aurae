@@ -48,7 +48,11 @@ pub(crate) struct CellsTable {
 impl CellsTable {
     /// Add the [cell] to the cache with key [cell_name].
     /// Returns an error if a duplicate [cell_name] already exists in the cache.
-    pub async fn insert(&self, cell_name: CellName, cell: Cell) -> Result<()> {
+    pub async fn insert<T: Into<Cell>>(
+        &self,
+        cell_name: CellName,
+        cell: T,
+    ) -> Result<()> {
         let mut cache = self.cache.lock().await;
 
         // TODO: replace with this when it becomes stable
@@ -59,14 +63,8 @@ impl CellsTable {
             return Err(CellsError::CellExists { cell_name });
         }
         // Ignoring return value as we've already assured ourselves that the key does not exist.
-        let _ = cache.insert(cell_name, cell);
+        let _ = cache.insert(cell_name, cell.into());
         Ok(())
-    }
-
-    pub async fn contains(&self, cell_name: &CellName) -> Result<bool> {
-        let cache = self.cache.lock().await;
-
-        Ok(cache.contains_key(cell_name))
     }
 
     pub async fn get_mut<F, R>(&self, cell_name: &CellName, f: F) -> Result<R>
@@ -76,7 +74,11 @@ impl CellsTable {
         let mut cache = self.cache.lock().await;
 
         if let Some(cell) = cache.get_mut(cell_name) {
-            f(cell)
+            let res = f(cell);
+            if matches!(res, Err(CellsError::CellUnallocated { .. })) {
+                let _ = cache.remove(cell_name);
+            }
+            res
         } else {
             Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
         }

@@ -32,8 +32,7 @@ use super::validation::{
     ValidatedAllocateCellRequest, ValidatedFreeCellRequest,
     ValidatedStartCellRequest, ValidatedStopCellRequest,
 };
-use super::{Cell, CellsTable, Result};
-use crate::runtime::cells::error::CellsError;
+use super::{CellsTable, Result};
 use ::validation::ValidatedType;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
@@ -61,16 +60,16 @@ impl CellService {
         let ValidatedAllocateCellRequest { cell } = request;
         info!("CellService: allocate() cell={:?}", cell);
 
-        if self.cells.contains(&cell.name).await? {
-            return Err(CellsError::CellExists { cell_name: cell.name });
-        }
-
         let cell_name = cell.name.clone();
+        self.cells.insert(cell.name.clone(), cell).await?;
 
-        // TODO: We allocate and then insert, which could fail, losing the ref to the cell
-        let cell = Cell::allocate(cell);
-        let cgroup_v2 = cell.v2();
-        self.cells.insert(cell_name.clone(), cell).await?;
+        let cgroup_v2 = self
+            .cells
+            .get_mut(&cell_name, |cell| {
+                cell.allocate();
+                Ok(cell.v2().expect("allocated cell returns `Some`"))
+            })
+            .await?;
 
         Ok(AllocateCellResponse {
             cell_name: cell_name.into_inner(),
@@ -85,8 +84,8 @@ impl CellService {
         let ValidatedFreeCellRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
-        // TODO: We remove and then free, which could fail, losing the ref to the cell
-        self.cells.remove(&cell_name).await?.free()?;
+        self.cells.get_mut(&cell_name, |cell| cell.free()).await?;
+        let _ = self.cells.remove(&cell_name).await?;
 
         Ok(FreeCellResponse::default())
     }
@@ -106,7 +105,7 @@ impl CellService {
 
             self.cells
                 .get_mut(&cell_name, move |cell| {
-                    cell.start_executable(executable).map_err(CellsError::from)
+                    cell.start_executable(executable)
                 })
                 .await?;
         }
@@ -128,7 +127,7 @@ impl CellService {
         let _exit_status = self
             .cells
             .get_mut(&cell_name, move |cell| {
-                cell.stop_executable(&executable_name).map_err(CellsError::from)
+                cell.stop_executable(&executable_name)
             })
             .await?;
 
@@ -186,9 +185,8 @@ impl cell_service_server::CellService for CellService {
 
 #[cfg(test)]
 mod tests {
-    use super::cell_service_server::CellService as GrpcCellService;
     use super::*;
-    use crate::runtime::cells::CellName;
+    use crate::runtime::cells::{CellName, CellsError};
 
     // TODO: run this in a way that creating cgroups works
     #[test]

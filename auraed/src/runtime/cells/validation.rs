@@ -92,7 +92,7 @@ pub(crate) struct ValidatedStopCellRequest {
 impl StopCellRequestTypeValidator for StopCellRequestValidator {}
 
 // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
-#[derive(Debug, ValidatedType)]
+#[derive(ValidatedType, Debug, Clone)]
 pub(crate) struct ValidatedCell {
     #[field_type(String)]
     #[validate(create)]
@@ -116,6 +116,12 @@ pub(crate) struct ValidatedCell {
 }
 
 impl CellTypeValidator for CellValidator {}
+
+impl From<ValidatedCell> for crate::runtime::cells::Cell {
+    fn from(x: ValidatedCell) -> Self {
+        Self::new(x)
+    }
+}
 
 #[derive(ValidatedType, Debug)]
 pub(crate) struct ValidatedExecutable {
