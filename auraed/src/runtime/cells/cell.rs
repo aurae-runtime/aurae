@@ -110,7 +110,10 @@ impl Cell {
     ) -> Result<()> {
         match &mut self.state {
             CellState::Unallocated(_) => {
-                Err(CellsError::CellNotFound { cell_name: self.name.clone() })
+                // TODO: Do we want to check the system to confirm?
+                Err(CellsError::CellUnallocated {
+                    cell_name: self.name.clone(),
+                })
             }
             CellState::Allocated { cgroup, executables } => {
                 let executable = executable.into();
@@ -171,7 +174,10 @@ impl Cell {
     ) -> Result<Option<ExitStatus>> {
         match &mut self.state {
             CellState::Unallocated(_) => {
-                Err(CellsError::CellNotFound { cell_name: self.name.clone() })
+                // TODO: Do we want to check the system to confirm?
+                Err(CellsError::CellUnallocated {
+                    cell_name: self.name.clone(),
+                })
             }
             CellState::Allocated { executables, .. } => {
                 if let Some(executable) = executables.get_mut(executable_name) {

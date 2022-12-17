@@ -33,7 +33,6 @@ use super::validation::{
     ValidatedStartCellRequest, ValidatedStopCellRequest,
 };
 use super::{CellsTable, Result};
-use crate::runtime::cells::error::CellsError;
 use ::validation::ValidatedType;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
@@ -106,7 +105,7 @@ impl CellService {
 
             self.cells
                 .get_mut(&cell_name, move |cell| {
-                    cell.start_executable(executable).map_err(CellsError::from)
+                    cell.start_executable(executable)
                 })
                 .await?;
         }
@@ -128,7 +127,7 @@ impl CellService {
         let _exit_status = self
             .cells
             .get_mut(&cell_name, move |cell| {
-                cell.stop_executable(&executable_name).map_err(CellsError::from)
+                cell.stop_executable(&executable_name)
             })
             .await?;
 
@@ -187,7 +186,7 @@ impl cell_service_server::CellService for CellService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::runtime::cells::CellName;
+    use crate::runtime::cells::{CellName, CellsError};
 
     // TODO: run this in a way that creating cgroups works
     #[test]

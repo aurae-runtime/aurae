@@ -74,7 +74,11 @@ impl CellsTable {
         let mut cache = self.cache.lock().await;
 
         if let Some(cell) = cache.get_mut(cell_name) {
-            f(cell)
+            let res = f(cell);
+            if matches!(res, Err(CellsError::CellUnallocated { .. })) {
+                let _ = cache.remove(cell_name);
+            }
+            res
         } else {
             Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
         }
