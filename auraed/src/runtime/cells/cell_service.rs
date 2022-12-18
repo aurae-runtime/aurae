@@ -97,11 +97,12 @@ impl CellService {
             cell_name, executable
         );
 
-        self.cells
+        let pid = self
+            .cells
             .get_mut(&cell_name, move |cell| cell.start_executable(executable))
             .await?;
 
-        Ok(StartExecutableResponse::default())
+        Ok(StartExecutableResponse { pid })
     }
 
     async fn stop(

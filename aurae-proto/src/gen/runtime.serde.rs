@@ -794,7 +794,7 @@ impl serde::Serialize for StartExecutableResponse {
         }
         let mut struct_ser = serializer.serialize_struct("runtime.StartExecutableResponse", len)?;
         if self.pid != 0 {
-            struct_ser.serialize_field("pid", ToString::to_string(&self.pid).as_str())?;
+            struct_ser.serialize_field("pid", &self.pid)?;
         }
         struct_ser.end()
     }

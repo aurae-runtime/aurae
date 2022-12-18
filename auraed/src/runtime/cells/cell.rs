@@ -104,7 +104,7 @@ impl Cell {
     pub fn start_executable<T: Into<Executable>>(
         &mut self,
         executable: T,
-    ) -> Result<()> {
+    ) -> Result<i32> {
         match &mut self.state {
             CellState::Unallocated => {
                 // TODO: Do we want to check the system to confirm?
@@ -130,6 +130,7 @@ impl Cell {
                 let _ = executables.insert(executable_name.clone(), executable);
 
                 // Start the child process
+
                 if let Some(executable) = executables.get_mut(&executable_name)
                 {
                     let pid = executable.start().map_err(|e| {
@@ -156,11 +157,10 @@ impl Cell {
                         "Cells: cell_name={} executable_name={executable_name} spawn() -> pid={pid:?}",
                         self.spec.name
                     );
+                    Ok(pid.pid as i32)
                 } else {
                     unreachable!("executable is guaranteed to be in the HashMap; we just inserted and there is a MutexGuard");
-                };
-
-                Ok(())
+                }
             }
         }
     }

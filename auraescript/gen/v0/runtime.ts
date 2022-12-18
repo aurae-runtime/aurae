@@ -96,10 +96,8 @@ export interface StartExecutableRequest {
 /** / The response after starting an executable within a Cell. */
 export interface StartExecutableResponse {
   /**
-   * int64 gid = 2;     // TODO
-   * int64 uid = 3;     // TODO
-   * string user = 4;   // TODO
-   * string group = 5;  // TODO
+   * / Return a pid as an int32 based on the pid_t type
+   * / in various libc libraries.
    */
   pid: number;
 }
