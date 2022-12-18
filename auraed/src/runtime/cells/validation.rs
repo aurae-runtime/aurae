@@ -1,8 +1,8 @@
 use crate::runtime::cells::{CellName, ExecutableName};
 use crate::runtime::{CpuCpus, CpuQuota, CpuWeight, CpusetMems};
 use aurae_proto::runtime::{
-    AllocateCellRequest, Cell, Executable, FreeCellRequest, StartCellRequest,
-    StopCellRequest,
+    AllocateCellRequest, Cell, Executable, FreeCellRequest,
+    StartExecutableRequest, StopExecutableRequest,
 };
 use validation::{ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
@@ -10,6 +10,7 @@ use validation_macros::ValidatedType;
 // TODO: Following the discord discussion of wanting to keep the logic on CellService,
 //  versus on the validated request structs, we may not want to create a file per endpoint,
 //  so I'm (future-highway) grouping it all here at least temporarily.
+// TODO: ...and I (@krisnova) read the above statement.
 
 #[derive(ValidatedType)]
 pub(crate) struct ValidatedAllocateCellRequest {
@@ -42,45 +43,27 @@ pub(crate) struct ValidatedFreeCellRequest {
 impl FreeCellRequestTypeValidator for FreeCellRequestValidator {}
 
 #[derive(ValidatedType)]
-pub(crate) struct ValidatedStartCellRequest {
+pub(crate) struct ValidatedStartExecutableRequest {
     #[field_type(String)]
     #[validate]
     pub cell_name: CellName,
-    #[field_type(Vec<Executable>)]
-    pub executables: Vec<ValidatedExecutable>,
+    #[field_type(Option<Executable>)]
+    pub executable: ValidatedExecutable,
 }
 
-impl StartCellRequestTypeValidator for StartCellRequestValidator {
-    fn validate_executables(
-        executables: Vec<Executable>,
+impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
+    fn validate_executable(
+        executable: Option<Executable>,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<Vec<ValidatedExecutable>, ValidationError> {
-        validation::minimum_length(
-            &executables,
-            1,
-            field_name,
-            field_name,
-            parent_name,
-        )?;
-
-        let base_parent_name = validation::field_name(field_name, parent_name);
-
-        let executables: Vec<_> = executables
-            .into_iter()
-            .enumerate()
-            .flat_map(|(i, executable)| {
-                let parent_name = format!("{base_parent_name}[{i}]");
-                ValidatedExecutable::validate(executable, Some(&parent_name))
-            })
-            .collect();
-
-        Ok(executables)
+    ) -> Result<ValidatedExecutable, ValidationError> {
+        let exe = validation::required(executable, field_name, parent_name)?;
+        ValidatedExecutable::validate(exe, None) // TODO: parent name
     }
 }
 
 #[derive(ValidatedType)]
-pub(crate) struct ValidatedStopCellRequest {
+pub(crate) struct ValidatedStopExecutableRequest {
     #[field_type(String)]
     #[validate]
     pub cell_name: CellName,
@@ -89,7 +72,7 @@ pub(crate) struct ValidatedStopCellRequest {
     pub executable_name: ExecutableName,
 }
 
-impl StopCellRequestTypeValidator for StopCellRequestValidator {}
+impl StopExecutableRequestTypeValidator for StopExecutableRequestValidator {}
 
 // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
 #[derive(ValidatedType, Debug, Clone)]
@@ -113,6 +96,19 @@ pub(crate) struct ValidatedCell {
     #[field_type(i64)]
     #[validate(create)]
     pub cpu_quota: CpuQuota,
+
+    #[validate(none)]
+    pub ns_share_mount: bool,
+    #[validate(none)]
+    pub ns_share_uts: bool,
+    #[validate(none)]
+    pub ns_share_ipc: bool,
+    #[validate(none)]
+    pub ns_share_pid: bool,
+    #[validate(none)]
+    pub ns_share_net: bool,
+    #[validate(none)]
+    pub ns_share_cgroup: bool,
 }
 
 impl CellTypeValidator for CellValidator {}

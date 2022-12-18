@@ -86,11 +86,11 @@ service CellService {
 
   /// Start a new Executable inside of an existing cell. Can be called
   /// in serial to start more than one executable in the same cell.
-  rpc Start(StartCellRequest) returns (StartCellResponse) {}
+  rpc Start(StartExecutableRequest) returns (StartExecutableResponse) {}
 
   /// Stop one or more Executables inside of an existing cell.
   /// Can be called in serial to stop/retry more than one executable.
-  rpc Stop(StopCellRequest) returns (StopCellResponse) {}
+  rpc Stop(StopExecutableRequest) returns (StopExecutableResponse) {}
 }
 
 /// The most primitive workload in Aurae, a standard executable process.
@@ -139,15 +139,29 @@ message Cell {
   /// will be as isolated as possible.
   ///
   /// Each shared namespace is a potential security risk.
-  //  bool ns_share_mount = 10;
-  //  bool ns_share_uts = 11;
-  //  bool ns_share_ipc = 12;
-  //  bool ns_share_pid = 13;
-  //  bool ns_share_net = 14;
-  //  bool ns_share_cgroup = 15;
+  bool ns_share_mount = 10;
+  bool ns_share_uts = 11;
+  bool ns_share_ipc = 12;
+  bool ns_share_pid = 13;
+  bool ns_share_net = 14;
+  bool ns_share_cgroup = 15;
+
 }
 
-message AllocateCellRequest { Cell cell = 1; }
+/// An Aurae cell is a name given to Linux control groups (cgroups) that also include
+/// a name, and special pre-exec functionality that is executed from within the same context
+/// as any executables scheduled.
+///
+/// A cell must be allocated for every executable scheduled. A cell defines the resource
+/// constraints of the system to allocate for an arbitrary use case.
+message AllocateCellRequest {
+
+  /// A smaller resource constrained section of the system.
+  Cell cell = 1;
+
+}
+
+/// The response after a cell has been allocated.
 message AllocateCellResponse {
   string cell_name = 1;
 
@@ -156,20 +170,38 @@ message AllocateCellResponse {
   bool cgroup_v2 = 2;
 }
 
+/// Used to remove or free a cell after it has been allocated.
 message FreeCellRequest { string cell_name = 1; }
 
+/// Response after removing or freeing a cell.
 message FreeCellResponse {}
 
-message StartCellRequest {
+/// A request for starting an executable inside of a Cell.
+///
+/// This is the lowest level of raw executive functionality.
+/// Here you can define shell commands, and meta information about the command.
+/// An executable is started synchronously.
+message StartExecutableRequest {
   string cell_name = 1;
-  repeated Executable executables = 2;
+  Executable executable = 2;
 }
 
-message StartCellResponse {}
+/// The response after starting an executable within a Cell.
+message StartExecutableResponse {
 
-message StopCellRequest {
+  /// Return a pid as an int32 based on the pid_t type
+  /// in various libc libraries.
+  int32 pid = 1;
+
+  //int32 gid = 2;     // TODO
+  //int32 uid = 3;     // TODO
+  //string user = 4;   // TODO
+  //string group = 5;  // TODO
+}
+
+message StopExecutableRequest {
   string cell_name = 1;
   string executable_name = 2;
 }
 
-message StopCellResponse {}
+message StopExecutableResponse {}

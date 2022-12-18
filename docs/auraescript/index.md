@@ -13,7 +13,7 @@ let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     })
 });
 
-let started = await cells.start(<runtime.StartCellRequest>{
+let started = await cells.start(<runtime.StartExecutableRequest>{
     executable: runtime.Executable.fromPartial({
         cellName: "my-cell",
         command: "sleep 4000",

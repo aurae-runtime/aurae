@@ -5,6 +5,6 @@ macros::ops_generator!(
     CellService,
     allocate(AllocateCellRequest) -> AllocateCellResponse,
     free(FreeCellRequest) -> FreeCellResponse,
-    start(StartCellRequest) -> StartCellResponse,
-    stop(StopCellRequest) -> StopCellResponse,
+    start(StartExecutableRequest) -> StartExecutableResponse,
+    stop(StopExecutableRequest) -> StopExecutableResponse,
 );

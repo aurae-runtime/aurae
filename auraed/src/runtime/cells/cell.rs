@@ -35,7 +35,8 @@ use cgroups_rs::{
     cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
 };
 use log::info;
-use std::{collections::HashMap, process::ExitStatus};
+use std::collections::HashMap;
+use unshare::ExitStatus;
 
 #[derive(Debug)]
 pub(crate) struct Cell {
@@ -67,6 +68,12 @@ impl Cell {
                 cpu_shares,
                 cpu_mems,
                 cpu_quota,
+                ns_share_mount: _ns_share_mount,
+                ns_share_uts: _ns_share_uts,
+                ns_share_ipc: _ns_share_ipc,
+                ns_share_pid: _ns_share_pid,
+                ns_share_net: _ns_share_net,
+                ns_share_cgroup: _ns_share_cgroup,
             } = self.spec.clone();
 
             let hierarchy = hierarchy();
@@ -104,7 +111,7 @@ impl Cell {
     pub fn start_executable<T: Into<Executable>>(
         &mut self,
         executable: T,
-    ) -> Result<()> {
+    ) -> Result<i32> {
         match &mut self.state {
             CellState::Unallocated => {
                 // TODO: Do we want to check the system to confirm?
@@ -130,17 +137,23 @@ impl Cell {
                 let _ = executables.insert(executable_name.clone(), executable);
 
                 // Start the child process
+                //
+                // Here is where we launch an executable within the context of a parent Cell.
+                // Aurae makes the assumption that all Executables within a cell share the
+                // same namespace isolation rules set up upon creation of the cell.
+
                 if let Some(executable) = executables.get_mut(&executable_name)
                 {
-                    let pid = executable.start().map_err(|e| {
-                        CellsError::FailedToStartExecutable {
-                            cell_name: self.spec.name.clone(),
-                            executable_name: executable.name.clone(),
-                            command: executable.command.clone(),
-                            args: executable.args.clone(),
-                            source: e,
-                        }
-                    })?;
+                    let pid =
+                        executable.start(self.spec.clone()).map_err(|_e| {
+                            CellsError::FailedToStartExecutable {
+                                cell_name: self.spec.name.clone(),
+                                executable_name: executable.name.clone(),
+                                command: executable.command.clone(),
+                                args: executable.args.clone(),
+                                // source: e,
+                            }
+                        })?;
 
                     // TODO: We've inserted the executable into our in-memory cache, and started it,
                     //   but we've failed to move it to the Cell...bad...solution?
@@ -156,11 +169,10 @@ impl Cell {
                         "Cells: cell_name={} executable_name={executable_name} spawn() -> pid={pid:?}",
                         self.spec.name
                     );
+                    Ok(pid.pid as i32)
                 } else {
                     unreachable!("executable is guaranteed to be in the HashMap; we just inserted and there is a MutexGuard");
-                };
-
-                Ok(())
+                }
             }
         }
     }
@@ -186,11 +198,11 @@ impl Cell {
 
                             Ok(exit_status)
                         }
-                        Err(e) => Err(CellsError::FailedToStopExecutable {
+                        Err(_e) => Err(CellsError::FailedToStopExecutable {
                             cell_name: self.spec.name.clone(),
                             executable_name: executable.name.clone(),
                             executable_pid: executable.pid().expect("pid"),
-                            source: e,
+                            // source: e,
                         }),
                     }
                 } else {

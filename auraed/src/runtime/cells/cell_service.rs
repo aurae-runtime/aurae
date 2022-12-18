@@ -30,14 +30,14 @@
 
 use super::validation::{
     ValidatedAllocateCellRequest, ValidatedFreeCellRequest,
-    ValidatedStartCellRequest, ValidatedStopCellRequest,
+    ValidatedStartExecutableRequest, ValidatedStopExecutableRequest,
 };
 use super::{Cells, Result};
 use ::validation::ValidatedType;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
-    FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
-    StopCellRequest, StopCellResponse,
+    FreeCellRequest, FreeCellResponse, StartExecutableRequest,
+    StartExecutableResponse, StopExecutableRequest, StopExecutableResponse,
 };
 use log::info;
 use tonic::{Request, Response, Status};
@@ -58,7 +58,15 @@ impl CellService {
     ) -> Result<AllocateCellResponse> {
         // Initialize the cell
         let ValidatedAllocateCellRequest { cell } = request;
+
+        // TODO We should discover a way to make the logging at the function level
+        // TODO dynamic such that we don't have to keep hard-coding things like this.
+        // TODO We are looking at tracing and observability for this!
         info!("CellService: allocate() cell={:?}", cell);
+        // info!(
+        //     "CellService: allocate() cell={:?} ns_share_mount={:?} ns_share_uts={:?} ns_share_ipc={:?} ns_share_pid={:?} ns_share_net={:?} ns_share_cgroup={:?}",
+        //     cell, ns_share_mount, ns_share_uts, ns_share_ipc, ns_share_pid, ns_share_net, ns_share_cgroup,
+        // );
 
         let cell_name = cell.name.clone();
         let cgroup_v2 = self
@@ -88,32 +96,29 @@ impl CellService {
 
     async fn start(
         &self,
-        request: ValidatedStartCellRequest,
-    ) -> Result<StartCellResponse> {
-        let ValidatedStartCellRequest { cell_name, executables } = request;
+        request: ValidatedStartExecutableRequest,
+    ) -> Result<StartExecutableResponse> {
+        let ValidatedStartExecutableRequest { cell_name, executable } = request;
 
-        for executable in executables {
-            // Create the new child process
-            info!(
-                "CellService: start() cell_name={} executable={:?}",
-                cell_name, executable
-            );
+        info!(
+            "CellService: start() cell_name={} executable={:?}",
+            cell_name, executable
+        );
 
-            self.cells
-                .get_mut(&cell_name, move |cell| {
-                    cell.start_executable(executable)
-                })
-                .await?;
-        }
+        let pid = self
+            .cells
+            .get_mut(&cell_name, move |cell| cell.start_executable(executable))
+            .await?;
 
-        Ok(StartCellResponse::default())
+        Ok(StartExecutableResponse { pid })
     }
 
     async fn stop(
         &self,
-        request: ValidatedStopCellRequest,
-    ) -> Result<StopCellResponse> {
-        let ValidatedStopCellRequest { cell_name, executable_name } = request;
+        request: ValidatedStopExecutableRequest,
+    ) -> Result<StopExecutableResponse> {
+        let ValidatedStopExecutableRequest { cell_name, executable_name } =
+            request;
 
         info!(
             "CellService: stop() cell_name={:?} executable_name={:?}",
@@ -127,7 +132,7 @@ impl CellService {
             })
             .await?;
 
-        Ok(StopCellResponse::default())
+        Ok(StopExecutableResponse::default())
     }
 }
 
@@ -162,19 +167,19 @@ impl cell_service_server::CellService for CellService {
 
     async fn start(
         &self,
-        request: Request<StartCellRequest>,
-    ) -> std::result::Result<Response<StartCellResponse>, Status> {
+        request: Request<StartExecutableRequest>,
+    ) -> std::result::Result<Response<StartExecutableResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStartCellRequest::validate(request, None)?;
+        let request = ValidatedStartExecutableRequest::validate(request, None)?;
         Ok(Response::new(self.start(request).await?))
     }
 
     async fn stop(
         &self,
-        request: Request<StopCellRequest>,
-    ) -> std::result::Result<Response<StopCellResponse>, Status> {
+        request: Request<StopExecutableRequest>,
+    ) -> std::result::Result<Response<StopExecutableResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStopCellRequest::validate(request, None)?;
+        let request = ValidatedStopExecutableRequest::validate(request, None)?;
         Ok(Response::new(self.stop(request).await?))
     }
 }

@@ -19,10 +19,10 @@
     - [Executable](#runtime-Executable)
     - [FreeCellRequest](#runtime-FreeCellRequest)
     - [FreeCellResponse](#runtime-FreeCellResponse)
-    - [StartCellRequest](#runtime-StartCellRequest)
-    - [StartCellResponse](#runtime-StartCellResponse)
-    - [StopCellRequest](#runtime-StopCellRequest)
-    - [StopCellResponse](#runtime-StopCellResponse)
+    - [StartExecutableRequest](#runtime-StartExecutableRequest)
+    - [StartExecutableResponse](#runtime-StartExecutableResponse)
+    - [StopExecutableRequest](#runtime-StopExecutableRequest)
+    - [StopExecutableResponse](#runtime-StopExecutableResponse)
   
     - [CellService](#runtime-CellService)
     - [Instances](#runtime-Instances)
@@ -213,9 +213,9 @@ The most primitive workload in Aurae, a standard executable process.
 
 
 
-<a name="runtime-StartCellRequest"></a>
+<a name="runtime-StartExecutableRequest"></a>
 
-### StartCellRequest
+### StartExecutableRequest
 
 
 
@@ -228,19 +228,19 @@ The most primitive workload in Aurae, a standard executable process.
 
 
 
-<a name="runtime-StartCellResponse"></a>
+<a name="runtime-StartExecutableResponse"></a>
 
-### StartCellResponse
-
-
+### StartExecutableResponse
 
 
 
 
 
-<a name="runtime-StopCellRequest"></a>
 
-### StopCellRequest
+
+<a name="runtime-StopExecutableRequest"></a>
+
+### StopExecutableRequest
 
 
 
@@ -254,9 +254,9 @@ The most primitive workload in Aurae, a standard executable process.
 
 
 
-<a name="runtime-StopCellResponse"></a>
+<a name="runtime-StopExecutableResponse"></a>
 
-### StopCellResponse
+### StopExecutableResponse
 
 
 
@@ -283,8 +283,8 @@ Cells is the most fundamental isolation boundary for Aurae.
 | ----------- | ------------ | ------------- | ------------|
 | Allocate | [AllocateCellRequest](#runtime-AllocateCellRequest) | [AllocateCellResponse](#runtime-AllocateCellResponse) | Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources only. |
 | Free | [FreeCellRequest](#runtime-FreeCellRequest) | [FreeCellResponse](#runtime-FreeCellResponse) | Free up previously requested resources for an existing cell |
-| Start | [StartCellRequest](#runtime-StartCellRequest) | [StartCellResponse](#runtime-StartCellResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
-| Stop | [StopCellRequest](#runtime-StopCellRequest) | [StopCellResponse](#runtime-StopCellResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
+| Start | [StartExecutableRequest](#runtime-StartExecutableRequest) | [StartExecutableResponse](#runtime-StartExecutableResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
+| Stop | [StopExecutableRequest](#runtime-StopExecutableRequest) | [StopExecutableResponse](#runtime-StopExecutableResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
 
 
 <a name="runtime-Instances"></a>

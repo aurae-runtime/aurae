@@ -46,20 +46,20 @@ helpers.print(allocated)
 
 
 // [ Start ]
-let started = await cells.start(<runtime.StartCellRequest>{
+let started = await cells.start(<runtime.StartExecutableRequest>{
     cellName: "sleeper-cell",
-    executables: [runtime.Executable.fromPartial({
-        command: "sleep",
+    executable: runtime.Executable.fromPartial({
+        command: "/usr/bin/sleep",
         args: ["42"],
         description: "Sleep for 42 seconds",
         name: "sleep-42"
-    })]
+    })
 })
 helpers.print(started)
 
 
 // [ Stop ]
-let stopped = await cells.stop(<runtime.StopCellRequest>{
+let stopped = await cells.stop(<runtime.StopExecutableRequest>{
     cellName: "sleeper-cell",
     executableName: "sleep-42",
 })

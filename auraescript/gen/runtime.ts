@@ -47,12 +47,35 @@ export interface Cell {
   cpuMems: string;
   /** / In one period, how much can the tasks run in microseconds. */
   cpuQuota: number;
+  /**
+   * / Linux namespaces to share with the calling process.
+   * / If all values are set to false, the resulting cell
+   * / will be as isolated as possible.
+   * /
+   * / Each shared namespace is a potential security risk.
+   */
+  nsShareMount: boolean;
+  nsShareUts: boolean;
+  nsShareIpc: boolean;
+  nsSharePid: boolean;
+  nsShareNet: boolean;
+  nsShareCgroup: boolean;
 }
 
+/**
+ * / An Aurae cell is a name given to Linux control groups (cgroups) that also include
+ * / a name, and special pre-exec functionality that is executed from within the same context
+ * / as any executables scheduled.
+ * /
+ * / A cell must be allocated for every executable scheduled. A cell defines the resource
+ * / constraints of the system to allocate for an arbitrary use case.
+ */
 export interface AllocateCellRequest {
+  /** / A smaller resource constrained section of the system. */
   cell: Cell | undefined;
 }
 
+/** / The response after a cell has been allocated. */
 export interface AllocateCellResponse {
   cellName: string;
   /**
@@ -62,27 +85,42 @@ export interface AllocateCellResponse {
   cgroupV2: boolean;
 }
 
+/** / Used to remove or free a cell after it has been allocated. */
 export interface FreeCellRequest {
   cellName: string;
 }
 
+/** / Response after removing or freeing a cell. */
 export interface FreeCellResponse {
 }
 
-export interface StartCellRequest {
+/**
+ * / A request for starting an executable inside of a Cell.
+ * /
+ * / This is the lowest level of raw executive functionality.
+ * / Here you can define shell commands, and meta information about the command.
+ * / An executable is started synchronously.
+ */
+export interface StartExecutableRequest {
   cellName: string;
-  executables: Executable[];
+  executable: Executable | undefined;
 }
 
-export interface StartCellResponse {
+/** / The response after starting an executable within a Cell. */
+export interface StartExecutableResponse {
+  /**
+   * / Return a pid as an int32 based on the pid_t type
+   * / in various libc libraries.
+   */
+  pid: number;
 }
 
-export interface StopCellRequest {
+export interface StopExecutableRequest {
   cellName: string;
   executableName: string;
 }
 
-export interface StopCellResponse {
+export interface StopExecutableResponse {
 }
 
 function createBaseExecutable(): Executable {
@@ -123,7 +161,19 @@ export const Executable = {
 };
 
 function createBaseCell(): Cell {
-  return { name: "", cpuCpus: "", cpuShares: 0, cpuMems: "", cpuQuota: 0 };
+  return {
+    name: "",
+    cpuCpus: "",
+    cpuShares: 0,
+    cpuMems: "",
+    cpuQuota: 0,
+    nsShareMount: false,
+    nsShareUts: false,
+    nsShareIpc: false,
+    nsSharePid: false,
+    nsShareNet: false,
+    nsShareCgroup: false,
+  };
 }
 
 export const Cell = {
@@ -134,6 +184,12 @@ export const Cell = {
       cpuShares: isSet(object.cpuShares) ? Number(object.cpuShares) : 0,
       cpuMems: isSet(object.cpuMems) ? String(object.cpuMems) : "",
       cpuQuota: isSet(object.cpuQuota) ? Number(object.cpuQuota) : 0,
+      nsShareMount: isSet(object.nsShareMount) ? Boolean(object.nsShareMount) : false,
+      nsShareUts: isSet(object.nsShareUts) ? Boolean(object.nsShareUts) : false,
+      nsShareIpc: isSet(object.nsShareIpc) ? Boolean(object.nsShareIpc) : false,
+      nsSharePid: isSet(object.nsSharePid) ? Boolean(object.nsSharePid) : false,
+      nsShareNet: isSet(object.nsShareNet) ? Boolean(object.nsShareNet) : false,
+      nsShareCgroup: isSet(object.nsShareCgroup) ? Boolean(object.nsShareCgroup) : false,
     };
   },
 
@@ -144,6 +200,12 @@ export const Cell = {
     message.cpuShares !== undefined && (obj.cpuShares = Math.round(message.cpuShares));
     message.cpuMems !== undefined && (obj.cpuMems = message.cpuMems);
     message.cpuQuota !== undefined && (obj.cpuQuota = Math.round(message.cpuQuota));
+    message.nsShareMount !== undefined && (obj.nsShareMount = message.nsShareMount);
+    message.nsShareUts !== undefined && (obj.nsShareUts = message.nsShareUts);
+    message.nsShareIpc !== undefined && (obj.nsShareIpc = message.nsShareIpc);
+    message.nsSharePid !== undefined && (obj.nsSharePid = message.nsSharePid);
+    message.nsShareNet !== undefined && (obj.nsShareNet = message.nsShareNet);
+    message.nsShareCgroup !== undefined && (obj.nsShareCgroup = message.nsShareCgroup);
     return obj;
   },
 
@@ -154,6 +216,12 @@ export const Cell = {
     message.cpuShares = object.cpuShares ?? 0;
     message.cpuMems = object.cpuMems ?? "";
     message.cpuQuota = object.cpuQuota ?? 0;
+    message.nsShareMount = object.nsShareMount ?? false;
+    message.nsShareUts = object.nsShareUts ?? false;
+    message.nsShareIpc = object.nsShareIpc ?? false;
+    message.nsSharePid = object.nsSharePid ?? false;
+    message.nsShareNet = object.nsShareNet ?? false;
+    message.nsShareCgroup = object.nsShareCgroup ?? false;
     return message;
   },
 };
@@ -249,100 +317,101 @@ export const FreeCellResponse = {
   },
 };
 
-function createBaseStartCellRequest(): StartCellRequest {
-  return { cellName: "", executables: [] };
+function createBaseStartExecutableRequest(): StartExecutableRequest {
+  return { cellName: "", executable: undefined };
 }
 
-export const StartCellRequest = {
-  fromJSON(object: any): StartCellRequest {
+export const StartExecutableRequest = {
+  fromJSON(object: any): StartExecutableRequest {
     return {
       cellName: isSet(object.cellName) ? String(object.cellName) : "",
-      executables: Array.isArray(object?.executables) ? object.executables.map((e: any) => Executable.fromJSON(e)) : [],
+      executable: isSet(object.executable) ? Executable.fromJSON(object.executable) : undefined,
     };
   },
 
-  toJSON(message: StartCellRequest): unknown {
+  toJSON(message: StartExecutableRequest): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
-    if (message.executables) {
-      obj.executables = message.executables.map((e) => e ? Executable.toJSON(e) : undefined);
-    } else {
-      obj.executables = [];
-    }
+    message.executable !== undefined &&
+      (obj.executable = message.executable ? Executable.toJSON(message.executable) : undefined);
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StartCellRequest>, I>>(object: I): StartCellRequest {
-    const message = createBaseStartCellRequest();
+  fromPartial<I extends Exact<DeepPartial<StartExecutableRequest>, I>>(object: I): StartExecutableRequest {
+    const message = createBaseStartExecutableRequest();
     message.cellName = object.cellName ?? "";
-    message.executables = object.executables?.map((e) => Executable.fromPartial(e)) || [];
+    message.executable = (object.executable !== undefined && object.executable !== null)
+      ? Executable.fromPartial(object.executable)
+      : undefined;
     return message;
   },
 };
 
-function createBaseStartCellResponse(): StartCellResponse {
-  return {};
+function createBaseStartExecutableResponse(): StartExecutableResponse {
+  return { pid: 0 };
 }
 
-export const StartCellResponse = {
-  fromJSON(_: any): StartCellResponse {
-    return {};
+export const StartExecutableResponse = {
+  fromJSON(object: any): StartExecutableResponse {
+    return { pid: isSet(object.pid) ? Number(object.pid) : 0 };
   },
 
-  toJSON(_: StartCellResponse): unknown {
+  toJSON(message: StartExecutableResponse): unknown {
     const obj: any = {};
+    message.pid !== undefined && (obj.pid = Math.round(message.pid));
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StartCellResponse>, I>>(_: I): StartCellResponse {
-    const message = createBaseStartCellResponse();
+  fromPartial<I extends Exact<DeepPartial<StartExecutableResponse>, I>>(object: I): StartExecutableResponse {
+    const message = createBaseStartExecutableResponse();
+    message.pid = object.pid ?? 0;
     return message;
   },
 };
 
-function createBaseStopCellRequest(): StopCellRequest {
+function createBaseStopExecutableRequest(): StopExecutableRequest {
   return { cellName: "", executableName: "" };
 }
 
-export const StopCellRequest = {
-  fromJSON(object: any): StopCellRequest {
+export const StopExecutableRequest = {
+  fromJSON(object: any): StopExecutableRequest {
     return {
       cellName: isSet(object.cellName) ? String(object.cellName) : "",
       executableName: isSet(object.executableName) ? String(object.executableName) : "",
     };
   },
 
-  toJSON(message: StopCellRequest): unknown {
+  toJSON(message: StopExecutableRequest): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
     message.executableName !== undefined && (obj.executableName = message.executableName);
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StopCellRequest>, I>>(object: I): StopCellRequest {
-    const message = createBaseStopCellRequest();
+  fromPartial<I extends Exact<DeepPartial<StopExecutableRequest>, I>>(object: I): StopExecutableRequest {
+    const message = createBaseStopExecutableRequest();
     message.cellName = object.cellName ?? "";
     message.executableName = object.executableName ?? "";
     return message;
   },
 };
 
-function createBaseStopCellResponse(): StopCellResponse {
+function createBaseStopExecutableResponse(): StopExecutableResponse {
   return {};
 }
 
-export const StopCellResponse = {
-  fromJSON(_: any): StopCellResponse {
+export const StopExecutableResponse = {
+  fromJSON(_: any): StopExecutableResponse {
     return {};
   },
 
-  toJSON(_: StopCellResponse): unknown {
+  toJSON(_: StopExecutableResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StopCellResponse>, I>>(_: I): StopCellResponse {
-    const message = createBaseStopCellResponse();
+  fromPartial<I extends Exact<DeepPartial<StopExecutableResponse>, I>>(_: I): StopExecutableResponse {
+    const message = createBaseStopExecutableResponse();
     return message;
   },
 };
@@ -380,12 +449,12 @@ export interface CellService {
    * / Start a new Executable inside of an existing cell. Can be called
    * / in serial to start more than one executable in the same cell.
    */
-  start(request: StartCellRequest): Promise<StartCellResponse>;
+  start(request: StartExecutableRequest): Promise<StartExecutableResponse>;
   /**
    * / Stop one or more Executables inside of an existing cell.
    * / Can be called in serial to stop/retry more than one executable.
    */
-  stop(request: StopCellRequest): Promise<StopCellResponse>;
+  stop(request: StopExecutableRequest): Promise<StopExecutableResponse>;
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
@@ -413,12 +482,12 @@ free(request: FreeCellRequest): Promise<FreeCellResponse> {
     return Deno.core.ops.ae__runtime__cell_service__free(request);
 }      
         
-start(request: StartCellRequest): Promise<StartCellResponse> {
+start(request: StartExecutableRequest): Promise<StartExecutableResponse> {
     // @ts-ignore
     return Deno.core.ops.ae__runtime__cell_service__start(request);
 }      
         
-stop(request: StopCellRequest): Promise<StopCellResponse> {
+stop(request: StopExecutableRequest): Promise<StopExecutableResponse> {
     // @ts-ignore
     return Deno.core.ops.ae__runtime__cell_service__stop(request);
 }      
