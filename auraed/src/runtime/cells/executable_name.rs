@@ -47,17 +47,9 @@ impl ValidatedField<String> for ExecutableName {
     }
 }
 
-impl Deref for ExecutableName {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 impl Display for ExecutableName {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        self.0.fmt(f)
     }
 }
 
