@@ -41,7 +41,6 @@ compile: ## Compile for the local architecture ⚙
 install: ## Build and install (debug) 🎉
 	@$(cargo) clippy
 	@$(cargo) install --debug --path .
-	sudo -E cp -rv examples/bin/* /usr/bin
 
 release: ## Build and install (release) 🎉
 	@$(cargo) install --path .

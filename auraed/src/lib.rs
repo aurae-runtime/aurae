@@ -50,47 +50,40 @@
     unused_comparisons,
     while_true
 )]
-#![warn(// TODO: missing_debug_implementations,
+#![warn(missing_debug_implementations,
         // TODO: missing_docs,
         trivial_casts,
         trivial_numeric_casts,
         unused_extern_crates,
         unused_import_braces,
-        // TODO: unused_results
+        unused_results
         )]
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
-#![warn(rustdoc::missing_doc_code_examples)]
+#![allow(dead_code)]
 
 use anyhow::anyhow;
 use anyhow::Context;
 use log::*;
-use logging::logchannel::LogChannel;
-use sea_orm::ConnectOptions;
-use sea_orm::ConnectionTrait;
-use sea_orm::Database;
-use sea_orm::Statement;
-use std::borrow::Cow;
+use logging::log_channel::LogChannel;
+use std::collections::hash_map::DefaultHasher;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
 use std::sync::Arc;
+use std::time::SystemTime;
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 
-use crate::observe::observe_server::ObserveServer;
-use crate::observe::ObserveService;
-use crate::runtime::core_server::CoreServer;
-use crate::runtime::CoreService;
-use crate::schedule::schedule_executable_server::ScheduleExecutableServer;
-use crate::schedule::ScheduleExecutableService;
+// Cells
+use crate::runtime::cells::CellService;
+use aurae_proto::runtime::cell_service_server::CellServiceServer;
 
 pub mod init;
 pub mod logging;
-mod meta;
 mod observe;
 mod runtime;
 mod schedule;
@@ -135,6 +128,7 @@ impl AuraedRuntime {
         let sock_path = Path::new(&self.socket)
             .parent()
             .ok_or("unable to find socket path")?;
+        // Create socket directory
         tokio::fs::create_dir_all(sock_path).await.with_context(|| {
             format!(
                 "Failed to create directory for socket: {}",
@@ -151,7 +145,6 @@ impl AuraedRuntime {
                 )
             })?;
         let server_key = tokio::fs::read(&self.server_key).await?;
-        let db_key = server_key.clone();
         let server_identity = Identity::from_pem(server_crt, server_key);
         info!("Register Server SSL Identity");
 
@@ -166,19 +159,17 @@ impl AuraedRuntime {
 
         let sock = UnixListener::bind(&self.socket)?;
         let sock_stream = UnixListenerStream::new(sock);
-        let log_collector = self.log_collector.clone();
+        let _log_collector = self.log_collector.clone();
 
         // Run the server concurrently
+        // TODO: pass a known-good path to CellService to store any runtime data.
         let handle = tokio::spawn(async {
             Server::builder()
                 .tls_config(tls)?
-                .add_service(CoreServer::new(CoreService::default()))
-                .add_service(ObserveServer::new(ObserveService::new(
-                    log_collector,
-                )))
-                .add_service(ScheduleExecutableServer::new(
-                    ScheduleExecutableService::default(),
-                ))
+                .add_service(CellServiceServer::new(CellService::new()))
+                // .add_service(ObserveServer::new(ObserveService::new(
+                //     log_collector,
+                // )))
                 .serve_with_incoming(sock_stream)
                 .await
         });
@@ -191,28 +182,6 @@ impl AuraedRuntime {
         fs::set_permissions(&self.socket, fs::Permissions::from_mode(0o766))?;
         info!("User Access Socket Created: {}", self.socket.display());
 
-        // SQLite
-        info!("Database Location:  /var/lib/aurae.db");
-        info!("Unlocking SQLite Database with Key: {:?}", self.server_key);
-        let mut opt =
-            ConnectOptions::new("sqlite:/var/lib/aurae.db".to_owned());
-        opt.sqlx_logging(false).sqlcipher_key(Cow::from(format!(
-            "{:?}",
-            db_key.to_ascii_lowercase()
-        )));
-
-        // Pragma initial connection
-        let mut opt = ConnectOptions::new("sqlite::memory:".to_owned());
-        opt.sqlx_logging(false); // TODO add sqlcipher_key
-        let db = Database::connect(opt).await?;
-        let x = db
-            .execute(Statement::from_string(
-                db.get_database_backend(),
-                "PRAGMA database_list;".to_string(),
-            ))
-            .await?;
-        info!("Initializing: SQLite: {:?}", x);
-
         // Event loop
         handle.await??;
         info!("gRPC server exited successfully");
@@ -221,21 +190,38 @@ impl AuraedRuntime {
     }
 }
 
-fn command_from_string(cmd: &str) -> Result<Command, anyhow::Error> {
-    let mut entries = cmd.split(' ');
+#[derive(Hash)]
+struct CellID {
+    base: String,
+    command: String,
+    timestamp: SystemTime,
+}
+
+/// A nondeterministic function used to create a unique ID from a cell name.
+/// The same cell name will produce a unique ID based on the time it was
+/// created.
+fn cell_name_from_string(command: &str) -> Result<String, anyhow::Error> {
+    let now = SystemTime::now();
+    let mut entries = command.split(' ');
     let base = match entries.next() {
         Some(base) => base,
         None => {
             return Err(anyhow!("empty base command string"));
         }
     };
-    let mut command = Command::new(base);
-    for ent in entries {
-        if ent != base {
-            command.arg(ent);
-        }
-    }
-    Ok(command)
+    let c = CellID {
+        base: base.to_string(),
+        command: command.to_string(),
+        timestamp: now,
+    };
+    let val = format!("{}-{:?}", base, cell_hash(&c));
+    Ok(val)
+}
+
+fn cell_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
 }
 
 #[cfg(test)]

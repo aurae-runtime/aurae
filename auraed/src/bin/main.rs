@@ -39,17 +39,17 @@
     unused_comparisons,
     while_true
 )]
-#![warn(// TODO: missing_debug_implementations,
+#![warn(missing_debug_implementations,
         // TODO: missing_docs,
         trivial_casts,
         trivial_numeric_casts,
         unused_extern_crates,
         unused_import_braces,
         unused_qualifications,
-        // TODO: unused_results
+        unused_results
         )]
 
-use auraed::{logging::logchannel::LogChannel, *};
+use auraed::{logging::log_channel::LogChannel, *};
 use clap::Parser;
 use log::*;
 use std::path::PathBuf;

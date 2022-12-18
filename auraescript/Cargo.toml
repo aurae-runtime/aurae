@@ -24,7 +24,7 @@
 #   distributed under the License is distributed on an "AS IS" BASIS,          #
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
 #   See the License for the specific language governing permissions and        #
-#   limitations under the License.                                             #                                                                             #
+#   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -33,37 +33,21 @@ name = "auraescript"
 version = "0.1.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
+license = "Apache-2.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [[bin]]
 name = "auraescript"
 path = "src/bin/main.rs"
 
 [dependencies]
-rhai = { version = "1.9.1", features = ["metadata"] }
-tonic = { version = "0.8", features = ["tls"] }
-tokio-stream = { version = "0.1", features = ["net"] }
-tokio = { version = "1.0", features = ["macros", "fs", "rt-multi-thread"] }
+anyhow = {workspace = true}
+aurae-proto = { workspace = true }
+deno_ast = { version = "0.21.0", features = ["transpiling"] }
+deno_core = "0.160.0"
+macros = { package = "auraescript_macros", path = "./macros" }
+serde = "1.0.147"
+tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
 toml = "0.5.9"
-serde = { version = "1.0.144", features = ["derive"] }
+tonic = { workspace = true, features = ["tls"] }
 tower = "0.4.13"
-home = "0.5.3"
-anyhow = "1.0"
-x509-parser = "0.14.0"
-rustls-pemfile = "1.0.1"
-if_chain = "1.0.2"
-time = "0.3.14"
-oid-registry = "0.6.0"
-x509-certificate = "0.14.0"
-prost = "0.11"
-ring = "0.16.20"
-json = "0.12.4"
-serde_json = "1.0.85"
-macros = { path = "macros" }
-
-[build-dependencies]
-tonic-build = "0.8"
-anyhow = "1.0"
-
-[dev-dependencies]
-openssl = "0.10.41"
+x509-certificate = "0.15.0"

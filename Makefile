@@ -43,7 +43,7 @@ compile: auraescript auraed ## Compile for the local architecture ⚙
 
 prcheck: build lint test
 
-build:
+build: proto
 	@$(cargo) build
 
 lint:
@@ -58,14 +58,12 @@ release: ## Build and install (release) 🎉
 	@$(cargo) install --path ./auraed
 
 .PHONY: auraescript
-auraescript: ## Initialize and compile aurae
-	@if [ ! -d auraescript ]; then printf "\n\nError: Missing submodules. Run 'make submodule' to download aurae source before compiling.\n\n"; exit 1; fi
+auraescript: proto ## Initialize and compile aurae
 	@$(cargo) clippy -p auraescript
 	@$(cargo) install --path ./auraescript --debug --force
 
 .PHONY: auraed
-auraed: ## Initialize and compile auraed
-	@if [ ! -d auraed ]; then printf "\n\nError:\nun 'make submodule' to download auraed source before compiling.\n\n"; exit 1; fi
+auraed: proto ## Initialize and compile auraed
 	@$(cargo) clippy -p auraed
 	@$(cargo) install --path ./auraed --debug --force
 
@@ -123,6 +121,15 @@ clean-auraescript:
 
 clean-auraed:
 	cd auraed && make clean
+
+.PHONY: proto
+proto: ## Generate code from protobuf schemas
+	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
+	buf generate -v api
+
+.PHONY: proto-lint
+proto-lint: ## Lint protobuf schemas
+	buf lint api
 
 .PHONY: clean
 clean: clean-certs

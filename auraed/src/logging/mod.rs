@@ -35,10 +35,10 @@ use std::time::SystemTime;
 
 /// Abstraction Layer for one log generating entity
 /// LogChannel provides channels between Log producers and log consumers
-pub mod logchannel;
+pub mod log_channel;
 
 /// Implements Log trait. Used to add grpc API to log targets for rust internal logging
-pub mod streamlogger;
+pub mod stream_logger;
 
 /// Get UNIX timestamp in seconds for logging
 pub fn get_timestamp_sec() -> i64 {

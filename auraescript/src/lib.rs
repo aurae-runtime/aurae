@@ -28,13 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! An interpreted infrastructure language built for enterprise platform teams.
-//!
-//! AuraeScript is an opinionated and Turing complete client language for an
-//! Aurae server. AuraeScript is an alternative to templated YAML for teams
-//! to express their applications.
-//!
-//! The AuraeScript definition lives in this crate library (lib.rs).
 // Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
 #![warn(future_incompatible, nonstandard_style, unused)]
 #![warn(
@@ -45,191 +38,114 @@
     unused_comparisons,
     while_true
 )]
-#![warn(// TODO: missing_debug_implementations,
-        // TODO: missing_docs,
-        trivial_casts,
-        trivial_numeric_casts,
-        unused_extern_crates,
-        unused_import_braces,
-        // TODO: unused_results
-        )]
-// The project prefers .expect("reason") instead of .unwrap() so we fail
-// on any .unwrap() statements in the code.
+#![warn(missing_debug_implementations,
+    // TODO: missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications,
+    unused_results
+)]
 #![warn(clippy::unwrap_used)]
+// TODO: need to figure out how to get tonic to allow this without allowing for whole crate
+#![allow(unused_qualifications)]
 
-// AuraeScript has a high expectation for documentation in this library as it
-// is used for the scripting language docs directly.
-#[warn(missing_docs)]
-pub mod builtin;
-pub mod meta;
-pub mod observe;
-pub mod runtime;
-pub mod schedule;
+// TODO: There are multiple `#[allow(dead_code)]` attributes to use or clean up
 
-use rhai::Engine;
+use anyhow::{anyhow, bail, Error};
+use deno_ast::{MediaType, ParseParams, SourceTextInfo};
+use deno_core::futures::FutureExt;
+use deno_core::{
+    resolve_import, Extension, JsRuntime, ModuleLoader, ModuleSource,
+    ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, RuntimeOptions,
+};
+use std::pin::Pin;
+use std::rc::Rc;
 
-use crate::builtin::client::*;
-use crate::builtin::*;
-use crate::observe::*;
-use crate::runtime::*;
-use crate::schedule::*;
+mod builtin;
+mod runtime;
 
-/// AuraeScript Standard Library.
-///
-/// The main definition of functions, objects, types, methods, and values
-/// for the entire AuraeScript library.
-///
-/// A large portion of this library is plumbed through from the gRPC client.
-///
-/// An important note for this library is that it is not "1-to-1" with the
-/// gRPC client.
-///
-/// There are carefully chosen subtle and semantic differences in how various
-/// parts of the Aurae Standard Library are exposed with AuraeScript.
-/// The philosophy is to keep the library beautiful, and simple.
-/// We prefer name() or meaningful_verbose_name()
-/// We prefer exec() over executable()
-///
-/// Each function in here must be heavily scrutinized as we will need to
-/// maintain some semblance of backward compatability over time.
-pub fn register_stdlib(mut engine: Engine) -> Engine {
-    engine
-        // about function
-        //
-        // Reserved function name to share information about the current
-        // client interpreter.
-        .register_fn("about", about)
-        // connect function
-        //
-        // Opinionated function that will attempt to look up configuration
-        // according to the semantics defined in the configuration module.
-        // This function will load the system configuration that is available
-        // in well known locations, or it will fail with a non-JSON error!
-        .register_fn("connect", connect)
-        // AuraeClient type
-        //
-        // Returned from connect() and is the pointer to the client which
-        // can be used to initialize subsystems with Aurae.
-        .register_type_with_name::<AuraeClient>("AuraeClient")
-        // AuraeClient.info function
-        //
-        // Used to show information about a specific client.
-        .register_fn("info", AuraeClient::info)
-        // X509Details type
-        //
-        // Identity and mTLS details.
-        .register_type_with_name::<X509Details>("X509Details")
-        .register_fn("json", X509Details::json)
-        .register_fn("raw", X509Details::raw)
-        // Runtime type
-        //
-        // The runtime subsystem with corresponding methods.
-        .register_type_with_name::<Core>("Core")
-        .register_fn("runtime", AuraeClient::runtime)
-        // Executable type
-        //
-        // An executable which can be started, stopped, or scheduled.
-        .register_type_with_name::<Executable>("Executable")
-        // exec function
-        //
-        // Most efficient way to execute a command with Aurae. Wraps up
-        // the runtime subsystem, and cmd setting into a single alias.
-        // Execute the argument string synchronously without any other
-        // code required.
-        .register_fn("exec", exec)
-        // cmd function
-        //
-        // Create an instance of an Executable type with an argument
-        // command string. Can be passed to various subsystems.
-        .register_fn("cmd", cmd)
-        // run_executable function
-        //
-        // Direct access to the run_executable function.
-        .register_fn("run_executable", Core::run_executable)
-        .register_fn("json", Executable::json)
-        .register_fn("raw", Executable::raw)
-        .register_get_set(
-            "command",
-            Executable::get_command,
-            Executable::set_command,
-        )
-        .register_get_set(
-            "comment",
-            Executable::get_comment,
-            Executable::set_comment,
-        )
-        // ExecutableStatus type
-        //
-        // Response with the status of a given Executable back from an Aurae server.
-        .register_type_with_name::<ExecutableStatus>("ExecutableStatus")
-        .register_fn("json", ExecutableStatus::json)
-        .register_fn("raw", ExecutableStatus::raw)
-        // ScheduleExecutable type
-        //
-        // The ScheduleExecutable subsystem.
-        .register_type_with_name::<ScheduleExecutable>("ScheduleExecutable")
-        .register_fn("schedule_executable", AuraeClient::schedule_executable)
-        // ScheduleExecutable.enable function
-        //
-        // Enable an Executable type{} to always run on the system.
-        .register_fn("enable", ScheduleExecutable::enable)
-        // ScheduleExecutable.disable function
-        //
-        // Disable an Executable type{} to not run on the system.
-        .register_fn("disable", ScheduleExecutable::disable)
-        // ScheduleExecutable.destroy function
-        //
-        // Destroy an Executable type{} from the system record.
-        .register_fn("destroy", ScheduleExecutable::destroy)
-        .register_type_with_name::<ExecutableEnableResponse>(
-            "ExecutableEnableResponse",
-        )
-        .register_fn("json", ExecutableEnableResponse::json)
-        .register_fn("raw", ExecutableEnableResponse::raw)
-        .register_type_with_name::<ExecutableDisableResponse>(
-            "ExecutableDisableResponse",
-        )
-        .register_fn("json", ExecutableDisableResponse::json)
-        .register_fn("raw", ExecutableDisableResponse::raw)
-        .register_type_with_name::<ExecutableDestroyResponse>(
-            "ExecutableDestroyResponse",
-        )
-        .register_fn("json", ExecutableDestroyResponse::json)
-        .register_fn("raw", ExecutableDestroyResponse::raw)
-        // Observe type
-        //
-        // The observe subsystem.
-        .register_type_with_name::<Observe>("Observe")
-        .register_fn("observe", AuraeClient::observe)
-        // Observe.status function
-        //
-        // Retrieve total system status metrics.
-        .register_fn("status", Observe::status_default)
-        .register_type_with_name::<StatusResponse>("StatusResponse")
-        .register_fn("json", StatusResponse::json)
-        .register_fn("raw", StatusResponse::raw)
-        // version function
-        //
-        // The Aurae version running on
-        .register_fn("version", version);
+pub fn init() -> JsRuntime {
+    let extension = Extension::builder().ops(stdlib()).build();
 
-    engine
+    JsRuntime::new(RuntimeOptions {
+        extensions: vec![extension],
+        module_loader: Some(Rc::new(TypescriptModuleLoader)),
+        ..Default::default()
+    })
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+fn stdlib() -> Vec<OpDecl> {
+    let mut ops = vec![];
+    ops.extend(runtime::op_decls());
+    ops
+}
 
-    #[test]
-    fn test_engine() {
-        let mut engine = Engine::new();
-        engine = register_stdlib(engine);
-        let sigs = engine.gen_fn_signatures(true);
-        println!("{:?}", sigs);
+// From: https://github.com/denoland/deno/blob/main/core/examples/ts_module_loader.rs
+struct TypescriptModuleLoader;
+
+impl ModuleLoader for TypescriptModuleLoader {
+    fn resolve(
+        &self,
+        specifier: &str,
+        referrer: &str,
+        _is_main: bool,
+    ) -> Result<ModuleSpecifier, Error> {
+        Ok(resolve_import(specifier, referrer)?)
     }
 
-    #[test]
-    fn test_flake() {
-        //assert_eq!(1, 2); // Flake test check
+    fn load(
+        &self,
+        module_specifier: &ModuleSpecifier,
+        _maybe_referrer: Option<ModuleSpecifier>,
+        _is_dyn_import: bool,
+    ) -> Pin<Box<ModuleSourceFuture>> {
+        let module_specifier = module_specifier.clone();
+        async move {
+            let path = module_specifier
+                .to_file_path()
+                .map_err(|_| anyhow!("Only file: URLs are supported."))?;
+
+            let media_type = MediaType::from(&path);
+            let (module_type, should_transpile) = match MediaType::from(&path) {
+                MediaType::JavaScript | MediaType::Mjs | MediaType::Cjs => {
+                    (ModuleType::JavaScript, false)
+                }
+                MediaType::Jsx => (ModuleType::JavaScript, true),
+                MediaType::TypeScript
+                | MediaType::Mts
+                | MediaType::Cts
+                | MediaType::Dts
+                | MediaType::Dmts
+                | MediaType::Dcts
+                | MediaType::Tsx => (ModuleType::JavaScript, true),
+                MediaType::Json => (ModuleType::Json, false),
+                _ => bail!("Unknown extension {:?}", path.extension()),
+            };
+
+            let code = std::fs::read_to_string(&path)?;
+            let code = if should_transpile {
+                let parsed = deno_ast::parse_module(ParseParams {
+                    specifier: module_specifier.to_string(),
+                    text_info: SourceTextInfo::from_string(code),
+                    media_type,
+                    capture_tokens: false,
+                    scope_analysis: false,
+                    maybe_syntax: None,
+                })?;
+                parsed.transpile(&Default::default())?.text
+            } else {
+                code
+            };
+            let module = ModuleSource {
+                code: code.into_bytes().into_boxed_slice(),
+                module_type,
+                module_url_specified: module_specifier.to_string(),
+                module_url_found: module_specifier.to_string(),
+            };
+            Ok(module)
+        }
+        .boxed_local()
     }
 }

@@ -41,93 +41,29 @@
     unused_comparisons,
     while_true
 )]
-#![warn(// TODO: missing_debug_implementations,
-        // TODO: missing_docs,
-        trivial_casts,
-        trivial_numeric_casts,
-        unused_extern_crates,
-        unused_import_braces,
-        unused_qualifications,
-        // TODO: unused_results
-        )]
+#![warn(missing_debug_implementations,
+    // TODO: missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications,
+    unused_results
+)]
 
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
 
-mod client;
-mod get_set;
+mod ops;
 
-/// Outputs the macro content during a render.
-#[proc_macro_derive(Output)]
-pub fn output(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let ident = &ast.ident;
-
-    let expanded = quote! {
-        impl #ident {
-            /// Output as symmetrical AuraeScript code.
-            pub fn raw(&mut self) {
-                println!("{:?}", self);
-            }
-
-            /// Output as valid JSON.
-            pub fn json(&mut self) {
-                let serialized = ::serde_json::to_string_pretty(&self).expect("Failed to serialize to pretty json");
-                println!("{}", serialized);
-            }
-        }
-    };
-
-    expanded.into()
-}
-
-/// Creates getter functions for all struct fields.
-///
-/// Example:
+/// # Example:
 /// ```ignore
-/// #[derive(::macros::Getters)]
-/// struct MyStruct {
-///     field_a: String,
-///     #[getset(ignore_get)]
-///     field_no_getter: String,
-///     #[getset(ignore)]
-///     field_no_getter_or_setter: String,
-/// }
-/// ```
-#[proc_macro_derive(Getters, attributes(getset))]
-pub fn getters(input: TokenStream) -> TokenStream {
-    get_set::getters(input)
-}
-
-/// Creates setter functions for all struct fields.
-///
-/// Example:
-/// ```ignore
-/// #[derive(::macros::Setters)]
-/// struct MyStruct {
-///     field_a: String,
-///     #[getset(ignore_set)]
-///     field_no_setter: String,
-///     #[getset(ignore)]
-///     field_no_getter_or_setter: String,
-/// }
-/// ```
-#[proc_macro_derive(Setters, attributes(getset))]
-pub fn setters(input: TokenStream) -> TokenStream {
-    get_set::setters(input)
-}
-
-/// Generates a struct (no fields), a `new` function, and implements `Default`.
-/// Additionally, generates boilerplate for function signatures provided.
-///
-/// Example:
-/// ```ignore
-/// macros::client_wrapper!(
+/// macros::ops_generator!(
+///     module_name,
 ///     ServiceName,
-///     snake_case_rpc_name(RequestMessageName) -> ResponseMessageName
+///     snake_case_rpc_name(RequestMessageName) -> ResponseMessageName,
+///     other(OtherRequest) -> OtherResponse
 /// );
 #[proc_macro]
-pub fn client_wrapper(input: TokenStream) -> TokenStream {
-    client::client_wrapper(input)
+pub fn ops_generator(input: TokenStream) -> TokenStream {
+    ops::ops_generator(input)
 }

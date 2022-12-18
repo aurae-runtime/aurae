@@ -9,9 +9,9 @@ The `auraed` daemon can be ran as a pid 1 on a Linux kernel and manages containe
 
 ### Mission
 
-Aurae is on a mission to be the most loved and most effective way of managing workloads on a single machine. Our hope is that by bringing a better set of controls to a single machine, we can unlock more brilliant higher order distributed systems in the future.
+Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
 
-Aurae is designed to work well with (but is deliberately decoupled from) Kubernetes. The `auraed` daemon runs "under" Kubernetes and exposes the [Aurae Standard Library](https://aurae.io/stdlib/) over an mTLS authenticated gRPC server. 
+Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mTLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
 
 ### Project Status
 
@@ -42,7 +42,7 @@ Aurae brings [SPIFFE](https://github.com/spiffe)/[SPIRE](https://github.com/spif
 
 ### Standard Library
 
-Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://github.com/aurae-runtime/auraed/tree/main/stdlib#the-aurae-standard-library).
+Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://aurae.io/stdlib/).
 
 ### Principle of Least Awareness
 
@@ -60,25 +60,34 @@ Aurae brings enterprise identity as low as the socket layer in a system, which u
 
 ## AuraeScript 
 
-Aurae offers a Turing complete scripting language written in Rust and similar to TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript).
+Aurae offers a Turing complete scripting language built on top of TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript). AuraeScript embeds the [Deno](https://deno.land) source code directly, and offers a remote client and SDK to interface directly with Aurae remotely. The AuraeScript library is automatically generated from the `.proto` files defined in the [Aurae Standard Library](https://aurae.io/stdlib/).
+
+Valid TypeScript files can be leveraged to replace static manifests, as well as interact directly with a running system.
 
 ```typescript
-let execute = true;    // Toggle execution
+#!/usr/bin/env auraescript
+let cells = new runtime.CellServiceClient();
 
-let aurae = connect(); // Connect to the daemon
-aurae.info().json();   // Show identity
+let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+    cell: runtime.Cell.fromPartial({
+        name: "my-cell",
+        cpus: "2"
+    })
+});
 
-if execute {
-    // Execute "cat /etc/resolv.conf"
-    let runtime = aurae.runtime();
-    let example = exec("cat /etc/resolv.conf");
-    runtime.start(example).json();
-}
+let started = await cells.start(<runtime.StartCellRequest>{
+    executable: runtime.Executable.fromPartial({
+        cellName: "my-cell",
+        command: "sleep 4000",
+        description: "Sleep for 4000 seconds",
+        name: "sleep-4000"
+    })
+})
 ```
 
-AuraeScript servers as one of many clients to the system and can be used to express workload manifests instead of YAML.
-AuraeScript can be used to control and gain visibility to the system.
-
 ## The Aurae Standard Library
+
+The Aurae Standard Library is expressed in `.proto` files and stored in this repository.
+Many components of the Aurae runtime system are automatically generated from this core definitions.
 
 See the [V0 API Reference](https://aurae.io/stdlib/v0/) for the current library definition.

@@ -28,13 +28,14 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-// @todo @krisnova remove this once logging is futher along
+// @todo @krisnova remove this once logging is further along
 #![allow(dead_code)]
 
-tonic::include_proto!("observe");
-
-use crate::observe::observe_server::Observe;
-use crate::{meta, LogChannel};
+use crate::LogChannel;
+use aurae_proto::observe::{
+    observe_server::Observe, GetAuraeDaemonLogStreamRequest,
+    GetSubProcessStreamRequest, LogItem,
+};
 use log::info;
 use std::sync::Arc;
 use tokio::sync::broadcast::Receiver;
@@ -65,17 +66,6 @@ impl ObserveService {
 
 #[tonic::async_trait]
 impl Observe for ObserveService {
-    async fn status(
-        &self,
-        _request: Request<StatusRequest>,
-    ) -> Result<Response<StatusResponse>, Status> {
-        let meta = meta::AuraeMeta {
-            name: "UNKNOWN_NAME".to_string(),
-            message: "UNKNOWN_MESSAGE".to_string(),
-        };
-        let response = StatusResponse { meta: Some(meta) };
-        Ok(Response::new(response))
-    }
     type GetAuraeDaemonLogStreamStream =
         ReceiverStream<Result<LogItem, Status>>;
 
@@ -89,7 +79,7 @@ impl Observe for ObserveService {
 
         // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
         //  .. thus disabled logging here.
-        tokio::spawn(async move {
+        let _ = tokio::spawn(async move {
             // Log consumer will error if:
             //  the producer is closed (no more logs)
             //  the receiver is lagging
