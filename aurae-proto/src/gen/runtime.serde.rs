@@ -10,45 +10,9 @@ impl serde::Serialize for AllocateCellRequest {
         if self.cell.is_some() {
             len += 1;
         }
-        if self.ns_share_mount {
-            len += 1;
-        }
-        if self.ns_share_uts {
-            len += 1;
-        }
-        if self.ns_share_ipc {
-            len += 1;
-        }
-        if self.ns_share_pid {
-            len += 1;
-        }
-        if self.ns_share_net {
-            len += 1;
-        }
-        if self.ns_share_cgroup {
-            len += 1;
-        }
         let mut struct_ser = serializer.serialize_struct("runtime.AllocateCellRequest", len)?;
         if let Some(v) = self.cell.as_ref() {
             struct_ser.serialize_field("cell", v)?;
-        }
-        if self.ns_share_mount {
-            struct_ser.serialize_field("nsShareMount", &self.ns_share_mount)?;
-        }
-        if self.ns_share_uts {
-            struct_ser.serialize_field("nsShareUts", &self.ns_share_uts)?;
-        }
-        if self.ns_share_ipc {
-            struct_ser.serialize_field("nsShareIpc", &self.ns_share_ipc)?;
-        }
-        if self.ns_share_pid {
-            struct_ser.serialize_field("nsSharePid", &self.ns_share_pid)?;
-        }
-        if self.ns_share_net {
-            struct_ser.serialize_field("nsShareNet", &self.ns_share_net)?;
-        }
-        if self.ns_share_cgroup {
-            struct_ser.serialize_field("nsShareCgroup", &self.ns_share_cgroup)?;
         }
         struct_ser.end()
     }
@@ -61,29 +25,11 @@ impl<'de> serde::Deserialize<'de> for AllocateCellRequest {
     {
         const FIELDS: &[&str] = &[
             "cell",
-            "ns_share_mount",
-            "nsShareMount",
-            "ns_share_uts",
-            "nsShareUts",
-            "ns_share_ipc",
-            "nsShareIpc",
-            "ns_share_pid",
-            "nsSharePid",
-            "ns_share_net",
-            "nsShareNet",
-            "ns_share_cgroup",
-            "nsShareCgroup",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Cell,
-            NsShareMount,
-            NsShareUts,
-            NsShareIpc,
-            NsSharePid,
-            NsShareNet,
-            NsShareCgroup,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -106,12 +52,6 @@ impl<'de> serde::Deserialize<'de> for AllocateCellRequest {
                     {
                         match value {
                             "cell" => Ok(GeneratedField::Cell),
-                            "nsShareMount" | "ns_share_mount" => Ok(GeneratedField::NsShareMount),
-                            "nsShareUts" | "ns_share_uts" => Ok(GeneratedField::NsShareUts),
-                            "nsShareIpc" | "ns_share_ipc" => Ok(GeneratedField::NsShareIpc),
-                            "nsSharePid" | "ns_share_pid" => Ok(GeneratedField::NsSharePid),
-                            "nsShareNet" | "ns_share_net" => Ok(GeneratedField::NsShareNet),
-                            "nsShareCgroup" | "ns_share_cgroup" => Ok(GeneratedField::NsShareCgroup),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -132,12 +72,6 @@ impl<'de> serde::Deserialize<'de> for AllocateCellRequest {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut cell__ = None;
-                let mut ns_share_mount__ = None;
-                let mut ns_share_uts__ = None;
-                let mut ns_share_ipc__ = None;
-                let mut ns_share_pid__ = None;
-                let mut ns_share_net__ = None;
-                let mut ns_share_cgroup__ = None;
                 while let Some(k) = map.next_key()? {
                     match k {
                         GeneratedField::Cell => {
@@ -146,52 +80,10 @@ impl<'de> serde::Deserialize<'de> for AllocateCellRequest {
                             }
                             cell__ = map.next_value()?;
                         }
-                        GeneratedField::NsShareMount => {
-                            if ns_share_mount__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("nsShareMount"));
-                            }
-                            ns_share_mount__ = Some(map.next_value()?);
-                        }
-                        GeneratedField::NsShareUts => {
-                            if ns_share_uts__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("nsShareUts"));
-                            }
-                            ns_share_uts__ = Some(map.next_value()?);
-                        }
-                        GeneratedField::NsShareIpc => {
-                            if ns_share_ipc__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("nsShareIpc"));
-                            }
-                            ns_share_ipc__ = Some(map.next_value()?);
-                        }
-                        GeneratedField::NsSharePid => {
-                            if ns_share_pid__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("nsSharePid"));
-                            }
-                            ns_share_pid__ = Some(map.next_value()?);
-                        }
-                        GeneratedField::NsShareNet => {
-                            if ns_share_net__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("nsShareNet"));
-                            }
-                            ns_share_net__ = Some(map.next_value()?);
-                        }
-                        GeneratedField::NsShareCgroup => {
-                            if ns_share_cgroup__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("nsShareCgroup"));
-                            }
-                            ns_share_cgroup__ = Some(map.next_value()?);
-                        }
                     }
                 }
                 Ok(AllocateCellRequest {
                     cell: cell__,
-                    ns_share_mount: ns_share_mount__.unwrap_or_default(),
-                    ns_share_uts: ns_share_uts__.unwrap_or_default(),
-                    ns_share_ipc: ns_share_ipc__.unwrap_or_default(),
-                    ns_share_pid: ns_share_pid__.unwrap_or_default(),
-                    ns_share_net: ns_share_net__.unwrap_or_default(),
-                    ns_share_cgroup: ns_share_cgroup__.unwrap_or_default(),
                 })
             }
         }
@@ -331,6 +223,24 @@ impl serde::Serialize for Cell {
         if self.cpu_quota != 0 {
             len += 1;
         }
+        if self.ns_share_mount {
+            len += 1;
+        }
+        if self.ns_share_uts {
+            len += 1;
+        }
+        if self.ns_share_ipc {
+            len += 1;
+        }
+        if self.ns_share_pid {
+            len += 1;
+        }
+        if self.ns_share_net {
+            len += 1;
+        }
+        if self.ns_share_cgroup {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("runtime.Cell", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
@@ -346,6 +256,24 @@ impl serde::Serialize for Cell {
         }
         if self.cpu_quota != 0 {
             struct_ser.serialize_field("cpuQuota", ToString::to_string(&self.cpu_quota).as_str())?;
+        }
+        if self.ns_share_mount {
+            struct_ser.serialize_field("nsShareMount", &self.ns_share_mount)?;
+        }
+        if self.ns_share_uts {
+            struct_ser.serialize_field("nsShareUts", &self.ns_share_uts)?;
+        }
+        if self.ns_share_ipc {
+            struct_ser.serialize_field("nsShareIpc", &self.ns_share_ipc)?;
+        }
+        if self.ns_share_pid {
+            struct_ser.serialize_field("nsSharePid", &self.ns_share_pid)?;
+        }
+        if self.ns_share_net {
+            struct_ser.serialize_field("nsShareNet", &self.ns_share_net)?;
+        }
+        if self.ns_share_cgroup {
+            struct_ser.serialize_field("nsShareCgroup", &self.ns_share_cgroup)?;
         }
         struct_ser.end()
     }
@@ -366,6 +294,18 @@ impl<'de> serde::Deserialize<'de> for Cell {
             "cpuMems",
             "cpu_quota",
             "cpuQuota",
+            "ns_share_mount",
+            "nsShareMount",
+            "ns_share_uts",
+            "nsShareUts",
+            "ns_share_ipc",
+            "nsShareIpc",
+            "ns_share_pid",
+            "nsSharePid",
+            "ns_share_net",
+            "nsShareNet",
+            "ns_share_cgroup",
+            "nsShareCgroup",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -375,6 +315,12 @@ impl<'de> serde::Deserialize<'de> for Cell {
             CpuShares,
             CpuMems,
             CpuQuota,
+            NsShareMount,
+            NsShareUts,
+            NsShareIpc,
+            NsSharePid,
+            NsShareNet,
+            NsShareCgroup,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -401,6 +347,12 @@ impl<'de> serde::Deserialize<'de> for Cell {
                             "cpuShares" | "cpu_shares" => Ok(GeneratedField::CpuShares),
                             "cpuMems" | "cpu_mems" => Ok(GeneratedField::CpuMems),
                             "cpuQuota" | "cpu_quota" => Ok(GeneratedField::CpuQuota),
+                            "nsShareMount" | "ns_share_mount" => Ok(GeneratedField::NsShareMount),
+                            "nsShareUts" | "ns_share_uts" => Ok(GeneratedField::NsShareUts),
+                            "nsShareIpc" | "ns_share_ipc" => Ok(GeneratedField::NsShareIpc),
+                            "nsSharePid" | "ns_share_pid" => Ok(GeneratedField::NsSharePid),
+                            "nsShareNet" | "ns_share_net" => Ok(GeneratedField::NsShareNet),
+                            "nsShareCgroup" | "ns_share_cgroup" => Ok(GeneratedField::NsShareCgroup),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -425,6 +377,12 @@ impl<'de> serde::Deserialize<'de> for Cell {
                 let mut cpu_shares__ = None;
                 let mut cpu_mems__ = None;
                 let mut cpu_quota__ = None;
+                let mut ns_share_mount__ = None;
+                let mut ns_share_uts__ = None;
+                let mut ns_share_ipc__ = None;
+                let mut ns_share_pid__ = None;
+                let mut ns_share_net__ = None;
+                let mut ns_share_cgroup__ = None;
                 while let Some(k) = map.next_key()? {
                     match k {
                         GeneratedField::Name => {
@@ -461,6 +419,42 @@ impl<'de> serde::Deserialize<'de> for Cell {
                                 Some(map.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
                             ;
                         }
+                        GeneratedField::NsShareMount => {
+                            if ns_share_mount__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("nsShareMount"));
+                            }
+                            ns_share_mount__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::NsShareUts => {
+                            if ns_share_uts__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("nsShareUts"));
+                            }
+                            ns_share_uts__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::NsShareIpc => {
+                            if ns_share_ipc__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("nsShareIpc"));
+                            }
+                            ns_share_ipc__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::NsSharePid => {
+                            if ns_share_pid__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("nsSharePid"));
+                            }
+                            ns_share_pid__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::NsShareNet => {
+                            if ns_share_net__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("nsShareNet"));
+                            }
+                            ns_share_net__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::NsShareCgroup => {
+                            if ns_share_cgroup__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("nsShareCgroup"));
+                            }
+                            ns_share_cgroup__ = Some(map.next_value()?);
+                        }
                     }
                 }
                 Ok(Cell {
@@ -469,6 +463,12 @@ impl<'de> serde::Deserialize<'de> for Cell {
                     cpu_shares: cpu_shares__.unwrap_or_default(),
                     cpu_mems: cpu_mems__.unwrap_or_default(),
                     cpu_quota: cpu_quota__.unwrap_or_default(),
+                    ns_share_mount: ns_share_mount__.unwrap_or_default(),
+                    ns_share_uts: ns_share_uts__.unwrap_or_default(),
+                    ns_share_ipc: ns_share_ipc__.unwrap_or_default(),
+                    ns_share_pid: ns_share_pid__.unwrap_or_default(),
+                    ns_share_net: ns_share_net__.unwrap_or_default(),
+                    ns_share_cgroup: ns_share_cgroup__.unwrap_or_default(),
                 })
             }
         }

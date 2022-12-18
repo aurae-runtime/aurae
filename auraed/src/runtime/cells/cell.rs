@@ -35,7 +35,8 @@ use cgroups_rs::{
     cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
 };
 use log::info;
-use std::{collections::HashMap, process::ExitStatus};
+use std::collections::HashMap;
+use unshare::ExitStatus;
 
 #[derive(Debug)]
 pub(crate) struct Cell {
@@ -67,6 +68,12 @@ impl Cell {
                 cpu_shares,
                 cpu_mems,
                 cpu_quota,
+                ns_share_mount: _ns_share_mount,
+                ns_share_uts: _ns_share_uts,
+                ns_share_ipc: _ns_share_ipc,
+                ns_share_pid: _ns_share_pid,
+                ns_share_net: _ns_share_net,
+                ns_share_cgroup: _ns_share_cgroup,
             } = self.spec.clone();
 
             let hierarchy = hierarchy();
@@ -130,16 +137,20 @@ impl Cell {
                 let _ = executables.insert(executable_name.clone(), executable);
 
                 // Start the child process
+                //
+                // Here is where we launch an executable within the context of a parent Cell.
+                // Aurae makes the assumption that all Executables within a cell share the
+                // same namespace isolation rules set up upon creation of the cell.
 
                 if let Some(executable) = executables.get_mut(&executable_name)
                 {
-                    let pid = executable.start().map_err(|e| {
+                    let pid = executable.start().map_err(|_e| {
                         CellsError::FailedToStartExecutable {
                             cell_name: self.spec.name.clone(),
                             executable_name: executable.name.clone(),
                             command: executable.command.clone(),
                             args: executable.args.clone(),
-                            source: e,
+                            // source: e,
                         }
                     })?;
 
@@ -186,11 +197,11 @@ impl Cell {
 
                             Ok(exit_status)
                         }
-                        Err(e) => Err(CellsError::FailedToStopExecutable {
+                        Err(_e) => Err(CellsError::FailedToStopExecutable {
                             cell_name: self.spec.name.clone(),
                             executable_name: executable.name.clone(),
                             executable_pid: executable.pid().expect("pid"),
-                            source: e,
+                            // source: e,
                         }),
                     }
                 } else {

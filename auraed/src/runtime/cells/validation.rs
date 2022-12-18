@@ -16,18 +16,6 @@ use validation_macros::ValidatedType;
 pub(crate) struct ValidatedAllocateCellRequest {
     #[field_type(Option<Cell>)]
     pub cell: ValidatedCell,
-    #[validate(none)]
-    pub ns_share_mount: bool,
-    #[validate(none)]
-    pub ns_share_uts: bool,
-    #[validate(none)]
-    pub ns_share_ipc: bool,
-    #[validate(none)]
-    pub ns_share_pid: bool,
-    #[validate(none)]
-    pub ns_share_net: bool,
-    #[validate(none)]
-    pub ns_share_cgroup: bool,
 }
 
 impl AllocateCellRequestTypeValidator for AllocateCellRequestValidator {
@@ -108,6 +96,19 @@ pub(crate) struct ValidatedCell {
     #[field_type(i64)]
     #[validate(create)]
     pub cpu_quota: CpuQuota,
+
+    #[validate(none)]
+    pub ns_share_mount: bool,
+    #[validate(none)]
+    pub ns_share_uts: bool,
+    #[validate(none)]
+    pub ns_share_ipc: bool,
+    #[validate(none)]
+    pub ns_share_pid: bool,
+    #[validate(none)]
+    pub ns_share_net: bool,
+    #[validate(none)]
+    pub ns_share_cgroup: bool,
 }
 
 impl CellTypeValidator for CellValidator {}

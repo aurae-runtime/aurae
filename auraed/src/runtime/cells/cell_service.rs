@@ -57,22 +57,16 @@ impl CellService {
         request: ValidatedAllocateCellRequest,
     ) -> Result<AllocateCellResponse> {
         // Initialize the cell
-        let ValidatedAllocateCellRequest {
-            cell,
-            ns_share_mount,
-            ns_share_uts,
-            ns_share_ipc,
-            ns_share_pid,
-            ns_share_net,
-            ns_share_cgroup,
-        } = request;
+        let ValidatedAllocateCellRequest { cell } = request;
+
         // TODO We should discover a way to make the logging at the function level
         // TODO dynamic such that we don't have to keep hard-coding things like this.
         // TODO We are looking at tracing and observability for this!
-        info!(
-            "CellService: allocate() cell={:?} ns_share_mount={:?} ns_share_uts={:?} ns_share_ipc={:?} ns_share_pid={:?} ns_share_net={:?} ns_share_cgroup={:?}",
-            cell, ns_share_mount, ns_share_uts, ns_share_ipc, ns_share_pid, ns_share_net, ns_share_cgroup,
-        );
+        info!("CellService: allocate() cell={:?}", cell);
+        // info!(
+        //     "CellService: allocate() cell={:?} ns_share_mount={:?} ns_share_uts={:?} ns_share_ipc={:?} ns_share_pid={:?} ns_share_net={:?} ns_share_cgroup={:?}",
+        //     cell, ns_share_mount, ns_share_uts, ns_share_ipc, ns_share_pid, ns_share_net, ns_share_cgroup,
+        // );
 
         let cell_name = cell.name.clone();
         let cgroup_v2 = self

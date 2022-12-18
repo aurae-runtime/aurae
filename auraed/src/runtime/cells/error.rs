@@ -31,7 +31,6 @@
 use crate::runtime::cells::{CellName, ExecutableName};
 use cgroups_rs::CgroupPid;
 use log::error;
-use std::io;
 use thiserror::Error;
 use tonic::Status;
 
@@ -53,20 +52,22 @@ pub(crate) enum CellsError {
     ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
     #[error("cell '{cell_name} could not find executable '{executable_name}'")]
     ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
+    // #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
+    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?})")]
     FailedToStartExecutable {
         cell_name: CellName,
         executable_name: ExecutableName,
         command: String,
         args: Vec<String>,
-        source: io::Error,
+        //source: unshare::Error,
     },
-    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]
+    //#[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]
+    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?})")]
     FailedToStopExecutable {
         cell_name: CellName,
         executable_name: ExecutableName,
         executable_pid: CgroupPid,
-        source: io::Error,
+        //source: unshare::Error,
     },
     #[error(
         "cell '{cell_name}' failed to add executable (executable:?): {source}"

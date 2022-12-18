@@ -2,8 +2,10 @@ use crate::runtime::cells::ExecutableName;
 use cgroups_rs::CgroupPid;
 use log::info;
 use std::io;
-use std::os::unix::process::CommandExt;
-use std::process::{Child, Command, ExitStatus};
+use unshare::Child;
+use unshare::Command;
+use unshare::Error;
+use unshare::ExitStatus;
 
 #[derive(Debug)]
 pub(crate) struct Executable {
@@ -33,14 +35,16 @@ impl Executable {
 
     /// Starts the executable and returns the pid.
     /// If the executable is already started, just returns the pid.
-    pub fn start(&mut self) -> Result<CgroupPid, io::Error> {
+    pub fn start(&mut self) -> Result<CgroupPid, Error> {
         match &self.state {
             ExecutableState::Started(child) => Ok((child.id() as u64).into()),
+
             ExecutableState::Init | ExecutableState::Stopped(_) => {
                 let mut command = Command::new(&self.command);
                 let command = command.args(&self.args);
 
                 // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
+
                 let command = {
                     let executable_name = self.name.clone();
                     unsafe {

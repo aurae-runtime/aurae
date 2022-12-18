@@ -47,6 +47,12 @@ export interface Cell {
   cpuMems: string;
   /** / In one period, how much can the tasks run in microseconds. */
   cpuQuota: number;
+  nsShareMount: boolean;
+  nsShareUts: boolean;
+  nsShareIpc: boolean;
+  nsSharePid: boolean;
+  nsShareNet: boolean;
+  nsShareCgroup: boolean;
 }
 
 /**
@@ -60,12 +66,6 @@ export interface Cell {
 export interface AllocateCellRequest {
   /** / A smaller resource constrained section of the system. */
   cell: Cell | undefined;
-  nsShareMount: boolean;
-  nsShareUts: boolean;
-  nsShareIpc: boolean;
-  nsSharePid: boolean;
-  nsShareNet: boolean;
-  nsShareCgroup: boolean;
 }
 
 /** / The response after a cell has been allocated. */
@@ -154,7 +154,19 @@ export const Executable = {
 };
 
 function createBaseCell(): Cell {
-  return { name: "", cpuCpus: "", cpuShares: 0, cpuMems: "", cpuQuota: 0 };
+  return {
+    name: "",
+    cpuCpus: "",
+    cpuShares: 0,
+    cpuMems: "",
+    cpuQuota: 0,
+    nsShareMount: false,
+    nsShareUts: false,
+    nsShareIpc: false,
+    nsSharePid: false,
+    nsShareNet: false,
+    nsShareCgroup: false,
+  };
 }
 
 export const Cell = {
@@ -165,6 +177,12 @@ export const Cell = {
       cpuShares: isSet(object.cpuShares) ? Number(object.cpuShares) : 0,
       cpuMems: isSet(object.cpuMems) ? String(object.cpuMems) : "",
       cpuQuota: isSet(object.cpuQuota) ? Number(object.cpuQuota) : 0,
+      nsShareMount: isSet(object.nsShareMount) ? Boolean(object.nsShareMount) : false,
+      nsShareUts: isSet(object.nsShareUts) ? Boolean(object.nsShareUts) : false,
+      nsShareIpc: isSet(object.nsShareIpc) ? Boolean(object.nsShareIpc) : false,
+      nsSharePid: isSet(object.nsSharePid) ? Boolean(object.nsSharePid) : false,
+      nsShareNet: isSet(object.nsShareNet) ? Boolean(object.nsShareNet) : false,
+      nsShareCgroup: isSet(object.nsShareCgroup) ? Boolean(object.nsShareCgroup) : false,
     };
   },
 
@@ -175,6 +193,12 @@ export const Cell = {
     message.cpuShares !== undefined && (obj.cpuShares = Math.round(message.cpuShares));
     message.cpuMems !== undefined && (obj.cpuMems = message.cpuMems);
     message.cpuQuota !== undefined && (obj.cpuQuota = Math.round(message.cpuQuota));
+    message.nsShareMount !== undefined && (obj.nsShareMount = message.nsShareMount);
+    message.nsShareUts !== undefined && (obj.nsShareUts = message.nsShareUts);
+    message.nsShareIpc !== undefined && (obj.nsShareIpc = message.nsShareIpc);
+    message.nsSharePid !== undefined && (obj.nsSharePid = message.nsSharePid);
+    message.nsShareNet !== undefined && (obj.nsShareNet = message.nsShareNet);
+    message.nsShareCgroup !== undefined && (obj.nsShareCgroup = message.nsShareCgroup);
     return obj;
   },
 
@@ -185,56 +209,34 @@ export const Cell = {
     message.cpuShares = object.cpuShares ?? 0;
     message.cpuMems = object.cpuMems ?? "";
     message.cpuQuota = object.cpuQuota ?? 0;
-    return message;
-  },
-};
-
-function createBaseAllocateCellRequest(): AllocateCellRequest {
-  return {
-    cell: undefined,
-    nsShareMount: false,
-    nsShareUts: false,
-    nsShareIpc: false,
-    nsSharePid: false,
-    nsShareNet: false,
-    nsShareCgroup: false,
-  };
-}
-
-export const AllocateCellRequest = {
-  fromJSON(object: any): AllocateCellRequest {
-    return {
-      cell: isSet(object.cell) ? Cell.fromJSON(object.cell) : undefined,
-      nsShareMount: isSet(object.nsShareMount) ? Boolean(object.nsShareMount) : false,
-      nsShareUts: isSet(object.nsShareUts) ? Boolean(object.nsShareUts) : false,
-      nsShareIpc: isSet(object.nsShareIpc) ? Boolean(object.nsShareIpc) : false,
-      nsSharePid: isSet(object.nsSharePid) ? Boolean(object.nsSharePid) : false,
-      nsShareNet: isSet(object.nsShareNet) ? Boolean(object.nsShareNet) : false,
-      nsShareCgroup: isSet(object.nsShareCgroup) ? Boolean(object.nsShareCgroup) : false,
-    };
-  },
-
-  toJSON(message: AllocateCellRequest): unknown {
-    const obj: any = {};
-    message.cell !== undefined && (obj.cell = message.cell ? Cell.toJSON(message.cell) : undefined);
-    message.nsShareMount !== undefined && (obj.nsShareMount = message.nsShareMount);
-    message.nsShareUts !== undefined && (obj.nsShareUts = message.nsShareUts);
-    message.nsShareIpc !== undefined && (obj.nsShareIpc = message.nsShareIpc);
-    message.nsSharePid !== undefined && (obj.nsSharePid = message.nsSharePid);
-    message.nsShareNet !== undefined && (obj.nsShareNet = message.nsShareNet);
-    message.nsShareCgroup !== undefined && (obj.nsShareCgroup = message.nsShareCgroup);
-    return obj;
-  },
-
-  fromPartial<I extends Exact<DeepPartial<AllocateCellRequest>, I>>(object: I): AllocateCellRequest {
-    const message = createBaseAllocateCellRequest();
-    message.cell = (object.cell !== undefined && object.cell !== null) ? Cell.fromPartial(object.cell) : undefined;
     message.nsShareMount = object.nsShareMount ?? false;
     message.nsShareUts = object.nsShareUts ?? false;
     message.nsShareIpc = object.nsShareIpc ?? false;
     message.nsSharePid = object.nsSharePid ?? false;
     message.nsShareNet = object.nsShareNet ?? false;
     message.nsShareCgroup = object.nsShareCgroup ?? false;
+    return message;
+  },
+};
+
+function createBaseAllocateCellRequest(): AllocateCellRequest {
+  return { cell: undefined };
+}
+
+export const AllocateCellRequest = {
+  fromJSON(object: any): AllocateCellRequest {
+    return { cell: isSet(object.cell) ? Cell.fromJSON(object.cell) : undefined };
+  },
+
+  toJSON(message: AllocateCellRequest): unknown {
+    const obj: any = {};
+    message.cell !== undefined && (obj.cell = message.cell ? Cell.toJSON(message.cell) : undefined);
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<AllocateCellRequest>, I>>(object: I): AllocateCellRequest {
+    const message = createBaseAllocateCellRequest();
+    message.cell = (object.cell !== undefined && object.cell !== null) ? Cell.fromPartial(object.cell) : undefined;
     return message;
   },
 };

@@ -134,6 +134,19 @@ message Cell {
   /// In one period, how much can the tasks run in microseconds.
   int64 cpu_quota = 5;
 
+  /// Linux namespaces to share with the calling process.
+  /// If all values are set to false, the resulting cell
+  /// will be as isolated as possible.
+  ///
+  /// Each shared namespace is a potential security risk.
+
+  bool ns_share_mount = 10;
+  bool ns_share_uts = 11;
+  bool ns_share_ipc = 12;
+  bool ns_share_pid = 13;
+  bool ns_share_net = 14;
+  bool ns_share_cgroup = 15;
+
 }
 
 /// An Aurae cell is a name given to Linux control groups (cgroups) that also include
@@ -146,19 +159,6 @@ message AllocateCellRequest {
 
   /// A smaller resource constrained section of the system.
   Cell cell = 1;
-
-  /// Linux namespaces to share with the calling process.
-  /// If all values are set to false, the resulting cell
-  /// will be as isolated as possible.
-  ///
-  /// Each shared namespace is a potential security risk.
-
-    bool ns_share_mount = 10;
-    bool ns_share_uts = 11;
-    bool ns_share_ipc = 12;
-    bool ns_share_pid = 13;
-    bool ns_share_net = 14;
-    bool ns_share_cgroup = 15;
 
 }
 
