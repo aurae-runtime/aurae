@@ -32,7 +32,7 @@ use super::validation::{
     ValidatedAllocateCellRequest, ValidatedFreeCellRequest,
     ValidatedStartCellRequest, ValidatedStopCellRequest,
 };
-use super::{CellsTable, Result};
+use super::{Cells, Result};
 use ::validation::ValidatedType;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
@@ -44,7 +44,7 @@ use tonic::{Request, Response, Status};
 
 #[derive(Debug, Clone)]
 pub struct CellService {
-    cells: CellsTable,
+    cells: Cells,
 }
 
 impl CellService {
@@ -61,12 +61,9 @@ impl CellService {
         info!("CellService: allocate() cell={:?}", cell);
 
         let cell_name = cell.name.clone();
-        self.cells.insert(cell.name.clone(), cell).await?;
-
         let cgroup_v2 = self
             .cells
-            .get_mut(&cell_name, |cell| {
-                cell.allocate();
+            .allocate_then(cell.name.clone(), cell, |cell| {
                 Ok(cell.v2().expect("allocated cell returns `Some`"))
             })
             .await?;
@@ -84,8 +81,7 @@ impl CellService {
         let ValidatedFreeCellRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
-        self.cells.get_mut(&cell_name, |cell| cell.free()).await?;
-        let _ = self.cells.remove(&cell_name).await?;
+        let _ = self.cells.free(&cell_name).await?;
 
         Ok(FreeCellResponse::default())
     }

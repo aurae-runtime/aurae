@@ -1,7 +1,7 @@
 use cell::Cell;
 use cell_name::CellName;
 pub(crate) use cell_service::CellService;
-use cells_table::CellsTable;
+use cells_table::Cells;
 use error::{CellsError, Result};
 use executable::Executable;
 use executable_name::ExecutableName;
