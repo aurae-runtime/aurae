@@ -1,11 +1,12 @@
+use crate::runtime::cells::validation::ValidatedCell;
 use crate::runtime::cells::ExecutableName;
 use cgroups_rs::CgroupPid;
 use log::info;
 use std::io;
-use unshare::Child;
 use unshare::Command;
 use unshare::Error;
 use unshare::ExitStatus;
+use unshare::{Child, Namespace};
 
 #[derive(Debug)]
 pub(crate) struct Executable {
@@ -35,7 +36,7 @@ impl Executable {
 
     /// Starts the executable and returns the pid.
     /// If the executable is already started, just returns the pid.
-    pub fn start(&mut self) -> Result<CgroupPid, Error> {
+    pub fn start(&mut self, spec: ValidatedCell) -> Result<CgroupPid, Error> {
         match &self.state {
             ExecutableState::Started(child) => Ok((child.id() as u64).into()),
 
@@ -43,8 +44,40 @@ impl Executable {
                 let mut command = Command::new(&self.command);
                 let command = command.args(&self.args);
 
-                // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
+                // Namespaces
+                //
+                // TODO We need to track the namespace for all newly
+                //      unshared namespaces within a Cell such that
+                //      we can call command.set_namespace() for
+                //      each of the new namespaces at the cell level!
+                //      This will likely require changing how Cells
+                //      manage namespaces as we need to cache the namespace
+                //      IDs (names?)
+                //
+                // TODO Basically once a namespace has been created for a Cell
+                //      we should put ALL future executables into the same namespace!
+                let mut namespaces_to_unshare: Vec<Namespace> = vec![];
+                if spec.ns_share_mount {
+                    namespaces_to_unshare.push(Namespace::Mount)
+                }
+                if spec.ns_share_uts {
+                    namespaces_to_unshare.push(Namespace::Uts)
+                }
+                if spec.ns_share_ipc {
+                    namespaces_to_unshare.push(Namespace::Ipc)
+                }
+                if spec.ns_share_pid {
+                    namespaces_to_unshare.push(Namespace::Pid)
+                }
+                if spec.ns_share_net {
+                    namespaces_to_unshare.push(Namespace::Net)
+                }
+                if spec.ns_share_cgroup {
+                    namespaces_to_unshare.push(Namespace::Cgroup)
+                }
+                let command = command.unshare(&namespaces_to_unshare);
 
+                // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
                 let command = {
                     let executable_name = self.name.clone();
                     unsafe {

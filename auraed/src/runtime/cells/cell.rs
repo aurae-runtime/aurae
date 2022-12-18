@@ -144,15 +144,16 @@ impl Cell {
 
                 if let Some(executable) = executables.get_mut(&executable_name)
                 {
-                    let pid = executable.start().map_err(|_e| {
-                        CellsError::FailedToStartExecutable {
-                            cell_name: self.spec.name.clone(),
-                            executable_name: executable.name.clone(),
-                            command: executable.command.clone(),
-                            args: executable.args.clone(),
-                            // source: e,
-                        }
-                    })?;
+                    let pid =
+                        executable.start(self.spec.clone()).map_err(|_e| {
+                            CellsError::FailedToStartExecutable {
+                                cell_name: self.spec.name.clone(),
+                                executable_name: executable.name.clone(),
+                                command: executable.command.clone(),
+                                args: executable.args.clone(),
+                                // source: e,
+                            }
+                        })?;
 
                     // TODO: We've inserted the executable into our in-memory cache, and started it,
                     //   but we've failed to move it to the Cell...bad...solution?
