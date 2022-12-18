@@ -90,22 +90,16 @@ impl CellService {
         &self,
         request: ValidatedStartExecutableRequest,
     ) -> Result<StartExecutableResponse> {
-        let ValidatedStartExecutableRequest { cell_name, executables } =
-            request;
+        let ValidatedStartExecutableRequest { cell_name, executable } = request;
 
-        for executable in executables {
-            // Create the new child process
-            info!(
-                "CellService: start() cell_name={} executable={:?}",
-                cell_name, executable
-            );
+        info!(
+            "CellService: start() cell_name={} executable={:?}",
+            cell_name, executable
+        );
 
-            self.cells
-                .get_mut(&cell_name, move |cell| {
-                    cell.start_executable(executable)
-                })
-                .await?;
-        }
+        self.cells
+            .get_mut(&cell_name, move |cell| cell.start_executable(executable))
+            .await?;
 
         Ok(StartExecutableResponse::default())
     }

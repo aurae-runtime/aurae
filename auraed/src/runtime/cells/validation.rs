@@ -46,36 +46,18 @@ pub(crate) struct ValidatedStartExecutableRequest {
     #[field_type(String)]
     #[validate]
     pub cell_name: CellName,
-    #[field_type(Vec<Executable>)]
-    pub executables: Vec<ValidatedExecutable>,
+    #[field_type(Option<Executable>)]
+    pub executable: ValidatedExecutable,
 }
 
 impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
-    fn validate_executables(
-        executables: Vec<Executable>,
+    fn validate_executable(
+        executable: Option<Executable>,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<Vec<ValidatedExecutable>, ValidationError> {
-        validation::minimum_length(
-            &executables,
-            1,
-            field_name,
-            field_name,
-            parent_name,
-        )?;
-
-        let base_parent_name = validation::field_name(field_name, parent_name);
-
-        let executables: Vec<_> = executables
-            .into_iter()
-            .enumerate()
-            .flat_map(|(i, executable)| {
-                let parent_name = format!("{base_parent_name}[{i}]");
-                ValidatedExecutable::validate(executable, Some(&parent_name))
-            })
-            .collect();
-
-        Ok(executables)
+    ) -> Result<ValidatedExecutable, ValidationError> {
+        let exe = validation::required(executable, field_name, parent_name)?;
+        ValidatedExecutable::validate(exe, None) // TODO: parent name
     }
 }
 

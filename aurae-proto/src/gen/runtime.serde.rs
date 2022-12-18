@@ -683,15 +683,15 @@ impl serde::Serialize for StartExecutableRequest {
         if !self.cell_name.is_empty() {
             len += 1;
         }
-        if !self.executables.is_empty() {
+        if self.executable.is_some() {
             len += 1;
         }
         let mut struct_ser = serializer.serialize_struct("runtime.StartExecutableRequest", len)?;
         if !self.cell_name.is_empty() {
             struct_ser.serialize_field("cellName", &self.cell_name)?;
         }
-        if !self.executables.is_empty() {
-            struct_ser.serialize_field("executables", &self.executables)?;
+        if let Some(v) = self.executable.as_ref() {
+            struct_ser.serialize_field("executable", v)?;
         }
         struct_ser.end()
     }
@@ -705,13 +705,13 @@ impl<'de> serde::Deserialize<'de> for StartExecutableRequest {
         const FIELDS: &[&str] = &[
             "cell_name",
             "cellName",
-            "executables",
+            "executable",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             CellName,
-            Executables,
+            Executable,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -734,7 +734,7 @@ impl<'de> serde::Deserialize<'de> for StartExecutableRequest {
                     {
                         match value {
                             "cellName" | "cell_name" => Ok(GeneratedField::CellName),
-                            "executables" => Ok(GeneratedField::Executables),
+                            "executable" => Ok(GeneratedField::Executable),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -755,7 +755,7 @@ impl<'de> serde::Deserialize<'de> for StartExecutableRequest {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut cell_name__ = None;
-                let mut executables__ = None;
+                let mut executable__ = None;
                 while let Some(k) = map.next_key()? {
                     match k {
                         GeneratedField::CellName => {
@@ -764,17 +764,17 @@ impl<'de> serde::Deserialize<'de> for StartExecutableRequest {
                             }
                             cell_name__ = Some(map.next_value()?);
                         }
-                        GeneratedField::Executables => {
-                            if executables__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("executables"));
+                        GeneratedField::Executable => {
+                            if executable__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("executable"));
                             }
-                            executables__ = Some(map.next_value()?);
+                            executable__ = map.next_value()?;
                         }
                     }
                 }
                 Ok(StartExecutableRequest {
                     cell_name: cell_name__.unwrap_or_default(),
-                    executables: executables__.unwrap_or_default(),
+                    executable: executable__,
                 })
             }
         }

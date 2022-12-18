@@ -90,7 +90,7 @@ export interface FreeCellResponse {
  */
 export interface StartExecutableRequest {
   cellName: string;
-  executables: Executable[];
+  executable: Executable | undefined;
 }
 
 /** / The response after starting an executable within a Cell. */
@@ -277,32 +277,31 @@ export const FreeCellResponse = {
 };
 
 function createBaseStartExecutableRequest(): StartExecutableRequest {
-  return { cellName: "", executables: [] };
+  return { cellName: "", executable: undefined };
 }
 
 export const StartExecutableRequest = {
   fromJSON(object: any): StartExecutableRequest {
     return {
       cellName: isSet(object.cellName) ? String(object.cellName) : "",
-      executables: Array.isArray(object?.executables) ? object.executables.map((e: any) => Executable.fromJSON(e)) : [],
+      executable: isSet(object.executable) ? Executable.fromJSON(object.executable) : undefined,
     };
   },
 
   toJSON(message: StartExecutableRequest): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
-    if (message.executables) {
-      obj.executables = message.executables.map((e) => e ? Executable.toJSON(e) : undefined);
-    } else {
-      obj.executables = [];
-    }
+    message.executable !== undefined &&
+      (obj.executable = message.executable ? Executable.toJSON(message.executable) : undefined);
     return obj;
   },
 
   fromPartial<I extends Exact<DeepPartial<StartExecutableRequest>, I>>(object: I): StartExecutableRequest {
     const message = createBaseStartExecutableRequest();
     message.cellName = object.cellName ?? "";
-    message.executables = object.executables?.map((e) => Executable.fromPartial(e)) || [];
+    message.executable = (object.executable !== undefined && object.executable !== null)
+      ? Executable.fromPartial(object.executable)
+      : undefined;
     return message;
   },
 };
