@@ -1,8 +1,8 @@
 use crate::runtime::cells::{CellName, ExecutableName};
 use crate::runtime::{CpuCpus, CpuQuota, CpuWeight, CpusetMems};
 use aurae_proto::runtime::{
-    AllocateCellRequest, Cell, Executable, FreeCellRequest, StartCellRequest,
-    StopCellRequest,
+    AllocateCellRequest, Cell, Executable, FreeCellRequest,
+    StartExecutableRequest, StopExecutableRequest,
 };
 use validation::{ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
@@ -42,7 +42,7 @@ pub(crate) struct ValidatedFreeCellRequest {
 impl FreeCellRequestTypeValidator for FreeCellRequestValidator {}
 
 #[derive(ValidatedType)]
-pub(crate) struct ValidatedStartCellRequest {
+pub(crate) struct ValidatedStartExecutableRequest {
     #[field_type(String)]
     #[validate]
     pub cell_name: CellName,
@@ -50,7 +50,7 @@ pub(crate) struct ValidatedStartCellRequest {
     pub executables: Vec<ValidatedExecutable>,
 }
 
-impl StartCellRequestTypeValidator for StartCellRequestValidator {
+impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
     fn validate_executables(
         executables: Vec<Executable>,
         field_name: &str,
@@ -80,7 +80,7 @@ impl StartCellRequestTypeValidator for StartCellRequestValidator {
 }
 
 #[derive(ValidatedType)]
-pub(crate) struct ValidatedStopCellRequest {
+pub(crate) struct ValidatedStopExecutableRequest {
     #[field_type(String)]
     #[validate]
     pub cell_name: CellName,
@@ -89,7 +89,7 @@ pub(crate) struct ValidatedStopCellRequest {
     pub executable_name: ExecutableName,
 }
 
-impl StopCellRequestTypeValidator for StopCellRequestValidator {}
+impl StopExecutableRequestTypeValidator for StopExecutableRequestValidator {}
 
 // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
 #[derive(ValidatedType, Debug, Clone)]

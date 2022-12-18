@@ -30,14 +30,14 @@
 
 use super::validation::{
     ValidatedAllocateCellRequest, ValidatedFreeCellRequest,
-    ValidatedStartCellRequest, ValidatedStopCellRequest,
+    ValidatedStartExecutableRequest, ValidatedStopExecutableRequest,
 };
 use super::{Cells, Result};
 use ::validation::ValidatedType;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
-    FreeCellRequest, FreeCellResponse, StartCellRequest, StartCellResponse,
-    StopCellRequest, StopCellResponse,
+    FreeCellRequest, FreeCellResponse, StartExecutableRequest,
+    StartExecutableResponse, StopExecutableRequest, StopExecutableResponse,
 };
 use log::info;
 use tonic::{Request, Response, Status};
@@ -88,9 +88,10 @@ impl CellService {
 
     async fn start(
         &self,
-        request: ValidatedStartCellRequest,
-    ) -> Result<StartCellResponse> {
-        let ValidatedStartCellRequest { cell_name, executables } = request;
+        request: ValidatedStartExecutableRequest,
+    ) -> Result<StartExecutableResponse> {
+        let ValidatedStartExecutableRequest { cell_name, executables } =
+            request;
 
         for executable in executables {
             // Create the new child process
@@ -106,14 +107,15 @@ impl CellService {
                 .await?;
         }
 
-        Ok(StartCellResponse::default())
+        Ok(StartExecutableResponse::default())
     }
 
     async fn stop(
         &self,
-        request: ValidatedStopCellRequest,
-    ) -> Result<StopCellResponse> {
-        let ValidatedStopCellRequest { cell_name, executable_name } = request;
+        request: ValidatedStopExecutableRequest,
+    ) -> Result<StopExecutableResponse> {
+        let ValidatedStopExecutableRequest { cell_name, executable_name } =
+            request;
 
         info!(
             "CellService: stop() cell_name={:?} executable_name={:?}",
@@ -127,7 +129,7 @@ impl CellService {
             })
             .await?;
 
-        Ok(StopCellResponse::default())
+        Ok(StopExecutableResponse::default())
     }
 }
 
@@ -162,19 +164,19 @@ impl cell_service_server::CellService for CellService {
 
     async fn start(
         &self,
-        request: Request<StartCellRequest>,
-    ) -> std::result::Result<Response<StartCellResponse>, Status> {
+        request: Request<StartExecutableRequest>,
+    ) -> std::result::Result<Response<StartExecutableResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStartCellRequest::validate(request, None)?;
+        let request = ValidatedStartExecutableRequest::validate(request, None)?;
         Ok(Response::new(self.start(request).await?))
     }
 
     async fn stop(
         &self,
-        request: Request<StopCellRequest>,
-    ) -> std::result::Result<Response<StopCellResponse>, Status> {
+        request: Request<StopExecutableRequest>,
+    ) -> std::result::Result<Response<StopExecutableResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStopCellRequest::validate(request, None)?;
+        let request = ValidatedStopExecutableRequest::validate(request, None)?;
         Ok(Response::new(self.stop(request).await?))
     }
 }

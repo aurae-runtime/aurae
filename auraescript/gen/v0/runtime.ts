@@ -49,10 +49,20 @@ export interface Cell {
   cpuQuota: number;
 }
 
+/**
+ * / An Aurae cell is a name given to Linux control groups (cgroups) that also include
+ * / a name, and special pre-exec functionality that is executed from within the same context
+ * / as any executables scheduled.
+ * /
+ * / A cell must be allocated for every executable scheduled. A cell defines the resource
+ * / constraints of the system to allocate for an arbitrary use case.
+ */
 export interface AllocateCellRequest {
+  /** / A smaller resource constrained section of the system. */
   cell: Cell | undefined;
 }
 
+/** / The response after a cell has been allocated. */
 export interface AllocateCellResponse {
   cellName: string;
   /**
@@ -62,27 +72,44 @@ export interface AllocateCellResponse {
   cgroupV2: boolean;
 }
 
+/** / Used to remove or free a cell after it has been allocated. */
 export interface FreeCellRequest {
   cellName: string;
 }
 
+/** / Response after removing or freeing a cell. */
 export interface FreeCellResponse {
 }
 
-export interface StartCellRequest {
+/**
+ * / A request for starting an executable inside of a Cell.
+ * /
+ * / This is the lowest level of raw executive functionality.
+ * / Here you can define shell commands, and meta information about the command.
+ * / An executable is started synchronously.
+ */
+export interface StartExecutableRequest {
   cellName: string;
   executables: Executable[];
 }
 
-export interface StartCellResponse {
+/** / The response after starting an executable within a Cell. */
+export interface StartExecutableResponse {
+  /**
+   * int64 gid = 2;     // TODO
+   * int64 uid = 3;     // TODO
+   * string user = 4;   // TODO
+   * string group = 5;  // TODO
+   */
+  pid: number;
 }
 
-export interface StopCellRequest {
+export interface StopExecutableRequest {
   cellName: string;
   executableName: string;
 }
 
-export interface StopCellResponse {
+export interface StopExecutableResponse {
 }
 
 function createBaseExecutable(): Executable {
@@ -249,19 +276,19 @@ export const FreeCellResponse = {
   },
 };
 
-function createBaseStartCellRequest(): StartCellRequest {
+function createBaseStartExecutableRequest(): StartExecutableRequest {
   return { cellName: "", executables: [] };
 }
 
-export const StartCellRequest = {
-  fromJSON(object: any): StartCellRequest {
+export const StartExecutableRequest = {
+  fromJSON(object: any): StartExecutableRequest {
     return {
       cellName: isSet(object.cellName) ? String(object.cellName) : "",
       executables: Array.isArray(object?.executables) ? object.executables.map((e: any) => Executable.fromJSON(e)) : [],
     };
   },
 
-  toJSON(message: StartCellRequest): unknown {
+  toJSON(message: StartExecutableRequest): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
     if (message.executables) {
@@ -272,77 +299,79 @@ export const StartCellRequest = {
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StartCellRequest>, I>>(object: I): StartCellRequest {
-    const message = createBaseStartCellRequest();
+  fromPartial<I extends Exact<DeepPartial<StartExecutableRequest>, I>>(object: I): StartExecutableRequest {
+    const message = createBaseStartExecutableRequest();
     message.cellName = object.cellName ?? "";
     message.executables = object.executables?.map((e) => Executable.fromPartial(e)) || [];
     return message;
   },
 };
 
-function createBaseStartCellResponse(): StartCellResponse {
-  return {};
+function createBaseStartExecutableResponse(): StartExecutableResponse {
+  return { pid: 0 };
 }
 
-export const StartCellResponse = {
-  fromJSON(_: any): StartCellResponse {
-    return {};
+export const StartExecutableResponse = {
+  fromJSON(object: any): StartExecutableResponse {
+    return { pid: isSet(object.pid) ? Number(object.pid) : 0 };
   },
 
-  toJSON(_: StartCellResponse): unknown {
+  toJSON(message: StartExecutableResponse): unknown {
     const obj: any = {};
+    message.pid !== undefined && (obj.pid = Math.round(message.pid));
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StartCellResponse>, I>>(_: I): StartCellResponse {
-    const message = createBaseStartCellResponse();
+  fromPartial<I extends Exact<DeepPartial<StartExecutableResponse>, I>>(object: I): StartExecutableResponse {
+    const message = createBaseStartExecutableResponse();
+    message.pid = object.pid ?? 0;
     return message;
   },
 };
 
-function createBaseStopCellRequest(): StopCellRequest {
+function createBaseStopExecutableRequest(): StopExecutableRequest {
   return { cellName: "", executableName: "" };
 }
 
-export const StopCellRequest = {
-  fromJSON(object: any): StopCellRequest {
+export const StopExecutableRequest = {
+  fromJSON(object: any): StopExecutableRequest {
     return {
       cellName: isSet(object.cellName) ? String(object.cellName) : "",
       executableName: isSet(object.executableName) ? String(object.executableName) : "",
     };
   },
 
-  toJSON(message: StopCellRequest): unknown {
+  toJSON(message: StopExecutableRequest): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
     message.executableName !== undefined && (obj.executableName = message.executableName);
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StopCellRequest>, I>>(object: I): StopCellRequest {
-    const message = createBaseStopCellRequest();
+  fromPartial<I extends Exact<DeepPartial<StopExecutableRequest>, I>>(object: I): StopExecutableRequest {
+    const message = createBaseStopExecutableRequest();
     message.cellName = object.cellName ?? "";
     message.executableName = object.executableName ?? "";
     return message;
   },
 };
 
-function createBaseStopCellResponse(): StopCellResponse {
+function createBaseStopExecutableResponse(): StopExecutableResponse {
   return {};
 }
 
-export const StopCellResponse = {
-  fromJSON(_: any): StopCellResponse {
+export const StopExecutableResponse = {
+  fromJSON(_: any): StopExecutableResponse {
     return {};
   },
 
-  toJSON(_: StopCellResponse): unknown {
+  toJSON(_: StopExecutableResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StopCellResponse>, I>>(_: I): StopCellResponse {
-    const message = createBaseStopCellResponse();
+  fromPartial<I extends Exact<DeepPartial<StopExecutableResponse>, I>>(_: I): StopExecutableResponse {
+    const message = createBaseStopExecutableResponse();
     return message;
   },
 };
@@ -380,12 +409,12 @@ export interface CellService {
    * / Start a new Executable inside of an existing cell. Can be called
    * / in serial to start more than one executable in the same cell.
    */
-  start(request: StartCellRequest): Promise<StartCellResponse>;
+  start(request: StartExecutableRequest): Promise<StartExecutableResponse>;
   /**
    * / Stop one or more Executables inside of an existing cell.
    * / Can be called in serial to stop/retry more than one executable.
    */
-  stop(request: StopCellRequest): Promise<StopCellResponse>;
+  stop(request: StopExecutableRequest): Promise<StopExecutableResponse>;
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
