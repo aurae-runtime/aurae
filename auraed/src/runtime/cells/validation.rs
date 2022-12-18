@@ -10,11 +10,24 @@ use validation_macros::ValidatedType;
 // TODO: Following the discord discussion of wanting to keep the logic on CellService,
 //  versus on the validated request structs, we may not want to create a file per endpoint,
 //  so I'm (future-highway) grouping it all here at least temporarily.
+// TODO: ...and I (@krisnova) read the above statement.
 
 #[derive(ValidatedType)]
 pub(crate) struct ValidatedAllocateCellRequest {
     #[field_type(Option<Cell>)]
     pub cell: ValidatedCell,
+    #[validate(none)]
+    pub ns_share_mount: bool,
+    #[validate(none)]
+    pub ns_share_uts: bool,
+    #[validate(none)]
+    pub ns_share_ipc: bool,
+    #[validate(none)]
+    pub ns_share_pid: bool,
+    #[validate(none)]
+    pub ns_share_net: bool,
+    #[validate(none)]
+    pub ns_share_cgroup: bool,
 }
 
 impl AllocateCellRequestTypeValidator for AllocateCellRequestValidator {
