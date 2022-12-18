@@ -32,8 +32,6 @@ use super::{Cell, CellName, CellsError, Result};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{Mutex, MutexGuard};
 
-// TODO (future-highway): would a RWLock be more performant?
-// Probably not because everything mutates?
 type Cache = HashMap<CellName, Cell>;
 
 /// Cells is the in-memory store for the list of cells created with Aurae.
@@ -100,14 +98,14 @@ impl Cells {
         get_mut(&mut cache, cell_name, f)
     }
 
-    /// Remove and return the [Cell] keyed by [CellName] from [Cells].
     /// Returns an error if the [CellName] does not exist in the cache.
-    pub async fn free(&self, cell_name: &CellName) -> Result<Cell> {
+    pub async fn free(&self, cell_name: &CellName) -> Result<()> {
         let mut cache = self.cache.lock().await;
         get_mut(&mut cache, cell_name, |cell| cell.free())?;
-        cache.remove(cell_name).ok_or_else(|| CellsError::CellNotFound {
-            cell_name: cell_name.clone(),
-        })
+        let _ = cache.remove(cell_name).ok_or_else(|| {
+            CellsError::CellNotFound { cell_name: cell_name.clone() }
+        })?;
+        Ok(())
     }
 }
 

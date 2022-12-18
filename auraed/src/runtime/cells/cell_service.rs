@@ -81,7 +81,7 @@ impl CellService {
         let ValidatedFreeCellRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
-        let _ = self.cells.free(&cell_name).await?;
+        self.cells.free(&cell_name).await?;
 
         Ok(FreeCellResponse::default())
     }
