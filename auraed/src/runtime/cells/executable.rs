@@ -37,7 +37,7 @@ impl Executable {
         match &self.state {
             ExecutableState::Started(child) => Ok((child.id() as u64).into()),
             ExecutableState::Init | ExecutableState::Stopped(_) => {
-                let mut command = Command::new(&self.name);
+                let mut command = Command::new(&self.command);
                 let command = command.args(&self.args);
 
                 // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
