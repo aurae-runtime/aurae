@@ -57,22 +57,31 @@ impl Executable {
                 // TODO Basically once a namespace has been created for a Cell
                 //      we should put ALL future executables into the same namespace!
                 let mut namespaces_to_unshare: Vec<Namespace> = vec![];
-                if spec.ns_share_mount {
+                // Note: The logic here is reversed. We define the flags as "share'
+                //       and map them to "unshare".
+                //       This is by design as the API has a concept of "share".
+                if !spec.ns_share_mount {
+                    info!("Unshare: mount");
                     namespaces_to_unshare.push(Namespace::Mount)
                 }
-                if spec.ns_share_uts {
+                if !spec.ns_share_uts {
+                    info!("Unshare: uts");
                     namespaces_to_unshare.push(Namespace::Uts)
                 }
-                if spec.ns_share_ipc {
+                if !spec.ns_share_ipc {
+                    info!("Unshare: ipc");
                     namespaces_to_unshare.push(Namespace::Ipc)
                 }
-                if spec.ns_share_pid {
+                if !spec.ns_share_pid {
+                    info!("Unshare: pid");
                     namespaces_to_unshare.push(Namespace::Pid)
                 }
-                if spec.ns_share_net {
+                if !spec.ns_share_net {
+                    info!("Unshare: net");
                     namespaces_to_unshare.push(Namespace::Net)
                 }
-                if spec.ns_share_cgroup {
+                if !spec.ns_share_cgroup {
+                    info!("Unshare: cgroup");
                     namespaces_to_unshare.push(Namespace::Cgroup)
                 }
                 let command = command.unshare(&namespaces_to_unshare);

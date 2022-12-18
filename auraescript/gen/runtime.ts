@@ -47,6 +47,13 @@ export interface Cell {
   cpuMems: string;
   /** / In one period, how much can the tasks run in microseconds. */
   cpuQuota: number;
+  /**
+   * / Linux namespaces to share with the calling process.
+   * / If all values are set to false, the resulting cell
+   * / will be as isolated as possible.
+   * /
+   * / Each shared namespace is a potential security risk.
+   */
   nsShareMount: boolean;
   nsShareUts: boolean;
   nsShareIpc: boolean;

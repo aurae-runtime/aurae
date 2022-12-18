@@ -139,7 +139,6 @@ message Cell {
   /// will be as isolated as possible.
   ///
   /// Each shared namespace is a potential security risk.
-
   bool ns_share_mount = 10;
   bool ns_share_uts = 11;
   bool ns_share_ipc = 12;
