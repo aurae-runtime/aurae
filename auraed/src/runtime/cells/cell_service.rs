@@ -40,11 +40,13 @@ use aurae_proto::runtime::{
     StartExecutableResponse, StopExecutableRequest, StopExecutableResponse,
 };
 use log::info;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Clone)]
 pub struct CellService {
-    cells: Cells,
+    cells: Arc<Mutex<Cells>>,
 }
 
 impl CellService {
@@ -68,17 +70,12 @@ impl CellService {
         //     cell, ns_share_mount, ns_share_uts, ns_share_ipc, ns_share_pid, ns_share_net, ns_share_cgroup,
         // );
 
-        let cell_name = cell.name.clone();
-        let cgroup_v2 = self
-            .cells
-            .allocate_then(cell.name.clone(), cell, |cell| {
-                Ok(cell.v2().expect("allocated cell returns `Some`"))
-            })
-            .await?;
+        let mut cells = self.cells.lock().await;
+        let cell = cells.allocate(cell)?;
 
         Ok(AllocateCellResponse {
-            cell_name: cell_name.into_inner(),
-            cgroup_v2,
+            cell_name: cell.name().clone().into_inner(),
+            cgroup_v2: cell.v2().expect("allocated cell returns `Some`"),
         })
     }
 
@@ -89,7 +86,8 @@ impl CellService {
         let ValidatedFreeCellRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
-        self.cells.free(&cell_name).await?;
+        let mut cells = self.cells.lock().await;
+        cells.free(&cell_name)?;
 
         Ok(FreeCellResponse::default())
     }
@@ -105,10 +103,12 @@ impl CellService {
             cell_name, executable
         );
 
-        let pid = self
-            .cells
-            .get_mut(&cell_name, move |cell| cell.start_executable(executable))
-            .await?;
+        let mut cells = self.cells.lock().await;
+        let pid = cells.get_mut(&cell_name, move |cell| {
+            // TODO: `start_executable can potentially return a &Executable, and the we can
+            //    build `StartExecutalbeResponse` from it.
+            cell.start_executable(executable)
+        })?;
 
         Ok(StartExecutableResponse { pid })
     }
@@ -125,12 +125,11 @@ impl CellService {
             cell_name, executable_name,
         );
 
-        let _exit_status = self
-            .cells
-            .get_mut(&cell_name, move |cell| {
-                cell.stop_executable(&executable_name)
-            })
-            .await?;
+        let mut cells = self.cells.lock().await;
+
+        let _exit_status = cells.get_mut(&cell_name, move |cell| {
+            cell.stop_executable(&executable_name)
+        })?;
 
         Ok(StopExecutableResponse::default())
     }

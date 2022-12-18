@@ -29,15 +29,14 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{Cell, CellName, CellsError, Result};
-use std::{collections::HashMap, sync::Arc};
-use tokio::sync::{Mutex, MutexGuard};
+use std::collections::HashMap;
 
 type Cache = HashMap<CellName, Cell>;
 
 /// Cells is the in-memory store for the list of cells created with Aurae.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default)]
 pub(crate) struct Cells {
-    cache: Arc<Mutex<Cache>>,
+    cache: Cache,
 }
 
 // TODO: add to the impl
@@ -49,40 +48,32 @@ pub(crate) struct Cells {
 impl Cells {
     /// Add the [Cell] to the cache with key [CellName].
     /// Returns an error if a duplicate [CellName] already exists in the cache.
-    pub async fn allocate<T: Into<Cell>>(
-        &self,
-        cell_name: CellName,
-        cell: T,
-    ) -> Result<()> {
-        let mut cache = self.cache.lock().await;
-        let _ = allocate(&mut cache, cell_name, cell)?;
-        Ok(())
+    pub fn allocate<T: Into<Cell>>(&mut self, cell: T) -> Result<&Cell> {
+        let cell = cell.into();
+        let cell_name = cell.name().clone();
+
+        // TODO: replace with this when it becomes stable
+        // cache.try_insert(cell_name.clone(), cgroup)
+
+        // Check if there was already a cgroup in the table with this cell name as a key.
+        if self.cache.contains_key(&cell_name) {
+            return Err(CellsError::CellExists { cell_name });
+        }
+
+        // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
+        let cell = self.cache.entry(cell_name).or_insert(cell);
+        cell.allocate();
+        Ok(cell)
     }
 
-    /// See [allocate]
-    pub async fn allocate_then<T: Into<Cell>, F, R>(
-        &self,
-        cell_name: CellName,
-        cell: T,
-        f: F,
-    ) -> Result<R>
+    pub fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: Fn(&Cell) -> Result<R>,
     {
-        let mut cache = self.cache.lock().await;
-        let cell = allocate(&mut cache, cell_name, cell)?;
-        f(cell)
-    }
-
-    pub async fn get<F, R>(&self, cell_name: &CellName, f: F) -> Result<R>
-    where
-        F: Fn(&Cell) -> Result<R>,
-    {
-        let mut cache = self.cache.lock().await;
-        if let Some(cell) = cache.get(cell_name) {
+        if let Some(cell) = self.cache.get(cell_name) {
             let res = f(cell);
             if matches!(res, Err(CellsError::CellUnallocated { .. })) {
-                let _ = cache.remove(cell_name);
+                let _ = self.cache.remove(cell_name);
             }
             res
         } else {
@@ -90,49 +81,24 @@ impl Cells {
         }
     }
 
-    pub async fn get_mut<F, R>(&self, cell_name: &CellName, f: F) -> Result<R>
+    pub fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: FnOnce(&mut Cell) -> Result<R>,
     {
-        let mut cache = self.cache.lock().await;
-        get_mut(&mut cache, cell_name, f)
+        get_mut(&mut self.cache, cell_name, f)
     }
 
     /// Returns an error if the [CellName] does not exist in the cache.
-    pub async fn free(&self, cell_name: &CellName) -> Result<()> {
-        let mut cache = self.cache.lock().await;
-        get_mut(&mut cache, cell_name, |cell| cell.free())?;
-        let _ = cache.remove(cell_name).ok_or_else(|| {
+    pub fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        get_mut(&mut self.cache, cell_name, |cell| cell.free())?;
+        let _ = self.cache.remove(cell_name).ok_or_else(|| {
             CellsError::CellNotFound { cell_name: cell_name.clone() }
         })?;
         Ok(())
     }
 }
 
-fn allocate<'a, T: Into<Cell>>(
-    cache: &'a mut MutexGuard<Cache>,
-    cell_name: CellName,
-    cell: T,
-) -> Result<&'a Cell> {
-    // TODO: replace with this when it becomes stable
-    // cache.try_insert(cell_name.clone(), cgroup)
-
-    // Check if there was already a cgroup in the table with this cell name as a key.
-    if cache.contains_key(&cell_name) {
-        return Err(CellsError::CellExists { cell_name });
-    }
-
-    // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
-    let cell = cache.entry(cell_name).or_insert_with(|| cell.into());
-    cell.allocate();
-    Ok(cell)
-}
-
-fn get_mut<F, R>(
-    cache: &mut MutexGuard<Cache>,
-    cell_name: &CellName,
-    f: F,
-) -> Result<R>
+fn get_mut<F, R>(cache: &mut Cache, cell_name: &CellName, f: F) -> Result<R>
 where
     F: FnOnce(&mut Cell) -> Result<R>,
 {

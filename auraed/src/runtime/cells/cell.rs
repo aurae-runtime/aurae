@@ -31,6 +31,7 @@
 use super::{
     validation::ValidatedCell, CellsError, Executable, ExecutableName, Result,
 };
+use crate::runtime::cells::cell_name::CellName;
 use cgroups_rs::{
     cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
 };
@@ -56,6 +57,10 @@ enum CellState {
 impl Cell {
     pub fn new(cell_spec: ValidatedCell) -> Self {
         Self { spec: cell_spec, state: CellState::Unallocated }
+    }
+
+    pub fn name(&self) -> &CellName {
+        &self.spec.name
     }
 
     /// Creates the underlying cgroup. Does nothing if the `Cell` has already been allocated.
