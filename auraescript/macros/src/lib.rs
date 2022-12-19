@@ -55,8 +55,10 @@ use proc_macro::TokenStream;
 
 mod ops;
 
+// TODO (future-highway): Due to needing to ignore certain tests in CI, we can't format
+//    the code in the docs as cargo test will try to test it. Workaround or add the needed
+//    deps to this crate to make it pass.
 /// # Example:
-/// ```ignore
 /// macros::ops_generator!(
 ///     module_name,
 ///     ServiceName,

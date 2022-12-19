@@ -11,8 +11,8 @@ impl CellName {
     }
 
     #[cfg(test)]
-    pub fn random() -> Self {
-        Self(uuid::Uuid::new_v4().to_string())
+    pub fn random_for_tests() -> Self {
+        Self(format!("ae-test-{}", uuid::Uuid::new_v4().to_string()))
     }
 }
 

@@ -8,10 +8,12 @@ use validation::ValidateInput;
 
 mod validation;
 
+// TODO (future-highway): Due to needing to ignore certain tests in CI, we can't format
+//    the code in the docs as cargo test will try to test it. Workaround or add the needed
+//    deps to this crate to make it pass.
 /// Scaffolds validation and provides a `validate` function on the unvalidated type by implementing `validation::ValidatingType`
 ///
 /// # Example
-/// ```ignore
 /// // Given you have this struct:
 /// struct Message {
 ///     cpu_percentage: i32
@@ -23,7 +25,6 @@ mod validation;
 ///     #[field_type(i32)]
 ///     cpu_percentage: u8
 /// }
-/// ```
 ///
 /// The macro will then generate a trait `MessageTypeValidator` and an empty struct `MessageValidator`.
 /// You must `impl MessageTypeValidator for MessageValidator`.

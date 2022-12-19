@@ -89,6 +89,9 @@ serve: docs ## Run the aurae.io static website locally
 	sudo -E ./hack/serve.sh
 
 test: ## Run the tests
+	@$(cargo) test -- --ignored
+
+testci: ## Run the tests that we can in CI
 	@$(cargo) test
 
 .PHONY: config
