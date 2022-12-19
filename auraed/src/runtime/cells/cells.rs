@@ -150,6 +150,7 @@ mod tests {
         cell.into()
     }
 
+    #[ignore]
     #[test]
     fn test_allocate() {
         let mut cells = Cells::default();
@@ -162,6 +163,7 @@ mod tests {
         assert!(cells.cache.contains_key(&cell_name));
     }
 
+    #[ignore]
     #[test]
     fn test_duplicate_allocate_is_error() {
         let mut cells = Cells::default();
@@ -179,6 +181,7 @@ mod tests {
         ));
     }
 
+    #[ignore]
     #[test]
     fn test_get() {
         let mut cells = Cells::default();
@@ -191,6 +194,7 @@ mod tests {
         cells.get(&cell_name, |_cell| Ok(())).expect("failed to get");
     }
 
+    #[ignore]
     #[test]
     fn test_get_missing_errors() {
         let mut cells = Cells::default();
@@ -204,6 +208,7 @@ mod tests {
         ));
     }
 
+    #[ignore]
     #[test]
     fn test_free() {
         let mut cells = Cells::default();
@@ -217,6 +222,7 @@ mod tests {
         assert!(cells.cache.is_empty());
     }
 
+    #[ignore]
     #[test]
     fn test_free_missing_is_error() {
         let mut cells = Cells::default();
