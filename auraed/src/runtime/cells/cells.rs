@@ -98,6 +98,17 @@ impl Cells {
     }
 }
 
+// TODO: Someone make sure I'm (future-highway) making sense here.
+/// auraed should never drop Cells unless it exits in which case, PID 1 is down anyway.
+/// However, tests leave cells behind and this should clean them up.
+impl Drop for Cells {
+    fn drop(&mut self) {
+        for cell in self.cache.values_mut() {
+            let _ = cell.free();
+        }
+    }
+}
+
 fn get_mut<F, R>(cache: &mut Cache, cell_name: &CellName, f: F) -> Result<R>
 where
     F: FnOnce(&mut Cell) -> Result<R>,
@@ -115,108 +126,107 @@ where
 
 #[cfg(test)]
 mod tests {
-    // TODO (future-highway): These tests need to be updated.
-    // use cgroups_rs::{cgroup_builder::CgroupBuilder, hierarchies};
-    //
-    // use super::*;
+    use super::*;
+    use crate::runtime::cells::validation::ValidatedCell;
+    use validation::ValidatedType;
 
-    // #[test]
-    // fn test_insert() {
-    //     let table = CellsTable::default();
-    //     let cgroup = CgroupBuilder::new("test-cell")
-    //         .build(Box::new(hierarchies::V2::new()));
-    //     {
-    //         let cache = table.cache.lock().expect("lock table");
-    //         assert!(cache.is_empty());
-    //     }
-    //     table.insert("test".into(), cgroup).expect("inserted in table");
-    //     {
-    //         let mut cache = table.cache.lock().expect("lock table");
-    //         assert!(cache.contains_key(&"test".into()));
-    //         cache.clear();
-    //     }
-    // }
-    //
-    // #[test]
-    // fn test_duplicate_insert_is_error() {
-    //     let table = CellsTable::default();
-    //     let cgroup = CgroupBuilder::new("test-cell")
-    //         .build(Box::new(hierarchies::V2::new()));
-    //     {
-    //         let cache = table.cache.lock().expect("lock table");
-    //         assert!(cache.is_empty());
-    //     }
-    //     table.insert("test".into(), cgroup.clone()).expect("inserted in table");
-    //     assert!(table.insert("test".into(), cgroup).is_err());
-    //     {
-    //         let mut cache = table.cache.lock().expect("lock table");
-    //         cache.clear();
-    //     }
-    // }
-    //
-    // #[test]
-    // fn test_get() {
-    //     let table = CellsTable::default();
-    //     let cgroup = CgroupBuilder::new("test-cell")
-    //         .build(Box::new(hierarchies::V2::new()));
-    //     {
-    //         let cache = table.cache.lock().expect("lock table");
-    //         assert!(cache.is_empty());
-    //     }
-    //     table.insert("test".into(), cgroup).expect("inserted in table");
-    //     assert!(table
-    //         .get(&"test".into())
-    //         .expect("getting from cache")
-    //         .is_some());
-    //     {
-    //         let mut cache = table.cache.lock().expect("lock table");
-    //         cache.clear();
-    //     }
-    // }
-    //
-    // #[test]
-    // fn test_get_missing_returns_none() {
-    //     let table = CellsTable::default();
-    //     {
-    //         let cache = table.cache.lock().expect("lock table");
-    //         assert!(cache.is_empty());
-    //     }
-    //
-    //     assert!(table
-    //         .get(&"test".into())
-    //         .expect("getting from cache")
-    //         .is_none());
-    // }
-    //
-    // #[test]
-    // fn test_remove() {
-    //     let table = CellsTable::default();
-    //     let cgroup = CgroupBuilder::new("test-cell")
-    //         .build(Box::new(hierarchies::V2::new()));
-    //     {
-    //         let cache = table.cache.lock().expect("lock table");
-    //         assert!(cache.is_empty());
-    //     }
-    //     table.insert("test".into(), cgroup).expect("inserted in table");
-    //     let _ = table.remove(&"test".into()).expect("removed from table");
-    //     {
-    //         let mut cache = table.cache.lock().expect("lock table");
-    //         assert!(cache.is_empty());
-    //         cache.clear();
-    //     }
-    // }
-    //
-    // #[test]
-    // fn test_remove_missing_is_error() {
-    //     let table = CellsTable::default();
-    //     {
-    //         let cache = table.cache.lock().expect("lock table");
-    //         assert!(cache.is_empty());
-    //     }
-    //     assert!(table.remove(&"test".into()).is_err());
-    //     {
-    //         let mut cache = table.cache.lock().expect("lock table");
-    //         cache.clear();
-    //     }
-    // }
+    fn create_cell(name: Option<CellName>) -> Cell {
+        let cell_name = name.unwrap_or_else(|| CellName::random_for_tests());
+
+        let cell = aurae_proto::runtime::Cell {
+            name: cell_name.into_inner(),
+            cpu_cpus: "".to_string(),
+            cpu_shares: 0,
+            cpu_mems: "".to_string(),
+            cpu_quota: 0,
+            ns_share_mount: false,
+            ns_share_uts: false,
+            ns_share_ipc: false,
+            ns_share_pid: false,
+            ns_share_net: false,
+            ns_share_cgroup: false,
+        };
+        let cell = ValidatedCell::validate(cell, None).expect("invalid cell");
+        cell.into()
+    }
+
+    #[test]
+    fn test_allocate() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell = create_cell(None);
+        let cell_name = cell.name().clone();
+
+        let _ = cells.allocate(cell).expect("allocate");
+        assert!(cells.cache.contains_key(&cell_name));
+    }
+
+    #[test]
+    fn test_duplicate_allocate_is_error() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name_in = CellName::random_for_tests();
+
+        let cell_a = create_cell(Some(cell_name_in.clone()));
+        let _ = cells.allocate(cell_a).expect("failed on first allocate");
+
+        let cell_b = create_cell(Some(cell_name_in.clone()));
+        assert!(matches!(
+            cells.allocate(cell_b),
+            Err(CellsError::CellExists { cell_name }) if cell_name == cell_name_in
+        ));
+    }
+
+    #[test]
+    fn test_get() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell = create_cell(None);
+        let cell_name = cell.name().clone();
+        let _ = cells.allocate(cell).expect("failed to allocate");
+
+        cells.get(&cell_name, |_cell| Ok(())).expect("failed to get");
+    }
+
+    #[test]
+    fn test_get_missing_errors() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name_in = CellName::random_for_tests();
+
+        assert!(matches!(
+            cells.get(&cell_name_in, |_cell| Ok(())),
+            Err(CellsError::CellNotFound { cell_name }) if cell_name == cell_name_in
+        ));
+    }
+
+    #[test]
+    fn test_free() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell = create_cell(None);
+        let cell_name = cell.name().clone();
+        let _ = cells.allocate(cell).expect("failed to allocate");
+
+        cells.free(&cell_name).expect("failed to free");
+        assert!(cells.cache.is_empty());
+    }
+
+    #[test]
+    fn test_free_missing_is_error() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name_in = CellName::random_for_tests();
+
+        assert!(matches!(
+            cells.free(&cell_name_in),
+            Err(CellsError::CellNotFound { cell_name }) if cell_name == cell_name_in
+        ));
+    }
 }

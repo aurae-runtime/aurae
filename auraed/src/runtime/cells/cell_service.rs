@@ -201,7 +201,7 @@ mod tests {
     #[tokio::test]
     async fn test_attempt_to_remove_unknown_cell_fails() {
         let service = CellService::new();
-        let random_cell_name = CellName::random();
+        let random_cell_name = CellName::random_for_tests();
 
         let res = service
             .free(ValidatedFreeCellRequest {
