@@ -32,8 +32,8 @@
 #![allow(dead_code)]
 //
 use aurae_proto::observe::LogItem;
-use tracing::error;
 use tokio::sync::broadcast::{self, Receiver, Sender};
+use tracing::error;
 
 use super::get_timestamp_sec;
 
@@ -89,7 +89,7 @@ impl LogChannel {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tracing::Level;
+    use log::Level;
     use simplelog::SimpleLogger;
 
     fn init_logging() {
