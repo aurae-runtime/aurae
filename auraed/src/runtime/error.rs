@@ -1,4 +1,4 @@
-use log::error;
+use tracing::error;
 use thiserror::Error;
 use tonic::Status;
 

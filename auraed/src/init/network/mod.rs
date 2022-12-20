@@ -30,7 +30,7 @@
 
 use futures::stream::TryStreamExt;
 use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
-use log::{error, info, trace, warn};
+use tracing::{error, info, trace, warn};
 use netlink_packet_route::rtnl::link::nlas::Nla;
 use rtnetlink::Handle;
 use std::collections::HashMap;

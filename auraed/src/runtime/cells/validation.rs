@@ -12,7 +12,7 @@ use validation_macros::ValidatedType;
 //  so I'm (future-highway) grouping it all here at least temporarily.
 // TODO: ...and I (@krisnova) read the above statement.
 
-#[derive(ValidatedType)]
+#[derive(Debug, ValidatedType)]
 pub(crate) struct ValidatedAllocateCellRequest {
     #[field_type(Option<Cell>)]
     pub cell: ValidatedCell,
@@ -33,7 +33,7 @@ impl AllocateCellRequestTypeValidator for AllocateCellRequestValidator {
     }
 }
 
-#[derive(ValidatedType)]
+#[derive(Debug, ValidatedType)]
 pub(crate) struct ValidatedFreeCellRequest {
     #[field_type(String)]
     #[validate]
@@ -42,7 +42,7 @@ pub(crate) struct ValidatedFreeCellRequest {
 
 impl FreeCellRequestTypeValidator for FreeCellRequestValidator {}
 
-#[derive(ValidatedType)]
+#[derive(Debug, ValidatedType)]
 pub(crate) struct ValidatedStartExecutableRequest {
     #[field_type(String)]
     #[validate]
@@ -62,7 +62,7 @@ impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
     }
 }
 
-#[derive(ValidatedType)]
+#[derive(Debug, ValidatedType)]
 pub(crate) struct ValidatedStopExecutableRequest {
     #[field_type(String)]
     #[validate]
