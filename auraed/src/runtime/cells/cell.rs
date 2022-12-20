@@ -39,6 +39,10 @@ use tracing::info;
 use std::collections::HashMap;
 use unshare::ExitStatus;
 
+// We should not be able to change a cell after it has been created.
+// You must free the cell and create a new one if you want to change anything about the cell.
+// In order to facilitate that immutability:
+// NEVER MAKE THE FIELDS PUB (OF ANY KIND)
 #[derive(Debug)]
 pub(crate) struct Cell {
     spec: ValidatedCell,
@@ -52,6 +56,7 @@ enum CellState {
         cgroup: Cgroup,
         executables: HashMap<ExecutableName, Executable>,
     },
+    Freed,
 }
 
 impl Cell {
@@ -59,11 +64,8 @@ impl Cell {
         Self { spec: cell_spec, state: CellState::Unallocated }
     }
 
-    pub fn name(&self) -> &CellName {
-        &self.spec.name
-    }
-
-    /// Creates the underlying cgroup. Does nothing if the `Cell` has already been allocated.
+    /// Creates the underlying cgroup.
+    /// Does nothing if [Cell] has been previously allocated.
     // Here is where we define the "default" cgroup parameters for Aurae cells
     pub fn allocate(&mut self) {
         if let CellState::Unallocated = &self.state {
@@ -99,6 +101,8 @@ impl Cell {
         }
     }
 
+    /// Deletes the underlying cgroup.
+    /// A [Cell] should never be reused after calling [free].
     pub fn free(&mut self) -> Result<()> {
         if let CellState::Allocated { cgroup, executables: _ } = &mut self.state
         {
@@ -107,7 +111,7 @@ impl Cell {
                 source: e,
             })?;
 
-            self.state = CellState::Unallocated;
+            self.state = CellState::Freed;
         }
 
         Ok(())
@@ -118,9 +122,9 @@ impl Cell {
         executable: T,
     ) -> Result<i32> {
         match &mut self.state {
-            CellState::Unallocated => {
+            CellState::Unallocated | CellState::Freed => {
                 // TODO: Do we want to check the system to confirm?
-                Err(CellsError::CellUnallocated {
+                Err(CellsError::CellNotAllocated {
                     cell_name: self.spec.name.clone(),
                 })
             }
@@ -187,9 +191,9 @@ impl Cell {
         executable_name: &ExecutableName,
     ) -> Result<Option<ExitStatus>> {
         match &mut self.state {
-            CellState::Unallocated => {
+            CellState::Unallocated | CellState::Freed => {
                 // TODO: Do we want to check the system to confirm?
-                Err(CellsError::CellUnallocated {
+                Err(CellsError::CellNotAllocated {
                     cell_name: self.spec.name.clone(),
                 })
             }
@@ -220,12 +224,48 @@ impl Cell {
         }
     }
 
-    /// Returns `None` if the `Cell` has not been allocated.
+    /// Returns the [CellName] of the [Cell]
+    pub fn name(&self) -> &CellName {
+        &self.spec.name
+    }
+
+    /// Returns [None] if the [Cell] is not allocated.
     pub fn v2(&self) -> Option<bool> {
         match &self.state {
             CellState::Allocated { cgroup, .. } => Some(cgroup.v2()),
             _ => None,
         }
+    }
+
+    #[cfg(test)]
+    pub fn new_for_tests(name: Option<CellName>) -> Self {
+        use validation::ValidatedType;
+
+        let cell_name = name.unwrap_or_else(|| CellName::random_for_tests());
+
+        let cell = aurae_proto::runtime::Cell {
+            name: cell_name.into_inner(),
+            cpu_cpus: "".to_string(),
+            cpu_shares: 0,
+            cpu_mems: "".to_string(),
+            cpu_quota: 0,
+            ns_share_mount: false,
+            ns_share_uts: false,
+            ns_share_ipc: false,
+            ns_share_pid: false,
+            ns_share_net: false,
+            ns_share_cgroup: false,
+        };
+        let cell = ValidatedCell::validate(cell, None).expect("invalid cell");
+        cell.into()
+    }
+}
+
+#[cfg(test)]
+impl Drop for Cell {
+    /// A [Cell] leaves a cgroup behind so we call [free] on drop
+    fn drop(&mut self) {
+        let _best_effort = self.free();
     }
 }
 
@@ -238,4 +278,26 @@ fn hierarchy() -> Box<dyn Hierarchy> {
     // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
     // hierarchies::V2
     Box::new(hierarchies::V2::new())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[ignore]
+    #[test]
+    fn test_cant_unfree() {
+        let mut cell = Cell::new_for_tests(None);
+        assert!(matches!(cell.state, CellState::Unallocated));
+
+        cell.allocate();
+        assert!(matches!(cell.state, CellState::Allocated { .. }));
+
+        cell.free().expect("failed to free");
+        assert!(matches!(cell.state, CellState::Freed));
+
+        // Calling allocate again should do nothing
+        cell.allocate();
+        assert!(matches!(cell.state, CellState::Freed));
+    }
 }
