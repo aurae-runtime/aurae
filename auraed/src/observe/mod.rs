@@ -31,17 +31,18 @@
 // @todo @krisnova remove this once logging is further along
 #![allow(dead_code)]
 
-use crate::LogChannel;
 use aurae_proto::observe::{
     observe_server::Observe, GetAuraeDaemonLogStreamRequest,
     GetSubProcessStreamRequest, LogItem,
 };
-use log::info;
 use std::sync::Arc;
 use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
+use tracing::info;
+
+use crate::logging::log_channel::LogChannel;
 
 /// The server side implementation of the Observe subsystem.
 #[derive(Debug)]

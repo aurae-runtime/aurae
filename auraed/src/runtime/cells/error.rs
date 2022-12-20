@@ -30,7 +30,7 @@
 
 use crate::runtime::cells::{CellName, ExecutableName};
 use cgroups_rs::CgroupPid;
-use log::error;
+use tracing::error;
 use thiserror::Error;
 use tonic::Status;
 

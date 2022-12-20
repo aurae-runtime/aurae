@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use anyhow::anyhow;
-use log::{info, trace};
+use tracing::{info, trace};
 use std::{fs::OpenOptions, io::Read, mem, path::Path, slice};
 
 use ::libc;

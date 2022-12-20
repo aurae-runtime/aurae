@@ -1,7 +1,7 @@
 use crate::runtime::cells::validation::ValidatedCell;
 use crate::runtime::cells::ExecutableName;
 use cgroups_rs::CgroupPid;
-use log::info;
+use tracing::info;
 use std::io;
 use unshare::Command;
 use unshare::Error;

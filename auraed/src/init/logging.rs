@@ -1,9 +1,11 @@
 use crate::logging::stream_logger::StreamLogger;
 use aurae_proto::observe::LogItem;
-use log::{Level, SetLoggerError};
+use log::SetLoggerError;
 use simplelog::SimpleLogger;
 use syslog::{BasicLogger, Facility, Formatter3164};
 use tokio::sync::broadcast::Sender;
+use tracing::Level;
+use tracing_log::AsLog;
 
 const AURAED_SYSLOG_NAME: &str = "auraed";
 
@@ -47,14 +49,13 @@ fn init_syslog_logging(
             panic!("Unable to setup syslog: {:?}", e);
         }
     };
-
     multi_log::MultiLogger::init(
         vec![
             logger_simple,
             Box::new(BasicLogger::new(logger_syslog)),
             logger_stream,
         ],
-        logger_level,
+        logger_level.as_log(),
     )
     .map_err(LoggingError::SysLogSetupFailure)
 }
@@ -77,14 +78,14 @@ fn init_pid1_logging(
 
     multi_log::MultiLogger::init(
         vec![logger_simple, logger_stream],
-        logger_level,
+        logger_level.as_log(),
     )
     .map_err(LoggingError::SysLogConnectionFailure)
 }
 
 fn create_logger_simple(logger_level: Level) -> Box<SimpleLogger> {
     SimpleLogger::new(
-        logger_level.to_level_filter(),
+        logger_level.as_log().to_level_filter(),
         simplelog::Config::default(),
     )
 }

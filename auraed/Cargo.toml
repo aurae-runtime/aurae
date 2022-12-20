@@ -59,6 +59,7 @@ tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
 tokio-stream = { version = "0.1", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
 tracing = { workspace = true, features = ["log"] }
+tracing-log = {workspace = true}
 tracing-subscriber = { workspace = true }
 unshare = "0.7.0"
 validation = { path = "../crates/validation", features=["regex", "tonic"] }

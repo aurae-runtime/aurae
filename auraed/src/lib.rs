@@ -64,15 +64,15 @@
 
 use anyhow::anyhow;
 use anyhow::Context;
-use log::*;
-use logging::log_channel::LogChannel;
+use tracing::*;
+//use logging::log_channel::LogChannel;
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::Arc;
+// use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
@@ -115,8 +115,8 @@ pub struct AuraedRuntime {
     /// Configurable socket path. Defaults to the value of
     /// `pub const AURAE_SOCK`
     pub socket: PathBuf,
-    /// Provides logging channels to expose auraed logging via grpc
-    pub log_collector: Arc<LogChannel>,
+    // /// Provides logging channels to expose auraed logging via grpc
+    //pub log_collector: Arc<LogChannel>,
 }
 
 /// Primary daemon structure. Holds state and memory for this instance of
@@ -159,7 +159,7 @@ impl AuraedRuntime {
 
         let sock = UnixListener::bind(&self.socket)?;
         let sock_stream = UnixListenerStream::new(sock);
-        let _log_collector = self.log_collector.clone();
+        //let _log_collector = self.log_collector.clone();
 
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.

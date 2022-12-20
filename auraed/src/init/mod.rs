@@ -40,7 +40,7 @@ use crate::init::{
     system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
 };
 use aurae_proto::observe::LogItem;
-use log::Level;
+use tracing::Level;
 use tokio::sync::broadcast::Sender;
 
 mod fileio;

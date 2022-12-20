@@ -53,8 +53,7 @@ use auraed::{logging::log_channel::LogChannel, *};
 use clap::Parser;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tracing::Level;
-use tracing::{info, error, trace};
+use tracing::{error, info, trace, Level};
 
 const EXIT_OKAY: i32 = 0;
 const EXIT_ERROR: i32 = 1;
@@ -96,19 +95,22 @@ async fn daemon() -> i32 {
     //
     // Normal mode: Info, Warn, Error
     // Verbose mode: Debug, Trace, Info, Warn, Error
-    let tracing_level = if options.verbose { Level::TRACE } else { Level::INFO };
+    let tracing_level =
+        if options.verbose { Level::TRACE } else { Level::INFO };
 
-    let _tracing_collector = tracing_subscriber::fmt()
-        .with_max_level(tracing_level)
-        .finish();
+    // TODO: journald
+    // TODO: multiple subscribers
+    tracing_subscriber::fmt()
+        .compact()
+        .with_env_filter(format!("auraed={tracing_level}"))
+        .init();
 
-    let logger_level = if options.verbose { log::Level::Trace } else { log::Level::Info };
     let log_collector = Arc::new(LogChannel::new("AuraeRuntime"));
     // Log Collector used to expose logs via API
     let prod = log_collector.get_producer();
 
     // Initializes Logging and prepares system if auraed is run as pid=1
-    init::init(logger_level, prod).await;
+    init::init(tracing_level, prod).await;
 
     trace!("**Logging: Verbose Mode**");
     info!("Starting Aurae Daemon Runtime...");
@@ -118,7 +120,7 @@ async fn daemon() -> i32 {
         server_key: PathBuf::from(options.server_key),
         ca_crt: PathBuf::from(options.ca_crt),
         socket: PathBuf::from(options.socket),
-        log_collector,
+        //log_collector,
     };
 
     let e = runtime.run().await;

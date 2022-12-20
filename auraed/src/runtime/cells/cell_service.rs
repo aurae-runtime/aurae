@@ -54,7 +54,7 @@ impl CellService {
         CellService { cells: Default::default() }
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn allocate(
         &self,
         request: ValidatedAllocateCellRequest,
@@ -80,7 +80,7 @@ impl CellService {
         })
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn free(
         &self,
         request: ValidatedFreeCellRequest,
@@ -94,7 +94,7 @@ impl CellService {
         Ok(FreeCellResponse::default())
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn start(
         &self,
         request: ValidatedStartExecutableRequest,
@@ -116,7 +116,7 @@ impl CellService {
         Ok(StartExecutableResponse { pid })
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn stop(
         &self,
         request: ValidatedStopExecutableRequest,

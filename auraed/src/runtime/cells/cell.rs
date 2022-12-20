@@ -35,7 +35,7 @@ use crate::runtime::cells::cell_name::CellName;
 use cgroups_rs::{
     cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
 };
-use log::info;
+use tracing::info;
 use std::collections::HashMap;
 use unshare::ExitStatus;
 

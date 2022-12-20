@@ -1,4 +1,4 @@
-use log::{error, info};
+use tracing::{error, info};
 use std::ffi::CStr;
 use std::{io, ptr};
 
