@@ -1,63 +1,26 @@
-use crate::logging::stream_logger::StreamLogger;
-use aurae_proto::observe::LogItem;
-use log::SetLoggerError;
-use simplelog::SimpleLogger;
-use syslog::{BasicLogger, Facility, Formatter3164};
-use tokio::sync::broadcast::Sender;
 use tracing::Level;
-use tracing_log::AsLog;
-
-const AURAED_SYSLOG_NAME: &str = "auraed";
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum LoggingError {
-    #[error("Unable to connect to syslog: {0}")]
-    SysLogConnectionFailure(SetLoggerError),
-    #[error("Unable to setup syslog: {0}")]
-    SysLogSetupFailure(SetLoggerError),
+    #[error("Failed to setup tracing: {source:?}")]
+    TracingSetupFailure { source: Box<dyn std::error::Error> },
 }
 
-pub(crate) fn init(
-    logger_level: Level,
-    producer: Sender<LogItem>,
-) -> Result<(), LoggingError> {
+pub(crate) fn init(logger_level: Level) -> Result<(), LoggingError> {
     match std::process::id() {
-        1 => init_pid1_logging(logger_level, producer),
-        _ => init_syslog_logging(logger_level, producer),
+        1 => init_pid1_logging(logger_level),
+        _ => init_syslog_logging(logger_level),
     }
 }
 
-fn init_syslog_logging(
-    logger_level: Level,
-    producer: Sender<LogItem>,
-) -> Result<(), LoggingError> {
-    // Syslog formatter
-    let formatter = Formatter3164 {
-        facility: Facility::LOG_USER,
-        hostname: None,
-        process: AURAED_SYSLOG_NAME.into(),
-        pid: 0,
-    };
-
-    // Initialize the logger
-    let logger_simple = create_logger_simple(logger_level);
-    let logger_stream = Box::new(StreamLogger::new(producer));
-
-    let logger_syslog = match syslog::unix(formatter) {
-        Ok(log_val) => log_val,
-        Err(e) => {
-            panic!("Unable to setup syslog: {:?}", e);
-        }
-    };
-    multi_log::MultiLogger::init(
-        vec![
-            logger_simple,
-            Box::new(BasicLogger::new(logger_syslog)),
-            logger_stream,
-        ],
-        logger_level.as_log(),
-    )
-    .map_err(LoggingError::SysLogSetupFailure)
+fn init_syslog_logging(tracing_level: Level) -> Result<(), LoggingError> {
+    // TODO: multiple subscribers
+    // TODO: journald
+    tracing_subscriber::fmt()
+        .compact()
+        .with_env_filter(format!("auraed={tracing_level}"))
+        .try_init()
+        .map_err(|e| LoggingError::TracingSetupFailure { source: e })
 }
 
 // To discuss here https://github.com/aurae-runtime/auraed/issues/24:
@@ -67,25 +30,10 @@ fn init_syslog_logging(
 //      other than fullfill the requirement of syslog crate.
 //      For now, auraed distinguishes between pid1 system and local (dev environment) logging.
 //      [1] https://docs.rs/syslog/latest/src/syslog/lib.rs.html#232-243
-fn init_pid1_logging(
-    logger_level: Level,
-    producer: Sender<LogItem>,
-) -> Result<(), LoggingError> {
-    // Initialize the logger
-    let logger_simple = create_logger_simple(logger_level);
-
-    let logger_stream = Box::new(StreamLogger::new(producer));
-
-    multi_log::MultiLogger::init(
-        vec![logger_simple, logger_stream],
-        logger_level.as_log(),
-    )
-    .map_err(LoggingError::SysLogConnectionFailure)
-}
-
-fn create_logger_simple(logger_level: Level) -> Box<SimpleLogger> {
-    SimpleLogger::new(
-        logger_level.as_log().to_level_filter(),
-        simplelog::Config::default(),
-    )
+fn init_pid1_logging(tracing_level: Level) -> Result<(), LoggingError> {
+    tracing_subscriber::fmt()
+        .compact()
+        .with_env_filter(format!("auraed={tracing_level}"))
+        .try_init()
+        .map_err(|e| LoggingError::TracingSetupFailure { source: e })
 }
