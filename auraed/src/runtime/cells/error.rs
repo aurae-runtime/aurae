@@ -43,7 +43,7 @@ pub(crate) enum CellsError {
     #[error("cell '{cell_name}' not found")]
     CellNotFound { cell_name: CellName },
     #[error("cell '{cell_name}' unallocated")]
-    CellUnallocated { cell_name: CellName },
+    CellNotAllocated { cell_name: CellName },
     #[error("cell '{cell_name}' could not be freed: {source}")]
     FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
     #[error(
@@ -101,7 +101,7 @@ impl From<CellsError> for Status {
             CellsError::FailedToObtainLock() => {
                 Status::aborted(err.to_string())
             }
-            CellsError::CellUnallocated { cell_name } => {
+            CellsError::CellNotAllocated { cell_name } => {
                 CellsError::CellNotFound { cell_name }.into()
             }
         }

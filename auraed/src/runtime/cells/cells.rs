@@ -72,7 +72,7 @@ impl Cells {
     {
         if let Some(cell) = self.cache.get(cell_name) {
             let res = f(cell);
-            if matches!(res, Err(CellsError::CellUnallocated { .. })) {
+            if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
                 let _ = self.cache.remove(cell_name);
             }
             res
@@ -98,24 +98,13 @@ impl Cells {
     }
 }
 
-// TODO: Someone make sure I'm (future-highway) making sense here.
-/// auraed should never drop Cells unless it exits in which case, PID 1 is down anyway.
-/// However, tests leave cells behind and this should clean them up.
-impl Drop for Cells {
-    fn drop(&mut self) {
-        for cell in self.cache.values_mut() {
-            let _ = cell.free();
-        }
-    }
-}
-
 fn get_mut<F, R>(cache: &mut Cache, cell_name: &CellName, f: F) -> Result<R>
 where
     F: FnOnce(&mut Cell) -> Result<R>,
 {
     if let Some(cell) = cache.get_mut(cell_name) {
         let res = f(cell);
-        if matches!(res, Err(CellsError::CellUnallocated { .. })) {
+        if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
             let _ = cache.remove(cell_name);
         }
         res
@@ -127,28 +116,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::runtime::cells::validation::ValidatedCell;
-    use validation::ValidatedType;
-
-    fn create_cell(name: Option<CellName>) -> Cell {
-        let cell_name = name.unwrap_or_else(|| CellName::random_for_tests());
-
-        let cell = aurae_proto::runtime::Cell {
-            name: cell_name.into_inner(),
-            cpu_cpus: "".to_string(),
-            cpu_shares: 0,
-            cpu_mems: "".to_string(),
-            cpu_quota: 0,
-            ns_share_mount: false,
-            ns_share_uts: false,
-            ns_share_ipc: false,
-            ns_share_pid: false,
-            ns_share_net: false,
-            ns_share_cgroup: false,
-        };
-        let cell = ValidatedCell::validate(cell, None).expect("invalid cell");
-        cell.into()
-    }
 
     #[ignore]
     #[test]
@@ -156,7 +123,7 @@ mod tests {
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
-        let cell = create_cell(None);
+        let cell = Cell::new_for_tests(None);
         let cell_name = cell.name().clone();
 
         let _ = cells.allocate(cell).expect("allocate");
@@ -171,10 +138,10 @@ mod tests {
 
         let cell_name_in = CellName::random_for_tests();
 
-        let cell_a = create_cell(Some(cell_name_in.clone()));
+        let cell_a = Cell::new_for_tests(Some(cell_name_in.clone()));
         let _ = cells.allocate(cell_a).expect("failed on first allocate");
 
-        let cell_b = create_cell(Some(cell_name_in.clone()));
+        let cell_b = Cell::new_for_tests(Some(cell_name_in.clone()));
         assert!(matches!(
             cells.allocate(cell_b),
             Err(CellsError::CellExists { cell_name }) if cell_name == cell_name_in
@@ -187,7 +154,7 @@ mod tests {
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
-        let cell = create_cell(None);
+        let cell = Cell::new_for_tests(None);
         let cell_name = cell.name().clone();
         let _ = cells.allocate(cell).expect("failed to allocate");
 
@@ -214,7 +181,7 @@ mod tests {
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
-        let cell = create_cell(None);
+        let cell = Cell::new_for_tests(None);
         let cell_name = cell.name().clone();
         let _ = cells.allocate(cell).expect("failed to allocate");
 
