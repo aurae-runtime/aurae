@@ -32,8 +32,8 @@
 #![allow(dead_code)]
 //
 use aurae_proto::observe::LogItem;
-use log::error;
 use tokio::sync::broadcast::{self, Receiver, Sender};
+use tracing::error;
 
 use super::get_timestamp_sec;
 

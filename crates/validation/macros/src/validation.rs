@@ -9,6 +9,7 @@ enum AutoValidate {
     Validate,
     ValidateOpt,
     ValidateNone,
+    ValidateForCreation,
 }
 
 pub(crate) struct ValidateInput {
@@ -111,50 +112,60 @@ impl From<DeriveInput> for ValidateInput {
                     )
                 };
 
-                let auto_validate = f.attrs.iter().filter(|x| {
-                    x.path.segments.len() == 1 && x.path.segments[0].ident == "validate"
-                })
+                let auto_validate = f.attrs
+                    .iter()
+                    .filter(|x| {
+                        x.path.segments.len() == 1 && x.path.segments[0].ident == "validate"
+                    })
                     .map(|attr| {
                         let arg = attr.tokens.to_string().replace(['(', ')'], "");
                         match &*arg {
                             "" => AutoValidate::Validate,
                             "opt" => AutoValidate::ValidateOpt,
                             "none" => AutoValidate::ValidateNone,
-                            _=> panic!("only `opt` or `none` are a valid args for the `validate` attribute")
+                            "create" => AutoValidate::ValidateForCreation,
+                            _=> panic!("`opt`, `none`, and `create` are a valid args for the `validate` attribute"),
                         }
                     })
-                    .next().or(Some(AutoValidate::No)).expect("auto_validate");
+                    .next()
+                    .or(Some(AutoValidate::No))
+                    .expect("auto_validate");
 
                 let base = quote! {
-                fn #field_validation_fn_ident(
-                    #field_ident: #field_type,
-                    field_name: &str,
-                    parent_name: Option<&str>
-                ) -> ::std::result::Result<
-                    #validated_field_type,
-                    ::validation::ValidationError
-                >
-            };
+                    fn #field_validation_fn_ident(
+                        #field_ident: #field_type,
+                        field_name: &str,
+                        parent_name: Option<&str>
+                    ) -> ::std::result::Result<
+                        #validated_field_type,
+                        ::validation::ValidationError
+                    >
+                };
 
                 match auto_validate {
                     AutoValidate::No => quote! {
-                    #base;
-                },
+                        #base;
+                    },
                     AutoValidate::Validate => quote! {
-                    #base {
-                        validation::ValidatedField::validate(Some(#field_ident), field_name, parent_name)
-                    }
-                },
+                        #base {
+                            validation::ValidatedField::validate(Some(#field_ident), field_name, parent_name)
+                        }
+                    },
                     AutoValidate::ValidateOpt => quote! {
-                    #base {
-                        validation::ValidatedField::validate_optional(#field_ident, field_name, parent_name)
-                    }
-                },
+                        #base {
+                            validation::ValidatedField::validate_optional(#field_ident, field_name, parent_name)
+                        }
+                    },
                     AutoValidate::ValidateNone => quote! {
-                    #base {
-                        Ok(#field_ident)
-                    }
-                },
+                        #base {
+                            Ok(#field_ident)
+                        }
+                    },
+                    AutoValidate::ValidateForCreation => quote! {
+                        #base {
+                            validation::ValidatedField::validate_for_creation(Some(#field_ident), field_name, parent_name)
+                        }
+                    },
                 }
             })
             .collect::<Vec<_>>();
@@ -163,8 +174,15 @@ impl From<DeriveInput> for ValidateInput {
             trait #validator_trait_ident {
                 #(#validator_trait_fns)*
 
-                fn validate_fields(
-                    fields: &#type_ident,
+                fn pre_validate(
+                    input: &#type_ident,
+                    parent_name: Option<&str>
+                ) -> ::std::result::Result<(), ::validation::ValidationError> {
+                    Ok(())
+                }
+
+                fn post_validate(
+                    output: &#validated_type_ident,
                     parent_name: Option<&str>
                 ) -> ::std::result::Result<(), ::validation::ValidationError> {
                     Ok(())

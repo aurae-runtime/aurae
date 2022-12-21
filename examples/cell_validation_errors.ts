@@ -1,16 +1,18 @@
 // [ Free ]
 import * as runtime from "../auraescript/gen/runtime.ts";
-import * as helpers from "../auraescript/gen/helpers.ts";
 
-let cells = new runtime.CellServiceClient();
+const cells = new runtime.CellServiceClient();
 
 //// REQUIRED
-// let freed = await cells.free(<runtime.FreeCellRequest>{
-//     cellName: ""
+// await cells.allocate(<runtime.AllocateCellRequest>{
+//     cell: runtime.Cell.fromPartial({
+//         name: ""
+//     })
 // });
 
 //// REGEX violation
-let freed = await cells.free(<runtime.FreeCellRequest>{
-    cellName: "nope_nope"
+await cells.allocate(<runtime.AllocateCellRequest>{
+    cell: runtime.Cell.fromPartial({
+        name: "nope_nope"
+    })
 });
-helpers.print(freed)

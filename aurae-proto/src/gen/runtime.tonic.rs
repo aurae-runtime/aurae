@@ -634,8 +634,8 @@ pub mod cell_service_client {
         }
         pub async fn start(
             &mut self,
-            request: impl tonic::IntoRequest<super::StartCellRequest>,
-        ) -> Result<tonic::Response<super::StartCellResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::StartExecutableRequest>,
+        ) -> Result<tonic::Response<super::StartExecutableResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -653,8 +653,8 @@ pub mod cell_service_client {
         }
         pub async fn stop(
             &mut self,
-            request: impl tonic::IntoRequest<super::StopCellRequest>,
-        ) -> Result<tonic::Response<super::StopCellResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::StopExecutableRequest>,
+        ) -> Result<tonic::Response<super::StopExecutableResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -687,12 +687,12 @@ pub mod cell_service_server {
         ) -> Result<tonic::Response<super::FreeCellResponse>, tonic::Status>;
         async fn start(
             &self,
-            request: tonic::Request<super::StartCellRequest>,
-        ) -> Result<tonic::Response<super::StartCellResponse>, tonic::Status>;
+            request: tonic::Request<super::StartExecutableRequest>,
+        ) -> Result<tonic::Response<super::StartExecutableResponse>, tonic::Status>;
         async fn stop(
             &self,
-            request: tonic::Request<super::StopCellRequest>,
-        ) -> Result<tonic::Response<super::StopCellResponse>, tonic::Status>;
+            request: tonic::Request<super::StopExecutableRequest>,
+        ) -> Result<tonic::Response<super::StopExecutableResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct CellServiceServer<T: CellService> {
@@ -834,16 +834,16 @@ pub mod cell_service_server {
                     struct StartSvc<T: CellService>(pub Arc<T>);
                     impl<
                         T: CellService,
-                    > tonic::server::UnaryService<super::StartCellRequest>
+                    > tonic::server::UnaryService<super::StartExecutableRequest>
                     for StartSvc<T> {
-                        type Response = super::StartCellResponse;
+                        type Response = super::StartExecutableResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::StartCellRequest>,
+                            request: tonic::Request<super::StartExecutableRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).start(request).await };
@@ -872,16 +872,16 @@ pub mod cell_service_server {
                     struct StopSvc<T: CellService>(pub Arc<T>);
                     impl<
                         T: CellService,
-                    > tonic::server::UnaryService<super::StopCellRequest>
+                    > tonic::server::UnaryService<super::StopExecutableRequest>
                     for StopSvc<T> {
-                        type Response = super::StopCellResponse;
+                        type Response = super::StopExecutableResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::StopCellRequest>,
+                            request: tonic::Request<super::StopExecutableRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).stop(request).await };

@@ -1,29 +1,30 @@
-use log::error;
+use tracing::error;
 use thiserror::Error;
 use tonic::Status;
 
-#[derive(Error, Debug, PartialEq, Eq)]
-pub enum CellServiceError {
-    #[error("missing argument in request: {arg}")]
-    MissingArgument { arg: String },
+pub(crate) type Result<T> = std::result::Result<T, RuntimeError>;
 
+#[derive(Error, Debug)]
+pub(crate) enum RuntimeError {
     #[error("internal error: {msg}: {err}")]
     Internal { msg: String, err: String },
+
+    #[error("{resource} was not allocated")]
+    Unallocated { resource: String },
+
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }
 
-impl From<CellServiceError> for Status {
-    fn from(err: CellServiceError) -> Self {
+impl From<RuntimeError> for Status {
+    fn from(err: RuntimeError) -> Self {
+        let msg = err.to_string();
+        error!("{msg}");
         match err {
-            CellServiceError::MissingArgument { arg } => {
-                let msg = format!("missing argument in request: {arg}");
-                error!("{msg}");
-                Self::failed_precondition(msg)
-            }
-            CellServiceError::Internal { msg, err } => {
-                let msg = format!("internal error: {msg}: {err}");
-                error!("{msg}");
+            RuntimeError::Internal { .. } | RuntimeError::Other { .. } => {
                 Self::internal(msg)
             }
+            RuntimeError::Unallocated { .. } => Self::not_found(msg),
         }
     }
 }

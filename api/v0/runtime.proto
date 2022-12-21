@@ -36,17 +36,17 @@ option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 /// ===
 ///
 /// The Runtime API is a resource-oriented set of services.
-/// Resource type API modelled after the "Resource-oriented design" shared by @dominichamon
-/// Source: https://google.aip.dev/121
+/// Resource type API modelled after the "Resource-oriented design" shared by
+/// @dominichamon Source: https://google.aip.dev/121
 
 // TODO Pods Service
-service Pods{}
+service Pods {}
 
 // TODO Instances Service
-service Instances{}
+service Instances {}
 
 // TODO Spawn Service
-service Spawn{}
+service Spawn {}
 
 /// Runtime Verbs
 /// ===
@@ -59,21 +59,26 @@ service Spawn{}
 /// verbs a new verb may be introduced as long as it reasonably
 /// applicable to similar RPCs and services.
 ///
-/// * Allocate   Reserve resources, and manage any prerequisites but do not start
-/// * Free       Free resources, and destroy any prerequisites that have been started
+/// * Allocate   Reserve resources, and manage any prerequisites but do not
+/// start
+/// * Free       Free resources, and destroy any prerequisites that have been
+/// started
 /// * Start      Run a resource immediately
 /// * Stop       Stop a resource immediately
-/// * Spawn      A special function that creates a child instance with inherited properties of the parent
+/// * Spawn      A special function that creates a child instance with inherited
+/// properties of the parent
 
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be
 /// used to run workloads.
 ///
-/// A cell is composed of a unique cgroup namespace, and unshared kernel namespaces.
+/// A cell is composed of a unique cgroup namespace, and unshared kernel
+/// namespaces.
 service CellService {
 
   /// Reserve requested system resources for a new cell.
-  /// For cells specifically this will allocate and reserve cgroup resources only.
+  /// For cells specifically this will allocate and reserve cgroup resources
+  /// only.
   rpc Allocate(AllocateCellRequest) returns (AllocateCellResponse) {}
 
   /// Free up previously requested resources for an existing cell
@@ -81,31 +86,33 @@ service CellService {
 
   /// Start a new Executable inside of an existing cell. Can be called
   /// in serial to start more than one executable in the same cell.
-  rpc Start(StartCellRequest) returns (StartCellResponse) {}
+  rpc Start(StartExecutableRequest) returns (StartExecutableResponse) {}
 
   /// Stop one or more Executables inside of an existing cell.
   /// Can be called in serial to stop/retry more than one executable.
-  rpc Stop(StopCellRequest) returns (StopCellResponse) {}
+  rpc Stop(StopExecutableRequest) returns (StopExecutableResponse) {}
 }
 
 /// The most primitive workload in Aurae, a standard executable process.
 message Executable {
   string name = 1;
   string command = 2;
-  string description = 3;
-  string cell_name = 4;
+  repeated string args = 3;
+  string description = 4;
 }
 
-/// An isolation resource used to divide a system into smaller resource boundaries.
+/// An isolation resource used to divide a system into smaller resource
+/// boundaries.
 message Cell {
 
   /// Resource parameters for control groups (cgroups)
-  /// Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) crate.
-  /// See [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
+  /// Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs)
+  /// crate. See
+  /// [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
   string name = 1;
 
   /// A comma-separated list of CPU IDs where the task in the control group
-  // can run. Dashes between numbers indicate ranges.
+  /// can run. Dashes between numbers indicate ranges.
   string cpu_cpus = 2;
 
   ///  Cgroups can be guaranteed a minimum number of "CPU shares"
@@ -116,15 +123,15 @@ message Cell {
   ///  and earlier).
   ///
   /// Weight of how much of the total CPU time should this control
-  //  group get. Note that this is hierarchical, so this is weighted
-  //  against the siblings of this control group.
+  ///  group get. Note that this is hierarchical, so this is weighted
+  ///  against the siblings of this control group.
   uint64 cpu_shares = 3;
 
   /// Same syntax as the cpus field of this structure, but applies to
-  //  memory nodes instead of processors.
+  ///  memory nodes instead of processors.
   string cpu_mems = 4;
 
-  // In one period, how much can the tasks run in nanoseconds.
+  /// In one period, how much can the tasks run in microseconds.
   int64 cpu_quota = 5;
 
   /// Linux namespaces to share with the calling process.
@@ -132,43 +139,69 @@ message Cell {
   /// will be as isolated as possible.
   ///
   /// Each shared namespace is a potential security risk.
-  //  bool ns_share_mount = 10;
-  //  bool ns_share_uts = 11;
-  //  bool ns_share_ipc = 12;
-  //  bool ns_share_pid = 13;
-  //  bool ns_share_net = 14;
-  //  bool ns_share_cgroup = 15;
+  bool ns_share_mount = 10;
+  bool ns_share_uts = 11;
+  bool ns_share_ipc = 12;
+  bool ns_share_pid = 13;
+  bool ns_share_net = 14;
+  bool ns_share_cgroup = 15;
+
 }
 
-
+/// An Aurae cell is a name given to Linux control groups (cgroups) that also include
+/// a name, and special pre-exec functionality that is executed from within the same context
+/// as any executables scheduled.
+///
+/// A cell must be allocated for every executable scheduled. A cell defines the resource
+/// constraints of the system to allocate for an arbitrary use case.
 message AllocateCellRequest {
+
+  /// A smaller resource constrained section of the system.
   Cell cell = 1;
+
 }
+
+/// The response after a cell has been allocated.
 message AllocateCellResponse {
   string cell_name = 1;
 
   /// A bool that will be set to true if the cgroup was created with
   /// cgroup v2 controller.
-  bool  cgroup_v2 = 2;
+  bool cgroup_v2 = 2;
 }
 
-message FreeCellRequest {
-   string cell_name = 1;
-}
+/// Used to remove or free a cell after it has been allocated.
+message FreeCellRequest { string cell_name = 1; }
 
+/// Response after removing or freeing a cell.
 message FreeCellResponse {}
 
-message StartCellRequest {
-  // TODO Consider set of executables
-  Executable executable = 1;
+/// A request for starting an executable inside of a Cell.
+///
+/// This is the lowest level of raw executive functionality.
+/// Here you can define shell commands, and meta information about the command.
+/// An executable is started synchronously.
+message StartExecutableRequest {
+  string cell_name = 1;
+  Executable executable = 2;
 }
 
-message StartCellResponse {
+/// The response after starting an executable within a Cell.
+message StartExecutableResponse {
+
+  /// Return a pid as an int32 based on the pid_t type
+  /// in various libc libraries.
+  int32 pid = 1;
+
+  //int32 gid = 2;     // TODO
+  //int32 uid = 3;     // TODO
+  //string user = 4;   // TODO
+  //string group = 5;  // TODO
 }
 
-message StopCellRequest {
+message StopExecutableRequest {
   string cell_name = 1;
   string executable_name = 2;
 }
 
-message StopCellResponse {}
+message StopExecutableResponse {}

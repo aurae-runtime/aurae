@@ -34,5 +34,5 @@ jobs:
         run: make build
       - name: Lint (make lint)
         run: make lint
-      - name: Tests (make test)
-        run: make test
+      - name: Tests (make testci)
+        run: make testci

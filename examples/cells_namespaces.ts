@@ -34,25 +34,57 @@ import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
 
-// [ Allocate ]
-let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+// [ Allocate Shared NS ]
+let s_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
-        cpuQuota: 300000, // 30% of the CPU
         cpuShares: 2, // Percentage of CPUs
-        name: "sleeper-cell",
+        name: "shared-pid-ns-dangerous",
+        nsSharePid: true,
     })
 });
-helpers.print(allocated)
-
+helpers.print(s_allocated)
 
 // [ Start ]
-let started = await cells.start(<runtime.StartExecutableRequest>{
-    cellName: "sleeper-cell",
-    executables: [runtime.Executable.fromPartial({
-        command: "/usr/bin/sleep",
-        args: ["42"],
-        description: "Sleep for 42 seconds",
-        name: "sleep-42"
-    })]
+let s_started = await cells.start(<runtime.StartExecutableRequest>{
+    cellName: "shared-pid-ns-dangerous",
+    executable: runtime.Executable.fromPartial({
+        command: "/usr/bin/ps", // Note: you must use the full path now for namespaces!
+        args: ["aux"],
+        description: "List processes",
+        name: "ps-aux"
+    })
 })
-helpers.print(started)
+helpers.print(s_started)
+
+// [ Allocate Unshared NS ]
+let u_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+    cell: runtime.Cell.fromPartial({
+        cpuShares: 2, // Percentage of CPUs
+        name: "unshared-pid-ns-safe",
+        nsSharePid: false, // Will default to false, but here for visibility
+    })
+});
+helpers.print(u_allocated)
+
+// [ Start ]
+let u_started = await cells.start(<runtime.StartExecutableRequest>{
+    cellName: "unshared-pid-ns-safe",
+    executable: runtime.Executable.fromPartial({
+        command: "/usr/bin/ps", // Note: you must use the full path now for namespaces!
+        args: ["aux"],
+        description: "List processes",
+        name: "ps-aux"
+    })
+})
+helpers.print(u_started)
+
+// [ Free ]
+await cells.free(<runtime.FreeCellRequest>{
+    cellName: "shared-pid-ns-dangerous"
+});
+await cells.free(<runtime.FreeCellRequest>{
+    cellName: "unshared-pid-ns-safe"
+});
+
+
+
