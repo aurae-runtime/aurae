@@ -36,8 +36,8 @@ use cgroups_rs::{
     cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
 };
 use std::collections::HashMap;
+use std::process::ExitStatus;
 use tracing::info;
-use unshare::ExitStatus;
 
 // We should not be able to change a cell after it has been created.
 // You must free the cell and create a new one if you want to change anything about the cell.
@@ -154,12 +154,12 @@ impl Cell {
                 if let Some(executable) = executables.get_mut(&executable_name)
                 {
                     let pid =
-                        executable.start(self.spec.clone()).map_err(|_e| {
+                        executable.start(self.spec.clone()).map_err(|e| {
                             CellsError::FailedToStartExecutable {
                                 cell_name: self.spec.name.clone(),
                                 executable_name: executable.name.clone(),
                                 command: executable.command.clone(),
-                                // source: e,
+                                source: e,
                             }
                         })?;
 
@@ -206,11 +206,11 @@ impl Cell {
 
                             Ok(exit_status)
                         }
-                        Err(_e) => Err(CellsError::FailedToStopExecutable {
+                        Err(e) => Err(CellsError::FailedToStopExecutable {
                             cell_name: self.spec.name.clone(),
                             executable_name: executable.name.clone(),
                             executable_pid: executable.pid().expect("pid"),
-                            // source: e,
+                            source: e,
                         }),
                     }
                 } else {

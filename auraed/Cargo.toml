@@ -63,7 +63,6 @@ tracing = { workspace = true, features = ["log"] }
 tracing-journald = "0.3"
 tracing-log = "0.1"
 tracing-subscriber = {version = "0.3", features = ["env-filter"]}
-unshare = "0.7.0"
 validation = { path = "../crates/validation", features=["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
