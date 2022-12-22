@@ -152,23 +152,8 @@ fn pre_exec(
     // with the host, we will manually mount /proc
     if !spec.ns_share_pid && !spec.ns_share_mount {
         info!("CellService: pre_exec(): mounting procfs /proc");
-        let supported = SupportedFilesystems::new().unwrap();
-        info!(
-            "CellService: pre_exec(): Supported filesystems: {:?}",
-            supported
-        );
-        let mount_result =
-            Mount::builder().fstype("proc").mount("proc", "/proc");
-        match mount_result {
-            Ok(mount) => {
-                // TODO We need to figure out how to manage this flag AFTER the command has been executed
-                // TODO Either on kill or stop we need to call this
-                let _mount = mount.into_unmount_drop(UnmountFlags::DETACH);
-            }
-            Err(why) => {
-                eprintln!("failed to mount device: {}", why);
-            }
-        }
+        // TODO Implement mount proc
+        // TODO validate this logic is the correct logic for mounting proc in our new namespace isolation zone
     }
 
     Ok(())
