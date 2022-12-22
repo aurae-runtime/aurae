@@ -1,8 +1,8 @@
 use crate::runtime::cells::validation::ValidatedCell;
 use crate::runtime::cells::ExecutableName;
 use cgroups_rs::CgroupPid;
-use tracing::info;
 use std::io;
+use tracing::info;
 use unshare::Command;
 use unshare::Error;
 use unshare::ExitStatus;
@@ -84,6 +84,7 @@ impl Executable {
                     info!("Unshare: cgroup");
                     namespaces_to_unshare.push(Namespace::Cgroup)
                 }
+
                 let command = command.unshare(&namespaces_to_unshare);
 
                 // Run 'pre_exec' hooks from the context of the soon-to-be launched child.
@@ -91,7 +92,7 @@ impl Executable {
                     let executable_name = self.name.clone();
                     unsafe {
                         command.pre_exec(move || {
-                            aurae_process_pre_exec(&executable_name)
+                            pre_exec(&executable_name, spec.clone())
                         })
                     }
                 };
@@ -135,11 +136,24 @@ impl Executable {
     }
 }
 
-fn aurae_process_pre_exec(executable_name: &ExecutableName) -> io::Result<()> {
-    info!("CellService: aurae_process_pre_exec(): {executable_name}");
+/// Common functionality within the context of the new executable
+fn pre_exec(
+    executable_name: &ExecutableName,
+    spec: ValidatedCell,
+) -> io::Result<()> {
+    info!("CellService: pre_exec(): {executable_name}");
     // Here we are executing as the new spawned pid.
     // This is a place where we can "hook" into all processes
     // started with Aurae in the future. Similar to kprobe/uprobe
     // in Linux or LD_PRELOAD in libc.
+
+    // In the event we are not sharing the mount namespace or the pid namespace
+    // with the host, we will manually mount /proc
+    if !spec.ns_share_pid && !spec.ns_share_mount {
+        info!("CellService: pre_exec(): mounting procfs /proc");
+        // TODO Implement mount proc
+        // TODO validate this logic is the correct logic for mounting proc in our new namespace isolation zone
+    }
+
     Ok(())
 }

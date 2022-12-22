@@ -6,11 +6,11 @@ The library leverages [protobuf](https://github.com/protocolbuffers/protobuf) as
 
 ### What is a subsystem?
 
-A subsystem is a smaller and scoped subsection of the library composed of RPCs and services. Subsystems in aurae are similar to "packages" or "modules" in programming languages such as [Rust](https://github.com/rust-lang/rust/tree/master/library/core/src), API groups in Kubernetes, and subsystems in Linux.
+A subsystem is a smaller and scoped subsection of the library composed of RPCs and services. Subsystems are similar to "packages" or "modules" in programming languages such as [Rust](https://github.com/rust-lang/rust/tree/master/library/core/src). Kubernetes as API groups, and Linux itself has subsystems.
 
 Each subsystem is unique. Each subsystem is liable to come with its own guarantees, and expectations.
 
-In protobuf terms a subsystem is a group of remote procedure calls (RPCs) called [services](https://developers.google.com/protocol-buffers/docs/proto3#services).
+In protobuf terms a subsystem is a group of [remote procedure calls (RPCs)](https://developers.google.com/protocol-buffers/docs/proto3#services) and [services](https://developers.google.com/protocol-buffers/docs/proto3#services).
 
 ### What are resources?
 
@@ -20,7 +20,7 @@ For example, Aurae has the concept of an `Executable` resource which represents 
 
 The core resources are intended to be fundamental and composable, similar to the objects and structures found in modern programming languages.
 
-Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed directly to, or received directly from, an RPC.
+Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed to directly to, or received directly from an RPC.
 
 In protobuf terms a resource is a [message](https://developers.google.com/protocol-buffers/docs/proto3#simple).
 
@@ -41,7 +41,7 @@ A function is a discreet piece of functionality designed to execute on the "back
 
 The library is designed to be executed procedurally and quickly. Many function calls per second is a reasonable expectation for any client.
 
-In protobuf terms a function is a [remote procedure call (RPC)](https://developers.google.com/protocol-buffers/docs/proto3#services) in a service.
+In protobuf terms a function is a [remote procedure call (RPC)](https://developers.google.com/protocol-buffers/docs/proto3#services)
 
 ### API Definition Convention
 
@@ -67,7 +67,7 @@ import "path/to/other.proto";
 
 // everything else
 
-```
+``` 
 
 Generally follow these rules:
 
@@ -87,11 +87,11 @@ enum FooBar {
   FOO_BAR_FIRST_VALUE = 1;
   FOO_BAR_SECOND_VALUE = 2;
 }
-```
+``` 
 
 A notable exception to the public specification above is the Aurae projects preference for standardizing the objects that are used as the request and response messages.
 
 The traditional convention that is meant to reduce the likelihood of future breaking changes and ease the creation of macros for generating code:
 
-- rpc methods (e.g., `StartWidget`) should have dedicated request and response messages named `StartWidgetRequest` and `StartWidgetResponse` respectively
-- objects (e.g., `Widget`) should be embedded directly into their corresponding `StartWidgetRequest`, `StopWidgetRequest`, etc style methods.
+- rpc methods (e.g., `StartWidget`) should have dedicated request and response messages named `StartWidgetResponse` and `StartWidgetResponse`
+- objects (e.g., `Widget`) should be embedded directly into their corresponding `StartWidgetRequest`, `StopWidgetReqyest`, etc style methods.

@@ -126,12 +126,17 @@ TODO: not implemented
 <a name="runtime-AllocateCellRequest"></a>
 
 ### AllocateCellRequest
-
+An Aurae cell is a name given to Linux control groups (cgroups) that also include
+/ a name, and special pre-exec functionality that is executed from within the same context
+/ as any executables scheduled.
+/
+/ A cell must be allocated for every executable scheduled. A cell defines the resource
+/ constraints of the system to allocate for an arbitrary use case.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| cell | [Cell](#runtime-Cell) |  |  |
+| cell | [Cell](#runtime-Cell) |  | A smaller resource constrained section of the system. |
 
 
 
@@ -141,7 +146,7 @@ TODO: not implemented
 <a name="runtime-AllocateCellResponse"></a>
 
 ### AllocateCellResponse
-
+The response after a cell has been allocated.
 
 
 | Field | Type | Label | Description |
@@ -157,13 +162,23 @@ TODO: not implemented
 <a name="runtime-Cell"></a>
 
 ### Cell
-An isolation resource used to divide a system into smaller resource boundaries.
+An isolation resource used to divide a system into smaller resource
+/ boundaries.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | Resource parameters for control groups (cgroups) / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) crate. / See [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs) |
-| cpu_shares | [uint64](#uint64) |  | Cgroups can be guaranteed a minimum number of &#34;CPU shares&#34; / when a system is busy. This does not limit a cgroup&#39;s CPU / usage if the CPUs are not busy. For further information, / see Documentation/scheduler/sched-design-CFS.rst (or / Documentation/scheduler/sched-design-CFS.txt in Linux 5.2 / and earlier). |
+| name | [string](#string) |  | Resource parameters for control groups (cgroups) / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) / crate. See / [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs) |
+| cpu_cpus | [string](#string) |  | A comma-separated list of CPU IDs where the task in the control group / can run. Dashes between numbers indicate ranges. |
+| cpu_shares | [uint64](#uint64) |  | Cgroups can be guaranteed a minimum number of &#34;CPU shares&#34; / when a system is busy. This does not limit a cgroup&#39;s CPU / usage if the CPUs are not busy. For further information, / see Documentation/scheduler/sched-design-CFS.rst (or / Documentation/scheduler/sched-design-CFS.txt in Linux 5.2 / and earlier). / / Weight of how much of the total CPU time should this control / group get. Note that this is hierarchical, so this is weighted / against the siblings of this control group. |
+| cpu_mems | [string](#string) |  | Same syntax as the cpus field of this structure, but applies to / memory nodes instead of processors. |
+| cpu_quota | [int64](#int64) |  | In one period, how much can the tasks run in microseconds. |
+| ns_share_mount | [bool](#bool) |  | Linux namespaces to share with the calling process. / If all values are set to false, the resulting cell / will be as isolated as possible. / / Each shared namespace is a potential security risk. |
+| ns_share_uts | [bool](#bool) |  |  |
+| ns_share_ipc | [bool](#bool) |  |  |
+| ns_share_pid | [bool](#bool) |  |  |
+| ns_share_net | [bool](#bool) |  |  |
+| ns_share_cgroup | [bool](#bool) |  |  |
 
 
 
@@ -180,8 +195,8 @@ The most primitive workload in Aurae, a standard executable process.
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  |  |
 | command | [string](#string) |  |  |
+| args | [string](#string) | repeated |  |
 | description | [string](#string) |  |  |
-| cell_name | [string](#string) |  |  |
 
 
 
@@ -191,7 +206,7 @@ The most primitive workload in Aurae, a standard executable process.
 <a name="runtime-FreeCellRequest"></a>
 
 ### FreeCellRequest
-
+Used to remove or free a cell after it has been allocated.
 
 
 | Field | Type | Label | Description |
@@ -206,7 +221,7 @@ The most primitive workload in Aurae, a standard executable process.
 <a name="runtime-FreeCellResponse"></a>
 
 ### FreeCellResponse
-
+Response after removing or freeing a cell.
 
 
 
@@ -216,12 +231,17 @@ The most primitive workload in Aurae, a standard executable process.
 <a name="runtime-StartExecutableRequest"></a>
 
 ### StartExecutableRequest
-
+A request for starting an executable inside of a Cell.
+/
+/ This is the lowest level of raw executive functionality.
+/ Here you can define shell commands, and meta information about the command.
+/ An executable is started synchronously.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| executable | [Executable](#runtime-Executable) |  | TODO Consider set of executables |
+| cell_name | [string](#string) |  |  |
+| executable | [Executable](#runtime-Executable) |  |  |
 
 
 
@@ -231,7 +251,12 @@ The most primitive workload in Aurae, a standard executable process.
 <a name="runtime-StartExecutableResponse"></a>
 
 ### StartExecutableResponse
+The response after starting an executable within a Cell.
 
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| pid | [int32](#int32) |  | Return a pid as an int32 based on the pid_t type / in various libc libraries. |
 
 
 
@@ -277,11 +302,12 @@ Cells is the most fundamental isolation boundary for Aurae.
 / A cell is an isolate set of resources of the system which can be
 / used to run workloads.
 /
-/ A cell is composed of a unique cgroup namespace, and unshared kernel namespaces.
+/ A cell is composed of a unique cgroup namespace, and unshared kernel
+/ namespaces.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Allocate | [AllocateCellRequest](#runtime-AllocateCellRequest) | [AllocateCellResponse](#runtime-AllocateCellResponse) | Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources only. |
+| Allocate | [AllocateCellRequest](#runtime-AllocateCellRequest) | [AllocateCellResponse](#runtime-AllocateCellResponse) | Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources / only. |
 | Free | [FreeCellRequest](#runtime-FreeCellRequest) | [FreeCellResponse](#runtime-FreeCellResponse) | Free up previously requested resources for an existing cell |
 | Start | [StartExecutableRequest](#runtime-StartExecutableRequest) | [StartExecutableResponse](#runtime-StartExecutableResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
 | Stop | [StopExecutableRequest](#runtime-StopExecutableRequest) | [StopExecutableResponse](#runtime-StopExecutableResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
