@@ -35,8 +35,8 @@ use crate::runtime::cells::cell_name::CellName;
 use cgroups_rs::{
     cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
 };
-use tracing::info;
 use std::collections::HashMap;
+use tracing::info;
 use unshare::ExitStatus;
 
 // We should not be able to change a cell after it has been created.
@@ -159,7 +159,6 @@ impl Cell {
                                 cell_name: self.spec.name.clone(),
                                 executable_name: executable.name.clone(),
                                 command: executable.command.clone(),
-                                args: executable.args.clone(),
                                 // source: e,
                             }
                         })?;
