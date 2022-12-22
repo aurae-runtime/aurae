@@ -81,7 +81,7 @@ struct AuraedOptions {
     #[clap(short, long, value_parser, default_value = AURAE_SOCK)]
     socket: String,
     /// Toggle verbosity. Default false
-    #[clap(short, long)]
+    #[clap(short, long, alias="ritz")]
     verbose: bool,
 }
 
