@@ -85,31 +85,26 @@ impl Cells {
     where
         F: FnOnce(&mut Cell) -> Result<R>,
     {
-        get_mut(&mut self.cache, cell_name, f)
+        let Some(cell) = self.cache.get_mut(cell_name) else {
+            return Err(CellsError::CellNotFound { cell_name: cell_name.clone() });
+        };
+
+        let res = f(cell);
+
+        if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
+            let _ = self.cache.remove(cell_name);
+        }
+
+        res
     }
 
     /// Returns an error if the [CellName] does not exist in the cache.
     pub fn free(&mut self, cell_name: &CellName) -> Result<()> {
-        get_mut(&mut self.cache, cell_name, |cell| cell.free())?;
+        self.get_mut(cell_name, |cell| cell.free())?;
         let _ = self.cache.remove(cell_name).ok_or_else(|| {
             CellsError::CellNotFound { cell_name: cell_name.clone() }
         })?;
         Ok(())
-    }
-}
-
-fn get_mut<F, R>(cache: &mut Cache, cell_name: &CellName, f: F) -> Result<R>
-where
-    F: FnOnce(&mut Cell) -> Result<R>,
-{
-    if let Some(cell) = cache.get_mut(cell_name) {
-        let res = f(cell);
-        if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
-            let _ = cache.remove(cell_name);
-        }
-        res
-    } else {
-        Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
     }
 }
 
