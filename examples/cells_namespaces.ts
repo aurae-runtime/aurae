@@ -83,6 +83,18 @@ let u_started = await cells.start(<runtime.StartExecutableRequest>{
 })
 helpers.print(u_started)
 
+// // [ Start Other ]
+// let u_started_other = await cells.start(<runtime.StartExecutableRequest>{
+//     cellName: "unshared-pid-ns-safe",
+//     executable: runtime.Executable.fromPartial({
+//         command: "/usr/bin/ls", // Note: you must use the full path now for namespaces!
+//         args: ["/proc"],
+//         description: "List processes",
+//         name: "ps-aux-other"
+//     })
+// })
+// helpers.print(u_started_other)
+
 // [ Free ]
 await cells.free(<runtime.FreeCellRequest>{
     cellName: "unshared-pid-ns-safe"

@@ -33,10 +33,14 @@ use super::{
 };
 use crate::runtime::cells::cell_name::CellName;
 use cgroups_rs::{
-    cgroup_builder::CgroupBuilder, hierarchies, Cgroup, Hierarchy,
+    cgroup_builder::CgroupBuilder, hierarchies, Cgroup, CgroupPid, Hierarchy,
 };
-use std::collections::HashMap;
-use std::process::ExitStatus;
+// use log::error;
+// use std::borrow::Borrow;
+// use std::fs::File;
+use std::ops::Deref;
+// use std::os::fd::AsRawFd;
+use std::{collections::HashMap, io, process::ExitStatus};
 use tracing::info;
 
 // We should not be able to change a cell after it has been created.
@@ -141,6 +145,19 @@ impl Cell {
             });
         }
 
+        let executable_name = executable.name.clone();
+        let other_executable_pid = executables
+            .deref()
+            .iter()
+            .filter_map(|(other_executable_name, other_executable)| {
+                if *other_executable_name != executable_name {
+                    other_executable.pid()
+                } else {
+                    None
+                }
+            })
+            .next();
+
         // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
         let executable =
             executables.entry(executable.name.clone()).or_insert(executable);
@@ -150,7 +167,12 @@ impl Cell {
         // Here is where we launch an executable within the context of a parent Cell.
         // Aurae makes the assumption that all Executables within a cell share the
         // same namespace isolation rules set up upon creation of the cell.
-        let pid = executable.start(self.spec.clone()).map_err(|e| {
+        let spec = self.spec.clone();
+        let pre_exec = move || {
+            pre_exec(&executable_name, &spec, other_executable_pid.as_ref())
+        };
+
+        let pid = executable.start(Some(pre_exec)).map_err(|e| {
             CellsError::FailedToStartExecutable {
                 cell_name: self.spec.name.clone(),
                 executable_name: executable.name.clone(),
@@ -267,6 +289,229 @@ fn hierarchy() -> Box<dyn Hierarchy> {
     // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
     // hierarchies::V2
     Box::new(hierarchies::V2::new())
+}
+
+/// Common functionality within the context of the new executable
+fn pre_exec(
+    executable_name: &ExecutableName,
+    spec: &ValidatedCell,
+    other_executable_pid: Option<&CgroupPid>,
+) -> io::Result<()> {
+    match other_executable_pid {
+        None => pre_exec_first_exe(executable_name, spec),
+        Some(other_executable_pid) => {
+            pre_exec_other_exes(executable_name, other_executable_pid)
+        }
+    }
+}
+
+fn pre_exec_first_exe(
+    executable_name: &ExecutableName,
+    spec: &ValidatedCell,
+) -> io::Result<()> {
+    info!("CellService: pre_exec_first_exe(): {executable_name}");
+    // Here we are executing as the new spawned pid.
+    // This is a place where we can "hook" into all processes
+    // started with Aurae in the future. Similar to kprobe/uprobe
+    // in Linux or LD_PRELOAD in libc.
+
+    pre_exec_unshare(executable_name, spec)?;
+
+    if !spec.ns_share_pid && !spec.ns_share_mount {
+        pre_exec_mount_proc(executable_name)?;
+    }
+
+    Ok(())
+}
+
+/// Common functionality within the context of the new executable
+fn pre_exec_other_exes(
+    executable_name: &ExecutableName,
+    _other_executable_pid: &CgroupPid,
+) -> io::Result<()> {
+    info!("CellService: pre_exec_other_exes(): {executable_name}");
+
+    // Does not work yet
+    // pre_exec_set_ns(executable_name, other_executable_pid)?;
+
+    // TODO: mount?
+
+    Ok(())
+}
+
+// Namespaces
+//
+// TODO We need to track the namespace for all newly
+//      unshared namespaces within a Cell such that
+//      we can call command.set_namespace() for
+//      each of the new namespaces at the cell level!
+//      This will likely require changing how Cells
+//      manage namespaces as we need to cache the namespace
+//      IDs (names?)
+//
+// TODO Basically once a namespace has been created for a Cell
+//      we should put ALL future executables into the same namespace!
+fn pre_exec_unshare(
+    executable_name: &ExecutableName,
+    spec: &ValidatedCell,
+) -> io::Result<()> {
+    info!("CellService: pre_exec_unshare(): {executable_name}");
+
+    // Note: The logic here is reversed. We define the flags as "share'
+    //       and map them to "unshare".
+    //       This is by design as the API has a concept of "share".
+    if !spec.ns_share_mount {
+        info!("Unshare: mount");
+        if let Err(err_no) =
+            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNS)
+        {
+            return Err(io::Error::from_raw_os_error(err_no as i32));
+        }
+    }
+    if !spec.ns_share_uts {
+        info!("Unshare: uts");
+        if let Err(err_no) =
+            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWUTS)
+        {
+            return Err(io::Error::from_raw_os_error(err_no as i32));
+        }
+    }
+    if !spec.ns_share_ipc {
+        info!("Unshare: ipc");
+        if let Err(err_no) =
+            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWIPC)
+        {
+            return Err(io::Error::from_raw_os_error(err_no as i32));
+        }
+    }
+    if !spec.ns_share_pid {
+        info!("Unshare: pid");
+        if let Err(err_no) =
+            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWPID)
+        {
+            return Err(io::Error::from_raw_os_error(err_no as i32));
+        }
+    }
+    if !spec.ns_share_net {
+        info!("Unshare: net");
+        if let Err(err_no) =
+            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNET)
+        {
+            return Err(io::Error::from_raw_os_error(err_no as i32));
+        }
+    }
+
+    if !spec.ns_share_cgroup {
+        info!("Unshare: cgroup");
+        if let Err(err_no) =
+            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWCGROUP)
+        {
+            return Err(io::Error::from_raw_os_error(err_no as i32));
+        }
+    }
+
+    Ok(())
+}
+
+// // This errors
+// fn pre_exec_set_ns(
+//     executable_name: &ExecutableName,
+//     other_executable_pid: &CgroupPid,
+// ) -> io::Result<()> {
+//     info!("CellService: pre_exec_setns(): {executable_name}");
+//
+//     let process = match other_executable_pid.pid.try_into() {
+//         Ok(pid) => procfs::process::Process::new(pid),
+//         Err(e) => {
+//             error!("{}", e);
+//             return Err(io::Error::new(io::ErrorKind::Other, e));
+//         }
+//     }
+//     .map_err(|e| {
+//         error!("{}", e);
+//         io::Error::new(io::ErrorKind::Other, e)
+//     })?;
+//
+//     for (name, ns) in process
+//         .namespaces()
+//         .map_err(|e| {
+//             error!("{}", e);
+//             io::Error::new(io::ErrorKind::Other, e)
+//         })?
+//         .into_iter()
+//     {
+//         let file = File::open(ns.path)?;
+//         let fd = file.as_raw_fd();
+//
+//         match name.to_string_lossy().borrow() {
+//             "ns" => {
+//                 if let Err(err_no) =
+//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWNS)
+//                 {
+//                     return Err(io::Error::from_raw_os_error(err_no as i32));
+//                 }
+//             }
+//             "uts" => {
+//                 if let Err(err_no) =
+//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWUTS)
+//                 {
+//                     return Err(io::Error::from_raw_os_error(err_no as i32));
+//                 }
+//             }
+//             "ipc" => {
+//                 if let Err(err_no) =
+//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWIPC)
+//                 {
+//                     return Err(io::Error::from_raw_os_error(err_no as i32));
+//                 }
+//             }
+//             "pid" => {
+//                 if let Err(err_no) =
+//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWPID)
+//                 {
+//                     return Err(io::Error::from_raw_os_error(err_no as i32));
+//                 }
+//             }
+//             "net" => {
+//                 if let Err(err_no) =
+//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWNET)
+//                 {
+//                     return Err(io::Error::from_raw_os_error(err_no as i32));
+//                 }
+//             }
+//             "cgroup" => {
+//                 if let Err(err_no) = nix::sched::setns(
+//                     fd,
+//                     nix::sched::CloneFlags::CLONE_NEWCGROUP,
+//                 ) {
+//                     return Err(io::Error::from_raw_os_error(err_no as i32));
+//                 }
+//             }
+//             other => {
+//                 info!("Other namespace: {other}")
+//             }
+//         }
+//     }
+//
+//     Ok(())
+// }
+
+fn pre_exec_mount_proc(executable_name: &ExecutableName) -> io::Result<()> {
+    info!("CellService: pre_exec_mount_proc(): {executable_name}");
+
+    if let Err(err_no) = nix::mount::mount(
+        Some("proc"),
+        "/proc",
+        Some("proc"),
+        nix::mount::MsFlags::empty(),
+        None::<&[u8]>,
+    ) {
+        return Err(io::Error::from_raw_os_error(err_no as i32));
+    }
+
+    // TODO validate this logic is the correct logic for mounting proc in our new namespace isolation zone
+
+    Ok(())
 }
 
 #[cfg(test)]
