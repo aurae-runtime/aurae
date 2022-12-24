@@ -30,9 +30,9 @@
 
 use crate::runtime::cells::{CellName, ExecutableName};
 use cgroups_rs::CgroupPid;
-use tracing::error;
 use thiserror::Error;
 use tonic::Status;
+use tracing::error;
 
 pub(crate) type Result<T> = std::result::Result<T, CellsError>;
 
@@ -58,7 +58,6 @@ pub(crate) enum CellsError {
         cell_name: CellName,
         executable_name: ExecutableName,
         command: String,
-        args: Vec<String>,
         //source: unshare::Error,
     },
     //#[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]

@@ -97,7 +97,6 @@ service CellService {
 message Executable {
   string name = 1;
   string command = 2;
-  repeated string args = 3;
   string description = 4;
 }
 

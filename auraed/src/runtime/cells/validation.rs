@@ -127,10 +127,6 @@ pub(crate) struct ValidatedExecutable {
 
     pub command: String,
 
-    #[field_type(Vec<String>)]
-    #[validate(none)]
-    pub args: Vec<String>,
-
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
     pub description: String,
@@ -148,7 +144,7 @@ impl ExecutableTypeValidator for ExecutableValidator {
 
 impl From<ValidatedExecutable> for crate::runtime::cells::Executable {
     fn from(x: ValidatedExecutable) -> Self {
-        let ValidatedExecutable { name, command, args, description } = x;
-        Self::new(name, command, args, description)
+        let ValidatedExecutable { name, command, description } = x;
+        Self::new(name, command, description)
     }
 }

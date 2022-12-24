@@ -6,7 +6,6 @@ export const protobufPackage = "runtime";
 export interface Executable {
   name: string;
   command: string;
-  args: string[];
   description: string;
 }
 
@@ -124,7 +123,7 @@ export interface StopExecutableResponse {
 }
 
 function createBaseExecutable(): Executable {
-  return { name: "", command: "", args: [], description: "" };
+  return { name: "", command: "", description: "" };
 }
 
 export const Executable = {
@@ -132,7 +131,6 @@ export const Executable = {
     return {
       name: isSet(object.name) ? String(object.name) : "",
       command: isSet(object.command) ? String(object.command) : "",
-      args: Array.isArray(object?.args) ? object.args.map((e: any) => String(e)) : [],
       description: isSet(object.description) ? String(object.description) : "",
     };
   },
@@ -141,11 +139,6 @@ export const Executable = {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
     message.command !== undefined && (obj.command = message.command);
-    if (message.args) {
-      obj.args = message.args.map((e) => e);
-    } else {
-      obj.args = [];
-    }
     message.description !== undefined && (obj.description = message.description);
     return obj;
   },
@@ -154,7 +147,6 @@ export const Executable = {
     const message = createBaseExecutable();
     message.name = object.name ?? "";
     message.command = object.command ?? "";
-    message.args = object.args?.map((e) => e) || [];
     message.description = object.description ?? "";
     return message;
   },

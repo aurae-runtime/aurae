@@ -12,7 +12,6 @@ use unshare::{Child, Namespace};
 pub(crate) struct Executable {
     pub name: ExecutableName,
     pub command: String,
-    pub args: Vec<String>,
     pub description: String,
     state: ExecutableState,
 }
@@ -28,10 +27,9 @@ impl Executable {
     pub fn new(
         name: ExecutableName,
         command: String,
-        args: Vec<String>,
         description: String,
     ) -> Self {
-        Self { name, command, args, description, state: ExecutableState::Init }
+        Self { name, command, description, state: ExecutableState::Init }
     }
 
     /// Starts the executable and returns the pid.
@@ -41,8 +39,8 @@ impl Executable {
             ExecutableState::Started(child) => Ok((child.id() as u64).into()),
 
             ExecutableState::Init | ExecutableState::Stopped(_) => {
-                let mut command = Command::new(&self.command);
-                let command = command.args(&self.args);
+                let mut command = Command::new("/usr/bin/sh");
+                let command = command.args(&["-c", &self.command]);
 
                 // Namespaces
                 //

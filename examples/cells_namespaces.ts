@@ -49,8 +49,7 @@ helpers.print(s_allocated)
 let s_started = await cells.start(<runtime.StartExecutableRequest>{
     cellName: "shared-pid-ns-dangerous",
     executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/ls", // Note: you must use the full path now for namespaces!
-        args: ["/proc"],
+        command: "/usr/bin/ls /proc", // Note: you must use the full path now for namespaces!
         description: "List processes",
         name: "ps-aux"
     })
@@ -77,8 +76,7 @@ helpers.print(u_allocated)
 let u_started = await cells.start(<runtime.StartExecutableRequest>{
     cellName: "unshared-pid-ns-safe",
     executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/ls", // Note: you must use the full path now for namespaces!
-        args: ["/proc"],
+        command: "/usr/bin/ls /proc", // Note: you must use the full path now for namespaces!
         description: "List processes",
         name: "ps-aux"
     })
