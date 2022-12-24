@@ -37,10 +37,7 @@ option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 ///
 /// The Runtime API is a resource-oriented set of services.
 /// Resource type API modelled after the "Resource-oriented design" shared by
-/// @dominichamon Source: https://google.aip.dev/121
-
-// TODO Pods Service
-service Pods {}
+/// Source: https://google.aip.dev/121
 
 // TODO Instances Service
 service Instances {}
@@ -67,6 +64,30 @@ service Spawn {}
 /// * Stop       Stop a resource immediately
 /// * Spawn      A special function that creates a child instance with inherited
 /// properties of the parent
+
+/// Pods is a higher level abstraction than Aurae cells, and to most users
+/// will look at feel like one or more "containers".
+///
+/// Pods will run an OCI compliant container image.
+///
+/// A pod is a group of one or more containers with shared network and storage.
+service Pods {
+
+  rpc Allocate(AllocatePodRequest) returns (AllocatePodResponse) {}
+  rpc Start(StartPodRequest) returns (StartPodResponse) {}
+  rpc Stop(StopPodRequest) returns (StopPodResponse) {}
+  rpc Free(FreePodRequest) returns (FreePodResponse) {}
+
+}
+
+message AllocatePodRequest{}
+message AllocatePodResponse{}
+message StartPodRequest{}
+message StartPodResponse{}
+message StopPodRequest{}
+message StopPodResponse{}
+message FreePodRequest{}
+message FreePodResponse{}
 
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be
@@ -198,6 +219,7 @@ message StartExecutableResponse {
   //string group = 5;  // TODO
 }
 
+/// Request to stop an executable at runtime.
 message StopExecutableRequest {
   string cell_name = 1;
   string executable_name = 2;
