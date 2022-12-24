@@ -62,25 +62,22 @@
 #![warn(missing_docs)]
 #![allow(dead_code)]
 
-use anyhow::anyhow;
-use anyhow::Context;
-use tracing::*;
-//use logging::log_channel::LogChannel;
-use std::collections::hash_map::DefaultHasher;
-use std::fs;
-use std::hash::{Hash, Hasher};
-use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
-use std::path::PathBuf;
-// use std::sync::Arc;
-use std::time::SystemTime;
+use crate::runtime::cells::CellService;
+use anyhow::{anyhow, Context};
+use aurae_proto::runtime::cell_service_server::CellServiceServer;
+use clap::Parser;
+use std::{
+    collections::hash_map::DefaultHasher,
+    fs,
+    hash::{Hash, Hasher},
+    os::unix::fs::PermissionsExt,
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
-
-// Cells
-use crate::runtime::cells::CellService;
-use aurae_proto::runtime::cell_service_server::CellServiceServer;
+use tracing::{error, info, trace, Level};
 
 pub mod init;
 pub mod logging;
@@ -96,7 +93,75 @@ mod schedule;
 /// processes and commands. Access to the socket must be governed
 /// by an appropriate mTLS Authorization setting in order to maintain
 /// a secure multi tenant system.
-pub const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
+const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
+const EXIT_OKAY: i32 = 0;
+const EXIT_ERROR: i32 = 1;
+
+/// Command line options for auraed.
+///
+/// Defines the configurable options which can be used to populate
+/// an AuraeRuntime structure.
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct AuraedOptions {
+    /// The signed server certificate. Defaults to /etc/aurae/pki/_signed.server.crt
+    #[clap(
+        long,
+        value_parser,
+        default_value = "/etc/aurae/pki/_signed.server.crt"
+    )]
+    server_crt: String,
+    /// The secret server key. Defaults to /etc/aurae/pki/server.key
+    #[clap(long, value_parser, default_value = "/etc/aurae/pki/server.key")]
+    server_key: String,
+    /// The CA certificate. Defaults to /etc/aurae/pki/ca.crt
+    #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
+    ca_crt: String,
+    /// Aurae socket path. Defaults to /var/run/aurae/aurae.sock
+    #[clap(short, long, value_parser, default_value = AURAE_SOCK)]
+    socket: String,
+    /// Toggle verbosity. Default false
+    #[clap(short, long, alias = "ritz")]
+    verbose: bool,
+}
+
+#[allow(missing_docs)] // TODO
+pub async fn daemon() -> i32 {
+    let options = AuraedOptions::parse();
+
+    // The logger will log to stdout and the syslog by default.
+    // We hold the opinion that the program is either "verbose"
+    // or it's not.
+    //
+    // Normal mode: Info, Warn, Error
+    // Verbose mode: Debug, Trace, Info, Warn, Error
+    let tracing_level =
+        if options.verbose { Level::TRACE } else { Level::INFO };
+
+    // Initializes Logging and prepares system if auraed is run as pid=1
+    init::init(tracing_level).await;
+
+    trace!("**Logging: Verbose Mode**");
+    info!("Starting Aurae Daemon Runtime...");
+
+    let runtime = AuraedRuntime {
+        server_crt: PathBuf::from(options.server_crt),
+        server_key: PathBuf::from(options.server_key),
+        ca_crt: PathBuf::from(options.ca_crt),
+        socket: PathBuf::from(options.socket),
+    };
+
+    let e = runtime.run().await;
+    if e.is_err() {
+        error!("{:?}", e);
+    }
+
+    if e.is_err() {
+        EXIT_ERROR
+    } else {
+        EXIT_OKAY
+    }
+}
 
 /// Each instance of Aurae holds internal state in memory. Below are the
 /// settings which can be configured for a given Aurae daemon instance.
@@ -105,7 +170,7 @@ pub const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
 /// material. Each new instance of a subsystem will read these from the local
 /// filesystem at runtime in order to authenticate.
 #[derive(Debug)]
-pub struct AuraedRuntime {
+struct AuraedRuntime {
     /// Certificate Authority for an organization or mesh of Aurae instances.
     pub ca_crt: PathBuf,
     /// The signed server X509 certificate for this unique instance.
