@@ -47,7 +47,7 @@ impl Executable {
 
             ExecutableState::Init | ExecutableState::Stopped(_) => {
                 let mut command = Command::new("/usr/bin/sh");
-                let mut command = command.args(&["-c", &self.command]);
+                let mut command = command.args(["-c", &self.command]);
 
                 if let Some(pre_exec) = pre_exec {
                     command = unsafe { command.pre_exec(pre_exec) };

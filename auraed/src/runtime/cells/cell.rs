@@ -177,7 +177,6 @@ impl Cell {
                 cell_name: self.spec.name.clone(),
                 executable_name: executable.name.clone(),
                 command: executable.command.clone(),
-                args: executable.args.clone(),
                 source: e,
             }
         })?;
