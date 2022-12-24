@@ -502,14 +502,11 @@ fn pre_exec_mount_proc(executable_name: &ExecutableName) -> io::Result<()> {
         Some("proc"),
         "/proc",
         Some("proc"),
-        nix::mount::MsFlags::empty(),
+        nix::mount::MsFlags::MS_BIND,
         None::<&[u8]>,
     ) {
         return Err(io::Error::from_raw_os_error(err_no as i32));
     }
-
-    // TODO validate this logic is the correct logic for mounting proc in our new namespace isolation zone
-
     Ok(())
 }
 
