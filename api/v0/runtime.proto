@@ -65,29 +65,30 @@ service Spawn {}
 /// * Spawn      A special function that creates a child instance with inherited
 /// properties of the parent
 
-/// Pods is a higher level abstraction than Aurae cells, and to most users
+/// A pod is a higher level abstraction than Aurae cells, and to most users
 /// will look at feel like one or more "containers".
 ///
 /// Pods will run an OCI compliant container image.
 ///
 /// A pod is a group of one or more containers with shared network and storage.
-service Pods {
+service PodService {
 
   rpc Allocate(AllocatePodRequest) returns (AllocatePodResponse) {}
-  rpc Start(StartPodRequest) returns (StartPodResponse) {}
-  rpc Stop(StopPodRequest) returns (StopPodResponse) {}
+  rpc Start(StartContainerRequest) returns (StartContainerResponse) {}
+  rpc Stop(StopContainerRequest) returns (StopContainerResponse) {}
   rpc Free(FreePodRequest) returns (FreePodResponse) {}
 
 }
 
 message AllocatePodRequest{}
 message AllocatePodResponse{}
-message StartPodRequest{}
-message StartPodResponse{}
-message StopPodRequest{}
-message StopPodResponse{}
 message FreePodRequest{}
 message FreePodResponse{}
+
+message StartContainerRequest{}
+message StartContainerResponse{}
+message StopContainerRequest{}
+message StopContainerResponse{}
 
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be
