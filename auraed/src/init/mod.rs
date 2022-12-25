@@ -37,7 +37,7 @@ use crate::init::{
     fs::FsError,
     logging::LoggingError,
     network::NetworkError,
-    system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
+    system_runtime::{PidGt1SystemRuntime, SystemRuntime},
 };
 use tracing::Level;
 

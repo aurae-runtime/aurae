@@ -124,6 +124,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "aurae-client"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aurae-client-macros",
+ "aurae-proto",
+ "serde",
+ "tokio",
+ "toml",
+ "tonic",
+ "tower",
+ "x509-certificate",
+]
+
+[[package]]
+name = "aurae-client-macros"
+version = "0.0.0"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "aurae-executables"
 version = "0.0.0"
 dependencies = [
@@ -131,15 +156,6 @@ dependencies = [
  "nix 0.26.1",
  "procfs",
  "tracing",
- "validation",
-]
-
-[[package]]
-name = "aurae-init"
-version = "0.0.0"
-dependencies = [
- "aurae-cells",
- "aurae-executables",
  "validation",
 ]
 
@@ -159,6 +175,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aurae-cells",
+ "aurae-client",
  "aurae-executables",
  "aurae-proto",
  "cgroups-rs",

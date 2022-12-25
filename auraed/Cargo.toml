@@ -41,6 +41,7 @@ path = "src/bin/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }
+aurae-client = { path = "../crates/aurae-client" }
 aurae-proto = { workspace = true }
 aurae-cells = { path = "../crates/aurae-cells" }
 aurae-executables = { path = "../crates/aurae-executables" }

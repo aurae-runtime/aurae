@@ -55,6 +55,7 @@ impl From<CellsServiceError> for Status {
             CellsError::CellNotFound { .. }
             | CellsError::ExecutableNotFound { .. } => Status::not_found(msg),
             CellsError::FailedToAllocateCell { .. }
+            | CellsError::AbortedAllocateCell { .. }
             | CellsError::FailedToFreeCell { .. }
             | CellsError::FailedToStartExecutable { .. }
             | CellsError::FailedToStopExecutable { .. }

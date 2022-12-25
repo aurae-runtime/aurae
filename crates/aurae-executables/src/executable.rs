@@ -212,6 +212,9 @@ fn exec_pid1(
                 .args(["--socket", "/var/run/aurae/nested.sock"])
                 .pre_exec(move || {
                     if !shared_namespaces.mount {
+                        // We can potentially do some setup here, and then leave the rest
+                        // to auraed's init. We would need flags to signal it is a nested PID1
+
                         // remount as private
                         nix::mount::mount(
                             Some("."),
@@ -247,8 +250,13 @@ fn exec_pid1(
     Ok(process)
 }
 
-fn exec(_command: CString) -> io::Result<Process> {
-    let child = Command::new("ls").current_dir("/").args(["/proc"]).spawn()?;
+fn exec(command: CString) -> io::Result<Process> {
+    // TODO: fix building command
+    let command = command.to_string_lossy();
+    let split = command.split_whitespace().collect::<Vec<_>>();
+    let program = &split[0];
+    let args = if split.len() > 1 { &split[1..] } else { &[] };
+    let child = Command::new(program).current_dir("/").args(args).spawn()?;
 
     let process = Process::new(child.id() as i32)
         .map_err(|e| io::Error::new(ErrorKind::Other, e))?;

@@ -28,58 +28,68 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::CellName;
-use aurae_executables::ExecutableName;
-use std::io;
-use thiserror::Error;
-use tracing::error;
+//! Configuration used to authenticate with a remote Aurae daemon.
+//!
+//! [`AuraeConfig::try_default()`] follows an ordered priority for searching for
+//! configuration on a client's machine.
+//!
+//! 1. ${HOME}/.aurae/config
+//! 2. /etc/aurae/config
+//! 3. /var/lib/aurae/config
 
-pub type Result<T> = std::result::Result<T, CellsError>;
+pub use self::{auth_config::AuthConfig, system_config::SystemConfig};
+use anyhow::{anyhow, Context, Result};
+use serde::Deserialize;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
 
-#[derive(Error, Debug)]
-pub enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' unallocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be allocated: {source}")]
-    FailedToAllocateCell { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' allocation was aborted: {source}")]
-    AbortedAllocateCell {
-        cell_name: CellName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cell '{cell_name}' already has an executable '{executable_name}'"
-    )]
-    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
-    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
-    FailedToStartExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        command: String,
-        source: io::Error,
-    },
-    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' due to: {source}")]
-    FailedToStopExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: io::Error,
-    },
-    #[error(
-        "cell '{cell_name}' failed to add executable (executable:?): {source}"
-    )]
-    FailedToAddExecutableToCell {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("failed to lock cells table")]
-    FailedToObtainLock(),
+mod auth_config;
+mod system_config;
+
+/// Configuration for AuraeScript client
+#[derive(Debug, Clone, Deserialize)]
+pub struct AuraeConfig {
+    /// Authentication material
+    pub auth: AuthConfig,
+    /// System configuration
+    pub system: SystemConfig,
+}
+
+impl AuraeConfig {
+    /// Attempt to easy-load Aurae configuration from well-known locations.
+    pub fn try_default() -> Result<Self> {
+        let home = std::env::var("HOME")
+            .expect("missing $HOME environmental variable");
+
+        let search_paths = [
+            &format!("{home}/.aurae/config"),
+            "/etc/aurae/config",
+            "/var/lib/aurae/config",
+        ];
+
+        for path in search_paths {
+            if let Ok(config) = Self::parse_from_file(path) {
+                return Ok(config);
+            }
+        }
+
+        Err(anyhow!("unable to find config file"))
+    }
+
+    /// Attempt to parse a config file into memory.
+    pub fn parse_from_file<P: AsRef<Path>>(path: P) -> Result<AuraeConfig> {
+        let mut config_toml = String::new();
+        let mut file = File::open(path)?;
+
+        if file
+            .read_to_string(&mut config_toml)
+            .with_context(|| "could not read AuraeConfig toml")?
+            == 0
+        {
+            return Err(anyhow!("empty config"));
+        }
+
+        Ok(toml::from_str(&config_toml)?)
+    }
 }

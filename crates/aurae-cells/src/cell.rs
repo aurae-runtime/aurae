@@ -47,8 +47,9 @@ pub struct Cell {
     state: CellState,
 }
 
-// TODO: look into clippy warning
+// TODO: look into clippy warning and remove dead_code
 #[allow(clippy::large_enum_variant)]
+#[allow(dead_code)]
 #[derive(Debug)]
 enum CellState {
     Unallocated,
@@ -100,10 +101,14 @@ impl Cell {
 
         println!("auraed pid {}", pid);
 
-        // TODO: We've inserted the executable into our in-memory cache, and started it,
-        //   but we've failed to move it to the Cell...bad...solution?
-        if let Err(_e) = cgroup.add_task((pid.as_raw() as u64).into()) {
-            panic!("failed to move nested auraed in cgroup") // TODO
+        if let Err(e) = cgroup.add_task((pid.as_raw() as u64).into()) {
+            // TODO: what if free also fails?
+            let _ = self.free();
+
+            return Err(CellsError::AbortedAllocateCell {
+                cell_name: self.name.clone(),
+                source: e,
+            });
         }
 
         println!("inserted auraed pid {}", pid);
@@ -137,7 +142,7 @@ impl Cell {
         &mut self,
         executable_spec: T,
     ) -> Result<&Executable> {
-        let CellState::Allocated { cgroup, pid1: _, executables } = &mut self.state else {
+        let CellState::Allocated { cgroup: _, pid1: _, executables } = &mut self.state else {
             return Err(CellsError::CellNotAllocated {
                 cell_name: self.name.clone(),
             });
@@ -158,6 +163,13 @@ impl Cell {
         let executable =
             executables.entry(executable.name.clone()).or_insert(executable);
 
+        // TODO: THE EXECUTABLE IS STARTED IN THE CURRENT CGROUP, NOT THE CELLS
+        //   Need to use aurae-client to communicate with the Cell's PID1
+        //   Need logic to understand if we are in the cell we want
+        //   Currently nested auraed sets socket to nested.sock -> can we use stdin?
+        //
+        // NOTE: v2 cgroups can either have nested cgroups or processes, not both (leaf workaround)
+
         // Start the child process
         //
         // Here is where we launch an executable within the context of a parent Cell.
@@ -172,16 +184,6 @@ impl Cell {
                 source: e,
             })?
             .expect("pid");
-
-        // TODO: We've inserted the executable into our in-memory cache, and started it,
-        //   but we've failed to move it to the Cell...bad...solution?
-        if let Err(e) = cgroup.add_task((pid.as_raw() as u64).into()) {
-            return Err(CellsError::FailedToAddExecutableToCell {
-                cell_name: self.name.clone(),
-                executable_name: executable.name.clone(),
-                source: e,
-            });
-        }
 
         info!(
             "Cells: cell_name={} executable_name={} spawn() -> pid={pid:?}",

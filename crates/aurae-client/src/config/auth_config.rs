@@ -28,58 +28,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::CellName;
-use aurae_executables::ExecutableName;
-use std::io;
-use thiserror::Error;
-use tracing::error;
+use serde::Deserialize;
 
-pub type Result<T> = std::result::Result<T, CellsError>;
-
-#[derive(Error, Debug)]
-pub enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' unallocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be allocated: {source}")]
-    FailedToAllocateCell { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' allocation was aborted: {source}")]
-    AbortedAllocateCell {
-        cell_name: CellName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cell '{cell_name}' already has an executable '{executable_name}'"
-    )]
-    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
-    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
-    FailedToStartExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        command: String,
-        source: io::Error,
-    },
-    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' due to: {source}")]
-    FailedToStopExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: io::Error,
-    },
-    #[error(
-        "cell '{cell_name}' failed to add executable (executable:?): {source}"
-    )]
-    FailedToAddExecutableToCell {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("failed to lock cells table")]
-    FailedToObtainLock(),
+/// Authentication material for an AuraeScript client.
+///
+/// This material is read from disk many times during runtime.
+/// Changing this material during a process will impact the currently
+/// running process.
+#[derive(Debug, Clone, Deserialize)]
+pub struct AuthConfig {
+    /// The same CA certificate the server has.
+    pub ca_crt: String,
+    /// The unique client certificate signed by the server.
+    pub client_crt: String,
+    /// The client secret key.
+    pub client_key: String,
 }
