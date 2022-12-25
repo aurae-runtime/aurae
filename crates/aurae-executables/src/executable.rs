@@ -207,8 +207,9 @@ fn exec_pid1(
 
         unsafe {
             let shared_namespaces = shared_namespaces.clone();
-            Command::new("aurae-init")
+            Command::new("auraed")
                 .current_dir("/")
+                .args(["--socket", "/var/run/aurae/nested.sock"])
                 .pre_exec(move || {
                     if !shared_namespaces.mount {
                         // remount as private
