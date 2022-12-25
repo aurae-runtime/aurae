@@ -139,6 +139,8 @@ name = "aurae-init"
 version = "0.0.0"
 dependencies = [
  "aurae-cells",
+ "aurae-executables",
+ "validation",
 ]
 
 [[package]]

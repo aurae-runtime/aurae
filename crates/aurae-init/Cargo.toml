@@ -10,3 +10,5 @@ path = "src/bin/main.rs"
 
 [dependencies]
 aurae-cells = { path = "../aurae-cells" }
+aurae-executables = { path = "../aurae-executables" }
+validation = { path = "../validation" }

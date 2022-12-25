@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 clone3 = "0.2.3"
-nix = { version = "0.26.1", features = ["mount", "sched"] }
+nix = { version = "0.26.1", features = ["mount", "sched", "fs"] }
 procfs = "0.14.2"
 tracing = { workspace = true }
 validation = { path = "../validation" }

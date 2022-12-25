@@ -1,13 +1,12 @@
 use crate::{ExecutableName, ExecutableSpec, SharedNamespaces};
 use nix::{
-    libc,
     libc::SIGCHLD,
-    sched::CloneFlags,
     sys::{signal::SIGKILL, wait::WaitStatus},
     unistd::Pid,
 };
 use procfs::process::Process;
-use std::ffi::CStr;
+use std::os::unix::process::CommandExt;
+use std::process::Command;
 use std::{
     ffi::CString,
     io::{self, ErrorKind},
@@ -148,6 +147,7 @@ fn exec_pid1(
     let mut pidfd = -1;
     let mut clone = clone3::Clone3::default();
     clone.flag_pidfd(&mut pidfd);
+    clone.flag_vfork();
     clone.exit_signal(signal as u64);
 
     // If CLONE_NEWNS is set, the cloned child is started in a
@@ -200,25 +200,41 @@ fn exec_pid1(
     }
 
     let pid = unsafe { clone.call() }
-        .map_err(|e| io::Error::from_raw_os_error(e.0 as i32))?;
+        .map_err(|e| io::Error::from_raw_os_error(e.0))?;
 
     if pid == 0 {
         // we are in the child
-        nix::mount::mount(
-            Some("proc"),
-            "/proc",
-            Some("proc"),
-            nix::mount::MsFlags::empty(),
-            None::<&[u8]>,
-        )
-        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-
-        let args: Vec<&CStr> = vec![];
-        nix::unistd::execvp(&CString::new("aurae-init").expect("valid"), &args)
-            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 
         unsafe {
-            libc::exit(1);
+            let shared_namespaces = shared_namespaces.clone();
+            Command::new("aurae-init")
+                .current_dir("/")
+                .pre_exec(move || {
+                    if !shared_namespaces.mount {
+                        // remount as private
+                        nix::mount::mount(
+                            Some("."),
+                            ".",
+                            None::<&str>,
+                            nix::mount::MsFlags::MS_SLAVE
+                                | nix::mount::MsFlags::MS_REC,
+                            Some(""),
+                        )
+                        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+                        nix::mount::mount(
+                            Some("proc"),
+                            "/proc",
+                            Some("proc"),
+                            nix::mount::MsFlags::empty(),
+                            None::<&[u8]>,
+                        )
+                        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+                    }
+
+                    Ok(())
+                })
+                .exec();
         }
     }
 
@@ -231,5 +247,10 @@ fn exec_pid1(
 }
 
 fn exec(_command: CString) -> io::Result<Process> {
-    todo!()
+    let child = Command::new("ls").current_dir("/").args(["/proc"]).spawn()?;
+
+    let process = Process::new(child.id() as i32)
+        .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
+
+    Ok(process)
 }
