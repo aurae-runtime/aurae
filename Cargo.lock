@@ -135,6 +135,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aurae-init"
+version = "0.0.0"
+dependencies = [
+ "aurae-cells",
+]
+
+[[package]]
 name = "aurae-proto"
 version = "0.1.0"
 dependencies = [

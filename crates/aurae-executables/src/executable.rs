@@ -1,12 +1,13 @@
 use crate::{ExecutableName, ExecutableSpec, SharedNamespaces};
-use nix::libc::pid_t;
 use nix::{
+    libc,
     libc::SIGCHLD,
     sched::CloneFlags,
     sys::{signal::SIGKILL, wait::WaitStatus},
     unistd::Pid,
 };
 use procfs::process::Process;
+use std::ffi::CStr;
 use std::{
     ffi::CString,
     io::{self, ErrorKind},
@@ -132,24 +133,10 @@ impl Executable {
 }
 
 fn exec_pid1(
-    command: CString,
+    _command: CString,
     shared_namespaces: &SharedNamespaces,
 ) -> io::Result<Process> {
     // Clone docs: https://man7.org/linux/man-pages/man2/clone.2.html
-
-    // The stack argument specifies the location of the stack used by
-    //        the child process.  Since the child and calling process may share
-    //        memory, it is not possible for the child process to execute in
-    //        the same stack as the calling process.  The calling process must
-    //        therefore set up memory space for the child stack and pass a
-    //        pointer to this space to clone()
-    // TODO: what does fork do for the stack?
-    let mut stack = [0u8; 1024 * 2];
-
-    // a flags bit mask that modifies
-    //        their behavior and allows the caller to specify what is shared
-    //        between the calling process and the child process
-    let flags: CloneFlags = shared_namespaces.into();
 
     // If this signal is specified as anything other than SIGCHLD, then the
     //        parent process must specify the __WALL or __WCLONE options when
@@ -158,7 +145,11 @@ fn exec_pid1(
     //        terminates.
     let signal = SIGCHLD;
 
+    let mut pidfd = -1;
     let mut clone = clone3::Clone3::default();
+    clone.flag_pidfd(&mut pidfd);
+    clone.exit_signal(signal as u64);
+
     // If CLONE_NEWNS is set, the cloned child is started in a
     // new mount namespace, initialized with a copy of the
     // namespace of the parent.  If CLONE_NEWNS is not set, the
@@ -208,28 +199,33 @@ fn exec_pid1(
         clone.flag_newcgroup();
     }
 
-    // let pid = unsafe { clone.call() }
-    //     .map_err(|e| io::Error::from_raw_os_error(e.0 as i32))?;
+    let pid = unsafe { clone.call() }
+        .map_err(|e| io::Error::from_raw_os_error(e.0 as i32))?;
 
-    let pid = nix::sched::clone(
-        Box::new(|| {
-            // TODO: execvp (std) vs execve (unshare crate)
-            match nix::unistd::execvp(
-                &CString::new("/usr/bin/sh").expect("valid CString"),
-                &[&CString::new("-c").expect("valid CString"), &command],
-            ) {
-                Err(exit_status) => exit_status as isize,
-                _ => unreachable!(),
-            }
-        }),
-        &mut stack,
-        flags,
-        Some(signal),
-    )
-    .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+    if pid == 0 {
+        // we are in the child
+        nix::mount::mount(
+            Some("proc"),
+            "/proc",
+            Some("proc"),
+            nix::mount::MsFlags::empty(),
+            None::<&[u8]>,
+        )
+        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 
-    let process = Process::new(pid.as_raw())
-        .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
+        let args: Vec<&CStr> = vec![];
+        nix::unistd::execvp(&CString::new("aurae-init").expect("valid"), &args)
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        unsafe {
+            libc::exit(1);
+        }
+    }
+
+    // we are in the parent again
+
+    let process =
+        Process::new(pid).map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
     Ok(process)
 }

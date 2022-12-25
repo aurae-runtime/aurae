@@ -1,0 +1,12 @@
+[package]
+name = "aurae-init"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "aurae-init"
+path = "src/bin/main.rs"
+
+[dependencies]
+aurae-cells = { path = "../aurae-cells" }
