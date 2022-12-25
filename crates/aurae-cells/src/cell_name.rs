@@ -3,7 +3,7 @@ use std::ops::Deref;
 use validation::{ValidatedField, ValidationError};
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub(crate) struct CellName(String);
+pub struct CellName(String);
 
 impl CellName {
     pub fn into_inner(self) -> String {

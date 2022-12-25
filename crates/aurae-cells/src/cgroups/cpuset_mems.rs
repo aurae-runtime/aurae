@@ -8,9 +8,9 @@ use std::{
 use validation::{ValidatedField, ValidationError};
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub(crate) struct CpuCpus(String);
+pub struct CpusetMems(String);
 
-impl CpuCpus {
+impl CpusetMems {
     #[cfg(test)]
     pub fn new(cpu_cpus: String) -> Self {
         Self(cpu_cpus)
@@ -21,7 +21,7 @@ impl CpuCpus {
     }
 }
 
-impl ValidatedField<String> for CpuCpus {
+impl ValidatedField<String> for CpusetMems {
     fn validate(
         input: Option<String>,
         field_name: &str,
@@ -49,7 +49,7 @@ impl ValidatedField<String> for CpuCpus {
     }
 }
 
-impl Deref for CpuCpus {
+impl Deref for CpusetMems {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -57,7 +57,7 @@ impl Deref for CpuCpus {
     }
 }
 
-impl Display for CpuCpus {
+impl Display for CpusetMems {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
@@ -75,8 +75,8 @@ mod tests {
     #[test_case("1,2-5,6"; "combo")]
     #[test]
     fn test_validation_success(input: &str) {
-        let input: CpuCpus = CpuCpus::new(input.into());
-        assert!(CpuCpus::validate_for_creation(
+        let input: CpusetMems = CpusetMems::new(input.into());
+        assert!(CpusetMems::validate_for_creation(
             Some(input.into_inner()),
             "cpu_cpus",
             None
@@ -90,8 +90,8 @@ mod tests {
     #[test_case("1,foo;5"; "bad combo")]
     #[test]
     fn test_validation_failure(input: &str) {
-        let input: CpuCpus = CpuCpus::new(input.into());
-        assert!(CpuCpus::validate_for_creation(
+        let input: CpusetMems = CpusetMems::new(input.into());
+        assert!(CpusetMems::validate_for_creation(
             Some(input.into_inner()),
             "cpu_cpus",
             None

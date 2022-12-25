@@ -40,8 +40,10 @@ name = "auraed"
 path = "src/bin/main.rs"
 
 [dependencies]
-anyhow = {workspace = true}
+anyhow = { workspace = true }
 aurae-proto = { workspace = true }
+aurae-cells = { path = "../crates/aurae-cells" }
+aurae-executables = { path = "../crates/aurae-executables" }
 cgroups-rs = "0.2.11"
 clap = { version = "3.1.20", features = ["derive"] }
 fancy-regex = "0.10.0"
@@ -64,11 +66,11 @@ tonic = { workspace = true, features = ["tls"] }
 tracing = { workspace = true, features = ["log"] }
 tracing-journald = "0.3"
 tracing-log = "0.1"
-tracing-subscriber = {version = "0.3", features = ["env-filter"]}
-validation = { path = "../crates/validation", features=["regex", "tonic"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+validation = { path = "../crates/validation", features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
-uuid = { version = "1.2.2", features=["v4"] }
+uuid = { version = "1.2.2", features = ["v4"] }

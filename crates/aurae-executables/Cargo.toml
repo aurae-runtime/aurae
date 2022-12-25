@@ -1,0 +1,12 @@
+[package]
+name = "aurae-executables"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+clone3 = "0.2.3"
+nix = { version = "0.26.1", features = ["mount", "sched"] }
+procfs = "0.14.2"
+tracing = { workspace = true }
+validation = { path = "../validation" }

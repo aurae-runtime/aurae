@@ -28,14 +28,14 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{Cell, CellName, CellsError, Result};
+use crate::{Cell, CellName, CellSpec, CellsError, Result};
 use std::collections::HashMap;
 
 type Cache = HashMap<CellName, Cell>;
 
 /// Cells is the in-memory store for the list of cells created with Aurae.
 #[derive(Debug, Default)]
-pub(crate) struct Cells {
+pub struct Cells {
     cache: Cache,
 }
 
@@ -48,10 +48,11 @@ pub(crate) struct Cells {
 impl Cells {
     /// Add the [Cell] to the cache with key [CellName].
     /// Returns an error if a duplicate [CellName] already exists in the cache.
-    pub fn allocate<T: Into<Cell>>(&mut self, cell: T) -> Result<&Cell> {
-        let cell = cell.into();
-        let cell_name = cell.name().clone();
-
+    pub fn allocate(
+        &mut self,
+        cell_name: CellName,
+        cell_spec: CellSpec,
+    ) -> Result<&Cell> {
         // TODO: replace with this when it becomes stable
         // cache.try_insert(cell_name.clone(), cgroup)
 
@@ -61,8 +62,12 @@ impl Cells {
         }
 
         // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
-        let cell = self.cache.entry(cell_name).or_insert(cell);
-        cell.allocate();
+        let cell = self
+            .cache
+            .entry(cell_name.clone())
+            .or_insert_with(|| Cell::new(cell_name, cell_spec));
+
+        cell.allocate()?;
         Ok(cell)
     }
 

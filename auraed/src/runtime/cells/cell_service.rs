@@ -32,8 +32,9 @@ use super::validation::{
     ValidatedAllocateCellRequest, ValidatedFreeCellRequest,
     ValidatedStartExecutableRequest, ValidatedStopExecutableRequest,
 };
-use super::{Cells, Result};
+use super::Result;
 use ::validation::ValidatedType;
+use aurae_cells::Cells;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
     FreeCellRequest, FreeCellResponse, StartExecutableRequest,
@@ -61,18 +62,11 @@ impl CellService {
     ) -> Result<AllocateCellResponse> {
         // Initialize the cell
         let ValidatedAllocateCellRequest { cell } = request;
-
-        // TODO We should discover a way to make the logging at the function level
-        // TODO dynamic such that we don't have to keep hard-coding things like this.
-        // TODO We are looking at tracing and observability for this!
-        info!("CellService: allocate() cell={:?}", cell);
-        // info!(
-        //     "CellService: allocate() cell={:?} ns_share_mount={:?} ns_share_uts={:?} ns_share_ipc={:?} ns_share_pid={:?} ns_share_net={:?} ns_share_cgroup={:?}",
-        //     cell, ns_share_mount, ns_share_uts, ns_share_ipc, ns_share_pid, ns_share_net, ns_share_cgroup,
-        // );
+        let cell_name = cell.name.clone();
+        let cell_spec = cell.into();
 
         let mut cells = self.cells.lock().await;
-        let cell = cells.allocate(cell)?;
+        let cell = cells.allocate(cell_name, cell_spec)?;
 
         Ok(AllocateCellResponse {
             cell_name: cell.name().clone().into_inner(),
@@ -108,9 +102,8 @@ impl CellService {
 
         let mut cells = self.cells.lock().await;
         let pid = cells.get_mut(&cell_name, move |cell| {
-            // TODO: `start_executable can potentially return a &Executable, and the we can
-            //    build `StartExecutalbeResponse` from it.
-            cell.start_executable(executable)
+            let executable = cell.start_executable(executable)?;
+            Ok(executable.pid().expect("pid").as_raw())
         })?;
 
         Ok(StartExecutableResponse { pid })
@@ -184,37 +177,5 @@ impl cell_service_server::CellService for CellService {
         let request = request.into_inner();
         let request = ValidatedStopExecutableRequest::validate(request, None)?;
         Ok(Response::new(self.stop(request).await?))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::runtime::cells::{CellName, CellsError};
-
-    // TODO: run this in a way that creating cgroups works
-    #[test]
-    fn test_create_remove_cgroup() {
-        // let service = CellService::new();
-        // let id = "testing-aurae";
-        // let _cgroup = service.create_cgroup(id, 2).expect("create cgroup");
-        // println!("Created cgroup: {}", id);
-        // service.remove_cgroup(id).expect("remove cgroup");
-    }
-
-    #[tokio::test]
-    async fn test_attempt_to_remove_unknown_cell_fails() {
-        let service = CellService::new();
-        let random_cell_name = CellName::random_for_tests();
-
-        let res = service
-            .free(ValidatedFreeCellRequest {
-                cell_name: random_cell_name.clone(),
-            })
-            .await;
-
-        assert!(
-            matches!(res, Err(CellsError::CellNotFound { cell_name }) if cell_name == random_cell_name)
-        );
     }
 }

@@ -28,92 +28,101 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{
-    validation::ValidatedCell, CellsError, Executable, ExecutableName, Result,
-};
-use crate::runtime::cells::cell_name::CellName;
-use cgroups_rs::{
-    cgroup_builder::CgroupBuilder, hierarchies, Cgroup, CgroupPid, Hierarchy,
-};
-// use log::error;
-// use std::borrow::Borrow;
-// use std::fs::File;
-use std::ops::Deref;
-// use std::os::fd::AsRawFd;
-use std::{collections::HashMap, io, process::ExitStatus};
+use crate::{CellName, CellSpec, CellsError, Result};
+use aurae_executables::{Executable, ExecutableName, ExecutableSpec};
+use cgroups_rs::Cgroup;
+use std::ffi::CString;
+use std::{collections::HashMap, process::ExitStatus};
 use tracing::info;
+use validation::ValidatedField;
 
 // We should not be able to change a cell after it has been created.
 // You must free the cell and create a new one if you want to change anything about the cell.
 // In order to facilitate that immutability:
 // NEVER MAKE THE FIELDS PUB (OF ANY KIND)
 #[derive(Debug)]
-pub(crate) struct Cell {
-    spec: ValidatedCell,
+pub struct Cell {
+    name: CellName,
+    spec: CellSpec,
     state: CellState,
 }
 
+// TODO: look into clippy warning
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 enum CellState {
     Unallocated,
     Allocated {
         cgroup: Cgroup,
+        pid1: Executable,
         executables: HashMap<ExecutableName, Executable>,
     },
     Freed,
 }
 
 impl Cell {
-    pub fn new(cell_spec: ValidatedCell) -> Self {
-        Self { spec: cell_spec, state: CellState::Unallocated }
+    pub fn new(name: CellName, cell_spec: CellSpec) -> Self {
+        Self { name, spec: cell_spec, state: CellState::Unallocated }
     }
 
     /// Creates the underlying cgroup.
     /// Does nothing if [Cell] has been previously allocated.
     // Here is where we define the "default" cgroup parameters for Aurae cells
-    pub fn allocate(&mut self) {
+    pub fn allocate(&mut self) -> Result<()> {
         let CellState::Unallocated = &self.state else {
-            return;
+            return Ok(());
         };
 
-        let ValidatedCell {
-            name,
-            cpu_cpus,
-            cpu_shares,
-            cpu_mems,
-            cpu_quota,
-            ns_share_mount: _ns_share_mount,
-            ns_share_uts: _ns_share_uts,
-            ns_share_ipc: _ns_share_ipc,
-            ns_share_pid: _ns_share_pid,
-            ns_share_net: _ns_share_net,
-            ns_share_cgroup: _ns_share_cgroup,
-        } = self.spec.clone();
+        let cgroup: Cgroup =
+            self.spec.cgroup_spec.clone().into_cgroup(&self.name);
 
-        let hierarchy = hierarchy();
-        let cgroup = CgroupBuilder::new(&name)
-            // CPU Controller
-            .cpu()
-            .shares(cpu_shares.into_inner())
-            .mems(cpu_mems.into_inner())
-            .period(1000000) // microseconds in a second
-            .quota(cpu_quota.into_inner())
-            .cpus(cpu_cpus.into_inner())
-            .done()
-            // Final Build
-            .build(hierarchy);
+        let executable_spec = ExecutableSpec {
+            // TODO: don't require use of validate
+            name: ExecutableName::validate(Some("auraed".into()), "", None)
+                .expect("valid executable name"),
+            command: CString::new("/root/.cargo/bin/auraed".to_string())
+                .expect("valid CString"),
+            description: "nested auraed".to_string(),
+        };
 
-        self.state =
-            CellState::Allocated { cgroup, executables: Default::default() }
+        let mut auraed = Executable::new_pid1(
+            executable_spec,
+            self.spec.shared_namespaces.clone(),
+        );
+
+        let pid = auraed
+            .start()
+            .map_err(|e| CellsError::FailedToAllocateCell {
+                cell_name: self.name.clone(),
+                source: e,
+            })?
+            .expect("pid");
+
+        println!("auraed pid {}", pid);
+
+        // TODO: We've inserted the executable into our in-memory cache, and started it,
+        //   but we've failed to move it to the Cell...bad...solution?
+        if let Err(_e) = cgroup.add_task((pid.as_raw() as u64).into()) {
+            panic!("failed to move nested auraed in cgroup") // TODO
+        }
+
+        println!("inserted auraed pid {}", pid);
+
+        self.state = CellState::Allocated {
+            cgroup,
+            pid1: auraed,
+            executables: Default::default(),
+        };
+
+        Ok(())
     }
 
     /// Deletes the underlying cgroup.
     /// A [Cell] should never be reused after calling [free].
     pub fn free(&mut self) -> Result<()> {
-        if let CellState::Allocated { cgroup, executables: _ } = &mut self.state
-        {
+        if let CellState::Allocated { cgroup, .. } = &mut self.state {
             cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
-                cell_name: self.spec.name.clone(),
+                cell_name: self.name.clone(),
                 source: e,
             })?;
         }
@@ -124,39 +133,26 @@ impl Cell {
         Ok(())
     }
 
-    pub fn start_executable<T: Into<Executable>>(
+    pub fn start_executable<T: Into<ExecutableSpec>>(
         &mut self,
-        executable: T,
-    ) -> Result<i32> {
-        let CellState::Allocated { cgroup, executables } = &mut self.state else {
+        executable_spec: T,
+    ) -> Result<&Executable> {
+        let CellState::Allocated { cgroup, pid1: _, executables } = &mut self.state else {
             return Err(CellsError::CellNotAllocated {
-                cell_name: self.spec.name.clone(),
+                cell_name: self.name.clone(),
             });
         };
 
-        let executable = executable.into();
+        let executable = Executable::new(executable_spec);
 
         // TODO: replace with try_insert when it becomes stable
         // Check if there was already an executable with the same name.
         if executables.contains_key(&executable.name) {
             return Err(CellsError::ExecutableExists {
-                cell_name: self.spec.name.clone(),
+                cell_name: self.name.clone(),
                 executable_name: executable.name,
             });
         }
-
-        let executable_name = executable.name.clone();
-        let other_executable_pid = executables
-            .deref()
-            .iter()
-            .filter_map(|(other_executable_name, other_executable)| {
-                if *other_executable_name != executable_name {
-                    other_executable.pid()
-                } else {
-                    None
-                }
-            })
-            .next();
 
         // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
         let executable =
@@ -167,25 +163,21 @@ impl Cell {
         // Here is where we launch an executable within the context of a parent Cell.
         // Aurae makes the assumption that all Executables within a cell share the
         // same namespace isolation rules set up upon creation of the cell.
-        let spec = self.spec.clone();
-        let pre_exec = move || {
-            pre_exec(&executable_name, &spec, other_executable_pid.as_ref())
-        };
-
-        let pid = executable.start(Some(pre_exec)).map_err(|e| {
-            CellsError::FailedToStartExecutable {
-                cell_name: self.spec.name.clone(),
+        let pid = executable
+            .start()
+            .map_err(|e| CellsError::FailedToStartExecutable {
+                cell_name: self.name.clone(),
                 executable_name: executable.name.clone(),
-                command: executable.command.clone(),
+                command: executable.command.to_string_lossy().into(),
                 source: e,
-            }
-        })?;
+            })?
+            .expect("pid");
 
         // TODO: We've inserted the executable into our in-memory cache, and started it,
         //   but we've failed to move it to the Cell...bad...solution?
-        if let Err(e) = cgroup.add_task(pid.pid.into()) {
+        if let Err(e) = cgroup.add_task((pid.as_raw() as u64).into()) {
             return Err(CellsError::FailedToAddExecutableToCell {
-                cell_name: self.spec.name.clone(),
+                cell_name: self.name.clone(),
                 executable_name: executable.name.clone(),
                 source: e,
             });
@@ -193,10 +185,10 @@ impl Cell {
 
         info!(
             "Cells: cell_name={} executable_name={} spawn() -> pid={pid:?}",
-            self.spec.name, executable.name
+            self.name, executable.name
         );
 
-        Ok(pid.pid as i32)
+        Ok(executable)
     }
 
     pub fn stop_executable(
@@ -206,13 +198,13 @@ impl Cell {
         let CellState::Allocated { executables, .. } = &mut self.state else {
             // TODO: Do we want to check the system to confirm?
             return Err(CellsError::CellNotAllocated {
-                cell_name: self.spec.name.clone(),
+                cell_name: self.name.clone(),
             });
         };
 
         let Some(executable) = executables.get_mut(executable_name) else {
             return Err(CellsError::ExecutableNotFound {
-                cell_name: self.spec.name.clone(),
+                cell_name: self.name.clone(),
                 executable_name: executable_name.clone(),
             });
         };
@@ -226,9 +218,8 @@ impl Cell {
                 Ok(exit_status)
             }
             Err(e) => Err(CellsError::FailedToStopExecutable {
-                cell_name: self.spec.name.clone(),
+                cell_name: self.name.clone(),
                 executable_name: executable.name.clone(),
-                executable_pid: executable.pid().expect("pid"),
                 source: e,
             }),
         }
@@ -236,11 +227,12 @@ impl Cell {
 
     /// Returns the [CellName] of the [Cell]
     pub fn name(&self) -> &CellName {
-        &self.spec.name
+        &self.name
     }
 
     /// Returns [None] if the [Cell] is not allocated.
     pub fn v2(&self) -> Option<bool> {
+        info!("{:?}", self);
         match &self.state {
             CellState::Allocated { cgroup, .. } => Some(cgroup.v2()),
             _ => None,
@@ -278,139 +270,128 @@ impl Drop for Cell {
         let _best_effort = self.free();
     }
 }
-
-fn hierarchy() -> Box<dyn Hierarchy> {
-    // Auraed will assume the V2 cgroup hierarchy by default.
-    // For now we do not change this, albeit in theory we could
-    // likely create backwards compatability for V1 hierarchy.
-    //
-    // For now, we simply... don't.
-    // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
-    // hierarchies::V2
-    Box::new(hierarchies::V2::new())
-}
-
-/// Common functionality within the context of the new executable
-fn pre_exec(
-    executable_name: &ExecutableName,
-    spec: &ValidatedCell,
-    other_executable_pid: Option<&CgroupPid>,
-) -> io::Result<()> {
-    match other_executable_pid {
-        None => pre_exec_first_exe(executable_name, spec),
-        Some(other_executable_pid) => {
-            pre_exec_other_exes(executable_name, other_executable_pid)
-        }
-    }
-}
-
-fn pre_exec_first_exe(
-    executable_name: &ExecutableName,
-    spec: &ValidatedCell,
-) -> io::Result<()> {
-    info!("CellService: pre_exec_first_exe(): {executable_name}");
-    // Here we are executing as the new spawned pid.
-    // This is a place where we can "hook" into all processes
-    // started with Aurae in the future. Similar to kprobe/uprobe
-    // in Linux or LD_PRELOAD in libc.
-
-    pre_exec_unshare(executable_name, spec)?;
-
-    if !spec.ns_share_pid && !spec.ns_share_mount {
-        pre_exec_mount_proc(executable_name)?;
-    }
-
-    Ok(())
-}
-
-/// Common functionality within the context of the new executable
-fn pre_exec_other_exes(
-    executable_name: &ExecutableName,
-    _other_executable_pid: &CgroupPid,
-) -> io::Result<()> {
-    info!("CellService: pre_exec_other_exes(): {executable_name}");
-
-    // Does not work yet
-    // pre_exec_set_ns(executable_name, other_executable_pid)?;
-
-    // TODO: mount?
-
-    Ok(())
-}
-
-// Namespaces
 //
-// TODO We need to track the namespace for all newly
-//      unshared namespaces within a Cell such that
-//      we can call command.set_namespace() for
-//      each of the new namespaces at the cell level!
-//      This will likely require changing how Cells
-//      manage namespaces as we need to cache the namespace
-//      IDs (names?)
+// /// Common functionality within the context of the new executable
+// fn pre_exec(
+//     executable_name: &ExecutableName,
+//     spec: &ValidatedCell,
+//     other_executable_pid: Option<&CgroupPid>,
+// ) -> io::Result<()> {
+//     match other_executable_pid {
+//         None => pre_exec_first_exe(executable_name, spec),
+//         Some(other_executable_pid) => {
+//             pre_exec_other_exes(executable_name, other_executable_pid)
+//         }
+//     }
+// }
 //
-// TODO Basically once a namespace has been created for a Cell
-//      we should put ALL future executables into the same namespace!
-fn pre_exec_unshare(
-    executable_name: &ExecutableName,
-    spec: &ValidatedCell,
-) -> io::Result<()> {
-    info!("CellService: pre_exec_unshare(): {executable_name}");
-
-    // Note: The logic here is reversed. We define the flags as "share'
-    //       and map them to "unshare".
-    //       This is by design as the API has a concept of "share".
-    if !spec.ns_share_mount {
-        info!("Unshare: mount");
-        if let Err(err_no) =
-            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNS)
-        {
-            return Err(io::Error::from_raw_os_error(err_no as i32));
-        }
-    }
-    if !spec.ns_share_uts {
-        info!("Unshare: uts");
-        if let Err(err_no) =
-            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWUTS)
-        {
-            return Err(io::Error::from_raw_os_error(err_no as i32));
-        }
-    }
-    if !spec.ns_share_ipc {
-        info!("Unshare: ipc");
-        if let Err(err_no) =
-            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWIPC)
-        {
-            return Err(io::Error::from_raw_os_error(err_no as i32));
-        }
-    }
-    if !spec.ns_share_pid {
-        info!("Unshare: pid");
-        if let Err(err_no) =
-            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWPID)
-        {
-            return Err(io::Error::from_raw_os_error(err_no as i32));
-        }
-    }
-    if !spec.ns_share_net {
-        info!("Unshare: net");
-        if let Err(err_no) =
-            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNET)
-        {
-            return Err(io::Error::from_raw_os_error(err_no as i32));
-        }
-    }
-
-    if !spec.ns_share_cgroup {
-        info!("Unshare: cgroup");
-        if let Err(err_no) =
-            nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWCGROUP)
-        {
-            return Err(io::Error::from_raw_os_error(err_no as i32));
-        }
-    }
-
-    Ok(())
-}
+// fn pre_exec_first_exe(
+//     executable_name: &ExecutableName,
+//     spec: &ValidatedCell,
+// ) -> io::Result<()> {
+//     info!("CellService: pre_exec_first_exe(): {executable_name}");
+//     // Here we are executing as the new spawned pid.
+//     // This is a place where we can "hook" into all processes
+//     // started with Aurae in the future. Similar to kprobe/uprobe
+//     // in Linux or LD_PRELOAD in libc.
+//
+//     pre_exec_unshare(executable_name, spec)?;
+//
+//     if !spec.ns_share_pid && !spec.ns_share_mount {
+//         pre_exec_mount_proc(executable_name)?;
+//     }
+//
+//     Ok(())
+// }
+//
+// /// Common functionality within the context of the new executable
+// fn pre_exec_other_exes(
+//     executable_name: &ExecutableName,
+//     _other_executable_pid: &CgroupPid,
+// ) -> io::Result<()> {
+//     info!("CellService: pre_exec_other_exes(): {executable_name}");
+//
+//     // Does not work yet
+//     // pre_exec_set_ns(executable_name, other_executable_pid)?;
+//
+//     // TODO: mount?
+//
+//     Ok(())
+// }
+//
+// // Namespaces
+// //
+// // TODO We need to track the namespace for all newly
+// //      unshared namespaces within a Cell such that
+// //      we can call command.set_namespace() for
+// //      each of the new namespaces at the cell level!
+// //      This will likely require changing how Cells
+// //      manage namespaces as we need to cache the namespace
+// //      IDs (names?)
+// //
+// // TODO Basically once a namespace has been created for a Cell
+// //      we should put ALL future executables into the same namespace!
+// fn pre_exec_unshare(
+//     executable_name: &ExecutableName,
+//     spec: &ValidatedCell,
+// ) -> io::Result<()> {
+//     info!("CellService: pre_exec_unshare(): {executable_name}");
+//
+//     // Note: The logic here is reversed. We define the flags as "share'
+//     //       and map them to "unshare".
+//     //       This is by design as the API has a concept of "share".
+//     if !spec.ns_share_mount {
+//         info!("Unshare: mount");
+//         if let Err(err_no) =
+//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNS)
+//         {
+//             return Err(io::Error::from_raw_os_error(err_no as i32));
+//         }
+//     }
+//     if !spec.ns_share_uts {
+//         info!("Unshare: uts");
+//         if let Err(err_no) =
+//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWUTS)
+//         {
+//             return Err(io::Error::from_raw_os_error(err_no as i32));
+//         }
+//     }
+//     if !spec.ns_share_ipc {
+//         info!("Unshare: ipc");
+//         if let Err(err_no) =
+//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWIPC)
+//         {
+//             return Err(io::Error::from_raw_os_error(err_no as i32));
+//         }
+//     }
+//     if !spec.ns_share_pid {
+//         info!("Unshare: pid");
+//         if let Err(err_no) =
+//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWPID)
+//         {
+//             return Err(io::Error::from_raw_os_error(err_no as i32));
+//         }
+//     }
+//     if !spec.ns_share_net {
+//         info!("Unshare: net");
+//         if let Err(err_no) =
+//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNET)
+//         {
+//             return Err(io::Error::from_raw_os_error(err_no as i32));
+//         }
+//     }
+//
+//     if !spec.ns_share_cgroup {
+//         info!("Unshare: cgroup");
+//         if let Err(err_no) =
+//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWCGROUP)
+//         {
+//             return Err(io::Error::from_raw_os_error(err_no as i32));
+//         }
+//     }
+//
+//     Ok(())
+// }
 
 // // This errors
 // fn pre_exec_set_ns(
@@ -494,21 +475,21 @@ fn pre_exec_unshare(
 //
 //     Ok(())
 // }
-
-fn pre_exec_mount_proc(executable_name: &ExecutableName) -> io::Result<()> {
-    info!("CellService: pre_exec_mount_proc(): {executable_name}");
-
-    if let Err(err_no) = nix::mount::mount(
-        Some("proc"),
-        "/proc",
-        Some("proc"),
-        nix::mount::MsFlags::MS_BIND,
-        None::<&[u8]>,
-    ) {
-        return Err(io::Error::from_raw_os_error(err_no as i32));
-    }
-    Ok(())
-}
+//
+// fn pre_exec_mount_proc(executable_name: &ExecutableName) -> io::Result<()> {
+//     info!("CellService: pre_exec_mount_proc(): {executable_name}");
+//
+//     if let Err(err_no) = nix::mount::mount(
+//         Some("proc"),
+//         "/proc",
+//         Some("proc"),
+//         nix::mount::MsFlags::MS_BIND,
+//         None::<&[u8]>,
+//     ) {
+//         return Err(io::Error::from_raw_os_error(err_no as i32));
+//     }
+//     Ok(())
+// }
 
 #[cfg(test)]
 mod tests {

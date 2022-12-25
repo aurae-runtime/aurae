@@ -51,28 +51,25 @@
     while_true
 )]
 #![warn(missing_debug_implementations,
-        // TODO: missing_docs,
-        trivial_casts,
-        trivial_numeric_casts,
-        unused_extern_crates,
-        unused_import_braces,
-        unused_results
-        )]
+// TODO: missing_docs,
+trivial_casts,
+trivial_numeric_casts,
+unused_extern_crates,
+unused_import_braces,
+unused_results
+)]
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
 #![allow(dead_code)]
 
-use crate::runtime::cells::CellService;
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use aurae_proto::runtime::cell_service_server::CellServiceServer;
 use clap::Parser;
+use runtime::CellService;
 use std::{
-    collections::hash_map::DefaultHasher,
     fs,
-    hash::{Hash, Hasher},
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
-    time::SystemTime,
 };
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
@@ -253,40 +250,6 @@ impl AuraedRuntime {
 
         Ok(())
     }
-}
-
-#[derive(Hash)]
-struct CellID {
-    base: String,
-    command: String,
-    timestamp: SystemTime,
-}
-
-/// A nondeterministic function used to create a unique ID from a cell name.
-/// The same cell name will produce a unique ID based on the time it was
-/// created.
-fn cell_name_from_string(command: &str) -> Result<String, anyhow::Error> {
-    let now = SystemTime::now();
-    let mut entries = command.split(' ');
-    let base = match entries.next() {
-        Some(base) => base,
-        None => {
-            return Err(anyhow!("empty base command string"));
-        }
-    };
-    let c = CellID {
-        base: base.to_string(),
-        command: command.to_string(),
-        timestamp: now,
-    };
-    let val = format!("{}-{:?}", base, cell_hash(&c));
-    Ok(val)
-}
-
-fn cell_hash<T: Hash>(t: &T) -> u64 {
-    let mut s = DefaultHasher::new();
-    t.hash(&mut s);
-    s.finish()
 }
 
 #[cfg(test)]

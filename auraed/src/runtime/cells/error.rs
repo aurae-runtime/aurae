@@ -28,59 +28,23 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cells::{CellName, ExecutableName};
-use cgroups_rs::CgroupPid;
-use std::io;
-use thiserror::Error;
+use aurae_cells::CellsError;
 use tonic::Status;
 use tracing::error;
 
-pub(crate) type Result<T> = std::result::Result<T, CellsError>;
+pub(crate) type Result<T> = std::result::Result<T, CellsServiceError>;
 
-#[derive(Error, Debug)]
-pub(crate) enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' unallocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cell '{cell_name}' already has an executable '{executable_name}'"
-    )]
-    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
-    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
-    FailedToStartExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        command: String,
-        source: io::Error,
-    },
-    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]
-    FailedToStopExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        executable_pid: CgroupPid,
-        source: io::Error,
-    },
-    #[error(
-        "cell '{cell_name}' failed to add executable (executable:?): {source}"
-    )]
-    FailedToAddExecutableToCell {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("failed to lock cells table")]
-    FailedToObtainLock(),
+pub(crate) struct CellsServiceError(CellsError);
+
+impl From<CellsError> for CellsServiceError {
+    fn from(value: CellsError) -> Self {
+        Self(value)
+    }
 }
 
-impl From<CellsError> for Status {
-    fn from(err: CellsError) -> Self {
+impl From<CellsServiceError> for Status {
+    fn from(err: CellsServiceError) -> Self {
+        let err = err.0;
         let msg = err.to_string();
         error!("{msg}");
         match err {
@@ -90,7 +54,8 @@ impl From<CellsError> for Status {
             }
             CellsError::CellNotFound { .. }
             | CellsError::ExecutableNotFound { .. } => Status::not_found(msg),
-            CellsError::FailedToFreeCell { .. }
+            CellsError::FailedToAllocateCell { .. }
+            | CellsError::FailedToFreeCell { .. }
             | CellsError::FailedToStartExecutable { .. }
             | CellsError::FailedToStopExecutable { .. }
             | CellsError::FailedToAddExecutableToCell { .. } => {
@@ -100,7 +65,7 @@ impl From<CellsError> for Status {
                 Status::aborted(err.to_string())
             }
             CellsError::CellNotAllocated { cell_name } => {
-                CellsError::CellNotFound { cell_name }.into()
+                CellsServiceError(CellsError::CellNotFound { cell_name }).into()
             }
         }
     }

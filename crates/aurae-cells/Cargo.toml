@@ -1,0 +1,18 @@
+[package]
+name = "aurae-cells"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[features]
+default = ["tonic"]
+tonic = ["dep:tonic"]
+
+[dependencies]
+aurae-executables = { path = "../aurae-executables" }
+cgroups-rs = "0.2.11"
+fancy-regex = "0.10.0"
+thiserror = { workspace = true }
+tonic = { workspace = true, optional = true }
+tracing = { workspace = true }
+validation = { path = "../validation", features = ["regex"] }
