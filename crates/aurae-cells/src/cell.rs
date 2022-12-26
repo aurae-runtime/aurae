@@ -31,8 +31,7 @@
 use crate::{CellName, CellSpec, CellsError, Result};
 use aurae_executables::{Executable, ExecutableName, ExecutableSpec};
 use cgroups_rs::Cgroup;
-use std::ffi::CString;
-use std::{collections::HashMap, process::ExitStatus};
+use std::process::Command;
 use tracing::info;
 use validation::ValidatedField;
 
@@ -47,17 +46,14 @@ pub struct Cell {
     state: CellState,
 }
 
-// TODO: look into clippy warning and remove dead_code
+// TODO: look into clippy warning
+// TODO: remove #[allow(dead_code)]
 #[allow(clippy::large_enum_variant)]
 #[allow(dead_code)]
 #[derive(Debug)]
 enum CellState {
     Unallocated,
-    Allocated {
-        cgroup: Cgroup,
-        pid1: Executable,
-        executables: HashMap<ExecutableName, Executable>,
-    },
+    Allocated { cgroup: Cgroup, auraed: Executable },
     Freed,
 }
 
@@ -77,12 +73,17 @@ impl Cell {
         let cgroup: Cgroup =
             self.spec.cgroup_spec.clone().into_cgroup(&self.name);
 
+        let mut command = Command::new("auraed");
+        let _ = command.arg("--nested");
+        // We are checking that command has an arg to assure ourselves that `command.arg`
+        // mutates command, and is not making a clone to return
+        assert_eq!(command.get_args().len(), 1);
+
         let executable_spec = ExecutableSpec {
             // TODO: don't require use of validate
             name: ExecutableName::validate(Some("auraed".into()), "", None)
                 .expect("valid executable name"),
-            command: CString::new("/root/.cargo/bin/auraed".to_string())
-                .expect("valid CString"),
+            command,
             description: "nested auraed".to_string(),
         };
 
@@ -91,13 +92,12 @@ impl Cell {
             self.spec.shared_namespaces.clone(),
         );
 
-        let pid = auraed
-            .start()
-            .map_err(|e| CellsError::FailedToAllocateCell {
-                cell_name: self.name.clone(),
-                source: e,
-            })?
-            .expect("pid");
+        auraed.start().map_err(|e| CellsError::FailedToAllocateCell {
+            cell_name: self.name.clone(),
+            source: e,
+        })?;
+
+        let pid = auraed.pid().expect("pid");
 
         println!("auraed pid {}", pid);
 
@@ -113,11 +113,7 @@ impl Cell {
 
         println!("inserted auraed pid {}", pid);
 
-        self.state = CellState::Allocated {
-            cgroup,
-            pid1: auraed,
-            executables: Default::default(),
-        };
+        self.state = CellState::Allocated { cgroup, auraed };
 
         Ok(())
     }
@@ -136,95 +132,6 @@ impl Cell {
         self.state = CellState::Freed;
 
         Ok(())
-    }
-
-    pub fn start_executable<T: Into<ExecutableSpec>>(
-        &mut self,
-        executable_spec: T,
-    ) -> Result<&Executable> {
-        let CellState::Allocated { cgroup: _, pid1: _, executables } = &mut self.state else {
-            return Err(CellsError::CellNotAllocated {
-                cell_name: self.name.clone(),
-            });
-        };
-
-        let executable = Executable::new(executable_spec);
-
-        // TODO: replace with try_insert when it becomes stable
-        // Check if there was already an executable with the same name.
-        if executables.contains_key(&executable.name) {
-            return Err(CellsError::ExecutableExists {
-                cell_name: self.name.clone(),
-                executable_name: executable.name,
-            });
-        }
-
-        // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
-        let executable =
-            executables.entry(executable.name.clone()).or_insert(executable);
-
-        // TODO: THE EXECUTABLE IS STARTED IN THE CURRENT CGROUP, NOT THE CELLS
-        //   Need to use aurae-client to communicate with the Cell's PID1
-        //   Need logic to understand if we are in the cell we want
-        //   Currently nested auraed sets socket to nested.sock -> can we use stdin?
-        //
-        // NOTE: v2 cgroups can either have nested cgroups or processes, not both (leaf workaround)
-
-        // Start the child process
-        //
-        // Here is where we launch an executable within the context of a parent Cell.
-        // Aurae makes the assumption that all Executables within a cell share the
-        // same namespace isolation rules set up upon creation of the cell.
-        let pid = executable
-            .start()
-            .map_err(|e| CellsError::FailedToStartExecutable {
-                cell_name: self.name.clone(),
-                executable_name: executable.name.clone(),
-                command: executable.command.to_string_lossy().into(),
-                source: e,
-            })?
-            .expect("pid");
-
-        info!(
-            "Cells: cell_name={} executable_name={} spawn() -> pid={pid:?}",
-            self.name, executable.name
-        );
-
-        Ok(executable)
-    }
-
-    pub fn stop_executable(
-        &mut self,
-        executable_name: &ExecutableName,
-    ) -> Result<Option<ExitStatus>> {
-        let CellState::Allocated { executables, .. } = &mut self.state else {
-            // TODO: Do we want to check the system to confirm?
-            return Err(CellsError::CellNotAllocated {
-                cell_name: self.name.clone(),
-            });
-        };
-
-        let Some(executable) = executables.get_mut(executable_name) else {
-            return Err(CellsError::ExecutableNotFound {
-                cell_name: self.name.clone(),
-                executable_name: executable_name.clone(),
-            });
-        };
-
-        match executable.kill() {
-            Ok(exit_status) => {
-                let _ = executables
-                    .remove(executable_name)
-                    .expect("asserted above");
-
-                Ok(exit_status)
-            }
-            Err(e) => Err(CellsError::FailedToStopExecutable {
-                cell_name: self.name.clone(),
-                executable_name: executable.name.clone(),
-                source: e,
-            }),
-        }
     }
 
     /// Returns the [CellName] of the [Cell]

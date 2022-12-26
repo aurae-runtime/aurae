@@ -5,10 +5,10 @@ use nix::{
     unistd::Pid,
 };
 use procfs::process::Process;
+use std::ffi::OsString;
 use std::os::unix::process::CommandExt;
 use std::process::Command;
 use std::{
-    ffi::CString,
     io::{self, ErrorKind},
     os::unix::process::ExitStatusExt,
     process::ExitStatus,
@@ -18,21 +18,28 @@ use tracing::info;
 #[derive(Debug)]
 pub struct Executable {
     pub name: ExecutableName,
-    pub command: CString,
     pub description: String,
     state: ExecutableState,
 }
 
 #[derive(Debug)]
 enum ExecutableState {
-    Init(ExecutableRole),
-    Started(Process),
+    Init {
+        command: Command,
+        role: ExecutableRole,
+    },
+    Started {
+        #[allow(unused)]
+        program: OsString,
+        #[allow(unused)]
+        args: Vec<OsString>,
+        process: Process,
+    },
     Stopped(ExitStatus),
 }
 
 #[derive(Debug)]
-pub enum ExecutableRole {
-    // #[cfg(target_os = "linux")]
+enum ExecutableRole {
     Pid1 { shared_namespaces: SharedNamespaces },
     Other,
 }
@@ -42,58 +49,58 @@ impl Executable {
         spec: T,
         shared_namespaces: SharedNamespaces,
     ) -> Self {
-        let ExecutableSpec { name, command, description } = spec.into();
+        let ExecutableSpec { name, description, command } = spec.into();
         Self {
             name,
-            command,
             description,
-            state: ExecutableState::Init(ExecutableRole::Pid1 {
-                shared_namespaces,
-            }),
+            state: ExecutableState::Init {
+                command,
+                role: ExecutableRole::Pid1 { shared_namespaces },
+            },
         }
     }
 
     pub fn new<T: Into<ExecutableSpec>>(spec: T) -> Self {
-        let ExecutableSpec { name, command, description } = spec.into();
+        let ExecutableSpec { name, description, command } = spec.into();
         Self {
             name,
-            command,
             description,
-            state: ExecutableState::Init(ExecutableRole::Other),
+            state: ExecutableState::Init {
+                command,
+                role: ExecutableRole::Other,
+            },
         }
     }
 
-    /// Starts the executable and returns the pid.
-    /// If the executable is running, returns the pid.
-    /// If the executable has stopped, returns [None]
-    pub fn start(&mut self) -> io::Result<Option<Pid>> {
-        if let ExecutableState::Started(process) = &self.state {
-            return Ok(Some(Pid::from_raw(process.pid)));
-        }
-
-        let ExecutableState::Init(role) = &self.state else {
-            return Ok(None);
+    /// Starts the underlying process.
+    /// Does nothing if [Executable] has previously been started.
+    pub fn start(&mut self) -> io::Result<()> {
+        let ExecutableState::Init { command, role } = &mut self.state else {
+            return Ok(());
         };
 
         let process = match role {
             ExecutableRole::Pid1 { shared_namespaces } => {
-                exec_pid1(self.command.clone(), shared_namespaces)
+                exec_pid1(command, shared_namespaces)
             }
-            ExecutableRole::Other => exec(self.command.clone()),
+            ExecutableRole::Other => exec(command),
         }?;
 
-        let pid = Pid::from_raw(process.pid);
-        self.state = ExecutableState::Started(process);
+        self.state = ExecutableState::Started {
+            program: command.get_program().to_os_string(),
+            args: command.get_args().map(|arg| arg.to_os_string()).collect(),
+            process,
+        };
 
-        Ok(Some(pid))
+        Ok(())
     }
 
     /// Stops the executable and returns the [ExitStatus].
     /// If the executable has never been started, returns [None].
     pub fn kill(&mut self) -> Result<Option<ExitStatus>, io::Error> {
         match &mut self.state {
-            ExecutableState::Init(_) => Ok(None),
-            ExecutableState::Started(process) => {
+            ExecutableState::Init { .. } => Ok(None),
+            ExecutableState::Started { process, .. } => {
                 let pid = Pid::from_raw(process.pid);
                 nix::sys::signal::kill(pid, SIGKILL)
                     .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
@@ -122,17 +129,16 @@ impl Executable {
 
     /// Returns the [Pid] while [Executable] is running, otherwise returns [None].
     pub fn pid(&self) -> Option<Pid> {
-        match &self.state {
-            ExecutableState::Started(process) => {
-                Some(Pid::from_raw(process.pid))
-            }
-            ExecutableState::Init(_) | ExecutableState::Stopped(_) => None,
-        }
+        let ExecutableState::Started { process, .. } = &self.state else {
+            return None;
+        };
+
+        Some(Pid::from_raw(process.pid))
     }
 }
 
 fn exec_pid1(
-    _command: CString,
+    command: &mut Command,
     shared_namespaces: &SharedNamespaces,
 ) -> io::Result<Process> {
     // Clone docs: https://man7.org/linux/man-pages/man2/clone.2.html
@@ -205,12 +211,12 @@ fn exec_pid1(
     if pid == 0 {
         // we are in the child
 
-        unsafe {
+        let command = command.current_dir("/");
+
+        let command = {
             let shared_namespaces = shared_namespaces.clone();
-            Command::new("auraed")
-                .current_dir("/")
-                .args(["--socket", "/var/run/aurae/nested.sock"])
-                .pre_exec(move || {
+            unsafe {
+                command.pre_exec(move || {
                     if !shared_namespaces.mount {
                         // We can potentially do some setup here, and then leave the rest
                         // to auraed's init. We would need flags to signal it is a nested PID1
@@ -238,8 +244,10 @@ fn exec_pid1(
 
                     Ok(())
                 })
-                .exec();
-        }
+            }
+        };
+
+        command.exec();
     }
 
     // we are in the parent again
@@ -250,13 +258,13 @@ fn exec_pid1(
     Ok(process)
 }
 
-fn exec(command: CString) -> io::Result<Process> {
-    // TODO: fix building command
-    let command = command.to_string_lossy();
-    let split = command.split_whitespace().collect::<Vec<_>>();
-    let program = &split[0];
-    let args = if split.len() > 1 { &split[1..] } else { &[] };
-    let child = Command::new(program).current_dir("/").args(args).spawn()?;
+// Start the child process
+//
+// Here is where we launch an executable within the context of a parent Cell.
+// Aurae makes the assumption that all Executables within a cell share the
+// same namespace isolation rules set up upon creation of the cell.
+fn exec(command: &mut Command) -> io::Result<Process> {
+    let child = command.current_dir("/").spawn()?;
 
     let process = Process::new(child.id() as i32)
         .map_err(|e| io::Error::new(ErrorKind::Other, e))?;

@@ -155,6 +155,7 @@ dependencies = [
  "clone3",
  "nix 0.26.1",
  "procfs",
+ "thiserror",
  "tracing",
  "validation",
 ]

@@ -42,9 +42,9 @@ path = "src/bin/main.rs"
 [dependencies]
 anyhow = { workspace = true }
 aurae-client = { path = "../crates/aurae-client" }
-aurae-proto = { workspace = true }
 aurae-cells = { path = "../crates/aurae-cells" }
 aurae-executables = { path = "../crates/aurae-executables" }
+aurae-proto = { workspace = true }
 cgroups-rs = "0.2.11"
 clap = { version = "3.1.20", features = ["derive"] }
 fancy-regex = "0.10.0"

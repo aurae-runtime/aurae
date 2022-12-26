@@ -29,7 +29,6 @@
 \* -------------------------------------------------------------------------- */
 
 use crate::CellName;
-use aurae_executables::ExecutableName;
 use std::io;
 use thiserror::Error;
 use tracing::error;
@@ -53,33 +52,4 @@ pub enum CellsError {
     },
     #[error("cell '{cell_name}' could not be freed: {source}")]
     FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cell '{cell_name}' already has an executable '{executable_name}'"
-    )]
-    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
-    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
-    FailedToStartExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        command: String,
-        source: io::Error,
-    },
-    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' due to: {source}")]
-    FailedToStopExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: io::Error,
-    },
-    #[error(
-        "cell '{cell_name}' failed to add executable (executable:?): {source}"
-    )]
-    FailedToAddExecutableToCell {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("failed to lock cells table")]
-    FailedToObtainLock(),
 }

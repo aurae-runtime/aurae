@@ -71,20 +71,30 @@ impl Cells {
         Ok(cell)
     }
 
-    pub fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
-    where
-        F: Fn(&Cell) -> Result<R>,
-    {
-        if let Some(cell) = self.cache.get(cell_name) {
-            let res = f(cell);
-            if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
-                let _ = self.cache.remove(cell_name);
-            }
-            res
-        } else {
-            Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
-        }
+    /// Returns an error if the [CellName] does not exist in the cache.
+    pub fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        self.get_mut(cell_name, |cell| cell.free())?;
+        let _ = self.cache.remove(cell_name).ok_or_else(|| {
+            CellsError::CellNotFound { cell_name: cell_name.clone() }
+        })?;
+        Ok(())
     }
+
+    // fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    // where
+    //     F: Fn(&Cell) -> Result<R>,
+    // {
+    //     if let Some(cell) = self.cache.get(cell_name) {
+    //         let res = f(cell);
+    //         if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
+    //             let _ = self.cache.remove(cell_name);
+    //         }
+    //         res
+    //     } else {
+    //         // if we can eliminate this case, we can take &self instead
+    //         Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
+    //     }
+    // }
 
     pub fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where
@@ -101,15 +111,6 @@ impl Cells {
         }
 
         res
-    }
-
-    /// Returns an error if the [CellName] does not exist in the cache.
-    pub fn free(&mut self, cell_name: &CellName) -> Result<()> {
-        self.get_mut(cell_name, |cell| cell.free())?;
-        let _ = self.cache.remove(cell_name).ok_or_else(|| {
-            CellsError::CellNotFound { cell_name: cell_name.clone() }
-        })?;
-        Ok(())
     }
 }
 

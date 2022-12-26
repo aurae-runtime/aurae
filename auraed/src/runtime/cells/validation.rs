@@ -7,7 +7,8 @@ use aurae_proto::runtime::{
     StartExecutableRequest, StopExecutableRequest,
 };
 use std::ffi::CString;
-use validation::{ValidatedType, ValidationError};
+use std::process::Command;
+use validation::{ValidatedField, ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
 
 // TODO: Following the discord discussion of wanting to keep the logic on CellService,
@@ -48,13 +49,37 @@ impl FreeCellRequestTypeValidator for FreeCellRequestValidator {}
 #[derive(Debug, ValidatedType)]
 pub struct ValidatedStartExecutableRequest {
     #[field_type(String)]
-    #[validate]
-    pub cell_name: CellName,
+    pub cell_name: Vec<CellName>,
     #[field_type(Option<Executable>)]
     pub executable: ValidatedExecutable,
 }
 
 impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
+    fn validate_cell_name(
+        cell_name: String,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Vec<CellName>, ValidationError> {
+        let cell_name = validation::required_not_empty(
+            Some(cell_name),
+            field_name,
+            parent_name,
+        )?;
+
+        let cell_name = cell_name
+            .split('/')
+            .flat_map(|cell_name| {
+                CellName::validate_for_creation(
+                    Some(cell_name.into()),
+                    field_name,
+                    parent_name,
+                )
+            })
+            .collect();
+
+        Ok(cell_name)
+    }
+
     fn validate_executable(
         executable: Option<Executable>,
         field_name: &str,
@@ -68,16 +93,40 @@ impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
 #[derive(Debug, ValidatedType)]
 pub struct ValidatedStopExecutableRequest {
     #[field_type(String)]
-    #[validate]
-    pub cell_name: CellName,
+    pub cell_name: Vec<CellName>,
     #[field_type(String)]
     #[validate]
     pub executable_name: ExecutableName,
 }
 
-impl StopExecutableRequestTypeValidator for StopExecutableRequestValidator {}
+impl StopExecutableRequestTypeValidator for StopExecutableRequestValidator {
+    fn validate_cell_name(
+        cell_name: String,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Vec<CellName>, ValidationError> {
+        // TODO: refactor to a CellNamePath maybe
+        let cell_name = validation::required_not_empty(
+            Some(cell_name),
+            field_name,
+            parent_name,
+        )?;
 
-// TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
+        let cell_name = cell_name
+            .split('/')
+            .flat_map(|cell_name| {
+                CellName::validate_for_creation(
+                    Some(cell_name.into()),
+                    field_name,
+                    parent_name,
+                )
+            })
+            .collect();
+
+        Ok(cell_name)
+    }
+}
+
 #[derive(ValidatedType, Debug, Clone)]
 pub struct ValidatedCell {
     #[field_type(String)]
@@ -189,6 +238,18 @@ impl ExecutableTypeValidator for ExecutableValidator {
 impl From<ValidatedExecutable> for aurae_executables::ExecutableSpec {
     fn from(x: ValidatedExecutable) -> Self {
         let ValidatedExecutable { name, command, description } = x;
+
+        // TODO: fix building command
+        let command = command.to_string_lossy();
+        let split = command.split_whitespace().collect::<Vec<_>>();
+        let program = &split[0];
+        let args = if split.len() > 1 { &split[1..] } else { &[] };
+        let mut command = Command::new(program);
+        let _ = command.args(args);
+        // We are checking that command has an arg to assure ourselves that `command.arg`
+        // mutates command, and is not making a clone to return
+        assert_eq!(command.get_args().len(), 1);
+
         Self { name, command, description }
     }
 }

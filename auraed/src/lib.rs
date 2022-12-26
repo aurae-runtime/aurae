@@ -120,6 +120,9 @@ struct AuraedOptions {
     /// Toggle verbosity. Default false
     #[clap(short, long, alias = "ritz")]
     verbose: bool,
+
+    #[clap(long)]
+    nested: bool,
 }
 
 #[allow(missing_docs)] // TODO

@@ -35,6 +35,7 @@ use super::validation::{
 use super::Result;
 use ::validation::ValidatedType;
 use aurae_cells::Cells;
+use aurae_executables::Executables;
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse,
     FreeCellRequest, FreeCellResponse, StartExecutableRequest,
@@ -48,11 +49,15 @@ use tracing::info;
 #[derive(Debug, Clone)]
 pub struct CellService {
     cells: Arc<Mutex<Cells>>,
+    executables: Arc<Mutex<Executables>>,
 }
 
 impl CellService {
     pub fn new() -> Self {
-        CellService { cells: Default::default() }
+        CellService {
+            cells: Default::default(),
+            executables: Default::default(),
+        }
     }
 
     #[tracing::instrument(skip(self))]
@@ -96,17 +101,25 @@ impl CellService {
         let ValidatedStartExecutableRequest { cell_name, executable } = request;
 
         info!(
-            "CellService: start() cell_name={} executable={:?}",
+            "CellService: start() cell_name={:?} executable={:?}",
             cell_name, executable
         );
 
-        let mut cells = self.cells.lock().await;
-        let pid = cells.get_mut(&cell_name, move |cell| {
-            let executable = cell.start_executable(executable)?;
-            Ok(executable.pid().expect("pid").as_raw())
-        })?;
+        if cell_name.len() == 1 {
+            // we are in the correct cell
+            let mut executables = self.executables.lock().await;
+            let executable = executables.start(executable)?;
+            let pid = executable.pid().expect("pid").as_raw();
+            Ok(StartExecutableResponse { pid })
+        } else {
+            // we are in a parent cell
+            let cell_name = &cell_name[1];
 
-        Ok(StartExecutableResponse { pid })
+            let mut cells = self.cells.lock().await;
+            Ok(cells.get_mut(cell_name, move |_cell| {
+                todo!("send the message to the cell's pid1")
+            })?)
+        }
     }
 
     #[tracing::instrument(skip(self))]
@@ -122,13 +135,20 @@ impl CellService {
             cell_name, executable_name,
         );
 
-        let mut cells = self.cells.lock().await;
+        if cell_name.len() == 1 {
+            // we are in the correct cell
+            let mut executables = self.executables.lock().await;
+            let _exit_status = executables.stop(&executable_name)?;
+            Ok(StopExecutableResponse::default())
+        } else {
+            // we are in a parent cell
+            let cell_name = &cell_name[1];
 
-        let _exit_status = cells.get_mut(&cell_name, move |cell| {
-            cell.stop_executable(&executable_name)
-        })?;
-
-        Ok(StopExecutableResponse::default())
+            let mut cells = self.cells.lock().await;
+            Ok(cells.get_mut(cell_name, move |_cell| {
+                todo!("send the message to the cell's pid1")
+            })?)
+        }
     }
 }
 

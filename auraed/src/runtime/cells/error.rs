@@ -29,45 +29,51 @@
 \* -------------------------------------------------------------------------- */
 
 use aurae_cells::CellsError;
+use aurae_executables::ExecutablesError;
+use thiserror::Error;
 use tonic::Status;
 use tracing::error;
 
 pub(crate) type Result<T> = std::result::Result<T, CellsServiceError>;
 
-pub(crate) struct CellsServiceError(CellsError);
-
-impl From<CellsError> for CellsServiceError {
-    fn from(value: CellsError) -> Self {
-        Self(value)
-    }
+#[derive(Debug, Error)]
+pub(crate) enum CellsServiceError {
+    #[error(transparent)]
+    CellsError(#[from] CellsError),
+    #[error(transparent)]
+    ExecutablesError(#[from] ExecutablesError),
 }
 
 impl From<CellsServiceError> for Status {
     fn from(err: CellsServiceError) -> Self {
-        let err = err.0;
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            CellsError::CellExists { .. }
-            | CellsError::ExecutableExists { .. } => {
-                Status::already_exists(msg)
-            }
-            CellsError::CellNotFound { .. }
-            | CellsError::ExecutableNotFound { .. } => Status::not_found(msg),
-            CellsError::FailedToAllocateCell { .. }
-            | CellsError::AbortedAllocateCell { .. }
-            | CellsError::FailedToFreeCell { .. }
-            | CellsError::FailedToStartExecutable { .. }
-            | CellsError::FailedToStopExecutable { .. }
-            | CellsError::FailedToAddExecutableToCell { .. } => {
-                Status::internal(msg)
-            }
-            CellsError::FailedToObtainLock() => {
-                Status::aborted(err.to_string())
-            }
-            CellsError::CellNotAllocated { cell_name } => {
-                CellsServiceError(CellsError::CellNotFound { cell_name }).into()
-            }
+            CellsServiceError::CellsError(e) => match e {
+                CellsError::CellExists { .. } => Status::already_exists(msg),
+                CellsError::CellNotFound { .. } => Status::not_found(msg),
+                CellsError::FailedToAllocateCell { .. }
+                | CellsError::AbortedAllocateCell { .. }
+                | CellsError::FailedToFreeCell { .. } => Status::internal(msg),
+                CellsError::CellNotAllocated { cell_name } => {
+                    CellsServiceError::CellsError(CellsError::CellNotFound {
+                        cell_name,
+                    })
+                    .into()
+                }
+            },
+            CellsServiceError::ExecutablesError(e) => match e {
+                ExecutablesError::ExecutableExists { .. } => {
+                    Status::already_exists(msg)
+                }
+                ExecutablesError::ExecutableNotFound { .. } => {
+                    Status::not_found(msg)
+                }
+                ExecutablesError::FailedToStartExecutable { .. }
+                | ExecutablesError::FailedToStopExecutable { .. } => {
+                    Status::internal(msg)
+                }
+            },
         }
     }
 }

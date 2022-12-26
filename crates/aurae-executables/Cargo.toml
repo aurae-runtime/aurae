@@ -8,5 +8,6 @@ publish = false
 clone3 = "0.2.3"
 nix = { version = "0.26.1", features = ["mount", "sched", "fs", "process"] }
 procfs = "0.14.2"
+thiserror = { workspace = true }
 tracing = { workspace = true }
 validation = { path = "../validation" }

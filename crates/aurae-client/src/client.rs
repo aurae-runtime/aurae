@@ -45,11 +45,11 @@ use x509_certificate::X509Certificate;
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
 /// Instance of a single client for an Aurae consumer.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone)]
 pub struct AuraeClient {
     /// The channel used for gRPC connections before encryption is handled.
-    #[serde(skip)]
     pub(crate) channel: Channel,
+    #[allow(unused)]
     x509_details: X509Details,
 }
 
@@ -61,7 +61,7 @@ impl AuraeClient {
     /// Create a new AuraeClient.
     ///
     /// Note: A new client is required for every independent execution of this process.
-    pub(crate) async fn new(
+    pub async fn new(
         AuraeConfig { auth, system }: AuraeConfig,
     ) -> anyhow::Result<Self> {
         let server_root_ca_cert = tokio::fs::read(&auth.ca_crt)
