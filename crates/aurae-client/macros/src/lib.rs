@@ -28,58 +28,44 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Run the Aurae daemon as a pid 1 init program.
-//!
-//! The Aurae daemon assumes that if the current process id (PID) is 1 to
-//! run itself as an initialization program, otherwise bypass the init module.
+// The project prefers .expect("reason") instead of .unwrap() so we fail
+// on any .unwrap() statements in the code.
+#![warn(clippy::unwrap_used)]
+// Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
+#![warn(future_incompatible, nonstandard_style, unused)]
+#![warn(
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    unconditional_recursion,
+    unused_comparisons,
+    while_true
+)]
+#![warn(missing_debug_implementations,
+    // TODO: missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications,
+    unused_results
+)]
 
-use crate::init::{
-    fs::FsError,
-    logging::LoggingError,
-    network::NetworkError,
-    system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
-};
-use tracing::Level;
+use proc_macro::TokenStream;
 
-mod fileio;
-mod fs;
-mod logging;
-mod network;
-mod power;
-mod system_runtime;
+mod ops;
 
-const BANNER: &str = "
-    +--------------------------------------------+
-    |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |
-    |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |
-    |  ███████║██║   ██║██████╔╝███████║█████╗   |
-    |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |
-    |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |
-    |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |
-    +--------------------------------------------+\n";
-
-#[derive(thiserror::Error, Debug)]
-pub(crate) enum InitError {
-    #[error(transparent)]
-    Logging(#[from] LoggingError),
-    #[error(transparent)]
-    Fs(#[from] FsError),
-    #[error(transparent)]
-    Network(#[from] NetworkError),
-}
-
-/// Run Aurae as an init pid 1 instance.
-pub async fn init(logger_level: Level, nested: bool) {
-    let res = match (std::process::id(), nested) {
-        (0, _) => unreachable!(
-            "process is running as PID 0, which should be impossible"
-        ),
-        (1, false) => Pid1SystemRuntime {}.init(logger_level),
-        _ => PidGt1SystemRuntime {}.init(logger_level),
-    }
-    .await;
-
-    if let Err(e) = res {
-        panic!("Failed to initialize: {e:?}")
-    }
+// TODO (future-highway): Due to needing to ignore certain tests in CI, we can't format
+//    the code in the docs as cargo test will try to test it. Workaround or add the needed
+//    deps to this crate to make it pass.
+/// # Example:
+/// macros::ops_generator!(
+///     module_name,
+///     ServiceName,
+///     snake_case_rpc_name(RequestMessageName) -> ResponseMessageName,
+///     other(OtherRequest) -> OtherResponse
+/// );
+#[proc_macro]
+pub fn ops_generator(input: TokenStream) -> TokenStream {
+    ops::ops_generator(input)
 }

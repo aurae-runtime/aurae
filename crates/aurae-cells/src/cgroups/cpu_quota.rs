@@ -5,42 +5,41 @@ use std::{
 
 use validation::{ValidatedField, ValidationError};
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub(crate) struct CpuWeight(u64);
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct CpuQuota(i64);
 
-impl CpuWeight {
+impl CpuQuota {
     #[cfg(test)]
-    pub fn new(cpu_weight: u64) -> Self {
-        Self(cpu_weight)
+    pub fn new(cpu_quota: i64) -> Self {
+        Self(cpu_quota)
     }
 
-    pub fn into_inner(self) -> u64 {
+    pub fn into_inner(self) -> i64 {
         self.0
     }
 }
 
-impl ValidatedField<u64> for CpuWeight {
+impl ValidatedField<i64> for CpuQuota {
     fn validate(
-        input: Option<u64>,
+        input: Option<i64>,
         field_name: &str,
         parent_name: Option<&str>,
     ) -> Result<Self, ValidationError> {
-        let input: u64 = validation::required(input, field_name, parent_name)?;
+        let input = validation::required(input, field_name, parent_name)?;
         Ok(Self(input))
     }
 
     fn validate_for_creation(
-        input: Option<u64>,
+        input: Option<i64>,
         field_name: &str,
         parent_name: Option<&str>,
     ) -> Result<Self, ValidationError> {
-        let input: CpuWeight = Self::validate(input, field_name, parent_name)?;
+        let input = Self::validate(input, field_name, parent_name)?;
 
-        // see cpu weight in https://docs.kernel.org/admin-guide/cgroup-v2.html
         validation::maximum_value(
             *input,
-            10000,
-            "units",
+            1000000,
+            "microseconds",
             field_name,
             parent_name,
         )?;
@@ -48,15 +47,15 @@ impl ValidatedField<u64> for CpuWeight {
     }
 }
 
-impl Deref for CpuWeight {
-    type Target = u64;
+impl Deref for CpuQuota {
+    type Target = i64;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl Display for CpuWeight {
+impl Display for CpuQuota {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
@@ -68,10 +67,10 @@ mod tests {
 
     #[test]
     fn test_validation_success() {
-        let input: CpuWeight = CpuWeight::new(100);
-        assert!(CpuWeight::validate_for_creation(
+        let input: CpuQuota = CpuQuota::new(100000);
+        assert!(CpuQuota::validate_for_creation(
             Some(input.into_inner()),
-            "cpu_weight",
+            "cpu_quota",
             None
         )
         .is_ok());
@@ -79,10 +78,10 @@ mod tests {
 
     #[test]
     fn test_validation_failure() {
-        let input: CpuWeight = CpuWeight::new(1000000);
-        assert!(CpuWeight::validate_for_creation(
+        let input: CpuQuota = CpuQuota::new(2000000);
+        assert!(CpuQuota::validate_for_creation(
             Some(input.into_inner()),
-            "cpu_weight",
+            "cpu_quota",
             None
         )
         .is_err());

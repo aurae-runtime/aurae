@@ -4,7 +4,7 @@ use std::ops::Deref;
 use validation::{ValidatedField, ValidationError};
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub(crate) struct ExecutableName(String);
+pub struct ExecutableName(String);
 
 impl ExecutableName {
     pub fn into_inner(self) -> String {

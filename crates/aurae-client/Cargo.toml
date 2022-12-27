@@ -1,0 +1,15 @@
+[package]
+name = "aurae-client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.68"
+aurae-proto = { workspace = true }
+macros = { package = "aurae-client-macros", path = "./macros" }
+serde = "1.0.147"
+tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
+toml = "0.5.9"
+tonic = { workspace = true, features = ["tls"] }
+tower = "0.4.13"
+x509-certificate = "0.15.0"

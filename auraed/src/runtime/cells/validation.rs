@@ -1,10 +1,15 @@
-use crate::runtime::cells::{CellName, ExecutableName};
-use crate::runtime::{CpuCpus, CpuQuota, CpuWeight, CpusetMems};
+use aurae_cells::{
+    CellName, CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems,
+};
+use aurae_executables::{ExecutableName, SharedNamespaces};
 use aurae_proto::runtime::{
     AllocateCellRequest, Cell, Executable, FreeCellRequest,
     StartExecutableRequest, StopExecutableRequest,
 };
-use validation::{ValidatedType, ValidationError};
+use std::collections::VecDeque;
+use std::ffi::OsString;
+use std::process::Command;
+use validation::{ValidatedField, ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
 
 // TODO: Following the discord discussion of wanting to keep the logic on CellService,
@@ -13,7 +18,7 @@ use validation_macros::ValidatedType;
 // TODO: ...and I (@krisnova) read the above statement.
 
 #[derive(Debug, ValidatedType)]
-pub(crate) struct ValidatedAllocateCellRequest {
+pub struct ValidatedAllocateCellRequest {
     #[field_type(Option<Cell>)]
     pub cell: ValidatedCell,
 }
@@ -34,7 +39,7 @@ impl AllocateCellRequestTypeValidator for AllocateCellRequestValidator {
 }
 
 #[derive(Debug, ValidatedType)]
-pub(crate) struct ValidatedFreeCellRequest {
+pub struct ValidatedFreeCellRequest {
     #[field_type(String)]
     #[validate]
     pub cell_name: CellName,
@@ -43,40 +48,86 @@ pub(crate) struct ValidatedFreeCellRequest {
 impl FreeCellRequestTypeValidator for FreeCellRequestValidator {}
 
 #[derive(Debug, ValidatedType)]
-pub(crate) struct ValidatedStartExecutableRequest {
+pub struct ValidatedStartExecutableRequest {
     #[field_type(String)]
-    #[validate]
-    pub cell_name: CellName,
+    pub cell_name: VecDeque<CellName>,
     #[field_type(Option<Executable>)]
     pub executable: ValidatedExecutable,
 }
 
 impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
+    fn validate_cell_name(
+        cell_name: String,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<VecDeque<CellName>, ValidationError> {
+        let cell_name =
+            validation::required(Some(cell_name), field_name, parent_name)?;
+
+        let cell_name = cell_name
+            .split('/')
+            .flat_map(|cell_name| {
+                CellName::validate_for_creation(
+                    Some(cell_name.into()),
+                    field_name,
+                    parent_name,
+                )
+            })
+            .collect();
+
+        Ok(cell_name)
+    }
+
     fn validate_executable(
         executable: Option<Executable>,
         field_name: &str,
         parent_name: Option<&str>,
     ) -> Result<ValidatedExecutable, ValidationError> {
-        let exe = validation::required(executable, field_name, parent_name)?;
-        ValidatedExecutable::validate(exe, None) // TODO: parent name
+        let executable =
+            validation::required(executable, field_name, parent_name)?;
+        ValidatedExecutable::validate(
+            executable,
+            Some(&*validation::field_name(field_name, parent_name)),
+        )
     }
 }
 
 #[derive(Debug, ValidatedType)]
-pub(crate) struct ValidatedStopExecutableRequest {
+pub struct ValidatedStopExecutableRequest {
     #[field_type(String)]
-    #[validate]
-    pub cell_name: CellName,
+    pub cell_name: VecDeque<CellName>,
     #[field_type(String)]
     #[validate]
     pub executable_name: ExecutableName,
 }
 
-impl StopExecutableRequestTypeValidator for StopExecutableRequestValidator {}
+impl StopExecutableRequestTypeValidator for StopExecutableRequestValidator {
+    fn validate_cell_name(
+        cell_name: String,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<VecDeque<CellName>, ValidationError> {
+        // TODO: refactor to a CellNamePath maybe
+        let cell_name =
+            validation::required(Some(cell_name), field_name, parent_name)?;
 
-// TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
+        let cell_name = cell_name
+            .split('/')
+            .flat_map(|cell_name| {
+                CellName::validate_for_creation(
+                    Some(cell_name.into()),
+                    field_name,
+                    parent_name,
+                )
+            })
+            .collect();
+
+        Ok(cell_name)
+    }
+}
+
 #[derive(ValidatedType, Debug, Clone)]
-pub(crate) struct ValidatedCell {
+pub struct ValidatedCell {
     #[field_type(String)]
     #[validate(create)]
     pub name: CellName,
@@ -113,19 +164,49 @@ pub(crate) struct ValidatedCell {
 
 impl CellTypeValidator for CellValidator {}
 
-impl From<ValidatedCell> for crate::runtime::cells::Cell {
+impl From<ValidatedCell> for aurae_cells::CellSpec {
     fn from(x: ValidatedCell) -> Self {
-        Self::new(x)
+        let ValidatedCell {
+            name: _,
+            cpu_cpus,
+            cpu_shares,
+            cpu_mems,
+            cpu_quota,
+            ns_share_mount,
+            ns_share_uts,
+            ns_share_ipc,
+            ns_share_pid,
+            ns_share_net,
+            ns_share_cgroup,
+        } = x;
+
+        Self {
+            cgroup_spec: CgroupSpec {
+                cpu_cpus,
+                cpu_quota,
+                cpu_weight: cpu_shares,
+                cpuset_mems: cpu_mems,
+            },
+            shared_namespaces: SharedNamespaces {
+                mount: ns_share_mount,
+                uts: ns_share_uts,
+                ipc: ns_share_ipc,
+                pid: ns_share_pid,
+                net: ns_share_net,
+                cgroup: ns_share_cgroup,
+            },
+        }
     }
 }
 
 #[derive(ValidatedType, Debug)]
-pub(crate) struct ValidatedExecutable {
+pub struct ValidatedExecutable {
     #[field_type(String)]
     #[validate(create)]
     pub name: ExecutableName,
 
-    pub command: String,
+    #[field_type(String)]
+    pub command: OsString,
 
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
@@ -137,14 +218,28 @@ impl ExecutableTypeValidator for ExecutableValidator {
         command: String,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<String, ValidationError> {
-        validation::required_not_empty(Some(command), field_name, parent_name)
+    ) -> Result<OsString, ValidationError> {
+        let command = validation::required_not_empty(
+            Some(command),
+            field_name,
+            parent_name,
+        )?;
+
+        Ok(OsString::from(command))
     }
 }
 
-impl From<ValidatedExecutable> for crate::runtime::cells::Executable {
+impl From<ValidatedExecutable> for aurae_executables::ExecutableSpec {
     fn from(x: ValidatedExecutable) -> Self {
         let ValidatedExecutable { name, command, description } = x;
-        Self::new(name, command, description)
+
+        let mut c = Command::new("sh");
+        let _ = c.args([OsString::from("-c"), command]);
+
+        // We are checking that command has an arg to assure ourselves that `command.arg`
+        // mutates command, and is not making a clone to return
+        assert_eq!(c.get_args().len(), 2);
+
+        Self { name, command: c, description }
     }
 }

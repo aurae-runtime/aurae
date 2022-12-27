@@ -34,59 +34,72 @@ import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
 
+const cellName = "ae-2";
 // [ Allocate Shared NS ]
 let s_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
         cpuShares: 2, // Percentage of CPUs
-        name: "shared-pid-ns-dangerous",
-        nsSharePid: true,
-        nsShareMount: true,
+        name: cellName,
+        // nsSharePid: true,
+        // nsShareMount: true,
     })
 });
 helpers.print(s_allocated)
 
 // [ Start ]
 let s_started = await cells.start(<runtime.StartExecutableRequest>{
-    cellName: "shared-pid-ns-dangerous",
+    cellName: cellName,
     executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/ls /proc", // Note: you must use the full path now for namespaces!
+        command: "ls /proc", // Note: you must use the full path now for namespaces!
         description: "List processes",
         name: "ps-aux"
     })
 })
 helpers.print(s_started)
-
-// [ Free ]
-await cells.free(<runtime.FreeCellRequest>{
-    cellName: "shared-pid-ns-dangerous"
-});
-
-// [ Allocate Unshared NS ]
-let u_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
-    cell: runtime.Cell.fromPartial({
-        cpuShares: 2, // Percentage of CPUs
-        name: "unshared-pid-ns-safe",
-        // Note: We do not set any nsShare* fields here as this is
-        // "secure-by-default" and will isolate all the namespaces!
-    })
-});
-helpers.print(u_allocated)
-
-// [ Start ]
-let u_started = await cells.start(<runtime.StartExecutableRequest>{
-    cellName: "unshared-pid-ns-safe",
-    executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/ls /proc", // Note: you must use the full path now for namespaces!
-        description: "List processes",
-        name: "ps-aux"
-    })
-})
-helpers.print(u_started)
-
-// [ Free ]
-await cells.free(<runtime.FreeCellRequest>{
-    cellName: "unshared-pid-ns-safe"
-});
+//
+// // [ Free ]
+// await cells.free(<runtime.FreeCellRequest>{
+//     cellName: "shared-pid-ns-dangerous"
+// });
+//
+// // [ Allocate Unshared NS ]
+// let u_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+//     cell: runtime.Cell.fromPartial({
+//         cpuShares: 2, // Percentage of CPUs
+//         name: "unshared-pid-ns-safe",
+//         // Note: We do not set any nsShare* fields here as this is
+//         // "secure-by-default" and will isolate all the namespaces!
+//     })
+// });
+// helpers.print(u_allocated)
+//
+// // [ Start ]
+// let u_started = await cells.start(<runtime.StartExecutableRequest>{
+//     cellName: "unshared-pid-ns-safe",
+//     executable: runtime.Executable.fromPartial({
+//         command: "/usr/bin/ls /proc", // Note: you must use the full path now for namespaces!
+//         description: "List processes",
+//         name: "ps-aux"
+//     })
+// })
+// helpers.print(u_started)
+//
+// // // [ Start Other ]
+// // let u_started_other = await cells.start(<runtime.StartExecutableRequest>{
+// //     cellName: "unshared-pid-ns-safe",
+// //     executable: runtime.Executable.fromPartial({
+// //         command: "/usr/bin/ls", // Note: you must use the full path now for namespaces!
+// //         args: ["/proc"],
+// //         description: "List processes",
+// //         name: "ps-aux-other"
+// //     })
+// // })
+// // helpers.print(u_started_other)
+//
+// // [ Free ]
+// await cells.free(<runtime.FreeCellRequest>{
+//     cellName: "unshared-pid-ns-safe"
+// });
 
 
 

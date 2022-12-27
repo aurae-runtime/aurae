@@ -28,81 +28,52 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cells::{CellName, ExecutableName};
-use cgroups_rs::CgroupPid;
+use aurae_cells::CellsError;
+use aurae_executables::ExecutablesError;
 use thiserror::Error;
 use tonic::Status;
 use tracing::error;
 
-pub(crate) type Result<T> = std::result::Result<T, CellsError>;
+pub(crate) type Result<T> = std::result::Result<T, CellsServiceError>;
 
-#[derive(Error, Debug)]
-pub(crate) enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' unallocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cell '{cell_name}' already has an executable '{executable_name}'"
-    )]
-    ExecutableExists { cell_name: CellName, executable_name: ExecutableName },
-    #[error("cell '{cell_name} could not find executable '{executable_name}'")]
-    ExecutableNotFound { cell_name: CellName, executable_name: ExecutableName },
-    // #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?}) due to: {source}")]
-    #[error("cell '{cell_name}' failed to start executable '{executable_name}' ({command:?})")]
-    FailedToStartExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        command: String,
-        //source: unshare::Error,
-    },
-    //#[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?}) due to: {source}")]
-    #[error("cell '{cell_name}' failed to stop executable '{executable_name}' ({executable_pid:?})")]
-    FailedToStopExecutable {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        executable_pid: CgroupPid,
-        //source: unshare::Error,
-    },
-    #[error(
-        "cell '{cell_name}' failed to add executable (executable:?): {source}"
-    )]
-    FailedToAddExecutableToCell {
-        cell_name: CellName,
-        executable_name: ExecutableName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("failed to lock cells table")]
-    FailedToObtainLock(),
+#[derive(Debug, Error)]
+pub(crate) enum CellsServiceError {
+    #[error(transparent)]
+    CellsError(#[from] CellsError),
+    #[error(transparent)]
+    ExecutablesError(#[from] ExecutablesError),
 }
 
-impl From<CellsError> for Status {
-    fn from(err: CellsError) -> Self {
+impl From<CellsServiceError> for Status {
+    fn from(err: CellsServiceError) -> Self {
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            CellsError::CellExists { .. }
-            | CellsError::ExecutableExists { .. } => {
-                Status::already_exists(msg)
-            }
-            CellsError::CellNotFound { .. }
-            | CellsError::ExecutableNotFound { .. } => Status::not_found(msg),
-            CellsError::FailedToFreeCell { .. }
-            | CellsError::FailedToStartExecutable { .. }
-            | CellsError::FailedToStopExecutable { .. }
-            | CellsError::FailedToAddExecutableToCell { .. } => {
-                Status::internal(msg)
-            }
-            CellsError::FailedToObtainLock() => {
-                Status::aborted(err.to_string())
-            }
-            CellsError::CellNotAllocated { cell_name } => {
-                CellsError::CellNotFound { cell_name }.into()
-            }
+            CellsServiceError::CellsError(e) => match e {
+                CellsError::CellExists { .. } => Status::already_exists(msg),
+                CellsError::CellNotFound { .. } => Status::not_found(msg),
+                CellsError::FailedToAllocateCell { .. }
+                | CellsError::AbortedAllocateCell { .. }
+                | CellsError::FailedToFreeCell { .. } => Status::internal(msg),
+                CellsError::CellNotAllocated { cell_name } => {
+                    CellsServiceError::CellsError(CellsError::CellNotFound {
+                        cell_name,
+                    })
+                    .into()
+                }
+            },
+            CellsServiceError::ExecutablesError(e) => match e {
+                ExecutablesError::ExecutableExists { .. } => {
+                    Status::already_exists(msg)
+                }
+                ExecutablesError::ExecutableNotFound { .. } => {
+                    Status::not_found(msg)
+                }
+                ExecutablesError::FailedToStartExecutable { .. }
+                | ExecutablesError::FailedToStopExecutable { .. } => {
+                    Status::internal(msg)
+                }
+            },
         }
     }
 }
