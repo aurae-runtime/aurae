@@ -120,7 +120,7 @@ struct AuraedOptions {
     /// Toggle verbosity. Default false
     #[clap(short, long, alias = "ritz")]
     verbose: bool,
-
+    /// Run auraed as a nested instance of itself in an Aurae cell.
     #[clap(long)]
     nested: bool,
 }

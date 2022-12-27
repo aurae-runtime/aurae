@@ -58,6 +58,8 @@ impl Cells {
 
         // Check if there was already a cgroup in the table with this cell name as a key.
         if self.cache.contains_key(&cell_name) {
+            // TODO Reconcile cache against filesystem somewhere, maybe here?
+            // TODO https://github.com/aurae-runtime/aurae/issues/198
             return Err(CellsError::CellExists { cell_name });
         }
 
@@ -84,6 +86,8 @@ impl Cells {
     where
         F: Fn(&Cell) -> Result<R>,
     {
+        // TODO Also reconcile the cache against the filesystem
+        // TODO https://github.com/aurae-runtime/aurae/issues/198
         if let Some(cell) = self.cache.get(cell_name) {
             let res = f(cell);
             if matches!(res, Err(CellsError::CellNotAllocated { .. })) {

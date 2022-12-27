@@ -81,7 +81,15 @@ impl Cell {
         let cgroup: Cgroup =
             self.spec.cgroup_spec.clone().into_cgroup(&self.name);
 
+        // Launch nested Auraed
+        //
+        // Here we launch a nested auraed with the --nested flag
+        // which is used our way of "hooking" into the newly created
+        // aurae isolation zone.
+        //
+        // TODO: Consider changing "--nested" to "--nested-cell" or similar
         // TODO: handle expect
+        // TODO: Pull nested auraed command into a deterministic function EG: nested_cell_command()
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
         client_config.system.socket =
@@ -93,10 +101,14 @@ impl Cell {
             &client_config.system.socket,
             "--nested",
         ]);
+
         // We are checking that command has an arg to assure ourselves that `command.arg`
         // mutates command, and is not making a clone to return
+        // We have a concern that the "command" API make change/break in the future and this
+        // test is intended to help safeguard against that!
         assert_eq!(command.get_args().len(), 3);
 
+        // Create the nested Auraed executable
         let executable_spec = ExecutableSpec {
             // TODO: don't require use of validate
             name: ExecutableName::validate(Some("auraed".into()), "", None)
@@ -105,6 +117,7 @@ impl Cell {
             description: "nested auraed".to_string(),
         };
 
+        // TODO: Its only a "new pid 1" if we unshare the pid namespace, otherwise its just a new process.
         let mut auraed = Executable::new_pid1(
             executable_spec,
             self.spec.shared_namespaces.clone(),
@@ -142,6 +155,9 @@ impl Cell {
     /// Deletes the underlying cgroup.
     /// A [Cell] should never be reused after calling [free].
     pub fn free(&mut self) -> Result<()> {
+        // TODO send SIGKILL to nested auraed before destroying the cgroup or the cgroup wont delete properly
+        // TODO In the future, use SIGINT intstead of SIGKILL once https://github.com/aurae-runtime/aurae/issues/199 is ready
+        // TODO nested auraed should proxy (bus) POSIX signals to child executables
         if let CellState::Allocated { cgroup, .. } = &mut self.state {
             cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
                 cell_name: self.name.clone(),
