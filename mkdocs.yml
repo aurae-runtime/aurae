@@ -10,8 +10,9 @@ nav:
   - Aurae Standard Library:
     - Specification: /stdlib
     - V0: /stdlib/v0
-  - Building from Source: /build
   - Quick Start: /quickstart
+  - Building from Source: /build
+  - Signals: /signals
   - Certificates: /certs
   - Contributors: /contributors
   - Reference:
