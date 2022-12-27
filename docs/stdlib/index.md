@@ -94,4 +94,4 @@ A notable exception to the public specification above is the Aurae projects pref
 The traditional convention that is meant to reduce the likelihood of future breaking changes and ease the creation of macros for generating code:
 
 - rpc methods (e.g., `StartWidget`) should have dedicated request and response messages named `StartWidgetResponse` and `StartWidgetResponse`
-- objects (e.g., `Widget`) should be embedded directly into their corresponding `StartWidgetRequest`, `StopWidgetReqyest`, etc style methods.
+- objects (e.g., `Widget`) should be embedded directly into their corresponding `StartWidgetRequest`, `StopWidgetRequest`, etc style methods.
