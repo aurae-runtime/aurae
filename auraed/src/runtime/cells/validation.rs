@@ -6,6 +6,7 @@ use aurae_proto::runtime::{
     AllocateCellRequest, Cell, Executable, FreeCellRequest,
     StartExecutableRequest, StopExecutableRequest,
 };
+use std::collections::VecDeque;
 use std::ffi::CString;
 use std::process::Command;
 use validation::{ValidatedField, ValidatedType, ValidationError};
@@ -49,7 +50,7 @@ impl FreeCellRequestTypeValidator for FreeCellRequestValidator {}
 #[derive(Debug, ValidatedType)]
 pub struct ValidatedStartExecutableRequest {
     #[field_type(String)]
-    pub cell_name: Vec<CellName>,
+    pub cell_name: VecDeque<CellName>,
     #[field_type(Option<Executable>)]
     pub executable: ValidatedExecutable,
 }
@@ -59,12 +60,9 @@ impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
         cell_name: String,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<Vec<CellName>, ValidationError> {
-        let cell_name = validation::required_not_empty(
-            Some(cell_name),
-            field_name,
-            parent_name,
-        )?;
+    ) -> Result<VecDeque<CellName>, ValidationError> {
+        let cell_name =
+            validation::required(Some(cell_name), field_name, parent_name)?;
 
         let cell_name = cell_name
             .split('/')
@@ -93,7 +91,7 @@ impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
 #[derive(Debug, ValidatedType)]
 pub struct ValidatedStopExecutableRequest {
     #[field_type(String)]
-    pub cell_name: Vec<CellName>,
+    pub cell_name: VecDeque<CellName>,
     #[field_type(String)]
     #[validate]
     pub executable_name: ExecutableName,
@@ -104,13 +102,10 @@ impl StopExecutableRequestTypeValidator for StopExecutableRequestValidator {
         cell_name: String,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<Vec<CellName>, ValidationError> {
+    ) -> Result<VecDeque<CellName>, ValidationError> {
         // TODO: refactor to a CellNamePath maybe
-        let cell_name = validation::required_not_empty(
-            Some(cell_name),
-            field_name,
-            parent_name,
-        )?;
+        let cell_name =
+            validation::required(Some(cell_name), field_name, parent_name)?;
 
         let cell_name = cell_name
             .split('/')

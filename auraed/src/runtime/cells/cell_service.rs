@@ -33,14 +33,19 @@ use super::validation::{
     ValidatedStartExecutableRequest, ValidatedStopExecutableRequest,
 };
 use super::Result;
+use crate::runtime::cells::error::CellsServiceError;
+use crate::runtime::cells::validation::ValidatedExecutable;
 use ::validation::ValidatedType;
 use aurae_cells::Cells;
+use aurae_client::runtime::cell_service::CellServiceClient;
+use aurae_client::AuraeClient;
 use aurae_executables::Executables;
 use aurae_proto::runtime::{
-    cell_service_server, AllocateCellRequest, AllocateCellResponse,
+    cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
     FreeCellRequest, FreeCellResponse, StartExecutableRequest,
     StartExecutableResponse, StopExecutableRequest, StopExecutableResponse,
 };
+use iter_tools::Itertools;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
@@ -97,28 +102,55 @@ impl CellService {
     async fn start(
         &self,
         request: ValidatedStartExecutableRequest,
-    ) -> Result<StartExecutableResponse> {
-        let ValidatedStartExecutableRequest { cell_name, executable } = request;
+    ) -> std::result::Result<Response<StartExecutableResponse>, Status> {
+        let ValidatedStartExecutableRequest { mut cell_name, executable } =
+            request;
 
         info!(
             "CellService: start() cell_name={:?} executable={:?}",
             cell_name, executable
         );
 
-        if cell_name.len() == 1 {
+        if cell_name.is_empty() {
             // we are in the correct cell
             let mut executables = self.executables.lock().await;
-            let executable = executables.start(executable)?;
+            let executable = executables
+                .start(executable)
+                .map_err(CellsServiceError::ExecutablesError)?;
+
             let pid = executable.pid().expect("pid").as_raw();
-            Ok(StartExecutableResponse { pid })
+            Ok(Response::new(StartExecutableResponse { pid }))
         } else {
             // we are in a parent cell
-            let cell_name = &cell_name[1];
+            let child_cell_name = cell_name.pop_front().expect("len > 0");
 
             let mut cells = self.cells.lock().await;
-            Ok(cells.get_mut(cell_name, move |_cell| {
-                todo!("send the message to the cell's pid1")
-            })?)
+            let client_config = cells
+                .get(&child_cell_name, move |cell| cell.client_config())
+                .map_err(CellsServiceError::CellsError)?;
+
+            // TODO: Handle error
+            let client = AuraeClient::new(client_config)
+                .await
+                .expect("failed to create AuraeClient");
+
+            // TODO: This seems wrong.
+            //  1. We are turning our validated request back into a normal message (nested auraed will revalidate for no reason).
+            //  2. We've lost all the original request's metadata
+            let ValidatedExecutable { name, command, description } = executable;
+
+            let res = client
+                .start(StartExecutableRequest {
+                    cell_name: cell_name.iter().join("/"),
+                    executable: Some(Executable {
+                        name: name.into_inner(),
+                        command: command.into_string().expect("valid string"),
+                        description,
+                    }),
+                })
+                .await;
+
+            res
         }
     }
 
@@ -126,8 +158,8 @@ impl CellService {
     async fn stop(
         &self,
         request: ValidatedStopExecutableRequest,
-    ) -> Result<StopExecutableResponse> {
-        let ValidatedStopExecutableRequest { cell_name, executable_name } =
+    ) -> std::result::Result<Response<StopExecutableResponse>, Status> {
+        let ValidatedStopExecutableRequest { mut cell_name, executable_name } =
             request;
 
         info!(
@@ -135,19 +167,34 @@ impl CellService {
             cell_name, executable_name,
         );
 
-        if cell_name.len() == 1 {
+        if cell_name.is_empty() {
             // we are in the correct cell
             let mut executables = self.executables.lock().await;
-            let _exit_status = executables.stop(&executable_name)?;
-            Ok(StopExecutableResponse::default())
+            let _exit_status = executables
+                .stop(&executable_name)
+                .map_err(CellsServiceError::ExecutablesError)?;
+
+            Ok(Response::new(StopExecutableResponse::default()))
         } else {
             // we are in a parent cell
-            let cell_name = &cell_name[1];
+            let child_cell_name = cell_name.pop_front().expect("len > 0");
 
             let mut cells = self.cells.lock().await;
-            Ok(cells.get_mut(cell_name, move |_cell| {
-                todo!("send the message to the cell's pid1")
-            })?)
+            let client_config = cells
+                .get(&child_cell_name, move |cell| cell.client_config())
+                .map_err(CellsServiceError::CellsError)?;
+
+            // TODO: Handle error
+            let client = AuraeClient::new(client_config)
+                .await
+                .expect("failed to create AuraeClient");
+
+            client
+                .stop(StopExecutableRequest {
+                    cell_name: cell_name.iter().join("/"),
+                    executable_name: executable_name.into_inner(),
+                })
+                .await
         }
     }
 }
@@ -187,7 +234,7 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<StartExecutableResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStartExecutableRequest::validate(request, None)?;
-        Ok(Response::new(self.start(request).await?))
+        Ok(self.start(request).await?)
     }
 
     async fn stop(
@@ -196,6 +243,6 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<StopExecutableResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStopExecutableRequest::validate(request, None)?;
-        Ok(Response::new(self.stop(request).await?))
+        Ok(self.stop(request).await?)
     }
 }

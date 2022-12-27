@@ -34,7 +34,7 @@ import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
 
-const cellName = "ae-10";
+const cellName = "ae-2";
 // [ Allocate Shared NS ]
 let s_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
@@ -50,7 +50,7 @@ helpers.print(s_allocated)
 let s_started = await cells.start(<runtime.StartExecutableRequest>{
     cellName: cellName,
     executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/ls /proc", // Note: you must use the full path now for namespaces!
+        command: "ls /proc", // Note: you must use the full path now for namespaces!
         description: "List processes",
         name: "ps-aux"
     })

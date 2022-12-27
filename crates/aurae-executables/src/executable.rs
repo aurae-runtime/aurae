@@ -223,12 +223,12 @@ fn exec_pid1(
 
                         // remount as private
                         nix::mount::mount(
-                            Some("."),
+                            None::<&str>, // ignored
                             ".",
-                            None::<&str>,
+                            None::<&str>, // ignored
                             nix::mount::MsFlags::MS_SLAVE
                                 | nix::mount::MsFlags::MS_REC,
-                            Some(""),
+                            None::<&str>, // ignored
                         )
                         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 

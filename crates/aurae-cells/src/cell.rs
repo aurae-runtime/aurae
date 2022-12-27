@@ -29,6 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use crate::{CellName, CellSpec, CellsError, Result};
+use aurae_client::AuraeConfig;
 use aurae_executables::{Executable, ExecutableName, ExecutableSpec};
 use cgroups_rs::Cgroup;
 use std::process::Command;
@@ -53,8 +54,15 @@ pub struct Cell {
 #[derive(Debug)]
 enum CellState {
     Unallocated,
-    Allocated { cgroup: Cgroup, auraed: Executable },
+    Allocated { cgroup: Cgroup, pid1: Pid1 },
     Freed,
+}
+
+#[derive(Debug)]
+struct Pid1 {
+    #[allow(unused)]
+    auraed: Executable,
+    client_config: AuraeConfig,
 }
 
 impl Cell {
@@ -73,11 +81,21 @@ impl Cell {
         let cgroup: Cgroup =
             self.spec.cgroup_spec.clone().into_cgroup(&self.name);
 
+        // TODO: handle expect
+        let mut client_config =
+            AuraeConfig::try_default().expect("file based config");
+        client_config.system.socket =
+            format!("/var/run/aurae/aurae-{}.sock", uuid::Uuid::new_v4());
+
         let mut command = Command::new("auraed");
-        let _ = command.arg("--nested");
+        let _ = command.args([
+            "--socket",
+            &client_config.system.socket,
+            "--nested",
+        ]);
         // We are checking that command has an arg to assure ourselves that `command.arg`
         // mutates command, and is not making a clone to return
-        assert_eq!(command.get_args().len(), 1);
+        assert_eq!(command.get_args().len(), 3);
 
         let executable_spec = ExecutableSpec {
             // TODO: don't require use of validate
@@ -113,7 +131,10 @@ impl Cell {
 
         println!("inserted auraed pid {}", pid);
 
-        self.state = CellState::Allocated { cgroup, auraed };
+        self.state = CellState::Allocated {
+            cgroup,
+            pid1: Pid1 { auraed, client_config },
+        };
 
         Ok(())
     }
@@ -132,6 +153,18 @@ impl Cell {
         self.state = CellState::Freed;
 
         Ok(())
+    }
+
+    // NOTE: Having this function return the AuraeClient means we need to make it async,
+    // or we need to make [AuraeClient::new] not async.
+    pub fn client_config(&self) -> Result<AuraeConfig> {
+        let CellState::Allocated { pid1, .. } = &self.state else {
+            return Err(CellsError::CellNotAllocated {
+                cell_name: self.name.clone(),
+            })
+        };
+
+        Ok(pid1.client_config.clone())
     }
 
     /// Returns the [CellName] of the [Cell]

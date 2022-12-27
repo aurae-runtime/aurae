@@ -80,21 +80,21 @@ impl Cells {
         Ok(())
     }
 
-    // fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
-    // where
-    //     F: Fn(&Cell) -> Result<R>,
-    // {
-    //     if let Some(cell) = self.cache.get(cell_name) {
-    //         let res = f(cell);
-    //         if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
-    //             let _ = self.cache.remove(cell_name);
-    //         }
-    //         res
-    //     } else {
-    //         // if we can eliminate this case, we can take &self instead
-    //         Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
-    //     }
-    // }
+    pub fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    where
+        F: Fn(&Cell) -> Result<R>,
+    {
+        if let Some(cell) = self.cache.get(cell_name) {
+            let res = f(cell);
+            if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
+                let _ = self.cache.remove(cell_name);
+            }
+            res
+        } else {
+            // if we can eliminate this case, we can take &self instead
+            Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
+        }
+    }
 
     pub fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where

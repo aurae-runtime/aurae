@@ -114,12 +114,14 @@ dependencies = [
 name = "aurae-cells"
 version = "0.0.0"
 dependencies = [
+ "aurae-client",
  "aurae-executables",
  "cgroups-rs",
  "fancy-regex",
  "thiserror",
  "tonic",
  "tracing",
+ "uuid",
  "validation",
 ]
 
@@ -184,6 +186,7 @@ dependencies = [
  "fancy-regex",
  "futures",
  "ipnetwork",
+ "iter_tools",
  "libc",
  "log",
  "multi_log",
@@ -1232,6 +1235,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "iter_tools"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "531cafdc99b3b3252bb32f5620e61d56b19415efc19900b12d1b2e7483854897"
+dependencies = [
+ "itertools",
 ]
 
 [[package]]

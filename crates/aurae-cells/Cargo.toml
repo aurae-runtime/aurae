@@ -9,10 +9,12 @@ default = ["tonic"]
 tonic = ["dep:tonic"]
 
 [dependencies]
+aurae-client = { path = "../aurae-client" }
 aurae-executables = { path = "../aurae-executables" }
 cgroups-rs = "0.2.11"
 fancy-regex = "0.10.0"
 thiserror = { workspace = true }
 tonic = { workspace = true, optional = true }
 tracing = { workspace = true }
+uuid = { version = "1.2.2", features = ["v4"] }
 validation = { path = "../validation", features = ["regex"] }

@@ -139,7 +139,7 @@ pub async fn daemon() -> i32 {
         if options.verbose { Level::TRACE } else { Level::INFO };
 
     // Initializes Logging and prepares system if auraed is run as pid=1
-    init::init(tracing_level).await;
+    init::init(tracing_level, options.nested).await;
 
     trace!("**Logging: Verbose Mode**");
     info!("Starting Aurae Daemon Runtime...");
