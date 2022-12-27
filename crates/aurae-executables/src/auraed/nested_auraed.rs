@@ -48,6 +48,26 @@ pub struct NestedAuraed {
 
 impl NestedAuraed {
     pub fn new(shared_namespaces: SharedNamespaces) -> io::Result<Self> {
+        // Launch nested Auraed
+        //
+        // Here we launch a nested auraed with the --nested flag
+        // which is used our way of "hooking" into the newly created
+        // aurae isolation zone.
+        //
+        // TODO: Consider changing "--nested" to "--nested-cell" or similar
+        // TODO: handle expect
+        let mut client_config =
+            AuraeConfig::try_default().expect("file based config");
+        client_config.system.socket =
+            format!("/var/run/aurae/aurae-{}.sock", uuid::Uuid::new_v4());
+
+        let mut command = Command::new("auraed");
+        let _ = command.current_dir("/").args([
+            "--socket",
+            &client_config.system.socket,
+            "--nested",
+        ]);
+
         // Clone docs: https://man7.org/linux/man-pages/man2/clone.2.html
 
         // If this signal is specified as anything other than SIGCHLD, then the
@@ -112,37 +132,18 @@ impl NestedAuraed {
             clone.flag_newcgroup();
         }
 
+        // We have a concern that the "command" API make change/break in the future and this
+        // test is intended to help safeguard against that!
+        // We check that the command we kept has the expected number of args following the call
+        // to command.args, whose return value we ignored above.
+        assert_eq!(command.get_args().len(), 3);
+
+        // NOTE: AFTER THIS CALL YOU CAN BE IN THE CURRENT OR CHILD PROCESS.
         let pid = unsafe { clone.call() }
             .map_err(|e| io::Error::from_raw_os_error(e.0))?;
 
-        // Launch nested Auraed
-        //
-        // Here we launch a nested auraed with the --nested flag
-        // which is used our way of "hooking" into the newly created
-        // aurae isolation zone.
-        //
-        // TODO: Consider changing "--nested" to "--nested-cell" or similar
-        // TODO: handle expect
-        let mut client_config =
-            AuraeConfig::try_default().expect("file based config");
-        client_config.system.socket =
-            format!("/var/run/aurae/aurae-{}.sock", uuid::Uuid::new_v4());
-
         if pid == 0 {
             // we are in the child
-
-            let mut command = Command::new("auraed");
-            let _ = command.current_dir("/").args([
-                "--socket",
-                &client_config.system.socket,
-                "--nested",
-            ]);
-
-            // We have a concern that the "command" API make change/break in the future and this
-            // test is intended to help safeguard against that!
-            // We check that the command we kept has the expected number of args following the call
-            // to command.args, whose return value we ignored above.
-            assert_eq!(command.get_args().len(), 3);
 
             let command = {
                 let shared_namespaces = shared_namespaces.clone();
