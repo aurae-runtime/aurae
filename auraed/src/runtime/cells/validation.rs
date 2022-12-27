@@ -7,7 +7,7 @@ use aurae_proto::runtime::{
     StartExecutableRequest, StopExecutableRequest,
 };
 use std::collections::VecDeque;
-use std::ffi::CString;
+use std::ffi::OsString;
 use std::process::Command;
 use validation::{ValidatedField, ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
@@ -83,8 +83,12 @@ impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
         field_name: &str,
         parent_name: Option<&str>,
     ) -> Result<ValidatedExecutable, ValidationError> {
-        let exe = validation::required(executable, field_name, parent_name)?;
-        ValidatedExecutable::validate(exe, None) // TODO: parent name
+        let executable =
+            validation::required(executable, field_name, parent_name)?;
+        ValidatedExecutable::validate(
+            executable,
+            Some(&*validation::field_name(field_name, parent_name)),
+        )
     }
 }
 
@@ -202,7 +206,7 @@ pub struct ValidatedExecutable {
     pub name: ExecutableName,
 
     #[field_type(String)]
-    pub command: CString,
+    pub command: OsString,
 
     // TODO: `#[validate(none)] is used to skip validation. Actually validate when restrictions are known.
     #[validate(none)]
@@ -214,19 +218,14 @@ impl ExecutableTypeValidator for ExecutableValidator {
         command: String,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<CString, ValidationError> {
+    ) -> Result<OsString, ValidationError> {
         let command = validation::required_not_empty(
             Some(command),
             field_name,
             parent_name,
         )?;
 
-        let command =
-            CString::new(command).map_err(|_| ValidationError::Invalid {
-                field: validation::field_name(field_name, parent_name),
-            })?;
-
-        Ok(command)
+        Ok(OsString::from(command))
     }
 }
 
@@ -234,17 +233,13 @@ impl From<ValidatedExecutable> for aurae_executables::ExecutableSpec {
     fn from(x: ValidatedExecutable) -> Self {
         let ValidatedExecutable { name, command, description } = x;
 
-        // TODO: fix building command
-        let command = command.to_string_lossy();
-        let split = command.split_whitespace().collect::<Vec<_>>();
-        let program = &split[0];
-        let args = if split.len() > 1 { &split[1..] } else { &[] };
-        let mut command = Command::new(program);
-        let _ = command.args(args);
+        let mut c = Command::new("sh");
+        let _ = c.args([OsString::from("-c"), command]);
+
         // We are checking that command has an arg to assure ourselves that `command.arg`
         // mutates command, and is not making a clone to return
-        assert_eq!(command.get_args().len(), 1);
+        assert_eq!(c.get_args().len(), 2);
 
-        Self { name, command, description }
+        Self { name, command: c, description }
     }
 }
