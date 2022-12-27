@@ -33,12 +33,9 @@ use crate::process::Process;
 use aurae_client::AuraeConfig;
 use nix::libc::SIGCHLD;
 use nix::unistd::Pid;
+use std::io;
 use std::os::unix::process::CommandExt;
 use std::process::{Command, ExitStatus};
-use std::{
-    io::{self, ErrorKind},
-    os::fd::{FromRawFd, OwnedFd},
-};
 
 #[derive(Debug)]
 pub struct NestedAuraed {
@@ -77,9 +74,9 @@ impl NestedAuraed {
         //        terminates.
         let signal = SIGCHLD;
 
-        let mut pid_fd = -1;
+        let mut pidfd = -1;
         let mut clone = clone3::Clone3::default();
-        clone.flag_pidfd(&mut pid_fd);
+        clone.flag_pidfd(&mut pidfd);
         clone.flag_vfork();
         clone.exit_signal(signal as u64);
 
@@ -146,7 +143,6 @@ impl NestedAuraed {
             // we are in the child
 
             let command = {
-                let shared_namespaces = shared_namespaces.clone();
                 unsafe {
                     command.pre_exec(move || {
                         if !shared_namespaces.mount {
@@ -187,26 +183,16 @@ impl NestedAuraed {
         }
 
         // we are in the parent again
-        let process = procfs::process::Process::new(pid)
-            .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
+        let process = Process::new_from_clone(pid, pidfd)?;
 
-        let pid_fd = unsafe { OwnedFd::from_raw_fd(pid_fd) };
-
-        Ok(Self {
-            process: Process {
-                inner: process,
-                pid_fd: Some(pid_fd),
-                child: None,
-            },
-            client_config,
-        })
+        Ok(Self { process, client_config })
     }
 
-    pub fn kill(&self) -> io::Result<ExitStatus> {
+    pub fn kill(&mut self) -> io::Result<ExitStatus> {
         self.process.kill()
     }
 
     pub fn pid(&self) -> Pid {
-        Pid::from_raw(self.process.pid)
+        self.process.pid()
     }
 }

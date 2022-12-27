@@ -32,50 +32,69 @@ use nix::sys::signal::SIGINT;
 use nix::sys::wait::WaitStatus;
 use nix::unistd::Pid;
 use std::io;
-use std::ops::Deref;
-use std::os::fd::OwnedFd;
+use std::io::ErrorKind;
+use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::unix::process::ExitStatusExt;
 use std::process::{Child, ExitStatus};
 use tracing::info;
 
 #[derive(Debug)]
-pub(crate) struct Process {
-    pub inner: procfs::process::Process,
-    pub pid_fd: Option<OwnedFd>,
-    pub child: Option<Child>,
+pub(crate) enum Process {
+    Cloned { process: procfs::process::Process, pidfd: OwnedFd },
+    Spawned(Child),
 }
-// TOOD: use states pattern to use Child when possible
+
 impl Process {
-    pub fn kill(&self) -> io::Result<ExitStatus> {
-        let pid = Pid::from_raw(self.inner.pid);
-        nix::sys::signal::kill(pid, SIGINT)
-            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+    pub fn new_from_clone(pid: i32, pidfd: i32) -> io::Result<Self> {
+        let process = procfs::process::Process::new(pid)
+            .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-        // https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitpid.html
-        // The waitpid() function obtains status information for process termination,
-        // and optionally process stop and/or continue, from a specified subset of the child processes.
-        // If pid is greater than 0, it specifies the process ID of a single child process for which status is requested.
-        let exit_status = loop {
-            let WaitStatus::Exited(_, exit_status) = nix::sys::wait::waitpid(pid, None)
-                .map_err(|e| io::Error::from_raw_os_error(e as i32))? else {
-                continue;
-            };
+        let pidfd = unsafe { OwnedFd::from_raw_fd(pidfd) };
 
-            break exit_status;
-        };
-
-        let exit_status = ExitStatus::from_raw(exit_status);
-
-        info!("Executable with pid {pid} exited with status {exit_status}",);
-
-        Ok(exit_status)
+        Ok(Self::Cloned { process, pidfd })
     }
-}
 
-impl Deref for Process {
-    type Target = procfs::process::Process;
+    pub fn new_from_spawn(child: Child) -> Self {
+        Self::Spawned(child)
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &self.inner
+    pub fn kill(&mut self) -> io::Result<ExitStatus> {
+        match self {
+            Process::Cloned { process, .. } => {
+                let pid = Pid::from_raw(process.pid);
+                nix::sys::signal::kill(pid, SIGINT)
+                    .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+                // https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitpid.html
+                // The waitpid() function obtains status information for process termination,
+                // and optionally process stop and/or continue, from a specified subset of the child processes.
+                // If pid is greater than 0, it specifies the process ID of a single child process for which status is requested.
+                let exit_status = loop {
+                    let WaitStatus::Exited(_, exit_status) = nix::sys::wait::waitpid(pid, None)
+                        .map_err(|e| io::Error::from_raw_os_error(e as i32))? else {
+                        continue;
+                    };
+
+                    break exit_status;
+                };
+
+                let exit_status = ExitStatus::from_raw(exit_status);
+
+                info!("Executable with pid {pid} exited with status {exit_status}",);
+
+                Ok(exit_status)
+            }
+            Process::Spawned(child) => {
+                child.kill()?;
+                child.wait()
+            }
+        }
+    }
+
+    pub fn pid(&self) -> Pid {
+        match self {
+            Process::Cloned { process, .. } => Pid::from_raw(process.pid),
+            Process::Spawned(child) => Pid::from_raw(child.id() as i32),
+        }
     }
 }

@@ -3,10 +3,7 @@ use crate::{ExecutableName, ExecutableSpec};
 use nix::unistd::Pid;
 use std::ffi::OsString;
 use std::process::Command;
-use std::{
-    io::{self, ErrorKind},
-    process::ExitStatus,
-};
+use std::{io, process::ExitStatus};
 
 #[derive(Debug)]
 pub struct Executable {
@@ -74,7 +71,7 @@ impl Executable {
             return None;
         };
 
-        Some(Pid::from_raw(process.pid))
+        Some(process.pid())
     }
 }
 
@@ -85,9 +82,5 @@ impl Executable {
 // same namespace isolation rules set up upon creation of the cell.
 fn exec(command: &mut Command) -> io::Result<Process> {
     let child = command.current_dir("/").spawn()?;
-
-    let process = procfs::process::Process::new(child.id() as i32)
-        .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
-
-    Ok(Process { inner: process, pid_fd: None, child: Some(child) })
+    Ok(Process::new_from_spawn(child))
 }
