@@ -1,4 +1,4 @@
-use aurae_executables::SharedNamespaces;
+use aurae_executables::auraed::SharedNamespaces;
 use cell::Cell;
 pub use cell_name::CellName;
 pub use cells::Cells;

@@ -1,7 +1,7 @@
 use aurae_cells::{
     CellName, CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems,
 };
-use aurae_executables::{ExecutableName, SharedNamespaces};
+use aurae_executables::{auraed::SharedNamespaces, ExecutableName};
 use aurae_proto::runtime::{
     AllocateCellRequest, Cell, Executable, FreeCellRequest,
     StartExecutableRequest, StopExecutableRequest,

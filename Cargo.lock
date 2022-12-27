@@ -154,11 +154,13 @@ dependencies = [
 name = "aurae-executables"
 version = "0.0.0"
 dependencies = [
+ "aurae-client",
  "clone3",
  "nix 0.26.1",
  "procfs",
  "thiserror",
  "tracing",
+ "uuid",
  "validation",
 ]
 

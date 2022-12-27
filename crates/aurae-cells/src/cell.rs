@@ -30,11 +30,9 @@
 
 use crate::{CellName, CellSpec, CellsError, Result};
 use aurae_client::AuraeConfig;
-use aurae_executables::{Executable, ExecutableName, ExecutableSpec};
+use aurae_executables::auraed::NestedAuraed;
 use cgroups_rs::Cgroup;
-use std::process::Command;
 use tracing::info;
-use validation::ValidatedField;
 
 // We should not be able to change a cell after it has been created.
 // You must free the cell and create a new one if you want to change anything about the cell.
@@ -54,15 +52,8 @@ pub struct Cell {
 #[derive(Debug)]
 enum CellState {
     Unallocated,
-    Allocated { cgroup: Cgroup, pid1: Pid1 },
+    Allocated { cgroup: Cgroup, nested_auraed: NestedAuraed },
     Freed,
-}
-
-#[derive(Debug)]
-struct Pid1 {
-    #[allow(unused)]
-    auraed: Executable,
-    client_config: AuraeConfig,
 }
 
 impl Cell {
@@ -81,54 +72,13 @@ impl Cell {
         let cgroup: Cgroup =
             self.spec.cgroup_spec.clone().into_cgroup(&self.name);
 
-        // Launch nested Auraed
-        //
-        // Here we launch a nested auraed with the --nested flag
-        // which is used our way of "hooking" into the newly created
-        // aurae isolation zone.
-        //
-        // TODO: Consider changing "--nested" to "--nested-cell" or similar
-        // TODO: handle expect
-        // TODO: Pull nested auraed command into a deterministic function EG: nested_cell_command()
-        let mut client_config =
-            AuraeConfig::try_default().expect("file based config");
-        client_config.system.socket =
-            format!("/var/run/aurae/aurae-{}.sock", uuid::Uuid::new_v4());
+        let auraed = NestedAuraed::new(self.spec.shared_namespaces.clone())
+            .map_err(|e| CellsError::FailedToAllocateCell {
+                cell_name: self.name.clone(),
+                source: e,
+            })?;
 
-        let mut command = Command::new("auraed");
-        let _ = command.args([
-            "--socket",
-            &client_config.system.socket,
-            "--nested",
-        ]);
-
-        // We are checking that command has an arg to assure ourselves that `command.arg`
-        // mutates command, and is not making a clone to return
-        // We have a concern that the "command" API make change/break in the future and this
-        // test is intended to help safeguard against that!
-        assert_eq!(command.get_args().len(), 3);
-
-        // Create the nested Auraed executable
-        let executable_spec = ExecutableSpec {
-            // TODO: don't require use of validate
-            name: ExecutableName::validate(Some("auraed".into()), "", None)
-                .expect("valid executable name"),
-            command,
-            description: "nested auraed".to_string(),
-        };
-
-        // TODO: Its only a "new pid 1" if we unshare the pid namespace, otherwise its just a new process.
-        let mut auraed = Executable::new_pid1(
-            executable_spec,
-            self.spec.shared_namespaces.clone(),
-        );
-
-        auraed.start().map_err(|e| CellsError::FailedToAllocateCell {
-            cell_name: self.name.clone(),
-            source: e,
-        })?;
-
-        let pid = auraed.pid().expect("pid");
+        let pid = auraed.pid();
 
         println!("auraed pid {}", pid);
 
@@ -144,10 +94,7 @@ impl Cell {
 
         println!("inserted auraed pid {}", pid);
 
-        self.state = CellState::Allocated {
-            cgroup,
-            pid1: Pid1 { auraed, client_config },
-        };
+        self.state = CellState::Allocated { cgroup, nested_auraed: auraed };
 
         Ok(())
     }
@@ -157,8 +104,9 @@ impl Cell {
     pub fn free(&mut self) -> Result<()> {
         // TODO In the future, use SIGINT intstead of SIGKILL once https://github.com/aurae-runtime/aurae/issues/199 is ready
         // TODO nested auraed should proxy (bus) POSIX signals to child executables
-        if let CellState::Allocated { cgroup, pid1 } = &mut self.state {
-            pid1.auraed.kill().map_err(|e| {
+        if let CellState::Allocated { cgroup, nested_auraed } = &mut self.state
+        {
+            nested_auraed.kill().map_err(|e| {
                 CellsError::FailedToKillCellChildren {
                     cell_name: self.name.clone(),
                     source: e,
@@ -180,13 +128,13 @@ impl Cell {
     // NOTE: Having this function return the AuraeClient means we need to make it async,
     // or we need to make [AuraeClient::new] not async.
     pub fn client_config(&self) -> Result<AuraeConfig> {
-        let CellState::Allocated { pid1, .. } = &self.state else {
+        let CellState::Allocated { nested_auraed, .. } = &self.state else {
             return Err(CellsError::CellNotAllocated {
                 cell_name: self.name.clone(),
             })
         };
 
-        Ok(pid1.client_config.clone())
+        Ok(nested_auraed.client_config.clone())
     }
 
     /// Returns the [CellName] of the [Cell]
