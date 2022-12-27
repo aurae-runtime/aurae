@@ -33,13 +33,13 @@ import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
 
-const cellName = "ae-2";
+const cellName = "ae-1";
 // [ Allocate Shared NS ]
 let s_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
         cpuShares: 2,
         name: cellName,
-        nsSharePid: true,
+        // nsSharePid: true,
         //nsShareMount: true,
     })
 });
@@ -58,10 +58,8 @@ helpers.print(s_started)
 
 // [ Free ]
 await cells.free(<runtime.FreeCellRequest>{
-    cellName: "shared-pid-ns-dangerous"
+    cellName: cellName
 });
-
-
 
 // // [ Allocate Unshared NS ]
 // let u_allocated = await cells.allocate(<runtime.AllocateCellRequest>{

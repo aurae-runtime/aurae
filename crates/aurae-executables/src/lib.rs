@@ -9,6 +9,7 @@ mod error;
 mod executable;
 mod executable_name;
 mod executables;
+mod process;
 mod shared_namespaces;
 
 pub struct ExecutableSpec {

@@ -50,6 +50,8 @@ pub enum CellsError {
         cell_name: CellName,
         source: cgroups_rs::error::Error,
     },
+    #[error("cell '{cell_name}' could not kill children: {source}")]
+    FailedToKillCellChildren { cell_name: CellName, source: io::Error },
     #[error("cell '{cell_name}' could not be freed: {source}")]
     FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
 }

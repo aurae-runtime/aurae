@@ -1,11 +1,12 @@
+use crate::process::Process;
 use crate::{ExecutableName, ExecutableSpec, SharedNamespaces};
 use nix::{
     libc::SIGCHLD,
-    sys::{signal::SIGKILL, wait::WaitStatus},
+    sys::{signal::SIGINT, wait::WaitStatus},
     unistd::Pid,
 };
-use procfs::process::Process;
 use std::ffi::OsString;
+use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::unix::process::CommandExt;
 use std::process::Command;
 use std::{
@@ -102,16 +103,20 @@ impl Executable {
             ExecutableState::Init { .. } => Ok(None),
             ExecutableState::Started { process, .. } => {
                 let pid = Pid::from_raw(process.pid);
-                nix::sys::signal::kill(pid, SIGKILL)
+                nix::sys::signal::kill(pid, SIGINT)
                     .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 
                 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitpid.html
                 // The waitpid() function obtains status information for process termination,
                 // and optionally process stop and/or continue, from a specified subset of the child processes.
                 // If pid is greater than 0, it specifies the process ID of a single child process for which status is requested.
-                let WaitStatus::Exited(_, exit_status) = nix::sys::wait::waitpid(pid, None)
-                    .map_err(|e| io::Error::from_raw_os_error(e as i32))? else {
-                    unreachable!("we specify a pid > 0, with no flags, so should only return on termination")
+                let exit_status = loop {
+                    let WaitStatus::Exited(_, exit_status) = nix::sys::wait::waitpid(pid, None)
+                        .map_err(|e| io::Error::from_raw_os_error(e as i32))? else {
+                        continue;
+                    };
+
+                    break exit_status;
                 };
 
                 let exit_status = ExitStatus::from_raw(exit_status);
@@ -150,9 +155,9 @@ fn exec_pid1(
     //        terminates.
     let signal = SIGCHLD;
 
-    let mut pidfd = -1;
+    let mut pid_fd = -1;
     let mut clone = clone3::Clone3::default();
-    clone.flag_pidfd(&mut pidfd);
+    clone.flag_pidfd(&mut pid_fd);
     clone.flag_vfork();
     clone.exit_signal(signal as u64);
 
@@ -251,11 +256,12 @@ fn exec_pid1(
     }
 
     // we are in the parent again
+    let process = procfs::process::Process::new(pid)
+        .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-    let process =
-        Process::new(pid).map_err(|e| io::Error::new(ErrorKind::Other, e))?;
+    let pid_fd = unsafe { OwnedFd::from_raw_fd(pid_fd) };
 
-    Ok(process)
+    Ok(Process { inner: process, pid_fd: Some(pid_fd), child: None })
 }
 
 // Start the child process
@@ -266,8 +272,8 @@ fn exec_pid1(
 fn exec(command: &mut Command) -> io::Result<Process> {
     let child = command.current_dir("/").spawn()?;
 
-    let process = Process::new(child.id() as i32)
+    let process = procfs::process::Process::new(child.id() as i32)
         .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-    Ok(process)
+    Ok(Process { inner: process, pid_fd: None, child: Some(child) })
 }

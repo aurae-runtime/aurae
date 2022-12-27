@@ -28,53 +28,22 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_cells::CellsError;
-use aurae_executables::ExecutablesError;
-use thiserror::Error;
-use tonic::Status;
-use tracing::error;
+use std::ops::Deref;
+use std::os::fd::OwnedFd;
+use std::process::Child;
 
-pub(crate) type Result<T> = std::result::Result<T, CellsServiceError>;
-
-#[derive(Debug, Error)]
-pub(crate) enum CellsServiceError {
-    #[error(transparent)]
-    CellsError(#[from] CellsError),
-    #[error(transparent)]
-    ExecutablesError(#[from] ExecutablesError),
+// TODO: Do we need this to hold onto either child or OwnedFD? What happens if we don't?
+#[derive(Debug)]
+pub(crate) struct Process {
+    pub inner: procfs::process::Process,
+    pub pid_fd: Option<OwnedFd>,
+    pub child: Option<Child>,
 }
 
-impl From<CellsServiceError> for Status {
-    fn from(err: CellsServiceError) -> Self {
-        let msg = err.to_string();
-        error!("{msg}");
-        match err {
-            CellsServiceError::CellsError(e) => match e {
-                CellsError::CellExists { .. } => Status::already_exists(msg),
-                CellsError::CellNotFound { .. } => Status::not_found(msg),
-                CellsError::FailedToAllocateCell { .. }
-                | CellsError::AbortedAllocateCell { .. }
-                | CellsError::FailedToKillCellChildren { .. }
-                | CellsError::FailedToFreeCell { .. } => Status::internal(msg),
-                CellsError::CellNotAllocated { cell_name } => {
-                    CellsServiceError::CellsError(CellsError::CellNotFound {
-                        cell_name,
-                    })
-                    .into()
-                }
-            },
-            CellsServiceError::ExecutablesError(e) => match e {
-                ExecutablesError::ExecutableExists { .. } => {
-                    Status::already_exists(msg)
-                }
-                ExecutablesError::ExecutableNotFound { .. } => {
-                    Status::not_found(msg)
-                }
-                ExecutablesError::FailedToStartExecutable { .. }
-                | ExecutablesError::FailedToStopExecutable { .. } => {
-                    Status::internal(msg)
-                }
-            },
-        }
+impl Deref for Process {
+    type Target = procfs::process::Process;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
     }
 }

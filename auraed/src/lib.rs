@@ -235,7 +235,16 @@ impl AuraedRuntime {
                 // .add_service(ObserveServer::new(ObserveService::new(
                 //     log_collector,
                 // )))
-                .serve_with_incoming(sock_stream)
+                .serve_with_incoming_shutdown(sock_stream, async {
+                    let _signal = tokio::signal::unix::signal(
+                        tokio::signal::unix::SignalKind::interrupt(),
+                    )
+                    .expect("failed to create shutdown signal stream")
+                    .recv()
+                    .await;
+
+                    info!("Received shutdown signal...");
+                })
                 .await
         });
 

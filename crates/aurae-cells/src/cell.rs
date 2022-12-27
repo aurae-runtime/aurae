@@ -155,10 +155,16 @@ impl Cell {
     /// Deletes the underlying cgroup.
     /// A [Cell] should never be reused after calling [free].
     pub fn free(&mut self) -> Result<()> {
-        // TODO send SIGKILL to nested auraed before destroying the cgroup or the cgroup wont delete properly
         // TODO In the future, use SIGINT intstead of SIGKILL once https://github.com/aurae-runtime/aurae/issues/199 is ready
         // TODO nested auraed should proxy (bus) POSIX signals to child executables
-        if let CellState::Allocated { cgroup, .. } = &mut self.state {
+        if let CellState::Allocated { cgroup, pid1 } = &mut self.state {
+            pid1.auraed.kill().map_err(|e| {
+                CellsError::FailedToKillCellChildren {
+                    cell_name: self.name.clone(),
+                    source: e,
+                }
+            })?;
+
             cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
                 cell_name: self.name.clone(),
                 source: e,

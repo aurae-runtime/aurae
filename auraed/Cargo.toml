@@ -62,7 +62,7 @@ simplelog = "0.12.0"
 sys-mount = "2.0.1"
 syslog = "6.0.1"
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread", "sync"] }
+tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread", "sync", "signal"] }
 tokio-stream = { version = "0.1", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
 tracing = { workspace = true, features = ["log"] }
