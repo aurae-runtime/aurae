@@ -94,6 +94,8 @@ impl Process {
                 // The waitpid() function obtains status information for process termination,
                 // and optionally process stop and/or continue, from a specified subset of the child processes.
                 // If pid is greater than 0, it specifies the process ID of a single child process for which status is requested.
+                // I (future-highway) think clippy is wrong.
+                #[allow(clippy::never_loop)]
                 let exit_status = loop {
                     let WaitStatus::Exited(_, exit_status) = nix::sys::wait::waitpid(pid, None)
                         .map_err(|e| io::Error::from_raw_os_error(e as i32))? else {

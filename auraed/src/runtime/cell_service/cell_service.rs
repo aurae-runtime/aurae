@@ -140,7 +140,7 @@ impl CellService {
             //  2. We've lost all the original request's metadata
             let ValidatedExecutable { name, command, description } = executable;
 
-            let res = client
+            client
                 .start(StartExecutableRequest {
                     cell_name: cell_name.iter().join("/"),
                     executable: Some(Executable {
@@ -149,9 +149,7 @@ impl CellService {
                         description,
                     }),
                 })
-                .await;
-
-            res
+                .await
         }
     }
 
