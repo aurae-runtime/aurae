@@ -33,7 +33,7 @@ use nix::sys::wait::WaitStatus;
 use nix::unistd::Pid;
 use std::io;
 use std::io::ErrorKind;
-use std::os::fd::{FromRawFd, OwnedFd};
+// use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::unix::process::ExitStatusExt;
 use std::process::{Child, ExitStatus};
 use tracing::info;
@@ -43,7 +43,7 @@ pub(crate) enum Process {
     Cloned {
         process: procfs::process::Process,
         #[allow(unused)]
-        pidfd: OwnedFd,
+        pidfd: i32,
     },
     Spawned(Child),
 }
@@ -53,7 +53,7 @@ impl Process {
         let process = procfs::process::Process::new(pid)
             .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-        let pidfd = unsafe { OwnedFd::from_raw_fd(pidfd) };
+        // let pidfd = unsafe { OwnedFd::from_raw_fd(pidfd) };
 
         Ok(Self::Cloned { process, pidfd })
     }
