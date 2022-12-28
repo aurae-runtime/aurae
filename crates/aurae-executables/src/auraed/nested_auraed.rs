@@ -32,6 +32,7 @@ use super::SharedNamespaces;
 use crate::process::Process;
 use aurae_client::AuraeConfig;
 use nix::libc::SIGCHLD;
+use nix::mount::MntFlags;
 use nix::sys::signal::{SIGINT, SIGKILL};
 use nix::unistd::Pid;
 use std::io;
@@ -81,6 +82,10 @@ impl NestedAuraed {
         clone.flag_pidfd(&mut pidfd);
         clone.flag_vfork();
         clone.exit_signal(signal as u64);
+
+        // Note: The logic here is reversed. We define the flags as "share'
+        //       and map them to "unshare".
+        //       This is by design as the API has a concept of "share".
 
         // If CLONE_NEWNS is set, the cloned child is started in a
         // new mount namespace, initialized with a copy of the
@@ -145,24 +150,33 @@ impl NestedAuraed {
             // we are in the child
 
             let command = {
+                let shared_namespaces = shared_namespaces.clone();
                 unsafe {
                     command.pre_exec(move || {
-                        if !shared_namespaces.mount {
-                            // We can potentially do some setup here, and then leave the rest
-                            // to auraed's init. We would need flags to signal it is a nested PID1
+                        // We can do the steps for isolation here and leave the rest to
+                        // auraed's init. This would probably require sending the
+                        // shared_namespaces data in the args.
 
+                        if !shared_namespaces.mount {
                             // remount as private
                             nix::mount::mount(
                                 None::<&str>, // ignored
                                 ".",
                                 None::<&str>, // ignored
-                                nix::mount::MsFlags::MS_SLAVE
+                                nix::mount::MsFlags::MS_PRIVATE
                                     | nix::mount::MsFlags::MS_REC,
                                 None::<&str>, // ignored
                             )
                             .map_err(|e| {
                                 io::Error::from_raw_os_error(e as i32)
                             })?;
+                        }
+
+                        if wants_isolated_pid(&shared_namespaces) {
+                            nix::mount::umount2("/proc", MntFlags::MNT_DETACH)
+                                .map_err(|e| {
+                                    io::Error::from_raw_os_error(e as i32)
+                                })?;
 
                             nix::mount::mount(
                                 Some("proc"),
@@ -191,15 +205,17 @@ impl NestedAuraed {
     }
 
     pub fn kill(&mut self) -> io::Result<ExitStatus> {
-        if self.shared_namespaces.pid {
+        if wants_isolated_pid(&self.shared_namespaces) {
+            // TODO: Here, SIGINT works when using auraescript, but fails during unit tests.
+
+            // If pids are isolated, nested auared will be running as PID 1.
+            // The kernel doesn't seem to allow SIGKILL to a PID 1,
+            // so send the appropriate graceful shutdown signal
             self.process.kill(Some(SIGKILL))?;
             self.process.wait()
         } else {
-            // If we didn't share the pid namespace,
-            //   then the nested auared will be running as PID 1.
-            // The kernel doesn't seem to allow SIGKILL to a PID 1,
-            //   so send the appropriate graceful shutdown signsl
-            self.process.kill(SIGINT)?;
+            // TODO: Here, the process should not be pid 1, but it still fails
+            self.process.kill(SIGKILL)?;
             self.process.wait()
         }
     }
@@ -208,3 +224,22 @@ impl NestedAuraed {
         self.process.pid()
     }
 }
+
+fn wants_isolated_pid(shared_namespaces: &SharedNamespaces) -> bool {
+    !shared_namespaces.pid && !shared_namespaces.mount
+}
+
+// On cleaning up other files these todos were there.
+// We may have avoided the need for tracking namespaces,
+// but I (future-highway) don't want to delete these until we are sure.
+// https://github.com/aurae-runtime/aurae/issues/200#issuecomment-1366279569
+// // TODO We need to track the namespace for all newly
+// //      unshared namespaces within a Cell such that
+// //      we can call command.set_namespace() for
+// //      each of the new namespaces at the cell level!
+// //      This will likely require changing how Cells
+// //      manage namespaces as we need to cache the namespace
+// //      IDs (names?)
+// //
+// // TODO Basically once a namespace has been created for a Cell
+// //      we should put ALL future executables into the same namespace!

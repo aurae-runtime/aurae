@@ -118,6 +118,7 @@ dependencies = [
  "aurae-executables",
  "cgroups-rs",
  "fancy-regex",
+ "simple_test_case",
  "thiserror",
  "tonic",
  "tracing",

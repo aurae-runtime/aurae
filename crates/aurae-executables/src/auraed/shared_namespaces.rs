@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SharedNamespaces {
     pub mount: bool,
     pub uts: bool,

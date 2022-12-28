@@ -16,3 +16,18 @@ pub struct CellSpec {
     pub cgroup_spec: CgroupSpec,
     pub shared_namespaces: SharedNamespaces,
 }
+
+impl CellSpec {
+    #[cfg(test)]
+    pub(crate) fn new_for_tests() -> Self {
+        Self {
+            cgroup_spec: CgroupSpec {
+                cpu_cpus: CpuCpus::new("".into()),
+                cpu_quota: CpuQuota::new(0),
+                cpu_weight: CpuWeight::new(0),
+                cpuset_mems: CpusetMems::new("".into()),
+            },
+            shared_namespaces: Default::default(), // nothing shared in default
+        }
+    }
+}

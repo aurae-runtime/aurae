@@ -113,6 +113,9 @@ impl Cell {
                 }
             })?;
 
+            // TODO: The cgroup was made as {CellName}/_ to work around the limitations of v2 cgroups.
+            //       But when we are deleting the cgroup, we are leaving behind a cgroup
+            //       at {CellName}. We need to clean that up.
             cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
                 cell_name: self.name.clone(),
                 source: e,
@@ -150,29 +153,6 @@ impl Cell {
             _ => None,
         }
     }
-
-    #[cfg(test)]
-    pub fn new_for_tests(name: Option<CellName>) -> Self {
-        use validation::ValidatedType;
-
-        let cell_name = name.unwrap_or_else(|| CellName::random_for_tests());
-
-        let cell = aurae_proto::runtime::Cell {
-            name: cell_name.into_inner(),
-            cpu_cpus: "".to_string(),
-            cpu_shares: 0,
-            cpu_mems: "".to_string(),
-            cpu_quota: 0,
-            ns_share_mount: false,
-            ns_share_uts: false,
-            ns_share_ipc: false,
-            ns_share_pid: false,
-            ns_share_net: false,
-            ns_share_cgroup: false,
-        };
-        let cell = ValidatedCell::validate(cell, None).expect("invalid cell");
-        cell.into()
-    }
 }
 
 #[cfg(test)]
@@ -182,226 +162,6 @@ impl Drop for Cell {
         let _best_effort = self.free();
     }
 }
-//
-// /// Common functionality within the context of the new executable
-// fn pre_exec(
-//     executable_name: &ExecutableName,
-//     spec: &ValidatedCell,
-//     other_executable_pid: Option<&CgroupPid>,
-// ) -> io::Result<()> {
-//     match other_executable_pid {
-//         None => pre_exec_first_exe(executable_name, spec),
-//         Some(other_executable_pid) => {
-//             pre_exec_other_exes(executable_name, other_executable_pid)
-//         }
-//     }
-// }
-//
-// fn pre_exec_first_exe(
-//     executable_name: &ExecutableName,
-//     spec: &ValidatedCell,
-// ) -> io::Result<()> {
-//     info!("CellService: pre_exec_first_exe(): {executable_name}");
-//     // Here we are executing as the new spawned pid.
-//     // This is a place where we can "hook" into all processes
-//     // started with Aurae in the future. Similar to kprobe/uprobe
-//     // in Linux or LD_PRELOAD in libc.
-//
-//     pre_exec_unshare(executable_name, spec)?;
-//
-//     if !spec.ns_share_pid && !spec.ns_share_mount {
-//         pre_exec_mount_proc(executable_name)?;
-//     }
-//
-//     Ok(())
-// }
-//
-// /// Common functionality within the context of the new executable
-// fn pre_exec_other_exes(
-//     executable_name: &ExecutableName,
-//     _other_executable_pid: &CgroupPid,
-// ) -> io::Result<()> {
-//     info!("CellService: pre_exec_other_exes(): {executable_name}");
-//
-//     // Does not work yet
-//     // pre_exec_set_ns(executable_name, other_executable_pid)?;
-//
-//     // TODO: mount?
-//
-//     Ok(())
-// }
-//
-// // Namespaces
-// //
-// // TODO We need to track the namespace for all newly
-// //      unshared namespaces within a Cell such that
-// //      we can call command.set_namespace() for
-// //      each of the new namespaces at the cell level!
-// //      This will likely require changing how Cells
-// //      manage namespaces as we need to cache the namespace
-// //      IDs (names?)
-// //
-// // TODO Basically once a namespace has been created for a Cell
-// //      we should put ALL future executables into the same namespace!
-// fn pre_exec_unshare(
-//     executable_name: &ExecutableName,
-//     spec: &ValidatedCell,
-// ) -> io::Result<()> {
-//     info!("CellService: pre_exec_unshare(): {executable_name}");
-//
-//     // Note: The logic here is reversed. We define the flags as "share'
-//     //       and map them to "unshare".
-//     //       This is by design as the API has a concept of "share".
-//     if !spec.ns_share_mount {
-//         info!("Unshare: mount");
-//         if let Err(err_no) =
-//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNS)
-//         {
-//             return Err(io::Error::from_raw_os_error(err_no as i32));
-//         }
-//     }
-//     if !spec.ns_share_uts {
-//         info!("Unshare: uts");
-//         if let Err(err_no) =
-//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWUTS)
-//         {
-//             return Err(io::Error::from_raw_os_error(err_no as i32));
-//         }
-//     }
-//     if !spec.ns_share_ipc {
-//         info!("Unshare: ipc");
-//         if let Err(err_no) =
-//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWIPC)
-//         {
-//             return Err(io::Error::from_raw_os_error(err_no as i32));
-//         }
-//     }
-//     if !spec.ns_share_pid {
-//         info!("Unshare: pid");
-//         if let Err(err_no) =
-//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWPID)
-//         {
-//             return Err(io::Error::from_raw_os_error(err_no as i32));
-//         }
-//     }
-//     if !spec.ns_share_net {
-//         info!("Unshare: net");
-//         if let Err(err_no) =
-//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNET)
-//         {
-//             return Err(io::Error::from_raw_os_error(err_no as i32));
-//         }
-//     }
-//
-//     if !spec.ns_share_cgroup {
-//         info!("Unshare: cgroup");
-//         if let Err(err_no) =
-//             nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWCGROUP)
-//         {
-//             return Err(io::Error::from_raw_os_error(err_no as i32));
-//         }
-//     }
-//
-//     Ok(())
-// }
-
-// // This errors
-// fn pre_exec_set_ns(
-//     executable_name: &ExecutableName,
-//     other_executable_pid: &CgroupPid,
-// ) -> io::Result<()> {
-//     info!("CellService: pre_exec_setns(): {executable_name}");
-//
-//     let process = match other_executable_pid.pid.try_into() {
-//         Ok(pid) => procfs::process::Process::new(pid),
-//         Err(e) => {
-//             error!("{}", e);
-//             return Err(io::Error::new(io::ErrorKind::Other, e));
-//         }
-//     }
-//     .map_err(|e| {
-//         error!("{}", e);
-//         io::Error::new(io::ErrorKind::Other, e)
-//     })?;
-//
-//     for (name, ns) in process
-//         .namespaces()
-//         .map_err(|e| {
-//             error!("{}", e);
-//             io::Error::new(io::ErrorKind::Other, e)
-//         })?
-//         .into_iter()
-//     {
-//         let file = File::open(ns.path)?;
-//         let fd = file.as_raw_fd();
-//
-//         match name.to_string_lossy().borrow() {
-//             "ns" => {
-//                 if let Err(err_no) =
-//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWNS)
-//                 {
-//                     return Err(io::Error::from_raw_os_error(err_no as i32));
-//                 }
-//             }
-//             "uts" => {
-//                 if let Err(err_no) =
-//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWUTS)
-//                 {
-//                     return Err(io::Error::from_raw_os_error(err_no as i32));
-//                 }
-//             }
-//             "ipc" => {
-//                 if let Err(err_no) =
-//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWIPC)
-//                 {
-//                     return Err(io::Error::from_raw_os_error(err_no as i32));
-//                 }
-//             }
-//             "pid" => {
-//                 if let Err(err_no) =
-//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWPID)
-//                 {
-//                     return Err(io::Error::from_raw_os_error(err_no as i32));
-//                 }
-//             }
-//             "net" => {
-//                 if let Err(err_no) =
-//                     nix::sched::setns(fd, nix::sched::CloneFlags::CLONE_NEWNET)
-//                 {
-//                     return Err(io::Error::from_raw_os_error(err_no as i32));
-//                 }
-//             }
-//             "cgroup" => {
-//                 if let Err(err_no) = nix::sched::setns(
-//                     fd,
-//                     nix::sched::CloneFlags::CLONE_NEWCGROUP,
-//                 ) {
-//                     return Err(io::Error::from_raw_os_error(err_no as i32));
-//                 }
-//             }
-//             other => {
-//                 info!("Other namespace: {other}")
-//             }
-//         }
-//     }
-//
-//     Ok(())
-// }
-//
-// fn pre_exec_mount_proc(executable_name: &ExecutableName) -> io::Result<()> {
-//     info!("CellService: pre_exec_mount_proc(): {executable_name}");
-//
-//     if let Err(err_no) = nix::mount::mount(
-//         Some("proc"),
-//         "/proc",
-//         Some("proc"),
-//         nix::mount::MsFlags::MS_BIND,
-//         None::<&[u8]>,
-//     ) {
-//         return Err(io::Error::from_raw_os_error(err_no as i32));
-//     }
-//     Ok(())
-// }
 
 #[cfg(test)]
 mod tests {
@@ -410,17 +170,18 @@ mod tests {
     #[ignore]
     #[test]
     fn test_cant_unfree() {
-        let mut cell = Cell::new_for_tests(None);
+        let cell_name = CellName::random_for_tests();
+        let mut cell = Cell::new(cell_name, CellSpec::new_for_tests());
         assert!(matches!(cell.state, CellState::Unallocated));
 
-        cell.allocate();
+        cell.allocate().expect("failed to allocate");
         assert!(matches!(cell.state, CellState::Allocated { .. }));
 
         cell.free().expect("failed to free");
         assert!(matches!(cell.state, CellState::Freed));
 
         // Calling allocate again should do nothing
-        cell.allocate();
+        cell.allocate().expect("failed to allocate 2");
         assert!(matches!(cell.state, CellState::Freed));
     }
 }
