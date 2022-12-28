@@ -5,7 +5,7 @@
 
 Aurae is a free and open source Rust project which houses a memory-safe systems runtime daemon built specifically for enterprise distributed systems called `auraed`.
 
-The `auraed` daemon can be ran as a pid 1 on a Linux kernel and manages containers, virtual machines, and spawning short-lived nested virtual instances of itself for an additional layer of isolation.
+The `auraed` daemon can be run as a pid 1 on a Linux kernel and manages containers, virtual machines, and spawning short-lived nested virtual instances of itself for an additional layer of isolation.
 
 ### Mission
 
@@ -46,7 +46,7 @@ Aurae exposes its functionality over a gRPC API which is referred to as the [Aur
 
 ### Principle of Least Awareness
 
-A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. Aurae is designed to take ownership of a single node, and expose the standard library a generic and meaningful way for higher order consumers.
+A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. Aurae is designed to take ownership of a single node, and expose the standard library as a generic and meaningful way for higher order consumers.
 
 Aurae is a low level building block and is designed to work well with any higher order system by offering a thoughtful set of APIs and controls for managing workloads on a node.
 
