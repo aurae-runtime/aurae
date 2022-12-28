@@ -28,14 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use cpu_cpus::CpuCpus;
-use cpu_quota::CpuQuota;
-use cpu_weight::CpuWeight;
-use cpuset_mems::CpusetMems;
+pub(crate) use cell_service::CellService;
 
-pub(crate) mod cells;
-mod cpu_cpus;
-mod cpu_quota;
-mod cpu_weight;
-mod cpuset_mems;
-mod error;
+mod cell_service;

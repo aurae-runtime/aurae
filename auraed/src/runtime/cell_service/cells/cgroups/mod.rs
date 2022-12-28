@@ -28,58 +28,22 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Run the Aurae daemon as a pid 1 init program.
-//!
-//! The Aurae daemon assumes that if the current process id (PID) is 1 to
-//! run itself as an initialization program, otherwise bypass the init module.
+pub use cgroup::Cgroup;
+pub use cpu_cpus::CpuCpus;
+pub use cpu_quota::CpuQuota;
+pub use cpu_weight::CpuWeight;
+pub use cpuset_mems::CpusetMems;
 
-use crate::init::{
-    fs::FsError,
-    logging::LoggingError,
-    network::NetworkError,
-    system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
-};
-use tracing::Level;
+mod cgroup;
+mod cpu_cpus;
+mod cpu_quota;
+mod cpu_weight;
+mod cpuset_mems;
 
-mod fileio;
-mod fs;
-mod logging;
-mod network;
-mod power;
-mod system_runtime;
-
-const BANNER: &str = "
-    +--------------------------------------------+
-    |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |
-    |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |
-    |  ███████║██║   ██║██████╔╝███████║█████╗   |
-    |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |
-    |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |
-    |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |
-    +--------------------------------------------+\n";
-
-#[derive(thiserror::Error, Debug)]
-pub(crate) enum InitError {
-    #[error(transparent)]
-    Logging(#[from] LoggingError),
-    #[error(transparent)]
-    Fs(#[from] FsError),
-    #[error(transparent)]
-    Network(#[from] NetworkError),
-}
-
-/// Run Aurae as an init pid 1 instance.
-pub async fn init(logger_level: Level, nested: bool) {
-    let res = match (std::process::id(), nested) {
-        (0, _) => unreachable!(
-            "process is running as PID 0, which should be impossible"
-        ),
-        (1, false) => Pid1SystemRuntime {}.init(logger_level),
-        _ => PidGt1SystemRuntime {}.init(logger_level),
-    }
-    .await;
-
-    if let Err(e) = res {
-        panic!("Failed to initialize: {e:?}")
-    }
+#[derive(Debug, Clone)]
+pub struct CgroupSpec {
+    pub cpu_cpus: CpuCpus,
+    pub cpu_quota: CpuQuota,
+    pub cpu_weight: CpuWeight,
+    pub cpuset_mems: CpusetMems,
 }

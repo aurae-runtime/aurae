@@ -28,14 +28,14 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{Cell, CellName, CellsError, Result};
+use super::{Cell, CellName, CellSpec, CellsError, Result};
 use std::collections::HashMap;
 
 type Cache = HashMap<CellName, Cell>;
 
 /// Cells is the in-memory store for the list of cells created with Aurae.
 #[derive(Debug, Default)]
-pub(crate) struct Cells {
+pub struct Cells {
     cache: Cache,
 }
 
@@ -48,28 +48,46 @@ pub(crate) struct Cells {
 impl Cells {
     /// Add the [Cell] to the cache with key [CellName].
     /// Returns an error if a duplicate [CellName] already exists in the cache.
-    pub fn allocate<T: Into<Cell>>(&mut self, cell: T) -> Result<&Cell> {
-        let cell = cell.into();
-        let cell_name = cell.name().clone();
-
+    pub fn allocate(
+        &mut self,
+        cell_name: CellName,
+        cell_spec: CellSpec,
+    ) -> Result<&Cell> {
         // TODO: replace with this when it becomes stable
         // cache.try_insert(cell_name.clone(), cgroup)
 
         // Check if there was already a cgroup in the table with this cell name as a key.
         if self.cache.contains_key(&cell_name) {
+            // TODO Reconcile cache against filesystem somewhere, maybe here?
+            // TODO https://github.com/aurae-runtime/aurae/issues/198
             return Err(CellsError::CellExists { cell_name });
         }
 
         // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
-        let cell = self.cache.entry(cell_name).or_insert(cell);
-        cell.allocate();
+        let cell = self
+            .cache
+            .entry(cell_name.clone())
+            .or_insert_with(|| Cell::new(cell_name, cell_spec));
+
+        cell.allocate()?;
         Ok(cell)
+    }
+
+    /// Returns an error if the [CellName] does not exist in the cache.
+    pub fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        self.get_mut(cell_name, |cell| cell.free())?;
+        let _ = self.cache.remove(cell_name).ok_or_else(|| {
+            CellsError::CellNotFound { cell_name: cell_name.clone() }
+        })?;
+        Ok(())
     }
 
     pub fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: Fn(&Cell) -> Result<R>,
     {
+        // TODO Also reconcile the cache against the filesystem
+        // TODO https://github.com/aurae-runtime/aurae/issues/198
         if let Some(cell) = self.cache.get(cell_name) {
             let res = f(cell);
             if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
@@ -77,6 +95,7 @@ impl Cells {
             }
             res
         } else {
+            // if we can eliminate this case, we can take &self instead
             Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
         }
     }
@@ -85,31 +104,17 @@ impl Cells {
     where
         F: FnOnce(&mut Cell) -> Result<R>,
     {
-        get_mut(&mut self.cache, cell_name, f)
-    }
+        let Some(cell) = self.cache.get_mut(cell_name) else {
+            return Err(CellsError::CellNotFound { cell_name: cell_name.clone() });
+        };
 
-    /// Returns an error if the [CellName] does not exist in the cache.
-    pub fn free(&mut self, cell_name: &CellName) -> Result<()> {
-        get_mut(&mut self.cache, cell_name, |cell| cell.free())?;
-        let _ = self.cache.remove(cell_name).ok_or_else(|| {
-            CellsError::CellNotFound { cell_name: cell_name.clone() }
-        })?;
-        Ok(())
-    }
-}
-
-fn get_mut<F, R>(cache: &mut Cache, cell_name: &CellName, f: F) -> Result<R>
-where
-    F: FnOnce(&mut Cell) -> Result<R>,
-{
-    if let Some(cell) = cache.get_mut(cell_name) {
         let res = f(cell);
+
         if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
-            let _ = cache.remove(cell_name);
+            let _ = self.cache.remove(cell_name);
         }
+
         res
-    } else {
-        Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
     }
 }
 
@@ -123,10 +128,10 @@ mod tests {
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
-        let cell = Cell::new_for_tests(None);
-        let cell_name = cell.name().clone();
+        let cell_name = CellName::random_for_tests();
+        let cell = CellSpec::new_for_tests();
 
-        let _ = cells.allocate(cell).expect("allocate");
+        let _ = cells.allocate(cell_name.clone(), cell).expect("allocate");
         assert!(cells.cache.contains_key(&cell_name));
     }
 
@@ -138,12 +143,14 @@ mod tests {
 
         let cell_name_in = CellName::random_for_tests();
 
-        let cell_a = Cell::new_for_tests(Some(cell_name_in.clone()));
-        let _ = cells.allocate(cell_a).expect("failed on first allocate");
+        let cell_a = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(cell_name_in.clone(), cell_a)
+            .expect("failed on first allocate");
 
-        let cell_b = Cell::new_for_tests(Some(cell_name_in.clone()));
+        let cell_b = CellSpec::new_for_tests();
         assert!(matches!(
-            cells.allocate(cell_b),
+            cells.allocate(cell_name_in.clone(), cell_b),
             Err(CellsError::CellExists { cell_name }) if cell_name == cell_name_in
         ));
     }
@@ -154,9 +161,11 @@ mod tests {
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
-        let cell = Cell::new_for_tests(None);
-        let cell_name = cell.name().clone();
-        let _ = cells.allocate(cell).expect("failed to allocate");
+        let cell_name = CellName::random_for_tests();
+        let cell = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(cell_name.clone(), cell)
+            .expect("failed to allocate");
 
         cells.get(&cell_name, |_cell| Ok(())).expect("failed to get");
     }
@@ -181,9 +190,11 @@ mod tests {
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
-        let cell = Cell::new_for_tests(None);
-        let cell_name = cell.name().clone();
-        let _ = cells.allocate(cell).expect("failed to allocate");
+        let cell_name = CellName::random_for_tests();
+        let cell = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(cell_name.clone(), cell)
+            .expect("failed to allocate");
 
         cells.free(&cell_name).expect("failed to free");
         assert!(cells.cache.is_empty());

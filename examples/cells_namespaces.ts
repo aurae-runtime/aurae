@@ -31,25 +31,29 @@
 import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/runtime.ts";
 
-
 let cells = new runtime.CellServiceClient();
 
+const cellName = "ae-1";
 // [ Allocate Shared NS ]
 let s_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
     cell: runtime.Cell.fromPartial({
-        cpuShares: 2, // Percentage of CPUs
-        name: "shared-pid-ns-dangerous",
-        nsSharePid: true,
-        nsShareMount: true,
+        cpuShares: 2,
+        name: cellName,
+        // nsShareMount: true,
+        // nsShareUts: true,
+        // nsShareIpc: true,
+        // nsSharePid: true,
+        // nsShareNet: true,
+        // nsShareCgroup: true,
     })
 });
 helpers.print(s_allocated)
 
 // [ Start ]
 let s_started = await cells.start(<runtime.StartExecutableRequest>{
-    cellName: "shared-pid-ns-dangerous",
+    cellName: cellName,
     executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/ls /proc", // Note: you must use the full path now for namespaces!
+        command: "ls /proc", // Note: you must use the full path now for namespaces!
         description: "List processes",
         name: "ps-aux"
     })
@@ -58,35 +62,5 @@ helpers.print(s_started)
 
 // [ Free ]
 await cells.free(<runtime.FreeCellRequest>{
-    cellName: "shared-pid-ns-dangerous"
+    cellName: cellName
 });
-
-// [ Allocate Unshared NS ]
-let u_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
-    cell: runtime.Cell.fromPartial({
-        cpuShares: 2, // Percentage of CPUs
-        name: "unshared-pid-ns-safe",
-        // Note: We do not set any nsShare* fields here as this is
-        // "secure-by-default" and will isolate all the namespaces!
-    })
-});
-helpers.print(u_allocated)
-
-// [ Start ]
-let u_started = await cells.start(<runtime.StartExecutableRequest>{
-    cellName: "unshared-pid-ns-safe",
-    executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/ls /proc", // Note: you must use the full path now for namespaces!
-        description: "List processes",
-        name: "ps-aux"
-    })
-})
-helpers.print(u_started)
-
-// [ Free ]
-await cells.free(<runtime.FreeCellRequest>{
-    cellName: "unshared-pid-ns-safe"
-});
-
-
-

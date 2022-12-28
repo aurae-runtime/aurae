@@ -28,17 +28,25 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::validation::{
-    ValidatedAllocateCellRequest, ValidatedFreeCellRequest,
-    ValidatedStartExecutableRequest, ValidatedStopExecutableRequest,
+use super::{
+    cells::Cells,
+    error::CellsServiceError,
+    executables::Executables,
+    validation::{
+        ValidatedAllocateCellRequest, ValidatedExecutable,
+        ValidatedFreeCellRequest, ValidatedStartExecutableRequest,
+        ValidatedStopExecutableRequest,
+    },
+    Result,
 };
-use super::{Cells, Result};
 use ::validation::ValidatedType;
+use aurae_client::{runtime::cell_service::CellServiceClient, AuraeClient};
 use aurae_proto::runtime::{
-    cell_service_server, AllocateCellRequest, AllocateCellResponse,
+    cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
     FreeCellRequest, FreeCellResponse, StartExecutableRequest,
     StartExecutableResponse, StopExecutableRequest, StopExecutableResponse,
 };
+use iter_tools::Itertools;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
@@ -47,11 +55,15 @@ use tracing::info;
 #[derive(Debug, Clone)]
 pub struct CellService {
     cells: Arc<Mutex<Cells>>,
+    executables: Arc<Mutex<Executables>>,
 }
 
 impl CellService {
     pub fn new() -> Self {
-        CellService { cells: Default::default() }
+        CellService {
+            cells: Default::default(),
+            executables: Default::default(),
+        }
     }
 
     #[tracing::instrument(skip(self))]
@@ -61,18 +73,11 @@ impl CellService {
     ) -> Result<AllocateCellResponse> {
         // Initialize the cell
         let ValidatedAllocateCellRequest { cell } = request;
-
-        // TODO We should discover a way to make the logging at the function level
-        // TODO dynamic such that we don't have to keep hard-coding things like this.
-        // TODO We are looking at tracing and observability for this!
-        info!("CellService: allocate() cell={:?}", cell);
-        // info!(
-        //     "CellService: allocate() cell={:?} ns_share_mount={:?} ns_share_uts={:?} ns_share_ipc={:?} ns_share_pid={:?} ns_share_net={:?} ns_share_cgroup={:?}",
-        //     cell, ns_share_mount, ns_share_uts, ns_share_ipc, ns_share_pid, ns_share_net, ns_share_cgroup,
-        // );
+        let cell_name = cell.name.clone();
+        let cell_spec = cell.into();
 
         let mut cells = self.cells.lock().await;
-        let cell = cells.allocate(cell)?;
+        let cell = cells.allocate(cell_name, cell_spec)?;
 
         Ok(AllocateCellResponse {
             cell_name: cell.name().clone().into_inner(),
@@ -98,30 +103,62 @@ impl CellService {
     async fn start(
         &self,
         request: ValidatedStartExecutableRequest,
-    ) -> Result<StartExecutableResponse> {
-        let ValidatedStartExecutableRequest { cell_name, executable } = request;
+    ) -> std::result::Result<Response<StartExecutableResponse>, Status> {
+        let ValidatedStartExecutableRequest { mut cell_name, executable } =
+            request;
 
         info!(
-            "CellService: start() cell_name={} executable={:?}",
+            "CellService: start() cell_name={:?} executable={:?}",
             cell_name, executable
         );
 
-        let mut cells = self.cells.lock().await;
-        let pid = cells.get_mut(&cell_name, move |cell| {
-            // TODO: `start_executable can potentially return a &Executable, and the we can
-            //    build `StartExecutalbeResponse` from it.
-            cell.start_executable(executable)
-        })?;
+        if cell_name.is_empty() {
+            // we are in the correct cell
+            let mut executables = self.executables.lock().await;
+            let executable = executables
+                .start(executable)
+                .map_err(CellsServiceError::ExecutablesError)?;
 
-        Ok(StartExecutableResponse { pid })
+            let pid = executable.pid().expect("pid").as_raw();
+            Ok(Response::new(StartExecutableResponse { pid }))
+        } else {
+            // we are in a parent cell
+            let child_cell_name = cell_name.pop_front().expect("len > 0");
+
+            let mut cells = self.cells.lock().await;
+            let client_config = cells
+                .get(&child_cell_name, move |cell| cell.client_config())
+                .map_err(CellsServiceError::CellsError)?;
+
+            // TODO: Handle error
+            let client = AuraeClient::new(client_config)
+                .await
+                .expect("failed to create AuraeClient");
+
+            // TODO: This seems wrong.
+            //  1. We are turning our validated request back into a normal message (nested auraed will revalidate for no reason).
+            //  2. We've lost all the original request's metadata
+            let ValidatedExecutable { name, command, description } = executable;
+
+            client
+                .start(StartExecutableRequest {
+                    cell_name: cell_name.iter().join("/"),
+                    executable: Some(Executable {
+                        name: name.into_inner(),
+                        command: command.into_string().expect("valid string"),
+                        description,
+                    }),
+                })
+                .await
+        }
     }
 
     #[tracing::instrument(skip(self))]
     async fn stop(
         &self,
         request: ValidatedStopExecutableRequest,
-    ) -> Result<StopExecutableResponse> {
-        let ValidatedStopExecutableRequest { cell_name, executable_name } =
+    ) -> std::result::Result<Response<StopExecutableResponse>, Status> {
+        let ValidatedStopExecutableRequest { mut cell_name, executable_name } =
             request;
 
         info!(
@@ -129,13 +166,35 @@ impl CellService {
             cell_name, executable_name,
         );
 
-        let mut cells = self.cells.lock().await;
+        if cell_name.is_empty() {
+            // we are in the correct cell
+            let mut executables = self.executables.lock().await;
+            let _exit_status = executables
+                .stop(&executable_name)
+                .map_err(CellsServiceError::ExecutablesError)?;
 
-        let _exit_status = cells.get_mut(&cell_name, move |cell| {
-            cell.stop_executable(&executable_name)
-        })?;
+            Ok(Response::new(StopExecutableResponse::default()))
+        } else {
+            // we are in a parent cell
+            let child_cell_name = cell_name.pop_front().expect("len > 0");
 
-        Ok(StopExecutableResponse::default())
+            let mut cells = self.cells.lock().await;
+            let client_config = cells
+                .get(&child_cell_name, move |cell| cell.client_config())
+                .map_err(CellsServiceError::CellsError)?;
+
+            // TODO: Handle error
+            let client = AuraeClient::new(client_config)
+                .await
+                .expect("failed to create AuraeClient");
+
+            client
+                .stop(StopExecutableRequest {
+                    cell_name: cell_name.iter().join("/"),
+                    executable_name: executable_name.into_inner(),
+                })
+                .await
+        }
     }
 }
 
@@ -174,7 +233,7 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<StartExecutableResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStartExecutableRequest::validate(request, None)?;
-        Ok(Response::new(self.start(request).await?))
+        Ok(self.start(request).await?)
     }
 
     async fn stop(
@@ -183,38 +242,6 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<StopExecutableResponse>, Status> {
         let request = request.into_inner();
         let request = ValidatedStopExecutableRequest::validate(request, None)?;
-        Ok(Response::new(self.stop(request).await?))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::runtime::cells::{CellName, CellsError};
-
-    // TODO: run this in a way that creating cgroups works
-    #[test]
-    fn test_create_remove_cgroup() {
-        // let service = CellService::new();
-        // let id = "testing-aurae";
-        // let _cgroup = service.create_cgroup(id, 2).expect("create cgroup");
-        // println!("Created cgroup: {}", id);
-        // service.remove_cgroup(id).expect("remove cgroup");
-    }
-
-    #[tokio::test]
-    async fn test_attempt_to_remove_unknown_cell_fails() {
-        let service = CellService::new();
-        let random_cell_name = CellName::random_for_tests();
-
-        let res = service
-            .free(ValidatedFreeCellRequest {
-                cell_name: random_cell_name.clone(),
-            })
-            .await;
-
-        assert!(
-            matches!(res, Err(CellsError::CellNotFound { cell_name }) if cell_name == random_cell_name)
-        );
+        Ok(self.stop(request).await?)
     }
 }

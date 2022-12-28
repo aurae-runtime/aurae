@@ -28,58 +28,68 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Run the Aurae daemon as a pid 1 init program.
+//! Configuration used to authenticate with a remote Aurae daemon.
 //!
-//! The Aurae daemon assumes that if the current process id (PID) is 1 to
-//! run itself as an initialization program, otherwise bypass the init module.
+//! [`AuraeConfig::try_default()`] follows an ordered priority for searching for
+//! configuration on a client's machine.
+//!
+//! 1. ${HOME}/.aurae/config
+//! 2. /etc/aurae/config
+//! 3. /var/lib/aurae/config
 
-use crate::init::{
-    fs::FsError,
-    logging::LoggingError,
-    network::NetworkError,
-    system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
-};
-use tracing::Level;
+pub use self::{auth_config::AuthConfig, system_config::SystemConfig};
+use anyhow::{anyhow, Context, Result};
+use serde::Deserialize;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
 
-mod fileio;
-mod fs;
-mod logging;
-mod network;
-mod power;
-mod system_runtime;
+mod auth_config;
+mod system_config;
 
-const BANNER: &str = "
-    +--------------------------------------------+
-    |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |
-    |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |
-    |  ███████║██║   ██║██████╔╝███████║█████╗   |
-    |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |
-    |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |
-    |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |
-    +--------------------------------------------+\n";
-
-#[derive(thiserror::Error, Debug)]
-pub(crate) enum InitError {
-    #[error(transparent)]
-    Logging(#[from] LoggingError),
-    #[error(transparent)]
-    Fs(#[from] FsError),
-    #[error(transparent)]
-    Network(#[from] NetworkError),
+/// Configuration for AuraeScript client
+#[derive(Debug, Clone, Deserialize)]
+pub struct AuraeConfig {
+    /// Authentication material
+    pub auth: AuthConfig,
+    /// System configuration
+    pub system: SystemConfig,
 }
 
-/// Run Aurae as an init pid 1 instance.
-pub async fn init(logger_level: Level, nested: bool) {
-    let res = match (std::process::id(), nested) {
-        (0, _) => unreachable!(
-            "process is running as PID 0, which should be impossible"
-        ),
-        (1, false) => Pid1SystemRuntime {}.init(logger_level),
-        _ => PidGt1SystemRuntime {}.init(logger_level),
-    }
-    .await;
+impl AuraeConfig {
+    /// Attempt to easy-load Aurae configuration from well-known locations.
+    pub fn try_default() -> Result<Self> {
+        let home = std::env::var("HOME")
+            .expect("missing $HOME environmental variable");
 
-    if let Err(e) = res {
-        panic!("Failed to initialize: {e:?}")
+        let search_paths = [
+            &format!("{home}/.aurae/config"),
+            "/etc/aurae/config",
+            "/var/lib/aurae/config",
+        ];
+
+        for path in search_paths {
+            if let Ok(config) = Self::parse_from_file(path) {
+                return Ok(config);
+            }
+        }
+
+        Err(anyhow!("unable to find config file"))
+    }
+
+    /// Attempt to parse a config file into memory.
+    pub fn parse_from_file<P: AsRef<Path>>(path: P) -> Result<AuraeConfig> {
+        let mut config_toml = String::new();
+        let mut file = File::open(path)?;
+
+        if file
+            .read_to_string(&mut config_toml)
+            .with_context(|| "could not read AuraeConfig toml")?
+            == 0
+        {
+            return Err(anyhow!("empty config"));
+        }
+
+        Ok(toml::from_str(&config_toml)?)
     }
 }
