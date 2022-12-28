@@ -2,6 +2,7 @@ use aurae_executables::auraed::SharedNamespaces;
 use cell::Cell;
 pub use cell_name::CellName;
 pub use cells::Cells;
+use cgroups::Cgroup;
 pub use cgroups::{CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems};
 pub use error::{CellsError, Result};
 

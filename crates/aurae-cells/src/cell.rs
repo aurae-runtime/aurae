@@ -28,10 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::{CellName, CellSpec, CellsError, Result};
+use crate::{CellName, CellSpec, CellsError, Cgroup, Result};
 use aurae_client::AuraeConfig;
 use aurae_executables::auraed::NestedAuraed;
-use cgroups_rs::Cgroup;
 use tracing::info;
 
 // We should not be able to change a cell after it has been created.
@@ -70,7 +69,7 @@ impl Cell {
         };
 
         let cgroup: Cgroup =
-            self.spec.cgroup_spec.clone().into_cgroup(&self.name);
+            Cgroup::new(self.name.clone(), self.spec.cgroup_spec.clone());
 
         let auraed = NestedAuraed::new(self.spec.shared_namespaces.clone())
             .map_err(|e| CellsError::FailedToAllocateCell {
@@ -113,9 +112,6 @@ impl Cell {
                 }
             })?;
 
-            // TODO: The cgroup was made as {CellName}/_ to work around the limitations of v2 cgroups.
-            //       But when we are deleting the cgroup, we are leaving behind a cgroup
-            //       at {CellName}. We need to clean that up.
             cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
                 cell_name: self.name.clone(),
                 source: e,

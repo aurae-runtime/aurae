@@ -211,7 +211,7 @@ impl NestedAuraed {
             // If pids are isolated, nested auared will be running as PID 1.
             // The kernel doesn't seem to allow SIGKILL to a PID 1,
             // so send the appropriate graceful shutdown signal
-            self.process.kill(Some(SIGKILL))?;
+            self.process.kill(Some(SIGINT))?;
             self.process.wait()
         } else {
             // TODO: Here, the process should not be pid 1, but it still fails
