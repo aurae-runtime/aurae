@@ -24,7 +24,8 @@ nav:
       - auraescript: /crate/src/auraescript/lib.rs.html
       - macros: /crate/src/macros/lib.rs.html
   - Blog:
-      - Isolation with Aurae Cells: /blog/24-10-2022-aurae-cells
+      - Isolation with Aurae Cells: /blog/2022-10-24-aurae-cells
+      - Cgroups in Aurae: /blog/2022-12-11-cgroups
 
 theme:
   name: material
