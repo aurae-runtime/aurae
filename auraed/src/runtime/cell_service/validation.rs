@@ -1,7 +1,7 @@
-use aurae_cells::{
-    CellName, CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems,
+use super::{
+    cells::{CellName, CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems},
+    executables::{auraed::SharedNamespaces, ExecutableName},
 };
-use aurae_executables::{auraed::SharedNamespaces, ExecutableName};
 use aurae_proto::runtime::{
     AllocateCellRequest, Cell, Executable, FreeCellRequest,
     StartExecutableRequest, StopExecutableRequest,
@@ -164,7 +164,7 @@ pub struct ValidatedCell {
 
 impl CellTypeValidator for CellValidator {}
 
-impl From<ValidatedCell> for aurae_cells::CellSpec {
+impl From<ValidatedCell> for super::cells::CellSpec {
     fn from(x: ValidatedCell) -> Self {
         let ValidatedCell {
             name: _,
@@ -229,7 +229,7 @@ impl ExecutableTypeValidator for ExecutableValidator {
     }
 }
 
-impl From<ValidatedExecutable> for aurae_executables::ExecutableSpec {
+impl From<ValidatedExecutable> for super::executables::ExecutableSpec {
     fn from(x: ValidatedExecutable) -> Self {
         let ValidatedExecutable { name, command, description } = x;
 

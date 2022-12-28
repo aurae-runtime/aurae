@@ -28,53 +28,22 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_cells::CellsError;
-use aurae_executables::ExecutablesError;
-use thiserror::Error;
-use tonic::Status;
-use tracing::error;
+pub use error::{ExecutablesError, Result};
+pub use executable::Executable;
+pub use executable_name::ExecutableName;
+pub use executables::Executables;
+use std::process::Command;
 
-pub(crate) type Result<T> = std::result::Result<T, CellsServiceError>;
+pub mod auraed;
+mod error;
+mod executable;
+mod executable_name;
+#[allow(clippy::module_inception)]
+mod executables;
+mod process;
 
-#[derive(Debug, Error)]
-pub(crate) enum CellsServiceError {
-    #[error(transparent)]
-    CellsError(#[from] CellsError),
-    #[error(transparent)]
-    ExecutablesError(#[from] ExecutablesError),
-}
-
-impl From<CellsServiceError> for Status {
-    fn from(err: CellsServiceError) -> Self {
-        let msg = err.to_string();
-        error!("{msg}");
-        match err {
-            CellsServiceError::CellsError(e) => match e {
-                CellsError::CellExists { .. } => Status::already_exists(msg),
-                CellsError::CellNotFound { .. } => Status::not_found(msg),
-                CellsError::FailedToAllocateCell { .. }
-                | CellsError::AbortedAllocateCell { .. }
-                | CellsError::FailedToKillCellChildren { .. }
-                | CellsError::FailedToFreeCell { .. } => Status::internal(msg),
-                CellsError::CellNotAllocated { cell_name } => {
-                    CellsServiceError::CellsError(CellsError::CellNotFound {
-                        cell_name,
-                    })
-                    .into()
-                }
-            },
-            CellsServiceError::ExecutablesError(e) => match e {
-                ExecutablesError::ExecutableExists { .. } => {
-                    Status::already_exists(msg)
-                }
-                ExecutablesError::ExecutableNotFound { .. } => {
-                    Status::not_found(msg)
-                }
-                ExecutablesError::FailedToStartExecutable { .. }
-                | ExecutablesError::FailedToStopExecutable { .. } => {
-                    Status::internal(msg)
-                }
-            },
-        }
-    }
+pub struct ExecutableSpec {
+    pub name: ExecutableName,
+    pub description: String,
+    pub command: Command,
 }

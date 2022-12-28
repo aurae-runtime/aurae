@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::SharedNamespaces;
-use crate::process::Process;
+use crate::runtime::cell_service::executables::process::Process;
 use aurae_client::AuraeConfig;
 use nix::libc::SIGCHLD;
 use nix::mount::MntFlags;
@@ -68,6 +68,12 @@ impl NestedAuraed {
             "--nested",
         ]);
 
+        // We have a concern that the "command" API make change/break in the future and this
+        // test is intended to help safeguard against that!
+        // We check that the command we kept has the expected number of args following the call
+        // to command.args, whose return value we ignored above.
+        assert_eq!(command.get_args().len(), 3);
+
         // Clone docs: https://man7.org/linux/man-pages/man2/clone.2.html
 
         // If this signal is specified as anything other than SIGCHLD, then the
@@ -79,9 +85,9 @@ impl NestedAuraed {
 
         let mut pidfd = -1;
         let mut clone = clone3::Clone3::default();
-        clone.flag_pidfd(&mut pidfd);
-        clone.flag_vfork();
-        clone.exit_signal(signal as u64);
+        let _ = clone.flag_pidfd(&mut pidfd);
+        let _ = clone.flag_vfork();
+        let _ = clone.exit_signal(signal as u64);
 
         // Note: The logic here is reversed. We define the flags as "share'
         //       and map them to "unshare".
@@ -92,7 +98,7 @@ impl NestedAuraed {
         // namespace of the parent.  If CLONE_NEWNS is not set, the
         // child lives in the same mount namespace as the parent.
         if !shared_namespaces.mount {
-            clone.flag_newns();
+            let _ = clone.flag_newns();
         }
 
         //If CLONE_NEWUTS is set, then create the process in a new
@@ -102,7 +108,7 @@ impl NestedAuraed {
         // fork(2)) the process is created in the same UTS namespace
         // as the calling process.
         if !shared_namespaces.uts {
-            clone.flag_newuts();
+            let _ = clone.flag_newuts();
         }
 
         // If CLONE_NEWIPC is set, then create the process in a new
@@ -110,7 +116,7 @@ impl NestedAuraed {
         // fork(2)), the process is created in the same IPC namespace
         // as the calling process.
         if !shared_namespaces.ipc {
-            clone.flag_newipc();
+            let _ = clone.flag_newipc();
         }
 
         // If CLONE_NEWPID is set, then create the process in a new
@@ -118,7 +124,7 @@ impl NestedAuraed {
         // fork(2)) the process is created in the same PID namespace
         // as the calling process.
         if !shared_namespaces.pid {
-            clone.flag_newpid();
+            let _ = clone.flag_newpid();
         }
 
         // If CLONE_NEWNET is set, then create the process in a new
@@ -126,21 +132,17 @@ impl NestedAuraed {
         // fork(2)) the process is created in the same network
         // namespace as the calling process.
         if !shared_namespaces.net {
-            clone.flag_newnet();
+            let _ = clone.flag_newnet();
         }
 
         // If this flag is not set, then (as with fork(2)) the process is
         // created in the same cgroup namespaces as the calling
         // process.
         if !shared_namespaces.cgroup {
-            clone.flag_newcgroup();
+            let _ = clone.flag_newcgroup();
         }
 
-        // We have a concern that the "command" API make change/break in the future and this
-        // test is intended to help safeguard against that!
-        // We check that the command we kept has the expected number of args following the call
-        // to command.args, whose return value we ignored above.
-        assert_eq!(command.get_args().len(), 3);
+        // TODO: clone uses the same pattern as command. Safeguard against changes
 
         // NOTE: AFTER THIS CALL YOU CAN BE IN THE CURRENT OR CHILD PROCESS.
         let pid = unsafe { clone.call() }
@@ -195,7 +197,8 @@ impl NestedAuraed {
                 }
             };
 
-            command.exec();
+            // TODO: check that exec should never return, even after exit
+            let _ = command.exec();
         }
 
         // we are in the parent again

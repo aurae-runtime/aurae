@@ -51,12 +51,12 @@
     while_true
 )]
 #![warn(missing_debug_implementations,
-// TODO: missing_docs,
-trivial_casts,
-trivial_numeric_casts,
-unused_extern_crates,
-unused_import_braces,
-unused_results
+    // TODO: missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_results
 )]
 #![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]

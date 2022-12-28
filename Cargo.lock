@@ -111,22 +111,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aurae-cells"
-version = "0.0.0"
-dependencies = [
- "aurae-client",
- "aurae-executables",
- "cgroups-rs",
- "fancy-regex",
- "simple_test_case",
- "thiserror",
- "tonic",
- "tracing",
- "uuid",
- "validation",
-]
-
-[[package]]
 name = "aurae-client"
 version = "0.1.0"
 dependencies = [
@@ -152,20 +136,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aurae-executables"
-version = "0.0.0"
-dependencies = [
- "aurae-client",
- "clone3",
- "nix 0.26.1",
- "procfs",
- "thiserror",
- "tracing",
- "uuid",
- "validation",
-]
-
-[[package]]
 name = "aurae-proto"
 version = "0.1.0"
 dependencies = [
@@ -180,12 +150,11 @@ name = "auraed"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "aurae-cells",
  "aurae-client",
- "aurae-executables",
  "aurae-proto",
  "cgroups-rs",
  "clap",
+ "clone3",
  "fancy-regex",
  "futures",
  "ipnetwork",

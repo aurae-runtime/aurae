@@ -28,8 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::{
-    Executable, ExecutablesError, ExecutableName, ExecutableSpec, Result,
+use super::{
+    Executable, ExecutableName, ExecutableSpec, ExecutablesError, Result,
 };
 use std::collections::HashMap;
 use std::process::ExitStatus;

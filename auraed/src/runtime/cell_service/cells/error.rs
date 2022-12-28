@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::CellName;
+use super::CellName;
 use std::io;
 use thiserror::Error;
 use tracing::error;

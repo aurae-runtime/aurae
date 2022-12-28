@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::{Cell, CellName, CellSpec, CellsError, Result};
+use super::{Cell, CellName, CellSpec, CellsError, Result};
 use std::collections::HashMap;
 
 type Cache = HashMap<CellName, Cell>;

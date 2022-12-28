@@ -42,11 +42,10 @@ path = "src/bin/main.rs"
 [dependencies]
 anyhow = { workspace = true }
 aurae-client = { path = "../crates/aurae-client" }
-aurae-cells = { path = "../crates/aurae-cells" }
-aurae-executables = { path = "../crates/aurae-executables" }
 aurae-proto = { workspace = true }
 cgroups-rs = "0.2.11"
 clap = { version = "3.1.20", features = ["derive"] }
+clone3 = "0.2.3"
 fancy-regex = "0.10.0"
 futures = "0.3.23"
 ipnetwork = "0.20.0"
@@ -69,10 +68,11 @@ tracing = { workspace = true, features = ["log"] }
 tracing-journald = "0.3"
 tracing-log = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1.2.2", features = ["v4"] }
 validation = { path = "../crates/validation", features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
-uuid = { version = "1.2.2", features = ["v4"] }
+

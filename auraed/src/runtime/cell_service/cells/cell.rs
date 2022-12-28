@@ -28,9 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::{CellName, CellSpec, CellsError, Cgroup, Result};
+use super::{CellName, CellSpec, CellsError, Cgroup, Result};
+use crate::runtime::cell_service::executables::auraed::NestedAuraed;
 use aurae_client::AuraeConfig;
-use aurae_executables::auraed::NestedAuraed;
 use tracing::info;
 
 // We should not be able to change a cell after it has been created.
@@ -105,7 +105,7 @@ impl Cell {
         // TODO nested auraed should proxy (bus) POSIX signals to child executables
         if let CellState::Allocated { cgroup, nested_auraed } = &mut self.state
         {
-            nested_auraed.kill().map_err(|e| {
+            let _exit_status = nested_auraed.kill().map_err(|e| {
                 CellsError::FailedToKillCellChildren {
                     cell_name: self.name.clone(),
                     source: e,

@@ -1,5 +1,5 @@
-use crate::process::Process;
-use crate::{ExecutableName, ExecutableSpec};
+use super::process::Process;
+use super::{ExecutableName, ExecutableSpec};
 use nix::sys::signal::SIGKILL;
 use nix::unistd::Pid;
 use std::ffi::OsString;

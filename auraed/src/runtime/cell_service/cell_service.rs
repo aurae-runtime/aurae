@@ -28,18 +28,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::validation::{
-    ValidatedAllocateCellRequest, ValidatedFreeCellRequest,
-    ValidatedStartExecutableRequest, ValidatedStopExecutableRequest,
+use super::{
+    cells::Cells,
+    error::CellsServiceError,
+    executables::Executables,
+    validation::{
+        ValidatedAllocateCellRequest, ValidatedExecutable,
+        ValidatedFreeCellRequest, ValidatedStartExecutableRequest,
+        ValidatedStopExecutableRequest,
+    },
+    Result,
 };
-use super::Result;
-use crate::runtime::cells::error::CellsServiceError;
-use crate::runtime::cells::validation::ValidatedExecutable;
 use ::validation::ValidatedType;
-use aurae_cells::Cells;
-use aurae_client::runtime::cell_service::CellServiceClient;
-use aurae_client::AuraeClient;
-use aurae_executables::Executables;
+use aurae_client::{runtime::cell_service::CellServiceClient, AuraeClient};
 use aurae_proto::runtime::{
     cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
     FreeCellRequest, FreeCellResponse, StartExecutableRequest,
