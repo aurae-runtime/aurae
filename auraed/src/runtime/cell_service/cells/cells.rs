@@ -28,12 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{Cell, CellName, CellSpec, CellsError, Result};
+use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
 use std::collections::HashMap;
 
 type Cache = HashMap<CellName, Cell>;
 
-/// Cells is the in-memory store for the list of cells created with Aurae.
+/// The in-memory cache of cells ([Cell]) created with Aurae.
 #[derive(Debug, Default)]
 pub struct Cells {
     cache: Cache,
@@ -46,24 +46,30 @@ pub struct Cells {
 // - Get Cgroup and pids from executable_name
 
 impl Cells {
-    /// Add the [Cell] to the cache with key [CellName].
-    /// Returns an error if a duplicate [CellName] already exists in the cache.
+    /// Calls [Cell::allocate] on a new [Cell] and adds it to it's cache with key [CellName].
+    ///
+    /// # Errors
+    /// * If cell exits -> [CellsError::CellExists]
+    /// * If a cell is not in cache but cgroup exists on fs -> [CellsError::CgroupIsNotACell]
+    /// * If cell fails to allocate (see [Cell::allocate])
     pub fn allocate(
         &mut self,
         cell_name: CellName,
         cell_spec: CellSpec,
     ) -> Result<&Cell> {
-        // TODO: replace with this when it becomes stable
-        // cache.try_insert(cell_name.clone(), cgroup)
-
-        // Check if there was already a cgroup in the table with this cell name as a key.
-        if self.cache.contains_key(&cell_name) {
-            // TODO Reconcile cache against filesystem somewhere, maybe here?
-            // TODO https://github.com/aurae-runtime/aurae/issues/198
-            return Err(CellsError::CellExists { cell_name });
+        if Cgroup::exists(&cell_name) {
+            return if self.cache.contains_key(&cell_name) {
+                Err(CellsError::CellExists { cell_name })
+            } else {
+                Err(CellsError::CgroupIsNotACell {
+                    cell_name: cell_name.clone(),
+                })
+            };
         }
 
-        // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
+        // From here, we know the cgroup doesn't exist, so remove from cache if it does
+        let _ = self.cache.remove(&cell_name);
+
         let cell = self
             .cache
             .entry(cell_name.clone())
@@ -73,12 +79,18 @@ impl Cells {
         Ok(cell)
     }
 
-    /// Returns an error if the [CellName] does not exist in the cache.
+    /// Calls [Cell::free] on a [Cell] and removes it from the cache.
+    ///
+    /// # Errors
+    /// * If cell is not cached and cgroup does not exist -> [CellsError::CellNotFound]
+    /// * If cell is cached and cgroup does not exist -> [CellsError::CgroupNotFound]
+    ///     - note: cell will be removed from cache
+    /// * If cell is not cached and cgroup exists on fs -> [CellsError::CgroupIsNotACell]
+    /// * If cell fails to free (see [Cell::free])
     pub fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        self.handle_cgroup_does_not_exist(cell_name)?;
         self.get_mut(cell_name, |cell| cell.free())?;
-        let _ = self.cache.remove(cell_name).ok_or_else(|| {
-            CellsError::CellNotFound { cell_name: cell_name.clone() }
-        })?;
+        let _ = self.cache.remove(cell_name);
         Ok(())
     }
 
@@ -86,26 +98,10 @@ impl Cells {
     where
         F: Fn(&Cell) -> Result<R>,
     {
-        // TODO Also reconcile the cache against the filesystem
-        // TODO https://github.com/aurae-runtime/aurae/issues/198
-        if let Some(cell) = self.cache.get(cell_name) {
-            let res = f(cell);
-            if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
-                let _ = self.cache.remove(cell_name);
-            }
-            res
-        } else {
-            // if we can eliminate this case, we can take &self instead
-            Err(CellsError::CellNotFound { cell_name: cell_name.clone() })
-        }
-    }
+        self.handle_cgroup_does_not_exist(cell_name)?;
 
-    pub fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
-    where
-        F: FnOnce(&mut Cell) -> Result<R>,
-    {
-        let Some(cell) = self.cache.get_mut(cell_name) else {
-            return Err(CellsError::CellNotFound { cell_name: cell_name.clone() });
+        let Some(cell) = self.cache.get(cell_name) else {
+            return Err(CellsError::CgroupIsNotACell { cell_name: cell_name.clone() });
         };
 
         let res = f(cell);
@@ -115,6 +111,44 @@ impl Cells {
         }
 
         res
+    }
+
+    pub fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    where
+        F: FnOnce(&mut Cell) -> Result<R>,
+    {
+        self.handle_cgroup_does_not_exist(cell_name)?;
+
+        let Some(cell) = self.cache.get_mut(cell_name) else {
+            return Err(CellsError::CgroupIsNotACell { cell_name: cell_name.clone() });
+        };
+
+        let res = f(cell);
+
+        if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
+            let _ = self.cache.remove(cell_name);
+        }
+
+        res
+    }
+
+    fn handle_cgroup_does_not_exist(
+        &mut self,
+        cell_name: &CellName,
+    ) -> Result<()> {
+        if Cgroup::exists(cell_name) {
+            return Ok(());
+        }
+
+        let Some(_removed) = self.cache.remove(cell_name) else {
+            // Cell doesn't exist & cgroup doesn't exit
+            return Err(CellsError::CellNotFound {
+                cell_name: cell_name.clone(),
+            });
+        };
+
+        // Cell exist, but cgroup doesn't
+        Err(CellsError::CgroupNotFound { cell_name: cell_name.clone() })
     }
 }
 

@@ -32,6 +32,7 @@ use crate::runtime::cell_service::cells::{CellName, CgroupSpec};
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{hierarchies, Hierarchy};
 use std::ops::{Deref, DerefMut};
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Cgroup {
@@ -70,6 +71,12 @@ impl Cgroup {
         //       But when we are deleting the cgroup, we are leaving behind a cgroup
         //       at {CellName}. We need to clean that up.
         cgroups_rs::Cgroup::load(hierarchy(), &*self.cell_name).delete()
+    }
+
+    pub fn exists(cell_name: &CellName) -> bool {
+        let mut path = PathBuf::from("/sys/fs/cgroup");
+        path.push(cell_name.deref());
+        path.exists()
     }
 }
 

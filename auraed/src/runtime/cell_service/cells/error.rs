@@ -54,4 +54,8 @@ pub enum CellsError {
     FailedToKillCellChildren { cell_name: CellName, source: io::Error },
     #[error("cell '{cell_name}' could not be freed: {source}")]
     FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
+    #[error("a cgroup '{cell_name}' exits on the system, but is not controlled by auraed")]
+    CgroupIsNotACell { cell_name: CellName },
+    #[error("cell '{cell_name}' did not find cgroup on system")]
+    CgroupNotFound { cell_name: CellName },
 }
