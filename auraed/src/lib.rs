@@ -143,6 +143,7 @@ pub async fn daemon() -> i32 {
 
     trace!("**Logging: Verbose Mode**");
     info!("Starting Aurae Daemon Runtime...");
+    info!("Aurae Daemon is pid {}", std::process::id());
 
     let runtime = AuraedRuntime {
         server_crt: PathBuf::from(options.server_crt),

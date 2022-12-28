@@ -32,6 +32,7 @@ use super::SharedNamespaces;
 use crate::process::Process;
 use aurae_client::AuraeConfig;
 use nix::libc::SIGCHLD;
+use nix::sys::signal::{SIGINT, SIGKILL};
 use nix::unistd::Pid;
 use std::io;
 use std::os::unix::process::CommandExt;
@@ -40,6 +41,7 @@ use std::process::{Command, ExitStatus};
 #[derive(Debug)]
 pub struct NestedAuraed {
     process: Process,
+    shared_namespaces: SharedNamespaces,
     pub client_config: AuraeConfig,
 }
 
@@ -185,11 +187,21 @@ impl NestedAuraed {
         // we are in the parent again
         let process = Process::new_from_clone(pid, pidfd)?;
 
-        Ok(Self { process, client_config })
+        Ok(Self { process, shared_namespaces, client_config })
     }
 
     pub fn kill(&mut self) -> io::Result<ExitStatus> {
-        self.process.kill()
+        if self.shared_namespaces.pid {
+            self.process.kill(Some(SIGKILL))?;
+            self.process.wait()
+        } else {
+            // If we didn't share the pid namespace,
+            //   then the nested auared will be running as PID 1.
+            // The kernel doesn't seem to allow SIGKILL to a PID 1,
+            //   so send the appropriate graceful shutdown signsl
+            self.process.kill(SIGINT)?;
+            self.process.wait()
+        }
     }
 
     pub fn pid(&self) -> Pid {

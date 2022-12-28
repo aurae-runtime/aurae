@@ -1,5 +1,6 @@
 use crate::process::Process;
 use crate::{ExecutableName, ExecutableSpec};
+use nix::sys::signal::SIGKILL;
 use nix::unistd::Pid;
 use std::ffi::OsString;
 use std::process::Command;
@@ -57,7 +58,8 @@ impl Executable {
         match &mut self.state {
             ExecutableState::Init { .. } => Ok(None),
             ExecutableState::Started { process, .. } => {
-                let exit_status = process.kill()?;
+                process.kill(Some(SIGKILL))?;
+                let exit_status = process.wait()?;
                 self.state = ExecutableState::Stopped(exit_status);
                 Ok(Some(exit_status))
             }

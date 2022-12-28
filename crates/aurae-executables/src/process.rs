@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use nix::sys::signal::SIGINT;
+use nix::sys::signal::{Signal, SIGKILL};
 use nix::sys::wait::WaitStatus;
 use nix::unistd::Pid;
 use std::io;
@@ -40,7 +40,11 @@ use tracing::info;
 
 #[derive(Debug)]
 pub(crate) enum Process {
-    Cloned { process: procfs::process::Process, pidfd: OwnedFd },
+    Cloned {
+        process: procfs::process::Process,
+        #[allow(unused)]
+        pidfd: OwnedFd,
+    },
     Spawned(Child),
 }
 
@@ -58,12 +62,33 @@ impl Process {
         Self::Spawned(child)
     }
 
-    pub fn kill(&mut self) -> io::Result<ExitStatus> {
+    pub fn kill<T: Into<Option<Signal>>>(
+        &mut self,
+        signal: T,
+    ) -> io::Result<()> {
+        let signal = signal.into();
+        let pid = match self {
+            Process::Cloned { process, .. } => process.pid,
+            Process::Spawned(child) => {
+                if let Some(SIGKILL) = &signal {
+                    // If we are sending a SIGKILL, just use std
+                    return child.kill();
+                } else {
+                    child.id() as i32
+                }
+            }
+        };
+
+        println!("Sending signal ({signal:?}) to pid {pid}");
+
+        nix::sys::signal::kill(Pid::from_raw(pid), signal)
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))
+    }
+
+    pub fn wait(&mut self) -> io::Result<ExitStatus> {
         match self {
             Process::Cloned { process, .. } => {
                 let pid = Pid::from_raw(process.pid);
-                nix::sys::signal::kill(pid, SIGINT)
-                    .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 
                 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitpid.html
                 // The waitpid() function obtains status information for process termination,
@@ -84,10 +109,7 @@ impl Process {
 
                 Ok(exit_status)
             }
-            Process::Spawned(child) => {
-                child.kill()?;
-                child.wait()
-            }
+            Process::Spawned(child) => child.wait(),
         }
     }
 
