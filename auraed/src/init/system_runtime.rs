@@ -3,13 +3,13 @@ use crate::init::{fs, logging, network, InitError, BANNER};
 use std::ffi::CString;
 use std::path::Path;
 use tonic::async_trait;
-use tracing::{error, info, trace, Level};
+use tracing::{error, info, trace};
 
 const POWER_BUTTON_DEVICE: &str = "/dev/input/event0";
 
 #[async_trait]
 pub(crate) trait SystemRuntime {
-    async fn init(self, logger_level: Level) -> Result<(), InitError>;
+    async fn init(self, verbose: bool) -> Result<(), InitError>;
 }
 
 pub(crate) struct Pid1SystemRuntime;
@@ -37,10 +37,10 @@ impl Pid1SystemRuntime {
 
 #[async_trait]
 impl SystemRuntime for Pid1SystemRuntime {
-    async fn init(self, logger_level: Level) -> Result<(), InitError> {
+    async fn init(self, verbose: bool) -> Result<(), InitError> {
         println!("{}", BANNER);
 
-        logging::init(logger_level)?;
+        logging::init(verbose)?;
         trace!("Logging started");
 
         trace!("Configure filesystem");
@@ -77,14 +77,8 @@ pub(crate) struct PidGt1SystemRuntime;
 
 #[async_trait]
 impl SystemRuntime for PidGt1SystemRuntime {
-    async fn init(self, logger_level: Level) -> Result<(), InitError> {
-        // FIXME?: this is potentially irrelevant now we have tracing.
-        // it could take responsibility for initializing tokio tracing, but given we need
-        // to annotate the methods for which we want spans anyway, we can't fully abstract
-        // the logging away from the other subsystems.
-        // it's possible that we could decide "we're using tokio tracing" and then this init
-        // step just initializes the right subscribers (log, syslog, etc).
-        logging::init(logger_level)?;
+    async fn init(self, verbose: bool) -> Result<(), InitError> {
+        logging::init(verbose)?;
         Ok(())
     }
 }

@@ -39,7 +39,6 @@ use crate::init::{
     network::NetworkError,
     system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
 };
-use tracing::Level;
 
 mod fileio;
 mod fs;
@@ -69,13 +68,13 @@ pub(crate) enum InitError {
 }
 
 /// Run Aurae as an init pid 1 instance.
-pub async fn init(logger_level: Level, nested: bool) {
+pub async fn init(verbose: bool, nested: bool) {
     let res = match (std::process::id(), nested) {
         (0, _) => unreachable!(
             "process is running as PID 0, which should be impossible"
         ),
-        (1, false) => Pid1SystemRuntime {}.init(logger_level),
-        _ => PidGt1SystemRuntime {}.init(logger_level),
+        (1, false) => Pid1SystemRuntime {}.init(verbose),
+        _ => PidGt1SystemRuntime {}.init(verbose),
     }
     .await;
 
