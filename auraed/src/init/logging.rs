@@ -15,14 +15,23 @@ pub(crate) enum LoggingError {
     TryInitError(#[from] TryInitError),
 }
 
-pub(crate) fn init(logger_level: Level) -> Result<(), LoggingError> {
+pub(crate) fn init(verbose: bool) -> Result<(), LoggingError> {
+    // The logger will log to stdout and possibly jourald depending on
+    // whether we are initializing as pid1 or not.
+    // We hold the opinion that the program is either "verbose"
+    // or it's not.
+    //
+    // Normal mode: Info, Warn, Error
+    // Verbose mode: Debug, Trace, Info, Warn, Error
+    let tracing_level = if verbose { Level::TRACE } else { Level::INFO };
+
     match std::process::id() {
-        1 => init_pid1_logging(logger_level),
-        _ => init_syslog_logging(logger_level),
+        1 => init_pid1_logging(tracing_level),
+        _ => init_journald_logging(tracing_level),
     }
 }
 
-fn init_syslog_logging(tracing_level: Level) -> Result<(), LoggingError> {
+fn init_journald_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing syslog logging");
     let journald_layer = tracing_journald::layer()?
         .with_syslog_identifier(AURAED_SYSLOG_IDENT.into());
@@ -39,9 +48,8 @@ fn init_syslog_logging(tracing_level: Level) -> Result<(), LoggingError> {
 // To discuss here https://github.com/aurae-runtime/auraed/issues/24:
 //      The "syslog" logger requires unix sockets.
 //      Syslog assumes that either /dev/log or /var/run/syslog are available [1].
-//      We need to discuss if there is a use case to log via unix sockets,
+// TODO: We need to discuss if there is a use case to log via unix sockets,
 //      other than fullfill the requirement of syslog crate.
-//      For now, auraed distinguishes between pid1 system and local (dev environment) logging.
 //      [1] https://docs.rs/syslog/latest/src/syslog/lib.rs.html#232-243
 fn init_pid1_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing pid1 logging");

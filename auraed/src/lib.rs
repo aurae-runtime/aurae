@@ -74,7 +74,7 @@ use std::{
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
-use tracing::{error, info, trace, Level};
+use tracing::{error, info, trace};
 
 pub mod init;
 pub mod logging;
@@ -129,20 +129,11 @@ struct AuraedOptions {
 pub async fn daemon() -> i32 {
     let options = AuraedOptions::parse();
 
-    // The logger will log to stdout and the syslog by default.
-    // We hold the opinion that the program is either "verbose"
-    // or it's not.
-    //
-    // Normal mode: Info, Warn, Error
-    // Verbose mode: Debug, Trace, Info, Warn, Error
-    let tracing_level =
-        if options.verbose { Level::TRACE } else { Level::INFO };
-
     // Initializes Logging and prepares system if auraed is run as pid=1
-    init::init(tracing_level, options.nested).await;
+    init::init(options.verbose, options.nested).await;
 
-    trace!("**Logging: Verbose Mode**");
-    info!("Starting Aurae Daemon Runtime...");
+    info!("Starting Aurae Daemon Runtime");
+    info!("Options: {options:#?}");
     info!("Aurae Daemon is pid {}", std::process::id());
 
     let runtime = AuraedRuntime {
