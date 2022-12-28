@@ -195,7 +195,6 @@ The most primitive workload in Aurae, a standard executable process.
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  |  |
 | command | [string](#string) |  |  |
-| args | [string](#string) | repeated |  |
 | description | [string](#string) |  |  |
 
 
