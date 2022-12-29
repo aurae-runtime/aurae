@@ -47,11 +47,17 @@ pub struct LogChannel {
 
 impl LogChannel {
     /// Constructor creating the channel for log communication
-    pub fn new(name: &str) -> LogChannel {
+    pub fn new(name: String) -> LogChannel {
         // TODO: decide for a cap. 40 is arbitrary
         let (producer, _) = broadcast::channel(40);
-        LogChannel { producer, name: name.to_string() }
+        LogChannel { producer, name }
     }
+
+    /// Getter for the name
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+
     /// Getter for producer channel
     pub fn get_producer(&self) -> Sender<LogItem> {
         self.producer.clone()
@@ -63,11 +69,11 @@ impl LogChannel {
     }
 
     /// Wrapper that sends a log line to the channel
-    pub fn log_line(producer: Sender<LogItem>, line: &str) {
+    pub fn log_line(producer: Sender<LogItem>, line: String) {
         // send returns an Err if there are no receivers. We ignore that.
         let _ = producer.send(LogItem {
             channel: "unknown".to_string(),
-            line: line.to_string(),
+            line,
             // TODO: milliseconds type in protobuf requires 128bit type
             timestamp: get_timestamp_sec(),
         });
@@ -105,24 +111,24 @@ mod tests {
     #[tokio::test]
     async fn test_ringbuffer_queue() {
         init_logging();
-        let lrb = LogChannel::new("Test");
+        let lrb = LogChannel::new("Test".into());
         let prod = lrb.get_producer();
         let mut consumer = lrb.get_consumer();
 
-        LogChannel::log_line(prod.clone(), "hello");
-        LogChannel::log_line(prod.clone(), "aurae");
-        LogChannel::log_line(prod.clone(), "bye");
+        LogChannel::log_line(prod.clone(), "hello".into());
+        LogChannel::log_line(prod.clone(), "aurae".into());
+        LogChannel::log_line(prod.clone(), "bye".into());
 
         let cur_item = LogChannel::consume_line(&mut consumer).await;
         assert!(cur_item.is_some());
-        assert_eq!(cur_item.unwrap().line, "hello");
+        assert_eq!(cur_item.unwrap().line, "hello".to_string());
 
         let cur_item = LogChannel::consume_line(&mut consumer).await;
         assert!(cur_item.is_some());
-        assert_eq!(cur_item.unwrap().line, "aurae");
+        assert_eq!(cur_item.unwrap().line, "aurae".to_string());
 
         let cur_item = LogChannel::consume_line(&mut consumer).await;
         assert!(cur_item.is_some());
-        assert_eq!(cur_item.unwrap().line, "bye");
+        assert_eq!(cur_item.unwrap().line, "bye".to_string());
     }
 }
