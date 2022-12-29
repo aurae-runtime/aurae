@@ -151,9 +151,10 @@ impl Cell {
     }
 }
 
-#[cfg(test)]
 impl Drop for Cell {
-    /// A [Cell] leaves a cgroup behind so we call [free] on drop
+    /// During normal behavior, cells are freed before being dropped,
+    /// but cache reconciliation may result in a drop in other circumstances.
+    /// Here we have a chance to clean up, no matter the circumstance.   
     fn drop(&mut self) {
         let _best_effort = self.free();
     }

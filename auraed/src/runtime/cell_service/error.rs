@@ -49,8 +49,12 @@ impl From<CellsServiceError> for Status {
         error!("{msg}");
         match err {
             CellsServiceError::CellsError(e) => match e {
+                CellsError::CgroupIsNotACell { .. } => {
+                    Status::failed_precondition(msg)
+                }
                 CellsError::CellExists { .. } => Status::already_exists(msg),
-                CellsError::CellNotFound { .. } => Status::not_found(msg),
+                CellsError::CellNotFound { .. }
+                | CellsError::CgroupNotFound { .. } => Status::not_found(msg),
                 CellsError::FailedToAllocateCell { .. }
                 | CellsError::AbortedAllocateCell { .. }
                 | CellsError::FailedToKillCellChildren { .. }
