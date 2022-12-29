@@ -659,6 +659,28 @@ export type Exact<P, I extends P> = P extends Builtin ? P
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;
 }
+export class CellServiceClient implements CellService {
+allocate(request: AllocateCellRequest): Promise<AllocateCellResponse> {
+    // @ts-ignore
+    return Deno.core.ops.ae__runtime__cell_service__allocate(request);
+}      
+        
+free(request: FreeCellRequest): Promise<FreeCellResponse> {
+    // @ts-ignore
+    return Deno.core.ops.ae__runtime__cell_service__free(request);
+}      
+        
+start(request: StartExecutableRequest): Promise<StartExecutableResponse> {
+    // @ts-ignore
+    return Deno.core.ops.ae__runtime__cell_service__start(request);
+}      
+        
+stop(request: StopExecutableRequest): Promise<StopExecutableResponse> {
+    // @ts-ignore
+    return Deno.core.ops.ae__runtime__cell_service__stop(request);
+}      
+        }
+
 export class PodServiceClient implements PodService {
 allocate(request: AllocatePodRequest): Promise<AllocatePodResponse> {
     // @ts-ignore
