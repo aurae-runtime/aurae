@@ -1,0 +1,18 @@
+---
+extends: substitution
+ignorecase: false
+level: error
+message: Use '%s' rather than '%s'.
+action:
+  name: replace
+swap:
+  aurae: Aurae
+  Auraed: auraed
+  CGroup|c group: cgroup
+  dns: DNS
+  gid: GID
+  makefile: Makefile
+  OS|Operating System: operating system
+  pid: PID
+  uid: UID
+  unix: Unix

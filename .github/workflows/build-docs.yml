@@ -31,6 +31,13 @@ jobs:
           cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
           cd ../
           rm -rf src
+      - name: Check documenation
+        run: |
+          wget --output-document=vale.tar.gz https://github.com/errata-ai/vale/releases/download/v2.21.3/vale_2.21.3_Linux_64-bit.tar.gz
+          mkdir bin && tar -xvzf vale.tar.gz -C bin
+          export PATH="$PWD/bin:$PATH"
+
+          make check-docs
       - name: Build documentation
         run: |
           make docs

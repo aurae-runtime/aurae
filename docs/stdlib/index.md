@@ -45,7 +45,7 @@ In protobuf terms a function is a [remote procedure call (RPC)](https://develope
 
 ### API Definition Convention
 
-Generally follow [this style guide](https://developers.google.com/protocol-buffers/docs/style) in the proto files.
+Generally follow [this style guide](https://developers.google.com/protocol-buffers/docs/style) in the `.proto` files.
 
 It is short, but the main points are:
 
@@ -93,5 +93,5 @@ A notable exception to the public specification above is the Aurae projects pref
 
 The traditional convention that is meant to reduce the likelihood of future breaking changes and ease the creation of macros for generating code:
 
-- rpc methods (e.g., `StartWidget`) should have dedicated request and response messages named `StartWidgetResponse` and `StopWidgetResponse`
-- objects (e.g., `Widget`) should be embedded directly into their corresponding `StartWidgetRequest`, `StopWidgetRequest`, etc style methods.
+- RPC methods (e.g., `StartWidget`) should have dedicated request and response messages named `StartWidgetResponse` and `StopWidgetResponse`
+- Objects (e.g., `Widget`) should be embedded directly into their corresponding `StartWidgetRequest`, `StopWidgetRequest`, etc style methods.

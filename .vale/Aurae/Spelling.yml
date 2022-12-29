@@ -1,0 +1,27 @@
+---
+extends: spelling
+level: warning
+message: "Use correct American English spelling. Did you really mean '%s'?"
+# A "filter" is a case-sensitive regular expression specifying words to ignore during spell checking.
+# Spelling rule applies to individual words
+filters:
+  - '[eE]num'
+  - API
+  - Aurae
+  - auraed
+  - authn
+  - authz
+  - cgroup
+  - composable
+  - loopback
+  - Makefile
+  - namespace
+  - protobuf
+  - RPC
+  - runtime
+  - seccomp
+  - stdlib
+  - systemd
+  - toolchain
+  - untrusted
+  - virtualized
