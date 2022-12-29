@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -27,8 +28,7 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+import * as helpers from "../auraescript/gen/helpers.ts";
+import * as runtime from "../auraescript/gen/runtime.ts";
 
-pub(crate) use cell_service::CellService;
-
-mod cell_service;
-mod pod_service;
+let pods = new runtime.PodsServiceClient();

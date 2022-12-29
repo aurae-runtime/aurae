@@ -28,7 +28,13 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub(crate) use cell_service::CellService;
+use aurae_proto::runtime::*;
 
-mod cell_service;
-mod pod_service;
+macros::ops_generator!(
+    runtime,
+    PodService,
+    allocate(AllocatePodRequest) -> AllocatePodResponse,
+    free(FreePodRequest) -> FreePodResponse,
+    start(StartContainerRequest) -> StartContainerResponse,
+    stop(StopContainerRequest) -> StopContainerResponse,
+);

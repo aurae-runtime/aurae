@@ -2,6 +2,30 @@
 
 export const protobufPackage = "runtime";
 
+export interface AllocatePodRequest {
+}
+
+export interface AllocatePodResponse {
+}
+
+export interface FreePodRequest {
+}
+
+export interface FreePodResponse {
+}
+
+export interface StartContainerRequest {
+}
+
+export interface StartContainerResponse {
+}
+
+export interface StopContainerRequest {
+}
+
+export interface StopContainerResponse {
+}
+
 /** / The most primitive workload in Aurae, a standard executable process. */
 export interface Executable {
   name: string;
@@ -114,6 +138,7 @@ export interface StartExecutableResponse {
   pid: number;
 }
 
+/** / Request to stop an executable at runtime. */
 export interface StopExecutableRequest {
   cellName: string;
   executableName: string;
@@ -121,6 +146,166 @@ export interface StopExecutableRequest {
 
 export interface StopExecutableResponse {
 }
+
+function createBaseAllocatePodRequest(): AllocatePodRequest {
+  return {};
+}
+
+export const AllocatePodRequest = {
+  fromJSON(_: any): AllocatePodRequest {
+    return {};
+  },
+
+  toJSON(_: AllocatePodRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<AllocatePodRequest>, I>>(_: I): AllocatePodRequest {
+    const message = createBaseAllocatePodRequest();
+    return message;
+  },
+};
+
+function createBaseAllocatePodResponse(): AllocatePodResponse {
+  return {};
+}
+
+export const AllocatePodResponse = {
+  fromJSON(_: any): AllocatePodResponse {
+    return {};
+  },
+
+  toJSON(_: AllocatePodResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<AllocatePodResponse>, I>>(_: I): AllocatePodResponse {
+    const message = createBaseAllocatePodResponse();
+    return message;
+  },
+};
+
+function createBaseFreePodRequest(): FreePodRequest {
+  return {};
+}
+
+export const FreePodRequest = {
+  fromJSON(_: any): FreePodRequest {
+    return {};
+  },
+
+  toJSON(_: FreePodRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<FreePodRequest>, I>>(_: I): FreePodRequest {
+    const message = createBaseFreePodRequest();
+    return message;
+  },
+};
+
+function createBaseFreePodResponse(): FreePodResponse {
+  return {};
+}
+
+export const FreePodResponse = {
+  fromJSON(_: any): FreePodResponse {
+    return {};
+  },
+
+  toJSON(_: FreePodResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<FreePodResponse>, I>>(_: I): FreePodResponse {
+    const message = createBaseFreePodResponse();
+    return message;
+  },
+};
+
+function createBaseStartContainerRequest(): StartContainerRequest {
+  return {};
+}
+
+export const StartContainerRequest = {
+  fromJSON(_: any): StartContainerRequest {
+    return {};
+  },
+
+  toJSON(_: StartContainerRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<StartContainerRequest>, I>>(_: I): StartContainerRequest {
+    const message = createBaseStartContainerRequest();
+    return message;
+  },
+};
+
+function createBaseStartContainerResponse(): StartContainerResponse {
+  return {};
+}
+
+export const StartContainerResponse = {
+  fromJSON(_: any): StartContainerResponse {
+    return {};
+  },
+
+  toJSON(_: StartContainerResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<StartContainerResponse>, I>>(_: I): StartContainerResponse {
+    const message = createBaseStartContainerResponse();
+    return message;
+  },
+};
+
+function createBaseStopContainerRequest(): StopContainerRequest {
+  return {};
+}
+
+export const StopContainerRequest = {
+  fromJSON(_: any): StopContainerRequest {
+    return {};
+  },
+
+  toJSON(_: StopContainerRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<StopContainerRequest>, I>>(_: I): StopContainerRequest {
+    const message = createBaseStopContainerRequest();
+    return message;
+  },
+};
+
+function createBaseStopContainerResponse(): StopContainerResponse {
+  return {};
+}
+
+export const StopContainerResponse = {
+  fromJSON(_: any): StopContainerResponse {
+    return {};
+  },
+
+  toJSON(_: StopContainerResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<StopContainerResponse>, I>>(_: I): StopContainerResponse {
+    const message = createBaseStopContainerResponse();
+    return message;
+  },
+};
 
 function createBaseExecutable(): Executable {
   return { name: "", command: "", description: "" };
@@ -408,16 +593,27 @@ export const StopExecutableResponse = {
   },
 };
 
-/** TODO Pods Service */
-export interface Pods {
-}
-
 /** TODO Instances Service */
 export interface Instances {
 }
 
 /** TODO Spawn Service */
 export interface Spawn {
+}
+
+/**
+ * / A pod is a higher level abstraction than Aurae cells, and to most users
+ * / will look at feel like one or more "containers".
+ * /
+ * / Pods will run an OCI compliant container image.
+ * /
+ * / A pod is a group of one or more containers with shared network and storage.
+ */
+export interface PodService {
+  allocate(request: AllocatePodRequest): Promise<AllocatePodResponse>;
+  start(request: StartContainerRequest): Promise<StartContainerResponse>;
+  stop(request: StopContainerRequest): Promise<StopContainerResponse>;
+  free(request: FreePodRequest): Promise<FreePodResponse>;
 }
 
 /**
@@ -482,5 +678,27 @@ start(request: StartExecutableRequest): Promise<StartExecutableResponse> {
 stop(request: StopExecutableRequest): Promise<StopExecutableResponse> {
     // @ts-ignore
     return Deno.core.ops.ae__runtime__cell_service__stop(request);
+}      
+        }
+
+export class PodServiceClient implements PodService {
+allocate(request: AllocatePodRequest): Promise<AllocatePodResponse> {
+    // @ts-ignore
+    return Deno.core.ops.ae__runtime__pod_service__allocate(request);
+}      
+        
+free(request: FreePodRequest): Promise<FreePodResponse> {
+    // @ts-ignore
+    return Deno.core.ops.ae__runtime__pod_service__free(request);
+}      
+        
+start(request: StartContainerRequest): Promise<StartContainerResponse> {
+    // @ts-ignore
+    return Deno.core.ops.ae__runtime__pod_service__start(request);
+}      
+        
+stop(request: StopContainerRequest): Promise<StopContainerResponse> {
+    // @ts-ignore
+    return Deno.core.ops.ae__runtime__pod_service__stop(request);
 }      
         }
