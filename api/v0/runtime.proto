@@ -84,11 +84,13 @@ message AllocatePodRequest{}
 message AllocatePodResponse{}
 message FreePodRequest{}
 message FreePodResponse{}
+message Pod{}
 
 message StartContainerRequest{}
 message StartContainerResponse{}
 message StopContainerRequest{}
 message StopContainerResponse{}
+message Container{}
 
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be

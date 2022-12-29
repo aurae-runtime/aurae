@@ -27,8 +27,3 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-
-pub(crate) use cell_service::CellService;
-
-mod cell_service;
-mod pod_service;
