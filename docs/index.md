@@ -88,6 +88,6 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 ## The Aurae Standard Library
 
 The Aurae Standard Library is expressed in `.proto` files and stored in this repository.
-Many components of the Aurae runtime system are automatically generated from this core definitions.
+Many components of the Aurae runtime system are automatically generated from these core definitions.
 
 See the [V0 API Reference](https://aurae.io/stdlib/v0/) for the current library definition.
