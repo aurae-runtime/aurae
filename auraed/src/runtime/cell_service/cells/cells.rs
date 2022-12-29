@@ -30,6 +30,7 @@
 
 use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
 use std::collections::HashMap;
+use tracing::warn;
 
 type Cache = HashMap<CellName, Cell>;
 
@@ -40,16 +41,16 @@ pub struct Cells {
 }
 
 // TODO: add to the impl
-// - Get Cgroup from cell_name
-// - Get Cgroup from executable_name
-// - Get Cgroup from pid
-// - Get Cgroup and pids from executable_name
+// [x] Get Cgroup from cell_name
+// [ ] Get Cgroup from executable_name
+// [ ] Get Cgroup from pid
+// [ ] Get Cgroup and pids from executable_name
 
 impl Cells {
     /// Calls [Cell::allocate] on a new [Cell] and adds it to it's cache with key [CellName].
     ///
     /// # Errors
-    /// * If cell exits -> [CellsError::CellExists]
+    /// * If cell exists -> [CellsError::CellExists]
     /// * If a cell is not in cache but cgroup exists on fs -> [CellsError::CgroupIsNotACell]
     /// * If cell fails to allocate (see [Cell::allocate])
     pub fn allocate(
@@ -68,7 +69,12 @@ impl Cells {
         }
 
         // From here, we know the cgroup doesn't exist, so remove from cache if it does
-        let _ = self.cache.remove(&cell_name);
+        if let Some(_removed) = self.cache.remove(&cell_name) {
+            // TODO: Should we not remove the cell (that has no cgroup) from the cache and
+            //       force the user to call Free? Free will also return an error, but we may be
+            //       calling other logic in free that we want to run.
+            warn!("found cached cell ('{cell_name}') without cgroup");
+        }
 
         let cell = self
             .cache
@@ -141,7 +147,7 @@ impl Cells {
         }
 
         let Some(_removed) = self.cache.remove(cell_name) else {
-            // Cell doesn't exist & cgroup doesn't exit
+            // Cell doesn't exist & cgroup doesn't exist
             return Err(CellsError::CellNotFound {
                 cell_name: cell_name.clone(),
             });
