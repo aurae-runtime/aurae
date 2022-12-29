@@ -63,3 +63,7 @@ include hack/hack.mk
 .PHONY: help
 help:  ## Show help messages for make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: oci-build
+oci-build: ## Build the aurae/auraed OCI images
+	$(oci) buildx build -t $(tag) -f $(ocifile) $(flags) .

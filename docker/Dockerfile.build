@@ -1,0 +1,59 @@
+# syntax = docker/dockerfile:1.4
+FROM bitnami/minideb:latest as main
+
+## Define ARGs
+ARG RUSTUP_TOOLCHAIN=stable
+ARG BUF_VERSION=1.11.0
+ARG VALE_VERSION=2.21.3
+ARG PROTOC_VERSION=1.5.1
+
+## Install packages
+RUN  apt-get update && \
+    install_packages  --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    curl \
+    libclang-dev \
+    libdbus-1-dev \
+    libseccomp-dev \
+    protobuf-compiler \
+    protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+
+## Setup protoc-gen-doc
+RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
+    tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz && \
+    chmod +x protoc-gen-doc && \
+    mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
+    rm protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+
+## Setup Rust
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUSTUP_TOOLCHAIN}
+ENV PATH=$PATH:/root/.cargo/bin
+RUN rustup component add clippy
+
+## Setup Buf
+RUN curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(uname -s)-$(uname -m)" \
+    -o "/usr/local/bin/buf" && \
+    chmod +x "/usr/local/bin/buf"
+
+## Setup Vale
+RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+    -o vale.tar.gz && \
+    tar -xvzf vale.tar.gz -C bin && \
+    mv bin/vale /usr/local/bin/vale && \
+    rm vale.tar.gz
+
+WORKDIR /app
+
+FROM main AS planner
+RUN cargo install cargo-chef
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+RUN cargo chef cook --recipe-path recipe.json
+
+FROM main as builder
+COPY --from=planner /root/.cargo/bin /root/.cargo/bin
+COPY --from=planner /root/.cargo/registry/index/ /root/.cargo/registry/index/
+COPY --from=planner /root/.cargo/registry/cache/ /root/.cargo/registry/cache/
