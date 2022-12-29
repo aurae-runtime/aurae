@@ -73,7 +73,7 @@ impl Cells {
             // TODO: Should we not remove the cell (that has no cgroup) from the cache and
             //       force the user to call Free? Free will also return an error, but we may be
             //       calling other logic in free that we want to run.
-            warn!("found cached cell ('{cell_name}') without cgroup");
+            warn!("Found cached cell ('{cell_name}') without cgroup. Did you forget to call free on the cell?");
         }
 
         let cell = self
