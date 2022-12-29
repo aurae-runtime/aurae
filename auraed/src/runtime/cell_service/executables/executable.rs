@@ -4,15 +4,12 @@ use crate::logging::log_channel::LogChannel;
 use nix::sys::signal::SIGKILL;
 use nix::unistd::Pid;
 use std::ffi::OsString;
-use std::fs::File;
-use std::io::BufRead;
-use std::os::unix::prelude::FromRawFd;
 use std::sync::Arc;
 use std::{
     io,
     process::{Command, ExitStatus, Stdio},
 };
-use tracing::{event, warn, Level};
+use tracing::{event, Level};
 
 #[derive(Debug)]
 pub struct Executable {
@@ -87,7 +84,7 @@ impl Executable {
                 //    .unwrap()
                 //    .join()
                 //    .expect("logging thread panicked")?;
-                for line in self.read_stdout()? {
+                for line in process.read_stdout()? {
                     event!(
                         Level::INFO,
                         level = "info",
@@ -99,7 +96,7 @@ impl Executable {
                         line.to_string(),
                     );
                 }
-                for line in self.read_stderr()? {
+                for line in process.read_stderr()? {
                     event!(
                         Level::INFO,
                         level = "error",
@@ -125,72 +122,6 @@ impl Executable {
         };
 
         Some(process.pid())
-    }
-
-    /// Returns any unread lines from stdout if [Executable] is running, otherwise returns an empty
-    /// [Vec].
-    pub fn read_stdout(&mut self) -> io::Result<Vec<String>> {
-        let ExecutableState::Started { process, .. } = &mut self.state else {
-            warn!("attempted to read stdout on process that was not started");
-            return Ok(vec![]);
-        };
-
-        let mut output = Vec::new();
-        match process {
-            Process::Spawned(child) => {
-                if let Some(stdout) = child.stdout.as_mut() {
-                    for line in io::BufReader::new(stdout).lines() {
-                        output.push(line?);
-                    }
-                };
-            }
-            Process::Cloned { process, .. } => {
-                let fd = process
-                    .fd_from_fd(1)
-                    .map_err(|e| {
-                        io::Error::new(io::ErrorKind::BrokenPipe, e.to_string())
-                    })?
-                    .fd;
-                let f = unsafe { File::from_raw_fd(fd) };
-
-                for line in io::BufReader::new(f).lines() {
-                    output.push(line?);
-                }
-            }
-        };
-        Ok(output)
-    }
-
-    /// Returns any unread lines from stderr if [Executable] is running, otherwise returns an empty
-    /// [Vec].
-    pub fn read_stderr(&mut self) -> io::Result<Vec<String>> {
-        let ExecutableState::Started { process, .. } = &mut self.state else {
-            return Ok(vec![]);
-        };
-
-        let mut output = Vec::new();
-        match process {
-            Process::Spawned(child) => {
-                if let Some(stdout) = child.stderr.as_mut() {
-                    for line in io::BufReader::new(stdout).lines() {
-                        output.push(line?);
-                    }
-                };
-            }
-            Process::Cloned { process, .. } => {
-                let fd = process
-                    .fd_from_fd(2)
-                    .map_err(|e| {
-                        io::Error::new(io::ErrorKind::BrokenPipe, e.to_string())
-                    })?
-                    .fd;
-                let f = unsafe { File::from_raw_fd(fd) };
-                for line in io::BufReader::new(f).lines() {
-                    output.push(line?);
-                }
-            }
-        };
-        Ok(output)
     }
 
     // TODO:

@@ -31,10 +31,11 @@
 use nix::sys::signal::{Signal, SIGKILL};
 use nix::sys::wait::WaitStatus;
 use nix::unistd::Pid;
+use std::fs::File;
 use std::io;
-use std::io::ErrorKind;
+use std::io::BufRead;
 // use std::os::fd::{FromRawFd, OwnedFd};
-use std::os::unix::process::ExitStatusExt;
+use std::os::unix::{prelude::FromRawFd, process::ExitStatusExt};
 use std::process::{Child, ExitStatus};
 use tracing::info;
 
@@ -51,7 +52,7 @@ pub(crate) enum Process {
 impl Process {
     pub fn new_from_clone(pid: i32, pidfd: i32) -> io::Result<Self> {
         let process = procfs::process::Process::new(pid)
-            .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
         // let pidfd = unsafe { OwnedFd::from_raw_fd(pidfd) };
 
@@ -120,5 +121,60 @@ impl Process {
             Process::Cloned { process, .. } => Pid::from_raw(process.pid),
             Process::Spawned(child) => Pid::from_raw(child.id() as i32),
         }
+    }
+
+    /// Returns any unread lines from stdout.
+    pub fn read_stdout(&mut self) -> io::Result<Vec<String>> {
+        let mut output = Vec::new();
+        match self {
+            Process::Spawned(child) => {
+                if let Some(stdout) = child.stdout.as_mut() {
+                    for line in io::BufReader::new(stdout).lines() {
+                        output.push(line?);
+                    }
+                };
+            }
+            Process::Cloned { process, .. } => {
+                let fd = process
+                    .fd_from_fd(1)
+                    .map_err(|e| {
+                        io::Error::new(io::ErrorKind::BrokenPipe, e.to_string())
+                    })?
+                    .fd;
+                let f = unsafe { File::from_raw_fd(fd) };
+
+                for line in io::BufReader::new(f).lines() {
+                    output.push(line?);
+                }
+            }
+        };
+        Ok(output)
+    }
+
+    /// Returns any unread lines from stderr.
+    pub fn read_stderr(&mut self) -> io::Result<Vec<String>> {
+        let mut output = Vec::new();
+        match self {
+            Process::Spawned(child) => {
+                if let Some(stdout) = child.stderr.as_mut() {
+                    for line in io::BufReader::new(stdout).lines() {
+                        output.push(line?);
+                    }
+                };
+            }
+            Process::Cloned { process, .. } => {
+                let fd = process
+                    .fd_from_fd(2)
+                    .map_err(|e| {
+                        io::Error::new(io::ErrorKind::BrokenPipe, e.to_string())
+                    })?
+                    .fd;
+                let f = unsafe { File::from_raw_fd(fd) };
+                for line in io::BufReader::new(f).lines() {
+                    output.push(line?);
+                }
+            }
+        };
+        Ok(output)
     }
 }

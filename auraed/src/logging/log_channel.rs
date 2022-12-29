@@ -54,7 +54,7 @@ impl LogChannel {
     }
 
     /// Getter for the name
-    pub fn name(&self) -> &String {
+    pub fn name(&self) -> &str {
         &self.name
     }
 
