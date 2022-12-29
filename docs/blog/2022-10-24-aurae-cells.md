@@ -73,7 +73,7 @@ I often say that cgroups are "vertical" resource slices and namespaces are "hori
 
 ## Systemd Slices
 
-By default, systemd schedules all of its workloads in their own cgroup with access to the same namespaces as pid 1 on the system. These workloads are called [services](https://www.freedesktop.org/software/systemd/man/systemd.service.html) or units.
+By default, systemd schedules all of its workloads in their own cgroup with access to the same namespaces as PID 1 on the system. These workloads are called [services](https://www.freedesktop.org/software/systemd/man/systemd.service.html) or units.
 
 Interestingly enough, Kubernetes also leverages systemd slices. You can usually see both systemd slices (`system.slice`) and Kubernetes pods (`kubepods.slice`) running side-by-side by exploring [/sys](https://man7.org/linux/man-pages/man5/sysfs.5.html) or `sysfs(5)` on your system. There are usually other cgroups running there as well. 
 
@@ -132,7 +132,7 @@ Regardless of if an administrator is executing a basic process, or a container: 
 Taking a step back from containerization we also understand that many enterprise users will need to execute untrusted code at scale.
 Aurae additionally acts as a lightweight virtualization hypervisor and meta-data service in addition to being a cgroup broker.
 
-Each instance of Aurae comes with its own running pid 1 daemon called `auraed`.
+Each instance of Aurae comes with its own running PID 1 daemon called `auraed`.
 
 ![cells](/assets/img/blog-instance.png)
 

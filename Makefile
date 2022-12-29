@@ -67,6 +67,10 @@ auraed: proto ## Initialize and compile auraed
 	@$(cargo) clippy -p auraed
 	@$(cargo) install --path ./auraed --debug --force
 
+.PHONY: check-docs
+check-docs: # spell checking
+	@vale --no-wrap --glob='!docs/stdlib/v0/*' ./docs
+
 .PHONY: docs
 docs: crate stdlibdocs ## Assemble all the /docs for the website locally.
 	cp -rv README.md docs/index.md # Special copy for the main README
