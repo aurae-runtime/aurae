@@ -29,7 +29,6 @@
 \* -------------------------------------------------------------------------- */
 
 use nix::sys::signal::{Signal, SIGKILL};
-use nix::sys::wait::WaitStatus;
 use nix::unistd::Pid;
 use std::fs::File;
 use std::io;
@@ -37,7 +36,7 @@ use std::io::BufRead;
 // use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::unix::{prelude::FromRawFd, process::ExitStatusExt};
 use std::process::{Child, ExitStatus};
-use tracing::info;
+use tracing::trace;
 
 #[derive(Debug)]
 pub(crate) enum Process {
@@ -80,7 +79,7 @@ impl Process {
             }
         };
 
-        println!("Sending signal ({signal:?}) to pid {pid}");
+        trace!("Sending signal {signal:?} to pid {pid}");
 
         nix::sys::signal::kill(Pid::from_raw(pid), signal)
             .map_err(|e| io::Error::from_raw_os_error(e as i32))
@@ -92,23 +91,27 @@ impl Process {
                 let pid = Pid::from_raw(process.pid);
 
                 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitpid.html
-                // The waitpid() function obtains status information for process termination,
-                // and optionally process stop and/or continue, from a specified subset of the child processes.
-                // If pid is greater than 0, it specifies the process ID of a single child process for which status is requested.
-                // I (future-highway) think clippy is wrong.
-                #[allow(clippy::never_loop)]
-                let exit_status = loop {
-                    let WaitStatus::Exited(_, exit_status) = nix::sys::wait::waitpid(pid, None)
-                        .map_err(|e| io::Error::from_raw_os_error(e as i32))? else {
-                        continue;
+
+                let mut exit_status = 0;
+                let _child_pid = loop {
+                    let res = unsafe {
+                        libc::waitpid(pid.as_raw(), &mut exit_status, 0)
                     };
 
-                    break exit_status;
-                };
+                    if res == -1 {
+                        let err = io::Error::last_os_error();
+                        match err.kind() {
+                            ErrorKind::Interrupted => continue,
+                            _ => break Err(err),
+                        }
+                    }
+
+                    break Ok(res);
+                }?;
 
                 let exit_status = ExitStatus::from_raw(exit_status);
 
-                info!("Executable with pid {pid} exited with status {exit_status}",);
+                trace!("Pid {pid} existed with status {exit_status}");
 
                 Ok(exit_status)
             }
