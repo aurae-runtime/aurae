@@ -32,7 +32,7 @@ use nix::sys::signal::{Signal, SIGKILL};
 use nix::unistd::Pid;
 use std::fs::File;
 use std::io;
-use std::io::BufRead;
+use std::io::{BufRead, ErrorKind};
 // use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::unix::{prelude::FromRawFd, process::ExitStatusExt};
 use std::process::{Child, ExitStatus};

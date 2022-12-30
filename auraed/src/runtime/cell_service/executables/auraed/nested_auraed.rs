@@ -33,7 +33,7 @@ use crate::runtime::cell_service::executables::process::Process;
 use aurae_client::AuraeConfig;
 use nix::libc::SIGCHLD;
 use nix::mount::MntFlags;
-use nix::sys::signal::{SIGKILL, SIGTERM};
+use nix::sys::signal::SIGTERM;
 use nix::unistd::Pid;
 use std::io;
 use std::os::unix::process::CommandExt;
@@ -208,24 +208,11 @@ impl NestedAuraed {
     }
 
     pub fn kill(&mut self) -> io::Result<ExitStatus> {
-        // If pids are isolated, nested auared will be running as PID 1.
-        // The kernel doesn't seem to allow SIGKILL to a PID 1,
-        // so send the appropriate graceful shutdown signal
-        // TODO: It seems like SIGKILL is also working even against a pid 1
-        //       (contrary to ^^^). What do we want to signal?
-
-        if wants_isolated_pid(&self.shared_namespaces) {
-            // TODO: Here, SIGTERM works when using auraescript, but hangs(?) during unit tests.
-            //       SIGKILL, however, works in both scenarios. This may be solved once we proxy
-            //       signals to nested auraeds.
-            self.process.kill(Some(SIGTERM))?;
-            self.process.wait()
-        } else {
-            // TODO: https://aurae.io/signals/ seems to indicate that we always want
-            //       to send SIGTERM to nested auraeds?
-            self.process.kill(SIGKILL)?;
-            self.process.wait()
-        }
+        // TODO: Here, SIGTERM works when using auraescript, but hangs(?) during unit tests.
+        //       SIGKILL, however, works. This may be solved once we proxy
+        //       signals to nested auraeds.
+        self.process.kill(Some(SIGTERM))?;
+        self.process.wait()
     }
 
     pub fn pid(&self) -> Pid {
