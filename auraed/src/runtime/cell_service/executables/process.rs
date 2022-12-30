@@ -111,7 +111,7 @@ impl Process {
 
                 let exit_status = ExitStatus::from_raw(exit_status);
 
-                trace!("Pid {pid} existed with status {exit_status}");
+                trace!("Pid {pid} exited with status {exit_status}");
 
                 Ok(exit_status)
             }
