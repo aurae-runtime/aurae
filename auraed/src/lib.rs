@@ -229,7 +229,7 @@ impl AuraedRuntime {
                 // )))
                 .serve_with_incoming_shutdown(sock_stream, async {
                     let _signal = tokio::signal::unix::signal(
-                        tokio::signal::unix::SignalKind::interrupt(),
+                        tokio::signal::unix::SignalKind::terminate(),
                     )
                     .expect("failed to create shutdown signal stream")
                     .recv()
