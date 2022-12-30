@@ -98,13 +98,12 @@ impl Executable {
     /// Stops the executable and returns the [ExitStatus].
     /// If the executable has never been started, returns [None].
     pub fn kill(&mut self) -> io::Result<Option<ExitStatus>> {
-        let exit_status: Option<ExitStatus>;
-        {
+        let exit_status = {
             let mut inner = self.inner.lock().map_err(|e| {
                 io::Error::new(io::ErrorKind::Other, e.to_string())
             })?;
             match &mut inner.state {
-                ExecutableState::Init { .. } => exit_status = None,
+                ExecutableState::Init { .. } => None,
                 ExecutableState::Started { process, .. } => {
                     let proc_status: ExitStatus;
                     {
@@ -115,11 +114,11 @@ impl Executable {
                         proc_status = proc.wait()?;
                     }
                     inner.state = ExecutableState::Stopped(proc_status);
-                    exit_status = Some(proc_status);
+                    Some(proc_status)
                 }
-                ExecutableState::Stopped(status) => exit_status = Some(*status),
-            };
-        }
+                ExecutableState::Stopped(status) => Some(*status),
+            }
+        };
         self.log_thread
             .take()
             .map(thread::JoinHandle::join)
@@ -150,11 +149,10 @@ impl Executable {
 fn spawn_log_thread(
     inner: Arc<Mutex<ExecutableInner>>,
 ) -> thread::JoinHandle<io::Result<()>> {
-    let local_inner = inner;
     thread::spawn(move || -> io::Result<()> {
         let mut running = true;
         while running {
-            let inner = local_inner.lock().map_err(|e| {
+            let inner = inner.lock().map_err(|e| {
                 io::Error::new(io::ErrorKind::Other, e.to_string())
             })?;
             let _span =
