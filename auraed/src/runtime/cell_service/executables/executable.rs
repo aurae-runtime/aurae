@@ -3,11 +3,12 @@ use super::{ExecutableName, ExecutableSpec};
 use crate::logging::log_channel::LogChannel;
 use nix::sys::signal::SIGKILL;
 use nix::unistd::Pid;
-use std::ffi::OsString;
-use std::sync::{Arc, Mutex};
 use std::{
+    ffi::OsString,
     io,
     process::{Command, ExitStatus, Stdio},
+    sync::{Arc, Mutex},
+    thread, time,
 };
 use tracing::{info, info_span};
 
@@ -24,7 +25,7 @@ struct ExecutableInner {
 pub struct Executable {
     // TODO: consider RWLock?
     inner: Arc<Mutex<ExecutableInner>>,
-    log_thread: Option<std::thread::JoinHandle<io::Result<()>>>,
+    log_thread: Option<thread::JoinHandle<io::Result<()>>>,
 }
 
 #[derive(Debug)]
@@ -121,7 +122,7 @@ impl Executable {
         }
         self.log_thread
             .take()
-            .map(std::thread::JoinHandle::join)
+            .map(thread::JoinHandle::join)
             .expect("thread panicked")
             .expect("join log_thread")
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
@@ -148,9 +149,9 @@ impl Executable {
 /// Spawns a thread that produces log lines while the [Executable] is running.
 fn spawn_log_thread(
     inner: Arc<Mutex<ExecutableInner>>,
-) -> std::thread::JoinHandle<io::Result<()>> {
+) -> thread::JoinHandle<io::Result<()>> {
     let local_inner = inner;
-    std::thread::spawn(move || -> io::Result<()> {
+    thread::spawn(move || -> io::Result<()> {
         let mut running = true;
         while running {
             let inner = local_inner.lock().map_err(|e| {
@@ -189,8 +190,12 @@ fn spawn_log_thread(
                         );
                     }
                 }
+                // NOTE: if an executable is stopped, we may miss the last batch of logs.
                 ExecutableState::Stopped { .. } => running = false,
             }
+            // sleep for a bit to be nice to the CPU and thread scheduler.  this might cause us to
+            // slow down logging from the process.
+            thread::sleep(time::Duration::from_millis(10));
         }
         Ok(())
     })
