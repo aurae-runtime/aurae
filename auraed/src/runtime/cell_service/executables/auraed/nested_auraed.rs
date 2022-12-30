@@ -33,7 +33,7 @@ use crate::runtime::cell_service::executables::process::Process;
 use aurae_client::AuraeConfig;
 use nix::libc::SIGCHLD;
 use nix::mount::MntFlags;
-use nix::sys::signal::{SIGINT, SIGKILL};
+use nix::sys::signal::SIGTERM;
 use nix::unistd::Pid;
 use std::io;
 use std::os::unix::process::CommandExt;
@@ -208,19 +208,11 @@ impl NestedAuraed {
     }
 
     pub fn kill(&mut self) -> io::Result<ExitStatus> {
-        if wants_isolated_pid(&self.shared_namespaces) {
-            // TODO: Here, SIGINT works when using auraescript, but fails during unit tests.
-
-            // If pids are isolated, nested auared will be running as PID 1.
-            // The kernel doesn't seem to allow SIGKILL to a PID 1,
-            // so send the appropriate graceful shutdown signal
-            self.process.kill(Some(SIGINT))?;
-            self.process.wait()
-        } else {
-            // TODO: Here, the process should not be pid 1, but it still fails
-            self.process.kill(SIGKILL)?;
-            self.process.wait()
-        }
+        // TODO: Here, SIGTERM works when using auraescript, but hangs(?) during unit tests.
+        //       SIGKILL, however, works. This may be solved once we proxy
+        //       signals to nested auraeds.
+        self.process.kill(Some(SIGTERM))?;
+        self.process.wait()
     }
 
     pub fn pid(&self) -> Pid {
@@ -229,6 +221,7 @@ impl NestedAuraed {
 }
 
 fn wants_isolated_pid(shared_namespaces: &SharedNamespaces) -> bool {
+    // TODO: This is wrong. A process wants an isolated pid namespace, regardless of mount
     !shared_namespaces.pid && !shared_namespaces.mount
 }
 
