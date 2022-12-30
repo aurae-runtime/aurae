@@ -57,17 +57,18 @@ impl Executables {
             });
         }
 
+        let executable_name = executable_spec.name.clone();
         // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
         let executable = self
             .cache
-            .entry(executable_spec.name.clone())
+            .entry(executable_name.clone())
             .or_insert_with(|| Executable::new(executable_spec));
 
         // TODO: if we fail to start, the exe remains in the cache and start cannot be called again
         // solving ^^ was a borrow checker fight and I (future-highway) lost this round.
         executable.start().map_err(|e| {
             ExecutablesError::FailedToStartExecutable {
-                executable_name: executable.name.clone(),
+                executable_name,
                 source: e,
             }
         })?;
@@ -90,9 +91,9 @@ impl Executables {
 
         let Some(exit_status) = exit_status else {
             // Exes that never started return None
-            let executable = self.cache.remove(executable_name).expect("exe in cache");
+            let _ = self.cache.remove(executable_name).expect("exe in cache");
             return Err(ExecutablesError::ExecutableNotFound {
-                executable_name: executable.name,
+                executable_name: executable_name.clone(),
             });
         };
 
