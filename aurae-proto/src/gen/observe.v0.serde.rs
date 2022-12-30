@@ -7,7 +7,7 @@ impl serde::Serialize for GetAuraeDaemonLogStreamRequest {
     {
         use serde::ser::SerializeStruct;
         let len = 0;
-        let struct_ser = serializer.serialize_struct("observe.GetAuraeDaemonLogStreamRequest", len)?;
+        let struct_ser = serializer.serialize_struct("observe.v0.GetAuraeDaemonLogStreamRequest", len)?;
         struct_ser.end()
     }
 }
@@ -53,7 +53,7 @@ impl<'de> serde::Deserialize<'de> for GetAuraeDaemonLogStreamRequest {
             type Value = GetAuraeDaemonLogStreamRequest;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct observe.GetAuraeDaemonLogStreamRequest")
+                formatter.write_str("struct observe.v0.GetAuraeDaemonLogStreamRequest")
             }
 
             fn visit_map<V>(self, mut map: V) -> std::result::Result<GetAuraeDaemonLogStreamRequest, V::Error>
@@ -67,7 +67,7 @@ impl<'de> serde::Deserialize<'de> for GetAuraeDaemonLogStreamRequest {
                 })
             }
         }
-        deserializer.deserialize_struct("observe.GetAuraeDaemonLogStreamRequest", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("observe.v0.GetAuraeDaemonLogStreamRequest", FIELDS, GeneratedVisitor)
     }
 }
 impl serde::Serialize for GetSubProcessStreamRequest {
@@ -84,7 +84,7 @@ impl serde::Serialize for GetSubProcessStreamRequest {
         if self.process_id != 0 {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("observe.GetSubProcessStreamRequest", len)?;
+        let mut struct_ser = serializer.serialize_struct("observe.v0.GetSubProcessStreamRequest", len)?;
         if self.channel_type != 0 {
             let v = LogChannelType::from_i32(self.channel_type)
                 .ok_or_else(|| serde::ser::Error::custom(format!("Invalid variant {}", self.channel_type)))?;
@@ -148,7 +148,7 @@ impl<'de> serde::Deserialize<'de> for GetSubProcessStreamRequest {
             type Value = GetSubProcessStreamRequest;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct observe.GetSubProcessStreamRequest")
+                formatter.write_str("struct observe.v0.GetSubProcessStreamRequest")
             }
 
             fn visit_map<V>(self, mut map: V) -> std::result::Result<GetSubProcessStreamRequest, V::Error>
@@ -181,7 +181,7 @@ impl<'de> serde::Deserialize<'de> for GetSubProcessStreamRequest {
                 })
             }
         }
-        deserializer.deserialize_struct("observe.GetSubProcessStreamRequest", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("observe.v0.GetSubProcessStreamRequest", FIELDS, GeneratedVisitor)
     }
 }
 impl serde::Serialize for LogChannelType {
@@ -191,8 +191,9 @@ impl serde::Serialize for LogChannelType {
         S: serde::Serializer,
     {
         let variant = match self {
-            Self::ChannelStdout => "CHANNEL_STDOUT",
-            Self::ChannelStderr => "CHANNEL_STDERR",
+            Self::Unspecified => "LOG_CHANNEL_TYPE_UNSPECIFIED",
+            Self::Stdout => "LOG_CHANNEL_TYPE_STDOUT",
+            Self::Stderr => "LOG_CHANNEL_TYPE_STDERR",
         };
         serializer.serialize_str(variant)
     }
@@ -204,8 +205,9 @@ impl<'de> serde::Deserialize<'de> for LogChannelType {
         D: serde::Deserializer<'de>,
     {
         const FIELDS: &[&str] = &[
-            "CHANNEL_STDOUT",
-            "CHANNEL_STDERR",
+            "LOG_CHANNEL_TYPE_UNSPECIFIED",
+            "LOG_CHANNEL_TYPE_STDOUT",
+            "LOG_CHANNEL_TYPE_STDERR",
         ];
 
         struct GeneratedVisitor;
@@ -248,8 +250,9 @@ impl<'de> serde::Deserialize<'de> for LogChannelType {
                 E: serde::de::Error,
             {
                 match value {
-                    "CHANNEL_STDOUT" => Ok(LogChannelType::ChannelStdout),
-                    "CHANNEL_STDERR" => Ok(LogChannelType::ChannelStderr),
+                    "LOG_CHANNEL_TYPE_UNSPECIFIED" => Ok(LogChannelType::Unspecified),
+                    "LOG_CHANNEL_TYPE_STDOUT" => Ok(LogChannelType::Stdout),
+                    "LOG_CHANNEL_TYPE_STDERR" => Ok(LogChannelType::Stderr),
                     _ => Err(serde::de::Error::unknown_variant(value, FIELDS)),
                 }
             }
@@ -274,7 +277,7 @@ impl serde::Serialize for LogItem {
         if self.timestamp != 0 {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("observe.LogItem", len)?;
+        let mut struct_ser = serializer.serialize_struct("observe.v0.LogItem", len)?;
         if !self.channel.is_empty() {
             struct_ser.serialize_field("channel", &self.channel)?;
         }
@@ -340,7 +343,7 @@ impl<'de> serde::Deserialize<'de> for LogItem {
             type Value = LogItem;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct observe.LogItem")
+                formatter.write_str("struct observe.v0.LogItem")
             }
 
             fn visit_map<V>(self, mut map: V) -> std::result::Result<LogItem, V::Error>
@@ -381,6 +384,6 @@ impl<'de> serde::Deserialize<'de> for LogItem {
                 })
             }
         }
-        deserializer.deserialize_struct("observe.LogItem", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("observe.v0.LogItem", FIELDS, GeneratedVisitor)
     }
 }
