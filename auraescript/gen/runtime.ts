@@ -14,6 +14,9 @@ export interface FreePodRequest {
 export interface FreePodResponse {
 }
 
+export interface Pod {
+}
+
 export interface StartContainerRequest {
 }
 
@@ -24,6 +27,9 @@ export interface StopContainerRequest {
 }
 
 export interface StopContainerResponse {
+}
+
+export interface Container {
 }
 
 /** / The most primitive workload in Aurae, a standard executable process. */
@@ -227,6 +233,26 @@ export const FreePodResponse = {
   },
 };
 
+function createBasePod(): Pod {
+  return {};
+}
+
+export const Pod = {
+  fromJSON(_: any): Pod {
+    return {};
+  },
+
+  toJSON(_: Pod): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<Pod>, I>>(_: I): Pod {
+    const message = createBasePod();
+    return message;
+  },
+};
+
 function createBaseStartContainerRequest(): StartContainerRequest {
   return {};
 }
@@ -303,6 +329,26 @@ export const StopContainerResponse = {
 
   fromPartial<I extends Exact<DeepPartial<StopContainerResponse>, I>>(_: I): StopContainerResponse {
     const message = createBaseStopContainerResponse();
+    return message;
+  },
+};
+
+function createBaseContainer(): Container {
+  return {};
+}
+
+export const Container = {
+  fromJSON(_: any): Container {
+    return {};
+  },
+
+  toJSON(_: Container): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<Container>, I>>(_: I): Container {
+    const message = createBaseContainer();
     return message;
   },
 };

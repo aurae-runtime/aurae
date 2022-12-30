@@ -119,7 +119,11 @@ impl CellService {
                 .start(executable)
                 .map_err(CellsServiceError::ExecutablesError)?;
 
-            let pid = executable.pid().expect("pid").as_raw();
+            let pid = executable.pid().map_err(CellsServiceError::IO)?.expect("pid").as_raw();
+
+            // TODO: either tell the [ObserveService] about this executable's log channels, or
+            // provide a way for the observe service to extract the log channels from here.
+
             Ok(Response::new(StartExecutableResponse { pid }))
         } else {
             // we are in a parent cell
