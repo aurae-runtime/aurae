@@ -41,6 +41,8 @@ pub(crate) enum CellsServiceError {
     CellsError(#[from] CellsError),
     #[error(transparent)]
     ExecutablesError(#[from] ExecutablesError),
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
 }
 
 impl From<CellsServiceError> for Status {
@@ -78,6 +80,7 @@ impl From<CellsServiceError> for Status {
                     Status::internal(msg)
                 }
             },
+            CellsServiceError::IO(_) => Status::internal(msg),
         }
     }
 }
