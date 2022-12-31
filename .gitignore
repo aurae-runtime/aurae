@@ -4,3 +4,4 @@ docs/crate/*
 auraescript/lib*
 auraescript/node_modules*
 pki*
+site
