@@ -1,6 +1,8 @@
 # syntax = docker/dockerfile:1.4
 FROM bitnami/minideb:latest as main
 
+LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
+
 ## Define ARGs
 ARG RUSTUP_TOOLCHAIN=stable
 ARG BUF_VERSION=1.11.0
