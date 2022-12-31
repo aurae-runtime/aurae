@@ -72,7 +72,6 @@ jobs:
       credentials:
         username:  ${{ github.actor }}
         password:  ${{ secrets.GITHUB_TOKEN }}
-      options: --cpus 1
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -103,7 +102,6 @@ jobs:
       credentials:
         username:  ${{ github.actor }}
         password:  ${{ secrets.GITHUB_TOKEN }}
-      options: --cpus 1
     steps:
       - uses: actions/checkout@v3
 
