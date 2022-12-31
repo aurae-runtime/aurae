@@ -6,22 +6,28 @@ message: "Use correct American English spelling. Did you really mean '%s'?"
 # Spelling rule applies to individual words
 filters:
   - '[eE]num'
+  - ADHD
   - API
+  - Aspie
   - Aurae
   - auraed
   - authn
   - authz
   - cgroup
   - composable
+  - LGTBQIA
   - loopback
   - Makefile
   - namespace
+  - neurodivergent
   - protobuf
   - RPC
   - runtime
   - seccomp
   - stdlib
+  - sublicense
   - systemd
   - toolchain
+  - transphobia
   - untrusted
   - virtualized
