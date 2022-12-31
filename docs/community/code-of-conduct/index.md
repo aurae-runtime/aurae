@@ -16,7 +16,7 @@ We believe that everyone knows when they are "being a dick", and we do not toler
 
 ### Immediate Rules
 
-Rules are interpretted by project maintainers, owners, and the authors. Violation of a rule is subject to removal of the project. All contributions to the project will be retained by the project in the event of a removal by a code of conduct violation.
+Rules are interpreted by project maintainers, owners, and the authors. Violation of a rule is subject to removal of the project. All contributions to the project will be retained by the project in the event of a removal by a code of conduct violation.
 
  - No violence, or suggestions of violence.
  - No fascism. No open support of authoritative or totalitarian government. 
@@ -36,4 +36,4 @@ Rules are interpretted by project maintainers, owners, and the authors. Violatio
 
 If at any point the project maintainers, owners, or authors determine that external behavior has conflicted with out rules we reserve the right to first warn and later remove a perceived bad actor from the community. 
 
-We believe that adhearing to our rules is important for the project. Interpretation of outside rule violations include but are not limited to Twitter, Discord, IRC, online chat, Reddit, social media sites such as Facebook, or Instagaram, Matrix, personal blogs, religious organizations, or other online forms, websites, or communities. 
+We believe that adhering to our rules is important for the project. Interpretation of outside rule violations include but are not limited to Twitter, Discord, IRC, online chat, Reddit, social media sites such as Facebook, or Instagram, Matrix, personal blogs, religious organizations, or other online forms, websites, or communities. 

@@ -2,7 +2,7 @@
 
 ## Filing issues
 
-- We exclusively use Github Issues for issue tracking.
+- We exclusively use GitHub Issues for issue tracking.
 - Make a brief search through existing issues to prevent the filing of
   duplicated issues.
 - The issue should describe:
