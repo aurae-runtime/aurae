@@ -28,45 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cell_service::executables::auraed::SharedNamespaces;
-use cell::Cell;
-pub use cell_name::CellName;
-pub use cells::Cells;
-use cgroups::Cgroup;
-pub use cgroups::{CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems};
-pub use error::{CellsError, Result};
-use lazy_static::lazy_static;
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::signal::unix::SignalKind;
 
-mod cell;
-mod cell_name;
-#[allow(clippy::module_inception)]
-mod cells;
-mod cgroups;
-mod error;
+/// Waits for a [SIGTERM] signal and...
+/// * Calls [Cells::broadcast_free]
+/// * Calls [Cells::broadcast_kill]
+/// ---
+/// Returns after processing the first received signal.
+pub async fn terminate() {
+    let mut stream = tokio::signal::unix::signal(SignalKind::terminate())
+        .expect("failed to listen for SIGTERM");
 
-lazy_static! {
-    pub static ref CELLS: Arc<Mutex<Cells>> = Default::default();
-}
-
-#[derive(Debug, Clone)]
-pub struct CellSpec {
-    pub cgroup_spec: CgroupSpec,
-    pub shared_namespaces: SharedNamespaces,
-}
-
-impl CellSpec {
-    #[cfg(test)]
-    pub(crate) fn new_for_tests() -> Self {
-        Self {
-            cgroup_spec: CgroupSpec {
-                cpu_cpus: CpuCpus::new("".into()),
-                cpu_quota: CpuQuota::new(0),
-                cpu_weight: CpuWeight::new(0),
-                cpuset_mems: CpusetMems::new("".into()),
-            },
-            shared_namespaces: Default::default(), // nothing shared in default
-        }
-    }
+    let _ = stream.recv().await;
+    let mut cells = crate::runtime::CELLS.lock().await;
+    // First try to gracefully free all cells.
+    cells.broadcast_free();
+    // The cells that remain failed to shut down for some reason.
+    cells.broadcast_kill();
 }

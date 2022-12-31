@@ -159,6 +159,7 @@ dependencies = [
  "futures",
  "ipnetwork",
  "iter_tools",
+ "lazy_static",
  "libc",
  "log",
  "multi_log",

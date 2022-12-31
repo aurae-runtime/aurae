@@ -29,7 +29,6 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cells::Cells,
     error::CellsServiceError,
     executables::Executables,
     validation::{
@@ -39,6 +38,7 @@ use super::{
     },
     Result,
 };
+use crate::runtime::cell_service::cells::CELLS;
 use ::validation::ValidatedType;
 use aurae_client::{runtime::cell_service::CellServiceClient, AuraeClient};
 use aurae_proto::runtime::{
@@ -54,16 +54,12 @@ use tracing::info;
 
 #[derive(Debug, Clone)]
 pub struct CellService {
-    cells: Arc<Mutex<Cells>>,
     executables: Arc<Mutex<Executables>>,
 }
 
 impl CellService {
     pub fn new() -> Self {
-        CellService {
-            cells: Default::default(),
-            executables: Default::default(),
-        }
+        CellService { executables: Default::default() }
     }
 
     #[tracing::instrument(skip(self))]
@@ -76,7 +72,7 @@ impl CellService {
         let cell_name = cell.name.clone();
         let cell_spec = cell.into();
 
-        let mut cells = self.cells.lock().await;
+        let mut cells = CELLS.lock().await;
         let cell = cells.allocate(cell_name, cell_spec)?;
 
         Ok(CellServiceAllocateResponse {
@@ -93,7 +89,7 @@ impl CellService {
         let ValidatedCellServiceFreeRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
-        let mut cells = self.cells.lock().await;
+        let mut cells = CELLS.lock().await;
         cells.free(&cell_name)?;
 
         Ok(CellServiceFreeResponse::default())
@@ -119,7 +115,11 @@ impl CellService {
                 .start(executable)
                 .map_err(CellsServiceError::ExecutablesError)?;
 
-            let pid = executable.pid().map_err(CellsServiceError::IO)?.expect("pid").as_raw();
+            let pid = executable
+                .pid()
+                .map_err(CellsServiceError::IO)?
+                .expect("pid")
+                .as_raw();
 
             // TODO: either tell the [ObserveService] about this executable's log channels, or
             // provide a way for the observe service to extract the log channels from here.
@@ -129,7 +129,7 @@ impl CellService {
             // we are in a parent cell
             let child_cell_name = cell_name.pop_front().expect("len > 0");
 
-            let mut cells = self.cells.lock().await;
+            let mut cells = CELLS.lock().await;
             let client_config = cells
                 .get(&child_cell_name, move |cell| cell.client_config())
                 .map_err(CellsServiceError::CellsError)?;
@@ -182,7 +182,7 @@ impl CellService {
             // we are in a parent cell
             let child_cell_name = cell_name.pop_front().expect("len > 0");
 
-            let mut cells = self.cells.lock().await;
+            let mut cells = CELLS.lock().await;
             let client_config = cells
                 .get(&child_cell_name, move |cell| cell.client_config())
                 .map_err(CellsServiceError::CellsError)?;

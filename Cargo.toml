@@ -39,6 +39,7 @@ members = [
 [workspace.dependencies]
 anyhow = "1.0.66"
 aurae-proto = { path = "./aurae-proto", version = "0.1.0" }
+lazy_static = "1.4.0"
 thiserror = "1.0.37"
 tokio = "1.22.0"
 tonic = "0.8.2"
