@@ -13,6 +13,9 @@ jobs:
   build-container:
     name: Build docker image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     concurrency:
       group: ${{ format('{0}-{1}', github.ref, github.job) }}
     outputs:
@@ -63,6 +66,9 @@ jobs:
   build-docs-with-container:
     name: Build Docs
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     needs: build-container
     container:
       image: ghcr.io/${{ github.repository }}/aurae-builder:${{ needs.build-container.outputs.tag }}
@@ -93,6 +99,9 @@ jobs:
   build:
     name: Build (lint, compile, test)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     needs: build-container
     timeout-minutes: 20
     container:
