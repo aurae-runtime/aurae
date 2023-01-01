@@ -1,17 +1,16 @@
 # syntax = docker/dockerfile:1.4
-FROM bitnami/minideb:latest as main
+FROM rust:1-slim-bullseye as main
 
 LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
 
 ## Define ARGs
-ARG RUSTUP_TOOLCHAIN=stable
 ARG BUF_VERSION=1.11.0
 ARG VALE_VERSION=2.21.3
 ARG PROTOC_VERSION=1.5.1
 
 ## Install packages
 RUN  apt-get update && \
-    install_packages  --no-install-recommends \
+    apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
     curl \
@@ -19,8 +18,10 @@ RUN  apt-get update && \
     libdbus-1-dev \
     libseccomp-dev \
     protobuf-compiler \
-    protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
+
+## Setup Rust
+RUN rustup component add clippy
 
 ## Setup protoc-gen-doc
 RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
@@ -28,11 +29,6 @@ RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/downloa
     chmod +x protoc-gen-doc && \
     mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
     rm protoc-gen-doc_1.5.1_linux_amd64.tar.gz
-
-## Setup Rust
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUSTUP_TOOLCHAIN}
-ENV PATH=$PATH:/root/.cargo/bin
-RUN rustup component add clippy
 
 ## Setup Buf
 RUN curl -sSL \
@@ -56,6 +52,6 @@ RUN cargo chef prepare --recipe-path recipe.json
 RUN cargo chef cook --recipe-path recipe.json
 
 FROM main as builder
-COPY --from=planner /root/.cargo/bin /root/.cargo/bin
-COPY --from=planner /root/.cargo/registry/index/ /root/.cargo/registry/index/
-COPY --from=planner /root/.cargo/registry/cache/ /root/.cargo/registry/cache/
+COPY --from=planner /usr/local/cargo/bin /root/.cargo/cargo/bin
+COPY --from=planner /usr/local/cargo/registry/index/ /root/.cargo/registry/index/
+COPY --from=planner /usr/local/cargo/registry/cache/ /root/.cargo/registry/cache/
