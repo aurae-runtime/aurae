@@ -10,11 +10,17 @@ nav:
   - Aurae Standard Library:
     - Specification: /stdlib
     - V0: /stdlib/v0
-  - Quick Start: /quickstart
-  - Building from Source: /build
+  - Getting Started:
+    - Building from Source: /build
+    - Quick Start: /quickstart
+    #- Examples: /examples
   - Signals: /signals
   - Certificates: /certs
-  - Contributors: /contributors
+  - Community:
+    - Aurae Community: /community
+    - Code of Conduct: /community/code-of-conduct
+    - Contribution Guidelines: /community/contribution-guidelines
+    - Join our Discord: https://discord.gg/aTe2Rjg5rq
   - Reference:
     - auraed: /crate/auraed
     - auraescript: /crate/auraescript
