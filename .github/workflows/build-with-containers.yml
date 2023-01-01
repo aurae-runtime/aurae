@@ -11,7 +11,6 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   CACHE_VERSION: v0
-  RUSTUP_TOOLCHAIN: stable
 jobs:
   build-container:
     name: Build docker image
@@ -58,7 +57,6 @@ jobs:
           file: docker/Dockerfile.build
           push: true
           pull: true
-          build-args: RUSTUP_TOOLCHAIN:${{env.RUSTUP_TOOLCHAIN}}
           tags: ghcr.io/${{ github.repository }}/aurae-builder:latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
           cache-from: type=gha
           cache-to: type=gha,mode=max
