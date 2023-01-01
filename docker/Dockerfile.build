@@ -52,6 +52,6 @@ RUN cargo chef prepare --recipe-path recipe.json
 RUN cargo chef cook --recipe-path recipe.json
 
 FROM main as builder
-COPY --from=planner /usr/local/cargo/bin /root/.cargo/cargo/bin
-COPY --from=planner /usr/local/cargo/registry/index/ /root/.cargo/registry/index/
-COPY --from=planner /usr/local/cargo/registry/cache/ /root/.cargo/registry/cache/
+COPY --from=planner /usr/local/cargo/bin /usr/local/cargo/bin
+COPY --from=planner /usr/local/cargo/registry/index/ /usr/local/cargo/registry/index/
+COPY --from=planner /usr/local/cargo/registry/cache/ /usr/local/cargo/registry/cache/
