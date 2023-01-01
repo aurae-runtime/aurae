@@ -1,14 +1,15 @@
 // @generated
 /// Generated client implementations.
-pub mod observe_client {
+pub mod observe_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    ///
     #[derive(Debug, Clone)]
-    pub struct ObserveClient<T> {
+    pub struct ObserveServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl ObserveClient<tonic::transport::Channel> {
+    impl ObserveServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -19,7 +20,7 @@ pub mod observe_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> ObserveClient<T>
+    impl<T> ObserveServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -37,7 +38,7 @@ pub mod observe_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> ObserveClient<InterceptedService<T, F>>
+        ) -> ObserveServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -51,7 +52,7 @@ pub mod observe_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            ObserveClient::new(InterceptedService::new(inner, interceptor))
+            ObserveServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -68,6 +69,8 @@ pub mod observe_client {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
+        /** request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
+*/
         pub async fn get_aurae_daemon_log_stream(
             &mut self,
             request: impl tonic::IntoRequest<super::GetAuraeDaemonLogStreamRequest>,
@@ -86,10 +89,12 @@ pub mod observe_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/observe.Observe/GetAuraeDaemonLogStream",
+                "/observe.v0.ObserveService/GetAuraeDaemonLogStream",
             );
             self.inner.server_streaming(request.into_request(), path, codec).await
         }
+        /** TODO: request log stream for a sub process
+*/
         pub async fn get_sub_process_stream(
             &mut self,
             request: impl tonic::IntoRequest<super::GetSubProcessStreamRequest>,
@@ -108,25 +113,27 @@ pub mod observe_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/observe.Observe/GetSubProcessStream",
+                "/observe.v0.ObserveService/GetSubProcessStream",
             );
             self.inner.server_streaming(request.into_request(), path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod observe_server {
+pub mod observe_service_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///Generated trait containing gRPC methods that should be implemented for use with ObserveServer.
+    ///Generated trait containing gRPC methods that should be implemented for use with ObserveServiceServer.
     #[async_trait]
-    pub trait Observe: Send + Sync + 'static {
+    pub trait ObserveService: Send + Sync + 'static {
         ///Server streaming response type for the GetAuraeDaemonLogStream method.
         type GetAuraeDaemonLogStreamStream: futures_core::Stream<
                 Item = Result<super::LogItem, tonic::Status>,
             >
             + Send
             + 'static;
+        /** request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
+*/
         async fn get_aurae_daemon_log_stream(
             &self,
             request: tonic::Request<super::GetAuraeDaemonLogStreamRequest>,
@@ -137,19 +144,22 @@ pub mod observe_server {
             >
             + Send
             + 'static;
+        /** TODO: request log stream for a sub process
+*/
         async fn get_sub_process_stream(
             &self,
             request: tonic::Request<super::GetSubProcessStreamRequest>,
         ) -> Result<tonic::Response<Self::GetSubProcessStreamStream>, tonic::Status>;
     }
+    ///
     #[derive(Debug)]
-    pub struct ObserveServer<T: Observe> {
+    pub struct ObserveServiceServer<T: ObserveService> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: Observe> ObserveServer<T> {
+    impl<T: ObserveService> ObserveServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -183,9 +193,9 @@ pub mod observe_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for ObserveServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for ObserveServiceServer<T>
     where
-        T: Observe,
+        T: ObserveService,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -201,11 +211,11 @@ pub mod observe_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/observe.Observe/GetAuraeDaemonLogStream" => {
+                "/observe.v0.ObserveService/GetAuraeDaemonLogStream" => {
                     #[allow(non_camel_case_types)]
-                    struct GetAuraeDaemonLogStreamSvc<T: Observe>(pub Arc<T>);
+                    struct GetAuraeDaemonLogStreamSvc<T: ObserveService>(pub Arc<T>);
                     impl<
-                        T: Observe,
+                        T: ObserveService,
                     > tonic::server::ServerStreamingService<
                         super::GetAuraeDaemonLogStreamRequest,
                     > for GetAuraeDaemonLogStreamSvc<T> {
@@ -245,11 +255,11 @@ pub mod observe_server {
                     };
                     Box::pin(fut)
                 }
-                "/observe.Observe/GetSubProcessStream" => {
+                "/observe.v0.ObserveService/GetSubProcessStream" => {
                     #[allow(non_camel_case_types)]
-                    struct GetSubProcessStreamSvc<T: Observe>(pub Arc<T>);
+                    struct GetSubProcessStreamSvc<T: ObserveService>(pub Arc<T>);
                     impl<
-                        T: Observe,
+                        T: ObserveService,
                     > tonic::server::ServerStreamingService<
                         super::GetSubProcessStreamRequest,
                     > for GetSubProcessStreamSvc<T> {
@@ -302,7 +312,7 @@ pub mod observe_server {
             }
         }
     }
-    impl<T: Observe> Clone for ObserveServer<T> {
+    impl<T: ObserveService> Clone for ObserveServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -312,7 +322,7 @@ pub mod observe_server {
             }
         }
     }
-    impl<T: Observe> Clone for _Inner<T> {
+    impl<T: ObserveService> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone())
         }
@@ -322,7 +332,7 @@ pub mod observe_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: Observe> tonic::server::NamedService for ObserveServer<T> {
-        const NAME: &'static str = "observe.Observe";
+    impl<T: ObserveService> tonic::server::NamedService for ObserveServiceServer<T> {
+        const NAME: &'static str = "observe.v0.ObserveService";
     }
 }

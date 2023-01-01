@@ -11,7 +11,7 @@ const cells = new runtime.CellServiceClient();
 // });
 
 //// REGEX violation
-await cells.allocate(<runtime.AllocateCellRequest>{
+await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         name: "nope_nope"
     })

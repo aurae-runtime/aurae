@@ -1,347 +1,4 @@
 // @generated
-impl serde::Serialize for AllocateCellRequest {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut len = 0;
-        if self.cell.is_some() {
-            len += 1;
-        }
-        let mut struct_ser = serializer.serialize_struct("runtime.AllocateCellRequest", len)?;
-        if let Some(v) = self.cell.as_ref() {
-            struct_ser.serialize_field("cell", v)?;
-        }
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for AllocateCellRequest {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-            "cell",
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-            Cell,
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        match value {
-                            "cell" => Ok(GeneratedField::Cell),
-                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = AllocateCellRequest;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.AllocateCellRequest")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<AllocateCellRequest, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                let mut cell__ = None;
-                while let Some(k) = map.next_key()? {
-                    match k {
-                        GeneratedField::Cell => {
-                            if cell__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("cell"));
-                            }
-                            cell__ = map.next_value()?;
-                        }
-                    }
-                }
-                Ok(AllocateCellRequest {
-                    cell: cell__,
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.AllocateCellRequest", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for AllocateCellResponse {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut len = 0;
-        if !self.cell_name.is_empty() {
-            len += 1;
-        }
-        if self.cgroup_v2 {
-            len += 1;
-        }
-        let mut struct_ser = serializer.serialize_struct("runtime.AllocateCellResponse", len)?;
-        if !self.cell_name.is_empty() {
-            struct_ser.serialize_field("cellName", &self.cell_name)?;
-        }
-        if self.cgroup_v2 {
-            struct_ser.serialize_field("cgroupV2", &self.cgroup_v2)?;
-        }
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for AllocateCellResponse {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-            "cell_name",
-            "cellName",
-            "cgroup_v2",
-            "cgroupV2",
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-            CellName,
-            CgroupV2,
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        match value {
-                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
-                            "cgroupV2" | "cgroup_v2" => Ok(GeneratedField::CgroupV2),
-                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = AllocateCellResponse;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.AllocateCellResponse")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<AllocateCellResponse, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                let mut cell_name__ = None;
-                let mut cgroup_v2__ = None;
-                while let Some(k) = map.next_key()? {
-                    match k {
-                        GeneratedField::CellName => {
-                            if cell_name__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("cellName"));
-                            }
-                            cell_name__ = Some(map.next_value()?);
-                        }
-                        GeneratedField::CgroupV2 => {
-                            if cgroup_v2__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("cgroupV2"));
-                            }
-                            cgroup_v2__ = Some(map.next_value()?);
-                        }
-                    }
-                }
-                Ok(AllocateCellResponse {
-                    cell_name: cell_name__.unwrap_or_default(),
-                    cgroup_v2: cgroup_v2__.unwrap_or_default(),
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.AllocateCellResponse", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for AllocatePodRequest {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.AllocatePodRequest", len)?;
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for AllocatePodRequest {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                            Err(serde::de::Error::unknown_field(value, FIELDS))
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = AllocatePodRequest;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.AllocatePodRequest")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<AllocatePodRequest, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                while map.next_key::<GeneratedField>()?.is_some() {
-                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
-                }
-                Ok(AllocatePodRequest {
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.AllocatePodRequest", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for AllocatePodResponse {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.AllocatePodResponse", len)?;
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for AllocatePodResponse {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                            Err(serde::de::Error::unknown_field(value, FIELDS))
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = AllocatePodResponse;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.AllocatePodResponse")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<AllocatePodResponse, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                while map.next_key::<GeneratedField>()?.is_some() {
-                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
-                }
-                Ok(AllocatePodResponse {
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.AllocatePodResponse", FIELDS, GeneratedVisitor)
-    }
-}
 impl serde::Serialize for Cell {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
@@ -383,7 +40,7 @@ impl serde::Serialize for Cell {
         if self.ns_share_cgroup {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("runtime.Cell", len)?;
+        let mut struct_ser = serializer.serialize_struct("runtime.v0.Cell", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
         }
@@ -507,7 +164,7 @@ impl<'de> serde::Deserialize<'de> for Cell {
             type Value = Cell;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.Cell")
+                formatter.write_str("struct runtime.v0.Cell")
             }
 
             fn visit_map<V>(self, mut map: V) -> std::result::Result<Cell, V::Error>
@@ -614,7 +271,754 @@ impl<'de> serde::Deserialize<'de> for Cell {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.Cell", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.Cell", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CellServiceAllocateRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.cell.is_some() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("runtime.v0.CellServiceAllocateRequest", len)?;
+        if let Some(v) = self.cell.as_ref() {
+            struct_ser.serialize_field("cell", v)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CellServiceAllocateRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "cell",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Cell,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "cell" => Ok(GeneratedField::Cell),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CellServiceAllocateRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.CellServiceAllocateRequest")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<CellServiceAllocateRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut cell__ = None;
+                while let Some(k) = map.next_key()? {
+                    match k {
+                        GeneratedField::Cell => {
+                            if cell__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cell"));
+                            }
+                            cell__ = map.next_value()?;
+                        }
+                    }
+                }
+                Ok(CellServiceAllocateRequest {
+                    cell: cell__,
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.CellServiceAllocateRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CellServiceAllocateResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.cell_name.is_empty() {
+            len += 1;
+        }
+        if self.cgroup_v2 {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("runtime.v0.CellServiceAllocateResponse", len)?;
+        if !self.cell_name.is_empty() {
+            struct_ser.serialize_field("cellName", &self.cell_name)?;
+        }
+        if self.cgroup_v2 {
+            struct_ser.serialize_field("cgroupV2", &self.cgroup_v2)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CellServiceAllocateResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "cell_name",
+            "cellName",
+            "cgroup_v2",
+            "cgroupV2",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            CellName,
+            CgroupV2,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
+                            "cgroupV2" | "cgroup_v2" => Ok(GeneratedField::CgroupV2),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CellServiceAllocateResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.CellServiceAllocateResponse")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<CellServiceAllocateResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut cell_name__ = None;
+                let mut cgroup_v2__ = None;
+                while let Some(k) = map.next_key()? {
+                    match k {
+                        GeneratedField::CellName => {
+                            if cell_name__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cellName"));
+                            }
+                            cell_name__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::CgroupV2 => {
+                            if cgroup_v2__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cgroupV2"));
+                            }
+                            cgroup_v2__ = Some(map.next_value()?);
+                        }
+                    }
+                }
+                Ok(CellServiceAllocateResponse {
+                    cell_name: cell_name__.unwrap_or_default(),
+                    cgroup_v2: cgroup_v2__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.CellServiceAllocateResponse", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CellServiceFreeRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.cell_name.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("runtime.v0.CellServiceFreeRequest", len)?;
+        if !self.cell_name.is_empty() {
+            struct_ser.serialize_field("cellName", &self.cell_name)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CellServiceFreeRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "cell_name",
+            "cellName",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            CellName,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CellServiceFreeRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.CellServiceFreeRequest")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<CellServiceFreeRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut cell_name__ = None;
+                while let Some(k) = map.next_key()? {
+                    match k {
+                        GeneratedField::CellName => {
+                            if cell_name__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cellName"));
+                            }
+                            cell_name__ = Some(map.next_value()?);
+                        }
+                    }
+                }
+                Ok(CellServiceFreeRequest {
+                    cell_name: cell_name__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.CellServiceFreeRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CellServiceFreeResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = 0;
+        let struct_ser = serializer.serialize_struct("runtime.v0.CellServiceFreeResponse", len)?;
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CellServiceFreeResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                            Err(serde::de::Error::unknown_field(value, FIELDS))
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CellServiceFreeResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.CellServiceFreeResponse")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<CellServiceFreeResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                while map.next_key::<GeneratedField>()?.is_some() {
+                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
+                }
+                Ok(CellServiceFreeResponse {
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.CellServiceFreeResponse", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CellServiceStartRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.cell_name.is_empty() {
+            len += 1;
+        }
+        if self.executable.is_some() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("runtime.v0.CellServiceStartRequest", len)?;
+        if !self.cell_name.is_empty() {
+            struct_ser.serialize_field("cellName", &self.cell_name)?;
+        }
+        if let Some(v) = self.executable.as_ref() {
+            struct_ser.serialize_field("executable", v)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CellServiceStartRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "cell_name",
+            "cellName",
+            "executable",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            CellName,
+            Executable,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
+                            "executable" => Ok(GeneratedField::Executable),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CellServiceStartRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.CellServiceStartRequest")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<CellServiceStartRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut cell_name__ = None;
+                let mut executable__ = None;
+                while let Some(k) = map.next_key()? {
+                    match k {
+                        GeneratedField::CellName => {
+                            if cell_name__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cellName"));
+                            }
+                            cell_name__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::Executable => {
+                            if executable__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("executable"));
+                            }
+                            executable__ = map.next_value()?;
+                        }
+                    }
+                }
+                Ok(CellServiceStartRequest {
+                    cell_name: cell_name__.unwrap_or_default(),
+                    executable: executable__,
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.CellServiceStartRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CellServiceStartResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.pid != 0 {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("runtime.v0.CellServiceStartResponse", len)?;
+        if self.pid != 0 {
+            struct_ser.serialize_field("pid", &self.pid)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CellServiceStartResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "pid",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Pid,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "pid" => Ok(GeneratedField::Pid),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CellServiceStartResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.CellServiceStartResponse")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<CellServiceStartResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut pid__ = None;
+                while let Some(k) = map.next_key()? {
+                    match k {
+                        GeneratedField::Pid => {
+                            if pid__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("pid"));
+                            }
+                            pid__ = 
+                                Some(map.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
+                    }
+                }
+                Ok(CellServiceStartResponse {
+                    pid: pid__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.CellServiceStartResponse", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CellServiceStopRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.cell_name.is_empty() {
+            len += 1;
+        }
+        if !self.executable_name.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("runtime.v0.CellServiceStopRequest", len)?;
+        if !self.cell_name.is_empty() {
+            struct_ser.serialize_field("cellName", &self.cell_name)?;
+        }
+        if !self.executable_name.is_empty() {
+            struct_ser.serialize_field("executableName", &self.executable_name)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CellServiceStopRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "cell_name",
+            "cellName",
+            "executable_name",
+            "executableName",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            CellName,
+            ExecutableName,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
+                            "executableName" | "executable_name" => Ok(GeneratedField::ExecutableName),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CellServiceStopRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.CellServiceStopRequest")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<CellServiceStopRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut cell_name__ = None;
+                let mut executable_name__ = None;
+                while let Some(k) = map.next_key()? {
+                    match k {
+                        GeneratedField::CellName => {
+                            if cell_name__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("cellName"));
+                            }
+                            cell_name__ = Some(map.next_value()?);
+                        }
+                        GeneratedField::ExecutableName => {
+                            if executable_name__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("executableName"));
+                            }
+                            executable_name__ = Some(map.next_value()?);
+                        }
+                    }
+                }
+                Ok(CellServiceStopRequest {
+                    cell_name: cell_name__.unwrap_or_default(),
+                    executable_name: executable_name__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.CellServiceStopRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CellServiceStopResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = 0;
+        let struct_ser = serializer.serialize_struct("runtime.v0.CellServiceStopResponse", len)?;
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CellServiceStopResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                            Err(serde::de::Error::unknown_field(value, FIELDS))
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CellServiceStopResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.CellServiceStopResponse")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<CellServiceStopResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                while map.next_key::<GeneratedField>()?.is_some() {
+                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
+                }
+                Ok(CellServiceStopResponse {
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.CellServiceStopResponse", FIELDS, GeneratedVisitor)
     }
 }
 impl serde::Serialize for Container {
@@ -625,7 +1029,7 @@ impl serde::Serialize for Container {
     {
         use serde::ser::SerializeStruct;
         let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.Container", len)?;
+        let struct_ser = serializer.serialize_struct("runtime.v0.Container", len)?;
         struct_ser.end()
     }
 }
@@ -671,7 +1075,7 @@ impl<'de> serde::Deserialize<'de> for Container {
             type Value = Container;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.Container")
+                formatter.write_str("struct runtime.v0.Container")
             }
 
             fn visit_map<V>(self, mut map: V) -> std::result::Result<Container, V::Error>
@@ -685,7 +1089,7 @@ impl<'de> serde::Deserialize<'de> for Container {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.Container", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.Container", FIELDS, GeneratedVisitor)
     }
 }
 impl serde::Serialize for Executable {
@@ -705,7 +1109,7 @@ impl serde::Serialize for Executable {
         if !self.description.is_empty() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("runtime.Executable", len)?;
+        let mut struct_ser = serializer.serialize_struct("runtime.v0.Executable", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
         }
@@ -771,7 +1175,7 @@ impl<'de> serde::Deserialize<'de> for Executable {
             type Value = Executable;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.Executable")
+                formatter.write_str("struct runtime.v0.Executable")
             }
 
             fn visit_map<V>(self, mut map: V) -> std::result::Result<Executable, V::Error>
@@ -810,312 +1214,7 @@ impl<'de> serde::Deserialize<'de> for Executable {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.Executable", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for FreeCellRequest {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut len = 0;
-        if !self.cell_name.is_empty() {
-            len += 1;
-        }
-        let mut struct_ser = serializer.serialize_struct("runtime.FreeCellRequest", len)?;
-        if !self.cell_name.is_empty() {
-            struct_ser.serialize_field("cellName", &self.cell_name)?;
-        }
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for FreeCellRequest {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-            "cell_name",
-            "cellName",
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-            CellName,
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        match value {
-                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
-                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = FreeCellRequest;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.FreeCellRequest")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<FreeCellRequest, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                let mut cell_name__ = None;
-                while let Some(k) = map.next_key()? {
-                    match k {
-                        GeneratedField::CellName => {
-                            if cell_name__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("cellName"));
-                            }
-                            cell_name__ = Some(map.next_value()?);
-                        }
-                    }
-                }
-                Ok(FreeCellRequest {
-                    cell_name: cell_name__.unwrap_or_default(),
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.FreeCellRequest", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for FreeCellResponse {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.FreeCellResponse", len)?;
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for FreeCellResponse {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                            Err(serde::de::Error::unknown_field(value, FIELDS))
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = FreeCellResponse;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.FreeCellResponse")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<FreeCellResponse, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                while map.next_key::<GeneratedField>()?.is_some() {
-                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
-                }
-                Ok(FreeCellResponse {
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.FreeCellResponse", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for FreePodRequest {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.FreePodRequest", len)?;
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for FreePodRequest {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                            Err(serde::de::Error::unknown_field(value, FIELDS))
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = FreePodRequest;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.FreePodRequest")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<FreePodRequest, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                while map.next_key::<GeneratedField>()?.is_some() {
-                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
-                }
-                Ok(FreePodRequest {
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.FreePodRequest", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for FreePodResponse {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.FreePodResponse", len)?;
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for FreePodResponse {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                            Err(serde::de::Error::unknown_field(value, FIELDS))
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = FreePodResponse;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.FreePodResponse")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<FreePodResponse, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                while map.next_key::<GeneratedField>()?.is_some() {
-                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
-                }
-                Ok(FreePodResponse {
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.FreePodResponse", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.Executable", FIELDS, GeneratedVisitor)
     }
 }
 impl serde::Serialize for Pod {
@@ -1126,7 +1225,7 @@ impl serde::Serialize for Pod {
     {
         use serde::ser::SerializeStruct;
         let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.Pod", len)?;
+        let struct_ser = serializer.serialize_struct("runtime.v0.Pod", len)?;
         struct_ser.end()
     }
 }
@@ -1172,7 +1271,7 @@ impl<'de> serde::Deserialize<'de> for Pod {
             type Value = Pod;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.Pod")
+                formatter.write_str("struct runtime.v0.Pod")
             }
 
             fn visit_map<V>(self, mut map: V) -> std::result::Result<Pod, V::Error>
@@ -1186,10 +1285,10 @@ impl<'de> serde::Deserialize<'de> for Pod {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.Pod", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.Pod", FIELDS, GeneratedVisitor)
     }
 }
-impl serde::Serialize for StartContainerRequest {
+impl serde::Serialize for PodServiceAllocateRequest {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -1197,11 +1296,11 @@ impl serde::Serialize for StartContainerRequest {
     {
         use serde::ser::SerializeStruct;
         let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.StartContainerRequest", len)?;
+        let struct_ser = serializer.serialize_struct("runtime.v0.PodServiceAllocateRequest", len)?;
         struct_ser.end()
     }
 }
-impl<'de> serde::Deserialize<'de> for StartContainerRequest {
+impl<'de> serde::Deserialize<'de> for PodServiceAllocateRequest {
     #[allow(deprecated)]
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
@@ -1240,27 +1339,27 @@ impl<'de> serde::Deserialize<'de> for StartContainerRequest {
         }
         struct GeneratedVisitor;
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = StartContainerRequest;
+            type Value = PodServiceAllocateRequest;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.StartContainerRequest")
+                formatter.write_str("struct runtime.v0.PodServiceAllocateRequest")
             }
 
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<StartContainerRequest, V::Error>
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<PodServiceAllocateRequest, V::Error>
                 where
                     V: serde::de::MapAccess<'de>,
             {
                 while map.next_key::<GeneratedField>()?.is_some() {
                     let _ = map.next_value::<serde::de::IgnoredAny>()?;
                 }
-                Ok(StartContainerRequest {
+                Ok(PodServiceAllocateRequest {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.StartContainerRequest", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.PodServiceAllocateRequest", FIELDS, GeneratedVisitor)
     }
 }
-impl serde::Serialize for StartContainerResponse {
+impl serde::Serialize for PodServiceAllocateResponse {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -1268,11 +1367,11 @@ impl serde::Serialize for StartContainerResponse {
     {
         use serde::ser::SerializeStruct;
         let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.StartContainerResponse", len)?;
+        let struct_ser = serializer.serialize_struct("runtime.v0.PodServiceAllocateResponse", len)?;
         struct_ser.end()
     }
 }
-impl<'de> serde::Deserialize<'de> for StartContainerResponse {
+impl<'de> serde::Deserialize<'de> for PodServiceAllocateResponse {
     #[allow(deprecated)]
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
@@ -1311,229 +1410,27 @@ impl<'de> serde::Deserialize<'de> for StartContainerResponse {
         }
         struct GeneratedVisitor;
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = StartContainerResponse;
+            type Value = PodServiceAllocateResponse;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.StartContainerResponse")
+                formatter.write_str("struct runtime.v0.PodServiceAllocateResponse")
             }
 
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<StartContainerResponse, V::Error>
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<PodServiceAllocateResponse, V::Error>
                 where
                     V: serde::de::MapAccess<'de>,
             {
                 while map.next_key::<GeneratedField>()?.is_some() {
                     let _ = map.next_value::<serde::de::IgnoredAny>()?;
                 }
-                Ok(StartContainerResponse {
+                Ok(PodServiceAllocateResponse {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.StartContainerResponse", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.PodServiceAllocateResponse", FIELDS, GeneratedVisitor)
     }
 }
-impl serde::Serialize for StartExecutableRequest {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut len = 0;
-        if !self.cell_name.is_empty() {
-            len += 1;
-        }
-        if self.executable.is_some() {
-            len += 1;
-        }
-        let mut struct_ser = serializer.serialize_struct("runtime.StartExecutableRequest", len)?;
-        if !self.cell_name.is_empty() {
-            struct_ser.serialize_field("cellName", &self.cell_name)?;
-        }
-        if let Some(v) = self.executable.as_ref() {
-            struct_ser.serialize_field("executable", v)?;
-        }
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for StartExecutableRequest {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-            "cell_name",
-            "cellName",
-            "executable",
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-            CellName,
-            Executable,
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        match value {
-                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
-                            "executable" => Ok(GeneratedField::Executable),
-                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = StartExecutableRequest;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.StartExecutableRequest")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<StartExecutableRequest, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                let mut cell_name__ = None;
-                let mut executable__ = None;
-                while let Some(k) = map.next_key()? {
-                    match k {
-                        GeneratedField::CellName => {
-                            if cell_name__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("cellName"));
-                            }
-                            cell_name__ = Some(map.next_value()?);
-                        }
-                        GeneratedField::Executable => {
-                            if executable__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("executable"));
-                            }
-                            executable__ = map.next_value()?;
-                        }
-                    }
-                }
-                Ok(StartExecutableRequest {
-                    cell_name: cell_name__.unwrap_or_default(),
-                    executable: executable__,
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.StartExecutableRequest", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for StartExecutableResponse {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut len = 0;
-        if self.pid != 0 {
-            len += 1;
-        }
-        let mut struct_ser = serializer.serialize_struct("runtime.StartExecutableResponse", len)?;
-        if self.pid != 0 {
-            struct_ser.serialize_field("pid", &self.pid)?;
-        }
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for StartExecutableResponse {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-            "pid",
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-            Pid,
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        match value {
-                            "pid" => Ok(GeneratedField::Pid),
-                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = StartExecutableResponse;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.StartExecutableResponse")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<StartExecutableResponse, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                let mut pid__ = None;
-                while let Some(k) = map.next_key()? {
-                    match k {
-                        GeneratedField::Pid => {
-                            if pid__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("pid"));
-                            }
-                            pid__ = 
-                                Some(map.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
-                            ;
-                        }
-                    }
-                }
-                Ok(StartExecutableResponse {
-                    pid: pid__.unwrap_or_default(),
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.StartExecutableResponse", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for StopContainerRequest {
+impl serde::Serialize for PodServiceFreeRequest {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -1541,11 +1438,11 @@ impl serde::Serialize for StopContainerRequest {
     {
         use serde::ser::SerializeStruct;
         let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.StopContainerRequest", len)?;
+        let struct_ser = serializer.serialize_struct("runtime.v0.PodServiceFreeRequest", len)?;
         struct_ser.end()
     }
 }
-impl<'de> serde::Deserialize<'de> for StopContainerRequest {
+impl<'de> serde::Deserialize<'de> for PodServiceFreeRequest {
     #[allow(deprecated)]
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
@@ -1584,27 +1481,27 @@ impl<'de> serde::Deserialize<'de> for StopContainerRequest {
         }
         struct GeneratedVisitor;
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = StopContainerRequest;
+            type Value = PodServiceFreeRequest;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.StopContainerRequest")
+                formatter.write_str("struct runtime.v0.PodServiceFreeRequest")
             }
 
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<StopContainerRequest, V::Error>
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<PodServiceFreeRequest, V::Error>
                 where
                     V: serde::de::MapAccess<'de>,
             {
                 while map.next_key::<GeneratedField>()?.is_some() {
                     let _ = map.next_value::<serde::de::IgnoredAny>()?;
                 }
-                Ok(StopContainerRequest {
+                Ok(PodServiceFreeRequest {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.StopContainerRequest", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.PodServiceFreeRequest", FIELDS, GeneratedVisitor)
     }
 }
-impl serde::Serialize for StopContainerResponse {
+impl serde::Serialize for PodServiceFreeResponse {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -1612,11 +1509,11 @@ impl serde::Serialize for StopContainerResponse {
     {
         use serde::ser::SerializeStruct;
         let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.StopContainerResponse", len)?;
+        let struct_ser = serializer.serialize_struct("runtime.v0.PodServiceFreeResponse", len)?;
         struct_ser.end()
     }
 }
-impl<'de> serde::Deserialize<'de> for StopContainerResponse {
+impl<'de> serde::Deserialize<'de> for PodServiceFreeResponse {
     #[allow(deprecated)]
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
@@ -1655,137 +1552,27 @@ impl<'de> serde::Deserialize<'de> for StopContainerResponse {
         }
         struct GeneratedVisitor;
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = StopContainerResponse;
+            type Value = PodServiceFreeResponse;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.StopContainerResponse")
+                formatter.write_str("struct runtime.v0.PodServiceFreeResponse")
             }
 
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<StopContainerResponse, V::Error>
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<PodServiceFreeResponse, V::Error>
                 where
                     V: serde::de::MapAccess<'de>,
             {
                 while map.next_key::<GeneratedField>()?.is_some() {
                     let _ = map.next_value::<serde::de::IgnoredAny>()?;
                 }
-                Ok(StopContainerResponse {
+                Ok(PodServiceFreeResponse {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.StopContainerResponse", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.PodServiceFreeResponse", FIELDS, GeneratedVisitor)
     }
 }
-impl serde::Serialize for StopExecutableRequest {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut len = 0;
-        if !self.cell_name.is_empty() {
-            len += 1;
-        }
-        if !self.executable_name.is_empty() {
-            len += 1;
-        }
-        let mut struct_ser = serializer.serialize_struct("runtime.StopExecutableRequest", len)?;
-        if !self.cell_name.is_empty() {
-            struct_ser.serialize_field("cellName", &self.cell_name)?;
-        }
-        if !self.executable_name.is_empty() {
-            struct_ser.serialize_field("executableName", &self.executable_name)?;
-        }
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for StopExecutableRequest {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-            "cell_name",
-            "cellName",
-            "executable_name",
-            "executableName",
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-            CellName,
-            ExecutableName,
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        match value {
-                            "cellName" | "cell_name" => Ok(GeneratedField::CellName),
-                            "executableName" | "executable_name" => Ok(GeneratedField::ExecutableName),
-                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = StopExecutableRequest;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.StopExecutableRequest")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<StopExecutableRequest, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                let mut cell_name__ = None;
-                let mut executable_name__ = None;
-                while let Some(k) = map.next_key()? {
-                    match k {
-                        GeneratedField::CellName => {
-                            if cell_name__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("cellName"));
-                            }
-                            cell_name__ = Some(map.next_value()?);
-                        }
-                        GeneratedField::ExecutableName => {
-                            if executable_name__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("executableName"));
-                            }
-                            executable_name__ = Some(map.next_value()?);
-                        }
-                    }
-                }
-                Ok(StopExecutableRequest {
-                    cell_name: cell_name__.unwrap_or_default(),
-                    executable_name: executable_name__.unwrap_or_default(),
-                })
-            }
-        }
-        deserializer.deserialize_struct("runtime.StopExecutableRequest", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for StopExecutableResponse {
+impl serde::Serialize for PodServiceStartRequest {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -1793,11 +1580,11 @@ impl serde::Serialize for StopExecutableResponse {
     {
         use serde::ser::SerializeStruct;
         let len = 0;
-        let struct_ser = serializer.serialize_struct("runtime.StopExecutableResponse", len)?;
+        let struct_ser = serializer.serialize_struct("runtime.v0.PodServiceStartRequest", len)?;
         struct_ser.end()
     }
 }
-impl<'de> serde::Deserialize<'de> for StopExecutableResponse {
+impl<'de> serde::Deserialize<'de> for PodServiceStartRequest {
     #[allow(deprecated)]
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
@@ -1836,23 +1623,236 @@ impl<'de> serde::Deserialize<'de> for StopExecutableResponse {
         }
         struct GeneratedVisitor;
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = StopExecutableResponse;
+            type Value = PodServiceStartRequest;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct runtime.StopExecutableResponse")
+                formatter.write_str("struct runtime.v0.PodServiceStartRequest")
             }
 
-            fn visit_map<V>(self, mut map: V) -> std::result::Result<StopExecutableResponse, V::Error>
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<PodServiceStartRequest, V::Error>
                 where
                     V: serde::de::MapAccess<'de>,
             {
                 while map.next_key::<GeneratedField>()?.is_some() {
                     let _ = map.next_value::<serde::de::IgnoredAny>()?;
                 }
-                Ok(StopExecutableResponse {
+                Ok(PodServiceStartRequest {
                 })
             }
         }
-        deserializer.deserialize_struct("runtime.StopExecutableResponse", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("runtime.v0.PodServiceStartRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for PodServiceStartResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = 0;
+        let struct_ser = serializer.serialize_struct("runtime.v0.PodServiceStartResponse", len)?;
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for PodServiceStartResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                            Err(serde::de::Error::unknown_field(value, FIELDS))
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = PodServiceStartResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.PodServiceStartResponse")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<PodServiceStartResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                while map.next_key::<GeneratedField>()?.is_some() {
+                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
+                }
+                Ok(PodServiceStartResponse {
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.PodServiceStartResponse", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for PodServiceStopRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = 0;
+        let struct_ser = serializer.serialize_struct("runtime.v0.PodServiceStopRequest", len)?;
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for PodServiceStopRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                            Err(serde::de::Error::unknown_field(value, FIELDS))
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = PodServiceStopRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.PodServiceStopRequest")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<PodServiceStopRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                while map.next_key::<GeneratedField>()?.is_some() {
+                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
+                }
+                Ok(PodServiceStopRequest {
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.PodServiceStopRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for PodServiceStopResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = 0;
+        let struct_ser = serializer.serialize_struct("runtime.v0.PodServiceStopResponse", len)?;
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for PodServiceStopResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                            Err(serde::de::Error::unknown_field(value, FIELDS))
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = PodServiceStopResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct runtime.v0.PodServiceStopResponse")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> std::result::Result<PodServiceStopResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                while map.next_key::<GeneratedField>()?.is_some() {
+                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
+                }
+                Ok(PodServiceStopResponse {
+                })
+            }
+        }
+        deserializer.deserialize_struct("runtime.v0.PodServiceStopResponse", FIELDS, GeneratedVisitor)
     }
 }

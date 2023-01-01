@@ -33,8 +33,8 @@ use aurae_proto::runtime::*;
 macros::ops_generator!(
     runtime,
     PodService,
-    allocate(AllocatePodRequest) -> AllocatePodResponse,
-    free(FreePodRequest) -> FreePodResponse,
-    start(StartContainerRequest) -> StartContainerResponse,
-    stop(StopContainerRequest) -> StopContainerResponse,
+    allocate(PodServiceAllocateRequest) -> PodServiceAllocateResponse,
+    free(PodServiceFreeRequest) -> PodServiceFreeResponse,
+    start(PodServiceStartRequest) -> PodServiceStartResponse,
+    stop(PodServiceStopRequest) -> PodServiceStopResponse,
 );

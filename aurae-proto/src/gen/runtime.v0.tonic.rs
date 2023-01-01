@@ -1,14 +1,14 @@
 // @generated
 /// Generated client implementations.
-pub mod instances_client {
+pub mod instance_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct InstancesClient<T> {
+    pub struct InstanceServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl InstancesClient<tonic::transport::Channel> {
+    impl InstanceServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -19,7 +19,7 @@ pub mod instances_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> InstancesClient<T>
+    impl<T> InstanceServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -37,7 +37,7 @@ pub mod instances_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> InstancesClient<InterceptedService<T, F>>
+        ) -> InstanceServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -51,7 +51,7 @@ pub mod instances_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            InstancesClient::new(InterceptedService::new(inner, interceptor))
+            InstanceServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -71,20 +71,20 @@ pub mod instances_client {
     }
 }
 /// Generated server implementations.
-pub mod instances_server {
+pub mod instance_service_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///Generated trait containing gRPC methods that should be implemented for use with InstancesServer.
+    ///Generated trait containing gRPC methods that should be implemented for use with InstanceServiceServer.
     #[async_trait]
-    pub trait Instances: Send + Sync + 'static {}
+    pub trait InstanceService: Send + Sync + 'static {}
     #[derive(Debug)]
-    pub struct InstancesServer<T: Instances> {
+    pub struct InstanceServiceServer<T: InstanceService> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: Instances> InstancesServer<T> {
+    impl<T: InstanceService> InstanceServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -118,9 +118,9 @@ pub mod instances_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for InstancesServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for InstanceServiceServer<T>
     where
-        T: Instances,
+        T: InstanceService,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -151,7 +151,7 @@ pub mod instances_server {
             }
         }
     }
-    impl<T: Instances> Clone for InstancesServer<T> {
+    impl<T: InstanceService> Clone for InstanceServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -161,7 +161,7 @@ pub mod instances_server {
             }
         }
     }
-    impl<T: Instances> Clone for _Inner<T> {
+    impl<T: InstanceService> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone())
         }
@@ -171,20 +171,20 @@ pub mod instances_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: Instances> tonic::server::NamedService for InstancesServer<T> {
-        const NAME: &'static str = "runtime.Instances";
+    impl<T: InstanceService> tonic::server::NamedService for InstanceServiceServer<T> {
+        const NAME: &'static str = "runtime.v0.InstanceService";
     }
 }
 /// Generated client implementations.
-pub mod spawn_client {
+pub mod spawn_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct SpawnClient<T> {
+    pub struct SpawnServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl SpawnClient<tonic::transport::Channel> {
+    impl SpawnServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -195,7 +195,7 @@ pub mod spawn_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> SpawnClient<T>
+    impl<T> SpawnServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -213,7 +213,7 @@ pub mod spawn_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> SpawnClient<InterceptedService<T, F>>
+        ) -> SpawnServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -227,7 +227,7 @@ pub mod spawn_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            SpawnClient::new(InterceptedService::new(inner, interceptor))
+            SpawnServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -247,20 +247,20 @@ pub mod spawn_client {
     }
 }
 /// Generated server implementations.
-pub mod spawn_server {
+pub mod spawn_service_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///Generated trait containing gRPC methods that should be implemented for use with SpawnServer.
+    ///Generated trait containing gRPC methods that should be implemented for use with SpawnServiceServer.
     #[async_trait]
-    pub trait Spawn: Send + Sync + 'static {}
+    pub trait SpawnService: Send + Sync + 'static {}
     #[derive(Debug)]
-    pub struct SpawnServer<T: Spawn> {
+    pub struct SpawnServiceServer<T: SpawnService> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: Spawn> SpawnServer<T> {
+    impl<T: SpawnService> SpawnServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -294,9 +294,9 @@ pub mod spawn_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for SpawnServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for SpawnServiceServer<T>
     where
-        T: Spawn,
+        T: SpawnService,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -327,7 +327,7 @@ pub mod spawn_server {
             }
         }
     }
-    impl<T: Spawn> Clone for SpawnServer<T> {
+    impl<T: SpawnService> Clone for SpawnServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -337,7 +337,7 @@ pub mod spawn_server {
             }
         }
     }
-    impl<T: Spawn> Clone for _Inner<T> {
+    impl<T: SpawnService> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone())
         }
@@ -347,8 +347,8 @@ pub mod spawn_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: Spawn> tonic::server::NamedService for SpawnServer<T> {
-        const NAME: &'static str = "runtime.Spawn";
+    impl<T: SpawnService> tonic::server::NamedService for SpawnServiceServer<T> {
+        const NAME: &'static str = "runtime.v0.SpawnService";
     }
 }
 /// Generated client implementations.
@@ -422,8 +422,8 @@ pub mod pod_service_client {
         }
         pub async fn allocate(
             &mut self,
-            request: impl tonic::IntoRequest<super::AllocatePodRequest>,
-        ) -> Result<tonic::Response<super::AllocatePodResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::PodServiceAllocateRequest>,
+        ) -> Result<tonic::Response<super::PodServiceAllocateResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -435,14 +435,14 @@ pub mod pod_service_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/runtime.PodService/Allocate",
+                "/runtime.v0.PodService/Allocate",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn start(
             &mut self,
-            request: impl tonic::IntoRequest<super::StartContainerRequest>,
-        ) -> Result<tonic::Response<super::StartContainerResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::PodServiceStartRequest>,
+        ) -> Result<tonic::Response<super::PodServiceStartResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -453,13 +453,15 @@ pub mod pod_service_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/runtime.PodService/Start");
+            let path = http::uri::PathAndQuery::from_static(
+                "/runtime.v0.PodService/Start",
+            );
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn stop(
             &mut self,
-            request: impl tonic::IntoRequest<super::StopContainerRequest>,
-        ) -> Result<tonic::Response<super::StopContainerResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::PodServiceStopRequest>,
+        ) -> Result<tonic::Response<super::PodServiceStopResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -470,13 +472,15 @@ pub mod pod_service_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/runtime.PodService/Stop");
+            let path = http::uri::PathAndQuery::from_static(
+                "/runtime.v0.PodService/Stop",
+            );
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn free(
             &mut self,
-            request: impl tonic::IntoRequest<super::FreePodRequest>,
-        ) -> Result<tonic::Response<super::FreePodResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::PodServiceFreeRequest>,
+        ) -> Result<tonic::Response<super::PodServiceFreeResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -487,7 +491,9 @@ pub mod pod_service_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/runtime.PodService/Free");
+            let path = http::uri::PathAndQuery::from_static(
+                "/runtime.v0.PodService/Free",
+            );
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -501,20 +507,20 @@ pub mod pod_service_server {
     pub trait PodService: Send + Sync + 'static {
         async fn allocate(
             &self,
-            request: tonic::Request<super::AllocatePodRequest>,
-        ) -> Result<tonic::Response<super::AllocatePodResponse>, tonic::Status>;
+            request: tonic::Request<super::PodServiceAllocateRequest>,
+        ) -> Result<tonic::Response<super::PodServiceAllocateResponse>, tonic::Status>;
         async fn start(
             &self,
-            request: tonic::Request<super::StartContainerRequest>,
-        ) -> Result<tonic::Response<super::StartContainerResponse>, tonic::Status>;
+            request: tonic::Request<super::PodServiceStartRequest>,
+        ) -> Result<tonic::Response<super::PodServiceStartResponse>, tonic::Status>;
         async fn stop(
             &self,
-            request: tonic::Request<super::StopContainerRequest>,
-        ) -> Result<tonic::Response<super::StopContainerResponse>, tonic::Status>;
+            request: tonic::Request<super::PodServiceStopRequest>,
+        ) -> Result<tonic::Response<super::PodServiceStopResponse>, tonic::Status>;
         async fn free(
             &self,
-            request: tonic::Request<super::FreePodRequest>,
-        ) -> Result<tonic::Response<super::FreePodResponse>, tonic::Status>;
+            request: tonic::Request<super::PodServiceFreeRequest>,
+        ) -> Result<tonic::Response<super::PodServiceFreeResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct PodServiceServer<T: PodService> {
@@ -575,21 +581,21 @@ pub mod pod_service_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/runtime.PodService/Allocate" => {
+                "/runtime.v0.PodService/Allocate" => {
                     #[allow(non_camel_case_types)]
                     struct AllocateSvc<T: PodService>(pub Arc<T>);
                     impl<
                         T: PodService,
-                    > tonic::server::UnaryService<super::AllocatePodRequest>
+                    > tonic::server::UnaryService<super::PodServiceAllocateRequest>
                     for AllocateSvc<T> {
-                        type Response = super::AllocatePodResponse;
+                        type Response = super::PodServiceAllocateResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::AllocatePodRequest>,
+                            request: tonic::Request<super::PodServiceAllocateRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).allocate(request).await };
@@ -613,21 +619,21 @@ pub mod pod_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/runtime.PodService/Start" => {
+                "/runtime.v0.PodService/Start" => {
                     #[allow(non_camel_case_types)]
                     struct StartSvc<T: PodService>(pub Arc<T>);
                     impl<
                         T: PodService,
-                    > tonic::server::UnaryService<super::StartContainerRequest>
+                    > tonic::server::UnaryService<super::PodServiceStartRequest>
                     for StartSvc<T> {
-                        type Response = super::StartContainerResponse;
+                        type Response = super::PodServiceStartResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::StartContainerRequest>,
+                            request: tonic::Request<super::PodServiceStartRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).start(request).await };
@@ -651,21 +657,21 @@ pub mod pod_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/runtime.PodService/Stop" => {
+                "/runtime.v0.PodService/Stop" => {
                     #[allow(non_camel_case_types)]
                     struct StopSvc<T: PodService>(pub Arc<T>);
                     impl<
                         T: PodService,
-                    > tonic::server::UnaryService<super::StopContainerRequest>
+                    > tonic::server::UnaryService<super::PodServiceStopRequest>
                     for StopSvc<T> {
-                        type Response = super::StopContainerResponse;
+                        type Response = super::PodServiceStopResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::StopContainerRequest>,
+                            request: tonic::Request<super::PodServiceStopRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).stop(request).await };
@@ -689,20 +695,21 @@ pub mod pod_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/runtime.PodService/Free" => {
+                "/runtime.v0.PodService/Free" => {
                     #[allow(non_camel_case_types)]
                     struct FreeSvc<T: PodService>(pub Arc<T>);
                     impl<
                         T: PodService,
-                    > tonic::server::UnaryService<super::FreePodRequest> for FreeSvc<T> {
-                        type Response = super::FreePodResponse;
+                    > tonic::server::UnaryService<super::PodServiceFreeRequest>
+                    for FreeSvc<T> {
+                        type Response = super::PodServiceFreeResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::FreePodRequest>,
+                            request: tonic::Request<super::PodServiceFreeRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).free(request).await };
@@ -762,7 +769,7 @@ pub mod pod_service_server {
         }
     }
     impl<T: PodService> tonic::server::NamedService for PodServiceServer<T> {
-        const NAME: &'static str = "runtime.PodService";
+        const NAME: &'static str = "runtime.v0.PodService";
     }
 }
 /// Generated client implementations.
@@ -836,8 +843,8 @@ pub mod cell_service_client {
         }
         pub async fn allocate(
             &mut self,
-            request: impl tonic::IntoRequest<super::AllocateCellRequest>,
-        ) -> Result<tonic::Response<super::AllocateCellResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::CellServiceAllocateRequest>,
+        ) -> Result<tonic::Response<super::CellServiceAllocateResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -849,31 +856,14 @@ pub mod cell_service_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/runtime.CellService/Allocate",
+                "/runtime.v0.CellService/Allocate",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn free(
             &mut self,
-            request: impl tonic::IntoRequest<super::FreeCellRequest>,
-        ) -> Result<tonic::Response<super::FreeCellResponse>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/runtime.CellService/Free");
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn start(
-            &mut self,
-            request: impl tonic::IntoRequest<super::StartExecutableRequest>,
-        ) -> Result<tonic::Response<super::StartExecutableResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::CellServiceFreeRequest>,
+        ) -> Result<tonic::Response<super::CellServiceFreeResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -885,14 +875,14 @@ pub mod cell_service_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/runtime.CellService/Start",
+                "/runtime.v0.CellService/Free",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
-        pub async fn stop(
+        pub async fn start(
             &mut self,
-            request: impl tonic::IntoRequest<super::StopExecutableRequest>,
-        ) -> Result<tonic::Response<super::StopExecutableResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::CellServiceStartRequest>,
+        ) -> Result<tonic::Response<super::CellServiceStartResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -903,7 +893,28 @@ pub mod cell_service_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/runtime.CellService/Stop");
+            let path = http::uri::PathAndQuery::from_static(
+                "/runtime.v0.CellService/Start",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn stop(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CellServiceStopRequest>,
+        ) -> Result<tonic::Response<super::CellServiceStopResponse>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/runtime.v0.CellService/Stop",
+            );
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -917,20 +928,20 @@ pub mod cell_service_server {
     pub trait CellService: Send + Sync + 'static {
         async fn allocate(
             &self,
-            request: tonic::Request<super::AllocateCellRequest>,
-        ) -> Result<tonic::Response<super::AllocateCellResponse>, tonic::Status>;
+            request: tonic::Request<super::CellServiceAllocateRequest>,
+        ) -> Result<tonic::Response<super::CellServiceAllocateResponse>, tonic::Status>;
         async fn free(
             &self,
-            request: tonic::Request<super::FreeCellRequest>,
-        ) -> Result<tonic::Response<super::FreeCellResponse>, tonic::Status>;
+            request: tonic::Request<super::CellServiceFreeRequest>,
+        ) -> Result<tonic::Response<super::CellServiceFreeResponse>, tonic::Status>;
         async fn start(
             &self,
-            request: tonic::Request<super::StartExecutableRequest>,
-        ) -> Result<tonic::Response<super::StartExecutableResponse>, tonic::Status>;
+            request: tonic::Request<super::CellServiceStartRequest>,
+        ) -> Result<tonic::Response<super::CellServiceStartResponse>, tonic::Status>;
         async fn stop(
             &self,
-            request: tonic::Request<super::StopExecutableRequest>,
-        ) -> Result<tonic::Response<super::StopExecutableResponse>, tonic::Status>;
+            request: tonic::Request<super::CellServiceStopRequest>,
+        ) -> Result<tonic::Response<super::CellServiceStopResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct CellServiceServer<T: CellService> {
@@ -991,21 +1002,21 @@ pub mod cell_service_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/runtime.CellService/Allocate" => {
+                "/runtime.v0.CellService/Allocate" => {
                     #[allow(non_camel_case_types)]
                     struct AllocateSvc<T: CellService>(pub Arc<T>);
                     impl<
                         T: CellService,
-                    > tonic::server::UnaryService<super::AllocateCellRequest>
+                    > tonic::server::UnaryService<super::CellServiceAllocateRequest>
                     for AllocateSvc<T> {
-                        type Response = super::AllocateCellResponse;
+                        type Response = super::CellServiceAllocateResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::AllocateCellRequest>,
+                            request: tonic::Request<super::CellServiceAllocateRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).allocate(request).await };
@@ -1029,21 +1040,21 @@ pub mod cell_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/runtime.CellService/Free" => {
+                "/runtime.v0.CellService/Free" => {
                     #[allow(non_camel_case_types)]
                     struct FreeSvc<T: CellService>(pub Arc<T>);
                     impl<
                         T: CellService,
-                    > tonic::server::UnaryService<super::FreeCellRequest>
+                    > tonic::server::UnaryService<super::CellServiceFreeRequest>
                     for FreeSvc<T> {
-                        type Response = super::FreeCellResponse;
+                        type Response = super::CellServiceFreeResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::FreeCellRequest>,
+                            request: tonic::Request<super::CellServiceFreeRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).free(request).await };
@@ -1067,21 +1078,21 @@ pub mod cell_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/runtime.CellService/Start" => {
+                "/runtime.v0.CellService/Start" => {
                     #[allow(non_camel_case_types)]
                     struct StartSvc<T: CellService>(pub Arc<T>);
                     impl<
                         T: CellService,
-                    > tonic::server::UnaryService<super::StartExecutableRequest>
+                    > tonic::server::UnaryService<super::CellServiceStartRequest>
                     for StartSvc<T> {
-                        type Response = super::StartExecutableResponse;
+                        type Response = super::CellServiceStartResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::StartExecutableRequest>,
+                            request: tonic::Request<super::CellServiceStartRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).start(request).await };
@@ -1105,21 +1116,21 @@ pub mod cell_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/runtime.CellService/Stop" => {
+                "/runtime.v0.CellService/Stop" => {
                     #[allow(non_camel_case_types)]
                     struct StopSvc<T: CellService>(pub Arc<T>);
                     impl<
                         T: CellService,
-                    > tonic::server::UnaryService<super::StopExecutableRequest>
+                    > tonic::server::UnaryService<super::CellServiceStopRequest>
                     for StopSvc<T> {
-                        type Response = super::StopExecutableResponse;
+                        type Response = super::CellServiceStopResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::StopExecutableRequest>,
+                            request: tonic::Request<super::CellServiceStopRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).stop(request).await };
@@ -1179,6 +1190,6 @@ pub mod cell_service_server {
         }
     }
     impl<T: CellService> tonic::server::NamedService for CellServiceServer<T> {
-        const NAME: &'static str = "runtime.CellService";
+        const NAME: &'static str = "runtime.v0.CellService";
     }
 }

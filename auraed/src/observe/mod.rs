@@ -32,7 +32,7 @@
 #![allow(dead_code)]
 
 use aurae_proto::observe::{
-    observe_server::Observe, GetAuraeDaemonLogStreamRequest,
+    observe_service_server::ObserveService, GetAuraeDaemonLogStreamRequest,
     GetSubProcessStreamRequest, LogItem,
 };
 use std::sync::Arc;
@@ -44,16 +44,16 @@ use tracing::info;
 
 use crate::logging::log_channel::LogChannel;
 
-/// The server side implementation of the Observe subsystem.
+/// The server side implementation of the ObserveService subsystem.
 #[derive(Debug)]
-pub struct ObserveService {
+pub struct ObserveServiceServer {
     aurae_logger: Arc<LogChannel>,
     sub_process_consumer_list: Vec<Receiver<LogItem>>,
 }
 
-impl ObserveService {
-    pub fn new(aurae_logger: Arc<LogChannel>) -> ObserveService {
-        ObserveService {
+impl ObserveServiceServer {
+    pub fn new(aurae_logger: Arc<LogChannel>) -> ObserveServiceServer {
+        ObserveServiceServer {
             aurae_logger,
             sub_process_consumer_list: Vec::<Receiver<LogItem>>::new(),
         }
@@ -66,7 +66,7 @@ impl ObserveService {
 }
 
 #[tonic::async_trait]
-impl Observe for ObserveService {
+impl ObserveService for ObserveServiceServer {
     type GetAuraeDaemonLogStreamStream =
         ReceiverStream<Result<LogItem, Status>>;
 

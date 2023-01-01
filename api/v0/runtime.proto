@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 syntax = "proto3";
-package runtime;
+package runtime.v0;
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 
 /// Runtime
@@ -39,11 +39,11 @@ option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 /// Resource type API modelled after the "Resource-oriented design" shared by
 /// Source: https://google.aip.dev/121
 
-// TODO Instances Service
-service Instances {}
+// TODO Instance Service
+service InstanceService {}
 
 // TODO Spawn Service
-service Spawn {}
+service SpawnService {}
 
 /// Runtime Verbs
 /// ===
@@ -73,23 +73,23 @@ service Spawn {}
 /// A pod is a group of one or more containers with shared network and storage.
 service PodService {
 
-  rpc Allocate(AllocatePodRequest) returns (AllocatePodResponse) {}
-  rpc Start(StartContainerRequest) returns (StartContainerResponse) {}
-  rpc Stop(StopContainerRequest) returns (StopContainerResponse) {}
-  rpc Free(FreePodRequest) returns (FreePodResponse) {}
+  rpc Allocate(PodServiceAllocateRequest) returns (PodServiceAllocateResponse) {}
+  rpc Start(PodServiceStartRequest) returns (PodServiceStartResponse) {}
+  rpc Stop(PodServiceStopRequest) returns (PodServiceStopResponse) {}
+  rpc Free(PodServiceFreeRequest) returns (PodServiceFreeResponse) {}
 
 }
 
-message AllocatePodRequest{}
-message AllocatePodResponse{}
-message FreePodRequest{}
-message FreePodResponse{}
+message PodServiceAllocateRequest{}
+message PodServiceAllocateResponse{}
+message PodServiceFreeRequest{}
+message PodServiceFreeResponse{}
 message Pod{}
 
-message StartContainerRequest{}
-message StartContainerResponse{}
-message StopContainerRequest{}
-message StopContainerResponse{}
+message PodServiceStartRequest{}
+message PodServiceStartResponse{}
+message PodServiceStopRequest{}
+message PodServiceStopResponse{}
 message Container{}
 
 /// Cells is the most fundamental isolation boundary for Aurae.
@@ -103,18 +103,18 @@ service CellService {
   /// Reserve requested system resources for a new cell.
   /// For cells specifically this will allocate and reserve cgroup resources
   /// only.
-  rpc Allocate(AllocateCellRequest) returns (AllocateCellResponse) {}
+  rpc Allocate(CellServiceAllocateRequest) returns (CellServiceAllocateResponse) {}
 
   /// Free up previously requested resources for an existing cell
-  rpc Free(FreeCellRequest) returns (FreeCellResponse) {}
+  rpc Free(CellServiceFreeRequest) returns (CellServiceFreeResponse) {}
 
   /// Start a new Executable inside of an existing cell. Can be called
   /// in serial to start more than one executable in the same cell.
-  rpc Start(StartExecutableRequest) returns (StartExecutableResponse) {}
+  rpc Start(CellServiceStartRequest) returns (CellServiceStartResponse) {}
 
   /// Stop one or more Executables inside of an existing cell.
   /// Can be called in serial to stop/retry more than one executable.
-  rpc Stop(StopExecutableRequest) returns (StopExecutableResponse) {}
+  rpc Stop(CellServiceStopRequest) returns (CellServiceStopResponse) {}
 }
 
 /// The most primitive workload in Aurae, a standard executable process.
@@ -177,7 +177,7 @@ message Cell {
 ///
 /// A cell must be allocated for every executable scheduled. A cell defines the resource
 /// constraints of the system to allocate for an arbitrary use case.
-message AllocateCellRequest {
+message CellServiceAllocateRequest {
 
   /// A smaller resource constrained section of the system.
   Cell cell = 1;
@@ -185,7 +185,7 @@ message AllocateCellRequest {
 }
 
 /// The response after a cell has been allocated.
-message AllocateCellResponse {
+message CellServiceAllocateResponse {
   string cell_name = 1;
 
   /// A bool that will be set to true if the cgroup was created with
@@ -194,23 +194,23 @@ message AllocateCellResponse {
 }
 
 /// Used to remove or free a cell after it has been allocated.
-message FreeCellRequest { string cell_name = 1; }
+message CellServiceFreeRequest { string cell_name = 1; }
 
 /// Response after removing or freeing a cell.
-message FreeCellResponse {}
+message CellServiceFreeResponse {}
 
 /// A request for starting an executable inside of a Cell.
 ///
 /// This is the lowest level of raw executive functionality.
 /// Here you can define shell commands, and meta information about the command.
 /// An executable is started synchronously.
-message StartExecutableRequest {
+message CellServiceStartRequest {
   string cell_name = 1;
   Executable executable = 2;
 }
 
 /// The response after starting an executable within a Cell.
-message StartExecutableResponse {
+message CellServiceStartResponse {
 
   /// Return a pid as an int32 based on the pid_t type
   /// in various libc libraries.
@@ -223,9 +223,9 @@ message StartExecutableResponse {
 }
 
 /// Request to stop an executable at runtime.
-message StopExecutableRequest {
+message CellServiceStopRequest {
   string cell_name = 1;
   string executable_name = 2;
 }
 
-message StopExecutableResponse {}
+message CellServiceStopResponse {}

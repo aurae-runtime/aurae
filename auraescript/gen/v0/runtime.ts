@@ -1,32 +1,32 @@
 /* eslint-disable */
 
-export const protobufPackage = "runtime";
+export const protobufPackage = "runtime.v0";
 
-export interface AllocatePodRequest {
+export interface PodServiceAllocateRequest {
 }
 
-export interface AllocatePodResponse {
+export interface PodServiceAllocateResponse {
 }
 
-export interface FreePodRequest {
+export interface PodServiceFreeRequest {
 }
 
-export interface FreePodResponse {
+export interface PodServiceFreeResponse {
 }
 
 export interface Pod {
 }
 
-export interface StartContainerRequest {
+export interface PodServiceStartRequest {
 }
 
-export interface StartContainerResponse {
+export interface PodServiceStartResponse {
 }
 
-export interface StopContainerRequest {
+export interface PodServiceStopRequest {
 }
 
-export interface StopContainerResponse {
+export interface PodServiceStopResponse {
 }
 
 export interface Container {
@@ -99,13 +99,13 @@ export interface Cell {
  * / A cell must be allocated for every executable scheduled. A cell defines the resource
  * / constraints of the system to allocate for an arbitrary use case.
  */
-export interface AllocateCellRequest {
+export interface CellServiceAllocateRequest {
   /** / A smaller resource constrained section of the system. */
   cell: Cell | undefined;
 }
 
 /** / The response after a cell has been allocated. */
-export interface AllocateCellResponse {
+export interface CellServiceAllocateResponse {
   cellName: string;
   /**
    * / A bool that will be set to true if the cgroup was created with
@@ -115,12 +115,12 @@ export interface AllocateCellResponse {
 }
 
 /** / Used to remove or free a cell after it has been allocated. */
-export interface FreeCellRequest {
+export interface CellServiceFreeRequest {
   cellName: string;
 }
 
 /** / Response after removing or freeing a cell. */
-export interface FreeCellResponse {
+export interface CellServiceFreeResponse {
 }
 
 /**
@@ -130,13 +130,13 @@ export interface FreeCellResponse {
  * / Here you can define shell commands, and meta information about the command.
  * / An executable is started synchronously.
  */
-export interface StartExecutableRequest {
+export interface CellServiceStartRequest {
   cellName: string;
   executable: Executable | undefined;
 }
 
 /** / The response after starting an executable within a Cell. */
-export interface StartExecutableResponse {
+export interface CellServiceStartResponse {
   /**
    * / Return a pid as an int32 based on the pid_t type
    * / in various libc libraries.
@@ -145,90 +145,90 @@ export interface StartExecutableResponse {
 }
 
 /** / Request to stop an executable at runtime. */
-export interface StopExecutableRequest {
+export interface CellServiceStopRequest {
   cellName: string;
   executableName: string;
 }
 
-export interface StopExecutableResponse {
+export interface CellServiceStopResponse {
 }
 
-function createBaseAllocatePodRequest(): AllocatePodRequest {
+function createBasePodServiceAllocateRequest(): PodServiceAllocateRequest {
   return {};
 }
 
-export const AllocatePodRequest = {
-  fromJSON(_: any): AllocatePodRequest {
+export const PodServiceAllocateRequest = {
+  fromJSON(_: any): PodServiceAllocateRequest {
     return {};
   },
 
-  toJSON(_: AllocatePodRequest): unknown {
+  toJSON(_: PodServiceAllocateRequest): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<AllocatePodRequest>, I>>(_: I): AllocatePodRequest {
-    const message = createBaseAllocatePodRequest();
+  fromPartial<I extends Exact<DeepPartial<PodServiceAllocateRequest>, I>>(_: I): PodServiceAllocateRequest {
+    const message = createBasePodServiceAllocateRequest();
     return message;
   },
 };
 
-function createBaseAllocatePodResponse(): AllocatePodResponse {
+function createBasePodServiceAllocateResponse(): PodServiceAllocateResponse {
   return {};
 }
 
-export const AllocatePodResponse = {
-  fromJSON(_: any): AllocatePodResponse {
+export const PodServiceAllocateResponse = {
+  fromJSON(_: any): PodServiceAllocateResponse {
     return {};
   },
 
-  toJSON(_: AllocatePodResponse): unknown {
+  toJSON(_: PodServiceAllocateResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<AllocatePodResponse>, I>>(_: I): AllocatePodResponse {
-    const message = createBaseAllocatePodResponse();
+  fromPartial<I extends Exact<DeepPartial<PodServiceAllocateResponse>, I>>(_: I): PodServiceAllocateResponse {
+    const message = createBasePodServiceAllocateResponse();
     return message;
   },
 };
 
-function createBaseFreePodRequest(): FreePodRequest {
+function createBasePodServiceFreeRequest(): PodServiceFreeRequest {
   return {};
 }
 
-export const FreePodRequest = {
-  fromJSON(_: any): FreePodRequest {
+export const PodServiceFreeRequest = {
+  fromJSON(_: any): PodServiceFreeRequest {
     return {};
   },
 
-  toJSON(_: FreePodRequest): unknown {
+  toJSON(_: PodServiceFreeRequest): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<FreePodRequest>, I>>(_: I): FreePodRequest {
-    const message = createBaseFreePodRequest();
+  fromPartial<I extends Exact<DeepPartial<PodServiceFreeRequest>, I>>(_: I): PodServiceFreeRequest {
+    const message = createBasePodServiceFreeRequest();
     return message;
   },
 };
 
-function createBaseFreePodResponse(): FreePodResponse {
+function createBasePodServiceFreeResponse(): PodServiceFreeResponse {
   return {};
 }
 
-export const FreePodResponse = {
-  fromJSON(_: any): FreePodResponse {
+export const PodServiceFreeResponse = {
+  fromJSON(_: any): PodServiceFreeResponse {
     return {};
   },
 
-  toJSON(_: FreePodResponse): unknown {
+  toJSON(_: PodServiceFreeResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<FreePodResponse>, I>>(_: I): FreePodResponse {
-    const message = createBaseFreePodResponse();
+  fromPartial<I extends Exact<DeepPartial<PodServiceFreeResponse>, I>>(_: I): PodServiceFreeResponse {
+    const message = createBasePodServiceFreeResponse();
     return message;
   },
 };
@@ -253,82 +253,82 @@ export const Pod = {
   },
 };
 
-function createBaseStartContainerRequest(): StartContainerRequest {
+function createBasePodServiceStartRequest(): PodServiceStartRequest {
   return {};
 }
 
-export const StartContainerRequest = {
-  fromJSON(_: any): StartContainerRequest {
+export const PodServiceStartRequest = {
+  fromJSON(_: any): PodServiceStartRequest {
     return {};
   },
 
-  toJSON(_: StartContainerRequest): unknown {
+  toJSON(_: PodServiceStartRequest): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StartContainerRequest>, I>>(_: I): StartContainerRequest {
-    const message = createBaseStartContainerRequest();
+  fromPartial<I extends Exact<DeepPartial<PodServiceStartRequest>, I>>(_: I): PodServiceStartRequest {
+    const message = createBasePodServiceStartRequest();
     return message;
   },
 };
 
-function createBaseStartContainerResponse(): StartContainerResponse {
+function createBasePodServiceStartResponse(): PodServiceStartResponse {
   return {};
 }
 
-export const StartContainerResponse = {
-  fromJSON(_: any): StartContainerResponse {
+export const PodServiceStartResponse = {
+  fromJSON(_: any): PodServiceStartResponse {
     return {};
   },
 
-  toJSON(_: StartContainerResponse): unknown {
+  toJSON(_: PodServiceStartResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StartContainerResponse>, I>>(_: I): StartContainerResponse {
-    const message = createBaseStartContainerResponse();
+  fromPartial<I extends Exact<DeepPartial<PodServiceStartResponse>, I>>(_: I): PodServiceStartResponse {
+    const message = createBasePodServiceStartResponse();
     return message;
   },
 };
 
-function createBaseStopContainerRequest(): StopContainerRequest {
+function createBasePodServiceStopRequest(): PodServiceStopRequest {
   return {};
 }
 
-export const StopContainerRequest = {
-  fromJSON(_: any): StopContainerRequest {
+export const PodServiceStopRequest = {
+  fromJSON(_: any): PodServiceStopRequest {
     return {};
   },
 
-  toJSON(_: StopContainerRequest): unknown {
+  toJSON(_: PodServiceStopRequest): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StopContainerRequest>, I>>(_: I): StopContainerRequest {
-    const message = createBaseStopContainerRequest();
+  fromPartial<I extends Exact<DeepPartial<PodServiceStopRequest>, I>>(_: I): PodServiceStopRequest {
+    const message = createBasePodServiceStopRequest();
     return message;
   },
 };
 
-function createBaseStopContainerResponse(): StopContainerResponse {
+function createBasePodServiceStopResponse(): PodServiceStopResponse {
   return {};
 }
 
-export const StopContainerResponse = {
-  fromJSON(_: any): StopContainerResponse {
+export const PodServiceStopResponse = {
+  fromJSON(_: any): PodServiceStopResponse {
     return {};
   },
 
-  toJSON(_: StopContainerResponse): unknown {
+  toJSON(_: PodServiceStopResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StopContainerResponse>, I>>(_: I): StopContainerResponse {
-    const message = createBaseStopContainerResponse();
+  fromPartial<I extends Exact<DeepPartial<PodServiceStopResponse>, I>>(_: I): PodServiceStopResponse {
+    const message = createBasePodServiceStopResponse();
     return message;
   },
 };
@@ -449,110 +449,110 @@ export const Cell = {
   },
 };
 
-function createBaseAllocateCellRequest(): AllocateCellRequest {
+function createBaseCellServiceAllocateRequest(): CellServiceAllocateRequest {
   return { cell: undefined };
 }
 
-export const AllocateCellRequest = {
-  fromJSON(object: any): AllocateCellRequest {
+export const CellServiceAllocateRequest = {
+  fromJSON(object: any): CellServiceAllocateRequest {
     return { cell: isSet(object.cell) ? Cell.fromJSON(object.cell) : undefined };
   },
 
-  toJSON(message: AllocateCellRequest): unknown {
+  toJSON(message: CellServiceAllocateRequest): unknown {
     const obj: any = {};
     message.cell !== undefined && (obj.cell = message.cell ? Cell.toJSON(message.cell) : undefined);
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<AllocateCellRequest>, I>>(object: I): AllocateCellRequest {
-    const message = createBaseAllocateCellRequest();
+  fromPartial<I extends Exact<DeepPartial<CellServiceAllocateRequest>, I>>(object: I): CellServiceAllocateRequest {
+    const message = createBaseCellServiceAllocateRequest();
     message.cell = (object.cell !== undefined && object.cell !== null) ? Cell.fromPartial(object.cell) : undefined;
     return message;
   },
 };
 
-function createBaseAllocateCellResponse(): AllocateCellResponse {
+function createBaseCellServiceAllocateResponse(): CellServiceAllocateResponse {
   return { cellName: "", cgroupV2: false };
 }
 
-export const AllocateCellResponse = {
-  fromJSON(object: any): AllocateCellResponse {
+export const CellServiceAllocateResponse = {
+  fromJSON(object: any): CellServiceAllocateResponse {
     return {
       cellName: isSet(object.cellName) ? String(object.cellName) : "",
       cgroupV2: isSet(object.cgroupV2) ? Boolean(object.cgroupV2) : false,
     };
   },
 
-  toJSON(message: AllocateCellResponse): unknown {
+  toJSON(message: CellServiceAllocateResponse): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
     message.cgroupV2 !== undefined && (obj.cgroupV2 = message.cgroupV2);
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<AllocateCellResponse>, I>>(object: I): AllocateCellResponse {
-    const message = createBaseAllocateCellResponse();
+  fromPartial<I extends Exact<DeepPartial<CellServiceAllocateResponse>, I>>(object: I): CellServiceAllocateResponse {
+    const message = createBaseCellServiceAllocateResponse();
     message.cellName = object.cellName ?? "";
     message.cgroupV2 = object.cgroupV2 ?? false;
     return message;
   },
 };
 
-function createBaseFreeCellRequest(): FreeCellRequest {
+function createBaseCellServiceFreeRequest(): CellServiceFreeRequest {
   return { cellName: "" };
 }
 
-export const FreeCellRequest = {
-  fromJSON(object: any): FreeCellRequest {
+export const CellServiceFreeRequest = {
+  fromJSON(object: any): CellServiceFreeRequest {
     return { cellName: isSet(object.cellName) ? String(object.cellName) : "" };
   },
 
-  toJSON(message: FreeCellRequest): unknown {
+  toJSON(message: CellServiceFreeRequest): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<FreeCellRequest>, I>>(object: I): FreeCellRequest {
-    const message = createBaseFreeCellRequest();
+  fromPartial<I extends Exact<DeepPartial<CellServiceFreeRequest>, I>>(object: I): CellServiceFreeRequest {
+    const message = createBaseCellServiceFreeRequest();
     message.cellName = object.cellName ?? "";
     return message;
   },
 };
 
-function createBaseFreeCellResponse(): FreeCellResponse {
+function createBaseCellServiceFreeResponse(): CellServiceFreeResponse {
   return {};
 }
 
-export const FreeCellResponse = {
-  fromJSON(_: any): FreeCellResponse {
+export const CellServiceFreeResponse = {
+  fromJSON(_: any): CellServiceFreeResponse {
     return {};
   },
 
-  toJSON(_: FreeCellResponse): unknown {
+  toJSON(_: CellServiceFreeResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<FreeCellResponse>, I>>(_: I): FreeCellResponse {
-    const message = createBaseFreeCellResponse();
+  fromPartial<I extends Exact<DeepPartial<CellServiceFreeResponse>, I>>(_: I): CellServiceFreeResponse {
+    const message = createBaseCellServiceFreeResponse();
     return message;
   },
 };
 
-function createBaseStartExecutableRequest(): StartExecutableRequest {
+function createBaseCellServiceStartRequest(): CellServiceStartRequest {
   return { cellName: "", executable: undefined };
 }
 
-export const StartExecutableRequest = {
-  fromJSON(object: any): StartExecutableRequest {
+export const CellServiceStartRequest = {
+  fromJSON(object: any): CellServiceStartRequest {
     return {
       cellName: isSet(object.cellName) ? String(object.cellName) : "",
       executable: isSet(object.executable) ? Executable.fromJSON(object.executable) : undefined,
     };
   },
 
-  toJSON(message: StartExecutableRequest): unknown {
+  toJSON(message: CellServiceStartRequest): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
     message.executable !== undefined &&
@@ -560,8 +560,8 @@ export const StartExecutableRequest = {
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StartExecutableRequest>, I>>(object: I): StartExecutableRequest {
-    const message = createBaseStartExecutableRequest();
+  fromPartial<I extends Exact<DeepPartial<CellServiceStartRequest>, I>>(object: I): CellServiceStartRequest {
+    const message = createBaseCellServiceStartRequest();
     message.cellName = object.cellName ?? "";
     message.executable = (object.executable !== undefined && object.executable !== null)
       ? Executable.fromPartial(object.executable)
@@ -570,81 +570,81 @@ export const StartExecutableRequest = {
   },
 };
 
-function createBaseStartExecutableResponse(): StartExecutableResponse {
+function createBaseCellServiceStartResponse(): CellServiceStartResponse {
   return { pid: 0 };
 }
 
-export const StartExecutableResponse = {
-  fromJSON(object: any): StartExecutableResponse {
+export const CellServiceStartResponse = {
+  fromJSON(object: any): CellServiceStartResponse {
     return { pid: isSet(object.pid) ? Number(object.pid) : 0 };
   },
 
-  toJSON(message: StartExecutableResponse): unknown {
+  toJSON(message: CellServiceStartResponse): unknown {
     const obj: any = {};
     message.pid !== undefined && (obj.pid = Math.round(message.pid));
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StartExecutableResponse>, I>>(object: I): StartExecutableResponse {
-    const message = createBaseStartExecutableResponse();
+  fromPartial<I extends Exact<DeepPartial<CellServiceStartResponse>, I>>(object: I): CellServiceStartResponse {
+    const message = createBaseCellServiceStartResponse();
     message.pid = object.pid ?? 0;
     return message;
   },
 };
 
-function createBaseStopExecutableRequest(): StopExecutableRequest {
+function createBaseCellServiceStopRequest(): CellServiceStopRequest {
   return { cellName: "", executableName: "" };
 }
 
-export const StopExecutableRequest = {
-  fromJSON(object: any): StopExecutableRequest {
+export const CellServiceStopRequest = {
+  fromJSON(object: any): CellServiceStopRequest {
     return {
       cellName: isSet(object.cellName) ? String(object.cellName) : "",
       executableName: isSet(object.executableName) ? String(object.executableName) : "",
     };
   },
 
-  toJSON(message: StopExecutableRequest): unknown {
+  toJSON(message: CellServiceStopRequest): unknown {
     const obj: any = {};
     message.cellName !== undefined && (obj.cellName = message.cellName);
     message.executableName !== undefined && (obj.executableName = message.executableName);
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StopExecutableRequest>, I>>(object: I): StopExecutableRequest {
-    const message = createBaseStopExecutableRequest();
+  fromPartial<I extends Exact<DeepPartial<CellServiceStopRequest>, I>>(object: I): CellServiceStopRequest {
+    const message = createBaseCellServiceStopRequest();
     message.cellName = object.cellName ?? "";
     message.executableName = object.executableName ?? "";
     return message;
   },
 };
 
-function createBaseStopExecutableResponse(): StopExecutableResponse {
+function createBaseCellServiceStopResponse(): CellServiceStopResponse {
   return {};
 }
 
-export const StopExecutableResponse = {
-  fromJSON(_: any): StopExecutableResponse {
+export const CellServiceStopResponse = {
+  fromJSON(_: any): CellServiceStopResponse {
     return {};
   },
 
-  toJSON(_: StopExecutableResponse): unknown {
+  toJSON(_: CellServiceStopResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial<I extends Exact<DeepPartial<StopExecutableResponse>, I>>(_: I): StopExecutableResponse {
-    const message = createBaseStopExecutableResponse();
+  fromPartial<I extends Exact<DeepPartial<CellServiceStopResponse>, I>>(_: I): CellServiceStopResponse {
+    const message = createBaseCellServiceStopResponse();
     return message;
   },
 };
 
-/** TODO Instances Service */
-export interface Instances {
+/** TODO Instance Service */
+export interface InstanceService {
 }
 
 /** TODO Spawn Service */
-export interface Spawn {
+export interface SpawnService {
 }
 
 /**
@@ -656,10 +656,10 @@ export interface Spawn {
  * / A pod is a group of one or more containers with shared network and storage.
  */
 export interface PodService {
-  allocate(request: AllocatePodRequest): Promise<AllocatePodResponse>;
-  start(request: StartContainerRequest): Promise<StartContainerResponse>;
-  stop(request: StopContainerRequest): Promise<StopContainerResponse>;
-  free(request: FreePodRequest): Promise<FreePodResponse>;
+  allocate(request: PodServiceAllocateRequest): Promise<PodServiceAllocateResponse>;
+  start(request: PodServiceStartRequest): Promise<PodServiceStartResponse>;
+  stop(request: PodServiceStopRequest): Promise<PodServiceStopResponse>;
+  free(request: PodServiceFreeRequest): Promise<PodServiceFreeResponse>;
 }
 
 /**
@@ -676,19 +676,19 @@ export interface CellService {
    * / For cells specifically this will allocate and reserve cgroup resources
    * / only.
    */
-  allocate(request: AllocateCellRequest): Promise<AllocateCellResponse>;
+  allocate(request: CellServiceAllocateRequest): Promise<CellServiceAllocateResponse>;
   /** / Free up previously requested resources for an existing cell */
-  free(request: FreeCellRequest): Promise<FreeCellResponse>;
+  free(request: CellServiceFreeRequest): Promise<CellServiceFreeResponse>;
   /**
    * / Start a new Executable inside of an existing cell. Can be called
    * / in serial to start more than one executable in the same cell.
    */
-  start(request: StartExecutableRequest): Promise<StartExecutableResponse>;
+  start(request: CellServiceStartRequest): Promise<CellServiceStartResponse>;
   /**
    * / Stop one or more Executables inside of an existing cell.
    * / Can be called in serial to stop/retry more than one executable.
    */
-  stop(request: StopExecutableRequest): Promise<StopExecutableResponse>;
+  stop(request: CellServiceStopRequest): Promise<CellServiceStopResponse>;
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;

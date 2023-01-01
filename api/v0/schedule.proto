@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 syntax = "proto3";
-package schedule;
+package schedule.v0;
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/schedule";
 
 // TODO Schedule subsystem
