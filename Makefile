@@ -82,7 +82,18 @@ stdlibdocs:
 	$(error "No /usr/local/bin/protoc-gen-doc, install from https://github.com/pseudomuto/protoc-gen-doc")
 else
 stdlibdocs:
-	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0 --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*.proto
+	mkdir -p docs/stdlib/observe/v0
+	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/observe/v0 --doc_out=docs/stdlib/observe/v0 --doc_opt="markdown,index.md:Ignore*" api/observe/v0/*.proto
+	mkdir -p docs/stdlib/schedule/v0
+	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/schedule/v0 --doc_out=docs/stdlib/schedule/v0 --doc_opt="markdown,index.md:Ignore*" api/schedule/v0/*.proto
+	mkdir -p docs/stdlib/runtime/cell/v0
+	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/runtime/cell/v0 --doc_out=docs/stdlib/runtime/cell/v0 --doc_opt="markdown,index.md:Ignore*" api/runtime/cell/v0/*.proto
+	mkdir -p docs/stdlib/runtime/pod/v0
+	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/runtime/pod/v0 --doc_out=docs/stdlib/runtime/pod/v0 --doc_opt="markdown,index.md:Ignore*" api/runtime/pod/v0/*.proto
+	mkdir -p docs/stdlib/runtime/spawn/v0
+	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/runtime/spawn/v0 --doc_out=docs/stdlib/runtime/spawn/v0 --doc_opt="markdown,index.md:Ignore*" api/runtime/spawn/v0/*.proto
+	mkdir -p docs/stdlib/runtime/instance/v0
+	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/runtime/instance/v0 --doc_out=docs/stdlib/runtime/instance/v0 --doc_opt="markdown,index.md:Ignore*" api/runtime/instance/v0/*.proto
 endif
 
 crate: ## Build the crate (documentation)
