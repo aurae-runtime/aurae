@@ -4,6 +4,8 @@ The Aurae Standard Library (stdlib or "the library") is a set of remote function
 
 The library leverages [protobuf](https://github.com/protocolbuffers/protobuf) as the source of truth for the types, names, and function signatures for the library.
 
+The `v0` release is an experimental and risky API. This API should never be ran in production as it is subject to change at any time.
+
 ### What is a subsystem?
 
 A subsystem is a smaller and scoped subsection of the library composed of RPCs and services. Subsystems are similar to "packages" or "modules" in programming languages such as [Rust](https://github.com/rust-lang/rust/tree/master/library/core/src). Kubernetes as API groups, and Linux itself has subsystems.
