@@ -134,7 +134,7 @@ pub struct ValidatedCell {
     #[validate(create)]
     pub name: CellName,
 
-    #[field_type(String)]
+    #[field_type(Vec<i32>)]
     #[validate(create)]
     pub cpu_cpus: CpuCpus,
 
@@ -142,7 +142,7 @@ pub struct ValidatedCell {
     #[validate(create)]
     pub cpu_shares: CpuWeight,
 
-    #[field_type(String)]
+    #[field_type(Vec<i32>)]
     #[validate(create)]
     pub cpu_mems: CpusetMems,
 

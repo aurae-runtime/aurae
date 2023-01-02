@@ -194,7 +194,10 @@ impl<'de> serde::Deserialize<'de> for Cell {
                             if cpu_cpus__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("cpuCpus"));
                             }
-                            cpu_cpus__ = Some(map.next_value()?);
+                            cpu_cpus__ = 
+                                Some(map.next_value::<Vec<::pbjson::private::NumberDeserialize<_>>>()?
+                                    .into_iter().map(|x| x.0).collect())
+                            ;
                         }
                         GeneratedField::CpuShares => {
                             if cpu_shares__.is_some() {
@@ -208,7 +211,10 @@ impl<'de> serde::Deserialize<'de> for Cell {
                             if cpu_mems__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("cpuMems"));
                             }
-                            cpu_mems__ = Some(map.next_value()?);
+                            cpu_mems__ = 
+                                Some(map.next_value::<Vec<::pbjson::private::NumberDeserialize<_>>>()?
+                                    .into_iter().map(|x| x.0).collect())
+                            ;
                         }
                         GeneratedField::CpuQuota => {
                             if cpu_quota__.is_some() {

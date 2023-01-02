@@ -73,24 +73,24 @@ service SpawnService {}
 /// A pod is a group of one or more containers with shared network and storage.
 service PodService {
 
-  rpc Allocate(PodServiceAllocateRequest) returns (PodServiceAllocateResponse) {}
+  rpc Allocate(PodServiceAllocateRequest) returns (PodServiceAllocateResponse) {
+  }
   rpc Start(PodServiceStartRequest) returns (PodServiceStartResponse) {}
   rpc Stop(PodServiceStopRequest) returns (PodServiceStopResponse) {}
   rpc Free(PodServiceFreeRequest) returns (PodServiceFreeResponse) {}
-
 }
 
-message PodServiceAllocateRequest{}
-message PodServiceAllocateResponse{}
-message PodServiceFreeRequest{}
-message PodServiceFreeResponse{}
-message Pod{}
+message PodServiceAllocateRequest {}
+message PodServiceAllocateResponse {}
+message PodServiceFreeRequest {}
+message PodServiceFreeResponse {}
+message Pod {}
 
-message PodServiceStartRequest{}
-message PodServiceStartResponse{}
-message PodServiceStopRequest{}
-message PodServiceStopResponse{}
-message Container{}
+message PodServiceStartRequest {}
+message PodServiceStartResponse {}
+message PodServiceStopRequest {}
+message PodServiceStopResponse {}
+message Container {}
 
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be
@@ -103,7 +103,8 @@ service CellService {
   /// Reserve requested system resources for a new cell.
   /// For cells specifically this will allocate and reserve cgroup resources
   /// only.
-  rpc Allocate(CellServiceAllocateRequest) returns (CellServiceAllocateResponse) {}
+  rpc Allocate(CellServiceAllocateRequest)
+      returns (CellServiceAllocateResponse) {}
 
   /// Free up previously requested resources for an existing cell
   rpc Free(CellServiceFreeRequest) returns (CellServiceFreeResponse) {}
@@ -134,9 +135,8 @@ message Cell {
   /// [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
   string name = 1;
 
-  /// A comma-separated list of CPU IDs where the task in the control group
-  /// can run. Dashes between numbers indicate ranges.
-  string cpu_cpus = 2;
+  /// A  list of CPU IDs where the task in the control group can run.
+  repeated int32 cpu_cpus = 2;
 
   ///  Cgroups can be guaranteed a minimum number of "CPU shares"
   ///  when a system is busy.  This does not limit a cgroup's CPU
@@ -151,8 +151,8 @@ message Cell {
   uint64 cpu_shares = 3;
 
   /// Same syntax as the cpus field of this structure, but applies to
-  ///  memory nodes instead of processors.
-  string cpu_mems = 4;
+  /// memory nodes instead of processors.
+  repeated int32 cpu_mems = 4;
 
   /// In one period, how much can the tasks run in microseconds.
   int64 cpu_quota = 5;
@@ -168,20 +168,18 @@ message Cell {
   bool ns_share_pid = 13;
   bool ns_share_net = 14;
   bool ns_share_cgroup = 15;
-
 }
 
-/// An Aurae cell is a name given to Linux control groups (cgroups) that also include
-/// a name, and special pre-exec functionality that is executed from within the same context
-/// as any executables scheduled.
+/// An Aurae cell is a name given to Linux control groups (cgroups) that also
+/// include a name, and special pre-exec functionality that is executed from
+/// within the same context as any executables scheduled.
 ///
-/// A cell must be allocated for every executable scheduled. A cell defines the resource
-/// constraints of the system to allocate for an arbitrary use case.
+/// A cell must be allocated for every executable scheduled. A cell defines the
+/// resource constraints of the system to allocate for an arbitrary use case.
 message CellServiceAllocateRequest {
 
   /// A smaller resource constrained section of the system.
   Cell cell = 1;
-
 }
 
 /// The response after a cell has been allocated.
@@ -216,10 +214,10 @@ message CellServiceStartResponse {
   /// in various libc libraries.
   int32 pid = 1;
 
-  //int32 gid = 2;     // TODO
-  //int32 uid = 3;     // TODO
-  //string user = 4;   // TODO
-  //string group = 5;  // TODO
+  // int32 gid = 2;     // TODO
+  // int32 uid = 3;     // TODO
+  // string user = 4;   // TODO
+  // string group = 5;  // TODO
 }
 
 /// Request to stop an executable at runtime.

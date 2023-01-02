@@ -54,10 +54,10 @@ impl CellSpec {
     pub(crate) fn new_for_tests() -> Self {
         Self {
             cgroup_spec: CgroupSpec {
-                cpu_cpus: CpuCpus::new("".into()),
+                cpu_cpus: CpuCpus::new(vec![]),
                 cpu_quota: CpuQuota::new(0),
                 cpu_weight: CpuWeight::new(0),
-                cpuset_mems: CpusetMems::new("".into()),
+                cpuset_mems: CpusetMems::new(vec![]),
             },
             shared_namespaces: Default::default(), // nothing shared in default
         }
