@@ -32,7 +32,7 @@ pub use error::{ExecutablesError, Result};
 pub use executable::Executable;
 pub use executable_name::ExecutableName;
 pub use executables::Executables;
-use std::process::Command;
+use tokio::process::Command;
 
 pub mod auraed;
 mod error;
