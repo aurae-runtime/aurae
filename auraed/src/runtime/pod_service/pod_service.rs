@@ -33,9 +33,9 @@
 
 use aurae_client::{runtime::pod_service::PodServiceClient, AuraeClient};
 use aurae_proto::runtime::{
-    pod_service_server, AllocatePodRequest, AllocatePodResponse,
-    FreePodRequest, FreePodResponse, Pod, StartContainerRequest,
-    StartContainerResponse, StopContainerRequest, StopContainerResponse,
+    pod_service_server, PodServiceAllocateRequest, PodServiceAllocateResponse,
+    PodServiceFreeRequest, PodServiceFreeResponse, Pod, PodServiceStartRequest,
+    PodServiceStartResponse, PodServiceStopRequest, PodServiceStopResponse,
 };
 // use std::sync::Arc;
 // use tokio::sync::Mutex;
@@ -58,30 +58,30 @@ impl PodService {
 impl pod_service_server::PodService for PodService {
     async fn allocate(
         &self,
-        request: Request<AllocatePodRequest>,
-    ) -> Result<Response<AllocatePodResponse>, Status> {
+        request: Request<PodServiceAllocateRequest>,
+    ) -> Result<Response<PodServiceAllocateResponse>, Status> {
         let _request = request.into_inner();
-        Ok(Response::new(AllocatePodResponse {}))
+        Ok(Response::new(PodServiceAllocateResponse {}))
     }
     async fn free(
         &self,
-        request: Request<FreePodRequest>,
-    ) -> Result<Response<FreePodResponse>, Status> {
+        request: Request<PodServiceFreeRequest>,
+    ) -> Result<Response<PodServiceFreeResponse>, Status> {
         let _request = request.into_inner();
-        Ok(Response::new(FreePodResponse {}))
+        Ok(Response::new(PodServiceFreeResponse {}))
     }
     async fn start(
         &self,
-        request: Request<StartContainerRequest>,
-    ) -> Result<Response<StartContainerResponse>, Status> {
+        request: Request<PodServiceStartRequest>,
+    ) -> Result<Response<PodServiceStartResponse>, Status> {
         let _request = request.into_inner();
-        Ok(Response::new(StartContainerResponse {}))
+        Ok(Response::new(PodServiceStartResponse {}))
     }
     async fn stop(
         &self,
-        request: Request<StopContainerRequest>,
-    ) -> Result<Response<StopContainerResponse>, Status> {
+        request: Request<PodServiceStopRequest>,
+    ) -> Result<Response<PodServiceStopResponse>, Status> {
         let _request = request.into_inner();
-        Ok(Response::new(StopContainerResponse {}))
+        Ok(Response::new(PodServiceStopResponse {}))
     }
 }

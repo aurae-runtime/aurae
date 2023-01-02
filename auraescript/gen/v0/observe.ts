@@ -1,22 +1,26 @@
 /* eslint-disable */
 import { Observable } from "rxjs";
 
-export const protobufPackage = "observe";
+export const protobufPackage = "observe.v0";
 
 export enum LogChannelType {
-  CHANNEL_STDOUT = 0,
-  CHANNEL_STDERR = 1,
+  LOG_CHANNEL_TYPE_UNSPECIFIED = 0,
+  LOG_CHANNEL_TYPE_STDOUT = 1,
+  LOG_CHANNEL_TYPE_STDERR = 2,
   UNRECOGNIZED = -1,
 }
 
 export function logChannelTypeFromJSON(object: any): LogChannelType {
   switch (object) {
     case 0:
-    case "CHANNEL_STDOUT":
-      return LogChannelType.CHANNEL_STDOUT;
+    case "LOG_CHANNEL_TYPE_UNSPECIFIED":
+      return LogChannelType.LOG_CHANNEL_TYPE_UNSPECIFIED;
     case 1:
-    case "CHANNEL_STDERR":
-      return LogChannelType.CHANNEL_STDERR;
+    case "LOG_CHANNEL_TYPE_STDOUT":
+      return LogChannelType.LOG_CHANNEL_TYPE_STDOUT;
+    case 2:
+    case "LOG_CHANNEL_TYPE_STDERR":
+      return LogChannelType.LOG_CHANNEL_TYPE_STDERR;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -26,10 +30,12 @@ export function logChannelTypeFromJSON(object: any): LogChannelType {
 
 export function logChannelTypeToJSON(object: LogChannelType): string {
   switch (object) {
-    case LogChannelType.CHANNEL_STDOUT:
-      return "CHANNEL_STDOUT";
-    case LogChannelType.CHANNEL_STDERR:
-      return "CHANNEL_STDERR";
+    case LogChannelType.LOG_CHANNEL_TYPE_UNSPECIFIED:
+      return "LOG_CHANNEL_TYPE_UNSPECIFIED";
+    case LogChannelType.LOG_CHANNEL_TYPE_STDOUT:
+      return "LOG_CHANNEL_TYPE_STDOUT";
+    case LogChannelType.LOG_CHANNEL_TYPE_STDERR:
+      return "LOG_CHANNEL_TYPE_STDERR";
     case LogChannelType.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
@@ -128,7 +134,7 @@ export const LogItem = {
   },
 };
 
-export interface Observe {
+export interface ObserveService {
   /** request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ). */
   getAuraeDaemonLogStream(request: GetAuraeDaemonLogStreamRequest): Observable<LogItem>;
   /** TODO: request log stream for a sub process */
