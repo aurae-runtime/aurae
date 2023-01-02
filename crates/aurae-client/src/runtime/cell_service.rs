@@ -28,10 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::runtime::*;
+use aurae_proto::runtime::cell::*;
 
 macros::ops_generator!(
-    runtime,
+    cell,
     CellService,
     allocate(CellServiceAllocateRequest) -> CellServiceAllocateResponse,
     free(CellServiceFreeRequest) -> CellServiceFreeResponse,

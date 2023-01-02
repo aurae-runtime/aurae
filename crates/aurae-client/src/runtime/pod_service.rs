@@ -28,10 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::runtime::*;
+use aurae_proto::runtime::pod::*;
 
 macros::ops_generator!(
-    runtime,
+    pod,
     PodService,
     allocate(PodServiceAllocateRequest) -> PodServiceAllocateResponse,
     free(PodServiceFreeRequest) -> PodServiceFreeResponse,
