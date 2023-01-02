@@ -38,7 +38,21 @@ pub mod observe {
 }
 
 pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
+    pub mod cell {
+        include!("gen/aurae.runtime.cell.v0.rs");
+    }
+
+    pub mod pod {
+        include!("gen/aurae.runtime.pod.v0.rs");
+    }
+
+    pub mod spawn {
+        include!("gen/aurae.runtime.spawn.v0.rs");
+    }
+
+    pub mod instance {
+        include!("gen/aurae.runtime.instance.v0.rs");
+    }
 }
 
 pub mod schedule {
