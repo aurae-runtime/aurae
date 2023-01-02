@@ -69,7 +69,7 @@ auraed: proto ## Initialize and compile auraed
 
 .PHONY: check-docs
 check-docs: # spell checking
-	@vale --no-wrap --glob='!docs/stdlib/v0/*' ./docs
+	@vale --no-wrap --glob='!docs/stdlib/**/*' ./docs
 
 .PHONY: docs
 docs: crate stdlibdocs ## Assemble all the /docs for the website locally.
