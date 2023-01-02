@@ -4,8 +4,6 @@ pub mod spawn_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
-    /** TODO Spawn Service
-*/
     #[derive(Debug, Clone)]
     pub struct SpawnServiceClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -79,8 +77,6 @@ pub mod spawn_service_server {
     ///Generated trait containing gRPC methods that should be implemented for use with SpawnServiceServer.
     #[async_trait]
     pub trait SpawnService: Send + Sync + 'static {}
-    /** TODO Spawn Service
-*/
     #[derive(Debug)]
     pub struct SpawnServiceServer<T: SpawnService> {
         inner: _Inner<T>,

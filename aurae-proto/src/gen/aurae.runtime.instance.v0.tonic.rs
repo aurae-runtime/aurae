@@ -4,8 +4,6 @@ pub mod instance_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
-    /** TODO Instance Service
-*/
     #[derive(Debug, Clone)]
     pub struct InstanceServiceClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -79,8 +77,6 @@ pub mod instance_service_server {
     ///Generated trait containing gRPC methods that should be implemented for use with InstanceServiceServer.
     #[async_trait]
     pub trait InstanceService: Send + Sync + 'static {}
-    /** TODO Instance Service
-*/
     #[derive(Debug)]
     pub struct InstanceServiceServer<T: InstanceService> {
         inner: _Inner<T>,

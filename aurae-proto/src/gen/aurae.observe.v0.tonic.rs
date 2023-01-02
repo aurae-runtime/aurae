@@ -4,6 +4,7 @@ pub mod observe_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    ///
     #[derive(Debug, Clone)]
     pub struct ObserveServiceClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -68,6 +69,8 @@ pub mod observe_service_client {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
+        /** request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
+*/
         pub async fn get_aurae_daemon_log_stream(
             &mut self,
             request: impl tonic::IntoRequest<super::GetAuraeDaemonLogStreamRequest>,
@@ -90,6 +93,8 @@ pub mod observe_service_client {
             );
             self.inner.server_streaming(request.into_request(), path, codec).await
         }
+        /** TODO: request log stream for a sub process
+*/
         pub async fn get_sub_process_stream(
             &mut self,
             request: impl tonic::IntoRequest<super::GetSubProcessStreamRequest>,
@@ -127,6 +132,8 @@ pub mod observe_service_server {
             >
             + Send
             + 'static;
+        /** request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
+*/
         async fn get_aurae_daemon_log_stream(
             &self,
             request: tonic::Request<super::GetAuraeDaemonLogStreamRequest>,
@@ -137,11 +144,14 @@ pub mod observe_service_server {
             >
             + Send
             + 'static;
+        /** TODO: request log stream for a sub process
+*/
         async fn get_sub_process_stream(
             &self,
             request: tonic::Request<super::GetSubProcessStreamRequest>,
         ) -> Result<tonic::Response<Self::GetSubProcessStreamStream>, tonic::Status>;
     }
+    ///
     #[derive(Debug)]
     pub struct ObserveServiceServer<T: ObserveService> {
         inner: _Inner<T>,
