@@ -31,6 +31,8 @@
 use super::{CellName, CellSpec, CellsError, Cgroup, Result};
 use crate::runtime::cell_service::executables::auraed::NestedAuraed;
 use aurae_client::AuraeConfig;
+use std::io;
+use std::process::ExitStatus;
 use tracing::info;
 
 // We should not be able to change a cell after it has been created.
@@ -44,10 +46,7 @@ pub struct Cell {
     state: CellState,
 }
 
-// TODO: look into clippy warning
-// TODO: remove #[allow(dead_code)]
 #[allow(clippy::large_enum_variant)]
-#[allow(dead_code)]
 #[derive(Debug)]
 enum CellState {
     Unallocated,
@@ -98,14 +97,30 @@ impl Cell {
         Ok(())
     }
 
-    /// Deletes the underlying cgroup.
-    /// A [Cell] should never be reused after calling [free].
+    /// Signals the [NestedAuraed] to gracefully shut down, and deletes the underlying cgroup.
+    /// The [Cell::state] will be set to [CellState::Freed] regardless of it's state prior to this call.
+    /// A [Cell] should never be reused once in the [CellState::Freed] state.
     pub fn free(&mut self) -> Result<()> {
-        // TODO In the future, use SIGINT intstead of SIGKILL once https://github.com/aurae-runtime/aurae/issues/199 is ready
+        // TODO https://github.com/aurae-runtime/aurae/issues/199 &&
+        //      aurae.io/signals, which is more accurate
         // TODO nested auraed should proxy (bus) POSIX signals to child executables
+        self.do_free(|nested_auraed| nested_auraed.shutdown())
+    }
+
+    /// Sends a [SIGKILL] to the [NestedAuraed], and deletes the underlying cgroup.
+    /// The [Cell::state] will be set to [CellState::Freed] regardless of it's state prior to this call.
+    /// A [Cell] should never be reused once in the [CellState::Freed] state.
+    pub fn kill(&mut self) -> Result<()> {
+        self.do_free(|nested_auraed| nested_auraed.kill())
+    }
+
+    fn do_free<F>(&mut self, f: F) -> Result<()>
+    where
+        F: Fn(&mut NestedAuraed) -> io::Result<ExitStatus>,
+    {
         if let CellState::Allocated { cgroup, nested_auraed } = &mut self.state
         {
-            let _exit_status = nested_auraed.kill().map_err(|e| {
+            let _exit_status = f(nested_auraed).map_err(|e| {
                 CellsError::FailedToKillCellChildren {
                     cell_name: self.name.clone(),
                     source: e,
@@ -156,7 +171,8 @@ impl Drop for Cell {
     /// but cache reconciliation may result in a drop in other circumstances.
     /// Here we have a chance to clean up, no matter the circumstance.   
     fn drop(&mut self) {
-        let _best_effort = self.free();
+        // We use kill here to be aggressive in cleaning up if anything has been left behind.
+        let _best_effort = self.kill();
     }
 }
 

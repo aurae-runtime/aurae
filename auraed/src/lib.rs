@@ -81,6 +81,7 @@ pub mod logging;
 mod observe;
 mod runtime;
 mod schedule;
+mod signal_handlers;
 
 /// Default Unix domain socket path for `auraed`.
 ///
@@ -218,12 +219,15 @@ impl AuraedRuntime {
         let sock_stream = UnixListenerStream::new(sock);
         //let _log_collector = self.log_collector.clone();
 
+        let cell_service = CellService::new();
+        let cell_service_server = CellServiceServer::new(cell_service.clone());
+
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.
-        let handle = tokio::spawn(async {
+        let server_handle = tokio::spawn(async move {
             Server::builder()
                 .tls_config(tls)?
-                .add_service(CellServiceServer::new(CellService::new()))
+                .add_service(cell_service_server)
                 // .add_service(ObserveServer::new(ObserveService::new(
                 //     log_collector,
                 // )))
@@ -237,7 +241,11 @@ impl AuraedRuntime {
 
                     info!("Received shutdown signal...");
                 })
-                .await
+                .await?;
+
+            info!("gRPC server exited successfully");
+
+            Ok::<_, tonic::transport::Error>(())
         });
 
         trace!("Setting socket mode {} -> 766", &self.socket.display());
@@ -249,8 +257,16 @@ impl AuraedRuntime {
         info!("User Access Socket Created: {}", self.socket.display());
 
         // Event loop
-        handle.await??;
-        info!("gRPC server exited successfully");
+        let terminate_handle = tokio::spawn(async {
+            signal_handlers::terminate(cell_service).await
+        });
+
+        let (server_result, _) =
+            tokio::try_join!(server_handle, terminate_handle)?;
+
+        if let Err(e) = server_result {
+            error!("gRPC server exited with error: {e}");
+        }
 
         Ok(())
     }

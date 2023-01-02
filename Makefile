@@ -73,7 +73,7 @@ check-docs: # spell checking
 	@vale --no-wrap --glob='!docs/stdlib/v0/*' ./docs
 
 .PHONY: docs
-docs: crate stdlibdocs ## Assemble all the /docs for the website locally.
+docs: proto crate stdlibdocs ## Assemble all the /docs for the website locally.
 	cp -rv README.md docs/index.md # Special copy for the main README
 	cp -rv api/README.md docs/stdlib/index.md # Special copy for the main README
 

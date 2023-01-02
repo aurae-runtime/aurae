@@ -50,6 +50,7 @@ fancy-regex = "0.10.0"
 futures = "0.3.23"
 ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
+lazy_static = { workspace = true }
 libc = "0.2"
 log = "0.4.17"
 multi_log = "0.1.2"

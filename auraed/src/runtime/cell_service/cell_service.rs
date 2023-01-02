@@ -29,22 +29,23 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cells::Cells,
     error::CellsServiceError,
     executables::Executables,
     validation::{
-        ValidatedCellServiceAllocateRequest, ValidatedExecutable,
-        ValidatedCellServiceFreeRequest, ValidatedCellServiceStartRequest,
-        ValidatedCellServiceStopRequest,
+        ValidatedCellServiceAllocateRequest, ValidatedCellServiceFreeRequest,
+        ValidatedCellServiceStartRequest, ValidatedCellServiceStopRequest,
+        ValidatedExecutable,
     },
     Result,
 };
+use crate::runtime::cell_service::cells::Cells;
 use ::validation::ValidatedType;
 use aurae_client::{runtime::cell_service::CellServiceClient, AuraeClient};
 use aurae_proto::runtime::{
-    cell_service_server, CellServiceAllocateRequest, CellServiceAllocateResponse, Executable,
-    CellServiceFreeRequest, CellServiceFreeResponse, CellServiceStartRequest,
-    CellServiceStartResponse, CellServiceStopRequest, CellServiceStopResponse,
+    cell_service_server, CellServiceAllocateRequest,
+    CellServiceAllocateResponse, CellServiceFreeRequest,
+    CellServiceFreeResponse, CellServiceStartRequest, CellServiceStartResponse,
+    CellServiceStopRequest, CellServiceStopResponse, Executable,
 };
 use iter_tools::Itertools;
 use std::sync::Arc;
@@ -100,6 +101,18 @@ impl CellService {
     }
 
     #[tracing::instrument(skip(self))]
+    pub(crate) async fn free_all(&self) -> Result<()> {
+        let mut cells = self.cells.lock().await;
+
+        // First try to gracefully free all cells.
+        cells.broadcast_free();
+        // The cells that remain failed to shut down for some reason.
+        cells.broadcast_kill();
+
+        Ok(())
+    }
+
+    #[tracing::instrument(skip(self))]
     async fn start(
         &self,
         request: ValidatedCellServiceStartRequest,
@@ -119,7 +132,11 @@ impl CellService {
                 .start(executable)
                 .map_err(CellsServiceError::ExecutablesError)?;
 
-            let pid = executable.pid().map_err(CellsServiceError::IO)?.expect("pid").as_raw();
+            let pid = executable
+                .pid()
+                .map_err(CellsServiceError::IO)?
+                .expect("pid")
+                .as_raw();
 
             // TODO: either tell the [ObserveService] about this executable's log channels, or
             // provide a way for the observe service to extract the log channels from here.
@@ -216,9 +233,11 @@ impl cell_service_server::CellService for CellService {
     async fn allocate(
         &self,
         request: Request<CellServiceAllocateRequest>,
-    ) -> std::result::Result<Response<CellServiceAllocateResponse>, Status> {
+    ) -> std::result::Result<Response<CellServiceAllocateResponse>, Status>
+    {
         let request = request.into_inner();
-        let request = ValidatedCellServiceAllocateRequest::validate(request, None)?;
+        let request =
+            ValidatedCellServiceAllocateRequest::validate(request, None)?;
         Ok(Response::new(self.allocate(request).await?))
     }
 
@@ -236,7 +255,8 @@ impl cell_service_server::CellService for CellService {
         request: Request<CellServiceStartRequest>,
     ) -> std::result::Result<Response<CellServiceStartResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedCellServiceStartRequest::validate(request, None)?;
+        let request =
+            ValidatedCellServiceStartRequest::validate(request, None)?;
         Ok(self.start(request).await?)
     }
 

@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: bufbuild/buf-setup-action@v1
       - uses: actions/cache@v3
         with:
           path: |
@@ -23,14 +24,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
           sudo apt-get install -y libdbus-1-dev pkg-config libseccomp-dev
-          mkdir src
-          cd src
           wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
           tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
           chmod +x protoc-gen-doc
           cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
-          cd ../
-          rm -rf src
       - name: Check documenation
         run: |
           wget --output-document=vale.tar.gz https://github.com/errata-ai/vale/releases/download/v2.21.3/vale_2.21.3_Linux_64-bit.tar.gz

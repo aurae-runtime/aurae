@@ -28,40 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-syntax = "proto3";
+use crate::runtime::CellService;
+use tokio::signal::unix::SignalKind;
+use tracing::error;
 
-package aurae.observe.v0;
+/// Waits for a [SIGTERM] signal and...
+/// * Calls [CellService::free_all]
+/// ---
+/// Returns after processing the first received signal.
+pub async fn terminate(cell_service: CellService) {
+    let mut stream = tokio::signal::unix::signal(SignalKind::terminate())
+        .expect("failed to listen for SIGTERM");
 
-option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/observe";
+    let _ = stream.recv().await;
 
-enum LogChannelType {
-  LOG_CHANNEL_TYPE_UNSPECIFIED = 0;
-  LOG_CHANNEL_TYPE_STDOUT = 1;
-  LOG_CHANNEL_TYPE_STDERR = 2;
-}
-
-service ObserveService {
-
-  // request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
-  rpc GetAuraeDaemonLogStream(GetAuraeDaemonLogStreamRequest) returns (stream LogItem) {}
-
-  // TODO: request log stream for a sub process
-  rpc GetSubProcessStream(GetSubProcessStreamRequest) returns (stream LogItem) {}
-
-}
-
-
-message GetAuraeDaemonLogStreamRequest {
-}
-
-// TODO: not implemented
-message GetSubProcessStreamRequest {
-  LogChannelType channel_type = 1;
-  int64 process_id = 2;
-}
-
-message LogItem {
-  string channel = 1;
-  string line = 2;
-  int64 timestamp = 3;
+    if let Err(e) = cell_service.free_all().await {
+        error!("Attempt to free all cells on terminate resulted in error: {e}")
+    }
 }
