@@ -2,7 +2,7 @@ use super::{
     cells::{CellName, CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems},
     executables::{auraed::SharedNamespaces, ExecutableName},
 };
-use aurae_proto::runtime::{
+use aurae_proto::runtime::cell::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
     CellServiceStartRequest, CellServiceStopRequest, Executable,
 };

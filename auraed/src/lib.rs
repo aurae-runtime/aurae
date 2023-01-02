@@ -63,7 +63,7 @@
 #![allow(dead_code)]
 
 use anyhow::Context;
-use aurae_proto::runtime::cell_service_server::CellServiceServer;
+use aurae_proto::runtime::cell::cell_service_server::CellServiceServer;
 use clap::Parser;
 use runtime::CellService;
 use std::{
