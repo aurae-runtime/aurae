@@ -54,3 +54,18 @@ let started = await cells.start(<runtime.CellServiceStartRequest>{
     })
 })
 helpers.print(started)
+
+// TODO: need a "wait for completion" event
+
+// [ Stop ]
+let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
+    cellName: "sleeper-cell",
+    executableName: "sleep-42",
+})
+helpers.print(stopped)
+
+// [ Free ]
+let freed = await cells.free(<runtime.CellServiceFreeRequest>{
+    cellName: "sleeper-cell"
+});
+helpers.print(freed)

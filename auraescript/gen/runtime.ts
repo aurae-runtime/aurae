@@ -51,11 +51,8 @@ export interface Cell {
    * / [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
    */
   name: string;
-  /**
-   * / A comma-separated list of CPU IDs where the task in the control group
-   * / can run. Dashes between numbers indicate ranges.
-   */
-  cpuCpus: string;
+  /** / A  list of CPU IDs where the task in the control group can run. */
+  cpuCpus: number[];
   /**
    * /  Cgroups can be guaranteed a minimum number of "CPU shares"
    * /  when a system is busy.  This does not limit a cgroup's CPU
@@ -71,9 +68,9 @@ export interface Cell {
   cpuShares: number;
   /**
    * / Same syntax as the cpus field of this structure, but applies to
-   * /  memory nodes instead of processors.
+   * / memory nodes instead of processors.
    */
-  cpuMems: string;
+  cpuMems: number[];
   /** / In one period, how much can the tasks run in microseconds. */
   cpuQuota: number;
   /**
@@ -92,12 +89,12 @@ export interface Cell {
 }
 
 /**
- * / An Aurae cell is a name given to Linux control groups (cgroups) that also include
- * / a name, and special pre-exec functionality that is executed from within the same context
- * / as any executables scheduled.
+ * / An Aurae cell is a name given to Linux control groups (cgroups) that also
+ * / include a name, and special pre-exec functionality that is executed from
+ * / within the same context as any executables scheduled.
  * /
- * / A cell must be allocated for every executable scheduled. A cell defines the resource
- * / constraints of the system to allocate for an arbitrary use case.
+ * / A cell must be allocated for every executable scheduled. A cell defines the
+ * / resource constraints of the system to allocate for an arbitrary use case.
  */
 export interface CellServiceAllocateRequest {
   /** / A smaller resource constrained section of the system. */
@@ -386,9 +383,9 @@ export const Executable = {
 function createBaseCell(): Cell {
   return {
     name: "",
-    cpuCpus: "",
+    cpuCpus: [],
     cpuShares: 0,
-    cpuMems: "",
+    cpuMems: [],
     cpuQuota: 0,
     nsShareMount: false,
     nsShareUts: false,
@@ -403,9 +400,9 @@ export const Cell = {
   fromJSON(object: any): Cell {
     return {
       name: isSet(object.name) ? String(object.name) : "",
-      cpuCpus: isSet(object.cpuCpus) ? String(object.cpuCpus) : "",
+      cpuCpus: Array.isArray(object?.cpuCpus) ? object.cpuCpus.map((e: any) => Number(e)) : [],
       cpuShares: isSet(object.cpuShares) ? Number(object.cpuShares) : 0,
-      cpuMems: isSet(object.cpuMems) ? String(object.cpuMems) : "",
+      cpuMems: Array.isArray(object?.cpuMems) ? object.cpuMems.map((e: any) => Number(e)) : [],
       cpuQuota: isSet(object.cpuQuota) ? Number(object.cpuQuota) : 0,
       nsShareMount: isSet(object.nsShareMount) ? Boolean(object.nsShareMount) : false,
       nsShareUts: isSet(object.nsShareUts) ? Boolean(object.nsShareUts) : false,
@@ -419,9 +416,17 @@ export const Cell = {
   toJSON(message: Cell): unknown {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
-    message.cpuCpus !== undefined && (obj.cpuCpus = message.cpuCpus);
+    if (message.cpuCpus) {
+      obj.cpuCpus = message.cpuCpus.map((e) => Math.round(e));
+    } else {
+      obj.cpuCpus = [];
+    }
     message.cpuShares !== undefined && (obj.cpuShares = Math.round(message.cpuShares));
-    message.cpuMems !== undefined && (obj.cpuMems = message.cpuMems);
+    if (message.cpuMems) {
+      obj.cpuMems = message.cpuMems.map((e) => Math.round(e));
+    } else {
+      obj.cpuMems = [];
+    }
     message.cpuQuota !== undefined && (obj.cpuQuota = Math.round(message.cpuQuota));
     message.nsShareMount !== undefined && (obj.nsShareMount = message.nsShareMount);
     message.nsShareUts !== undefined && (obj.nsShareUts = message.nsShareUts);
@@ -435,9 +440,9 @@ export const Cell = {
   fromPartial<I extends Exact<DeepPartial<Cell>, I>>(object: I): Cell {
     const message = createBaseCell();
     message.name = object.name ?? "";
-    message.cpuCpus = object.cpuCpus ?? "";
+    message.cpuCpus = object.cpuCpus?.map((e) => e) || [];
     message.cpuShares = object.cpuShares ?? 0;
-    message.cpuMems = object.cpuMems ?? "";
+    message.cpuMems = object.cpuMems?.map((e) => e) || [];
     message.cpuQuota = object.cpuQuota ?? 0;
     message.nsShareMount = object.nsShareMount ?? false;
     message.nsShareUts = object.nsShareUts ?? false;

@@ -53,10 +53,10 @@ impl Cgroup {
             // CPU Controller
             .cpu()
             .shares(cpu_weight.into_inner())
-            .mems(cpuset_mems.into_inner())
+            .mems(cpuset_mems.as_string())
             .period(1000000) // microseconds in a second
             .quota(cpu_quota.into_inner())
-            .cpus(cpu_cpus.into_inner())
+            .cpus(cpu_cpus.as_string())
             .done()
             // Final Build
             .build(hierarchy);
