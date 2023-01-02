@@ -46,7 +46,7 @@ use crate::logging::log_channel::LogChannel;
 
 /// The server side implementation of the ObserveService subsystem.
 #[derive(Debug)]
-pub struct ObserveServiceServer {
+pub(crate) struct ObserveServiceServer {
     aurae_logger: Arc<LogChannel>,
     sub_process_consumer_list: Vec<Receiver<LogItem>>,
 }
@@ -76,7 +76,7 @@ impl ObserveService for ObserveServiceServer {
     ) -> Result<Response<Self::GetAuraeDaemonLogStreamStream>, Status> {
         let (tx, rx) = mpsc::channel::<Result<LogItem, Status>>(4);
 
-        let mut log_consumer = self.aurae_logger.get_consumer();
+        let mut log_consumer = self.aurae_logger.subscribe();
 
         // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
         //  .. thus disabled logging here.
