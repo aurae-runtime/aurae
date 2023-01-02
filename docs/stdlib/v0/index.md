@@ -4,30 +4,40 @@
 ## Table of Contents
 
 - [observe.proto](#observe-proto)
-    - [GetAuraeDaemonLogStreamRequest](#observe-GetAuraeDaemonLogStreamRequest)
-    - [GetSubProcessStreamRequest](#observe-GetSubProcessStreamRequest)
-    - [LogItem](#observe-LogItem)
+    - [GetAuraeDaemonLogStreamRequest](#observe-v0-GetAuraeDaemonLogStreamRequest)
+    - [GetSubProcessStreamRequest](#observe-v0-GetSubProcessStreamRequest)
+    - [LogItem](#observe-v0-LogItem)
   
-    - [LogChannelType](#observe-LogChannelType)
+    - [LogChannelType](#observe-v0-LogChannelType)
   
-    - [Observe](#observe-Observe)
+    - [ObserveService](#observe-v0-ObserveService)
   
 - [runtime.proto](#runtime-proto)
-    - [AllocateCellRequest](#runtime-AllocateCellRequest)
-    - [AllocateCellResponse](#runtime-AllocateCellResponse)
-    - [Cell](#runtime-Cell)
-    - [Executable](#runtime-Executable)
-    - [FreeCellRequest](#runtime-FreeCellRequest)
-    - [FreeCellResponse](#runtime-FreeCellResponse)
-    - [StartExecutableRequest](#runtime-StartExecutableRequest)
-    - [StartExecutableResponse](#runtime-StartExecutableResponse)
-    - [StopExecutableRequest](#runtime-StopExecutableRequest)
-    - [StopExecutableResponse](#runtime-StopExecutableResponse)
+    - [Cell](#runtime-v0-Cell)
+    - [CellServiceAllocateRequest](#runtime-v0-CellServiceAllocateRequest)
+    - [CellServiceAllocateResponse](#runtime-v0-CellServiceAllocateResponse)
+    - [CellServiceFreeRequest](#runtime-v0-CellServiceFreeRequest)
+    - [CellServiceFreeResponse](#runtime-v0-CellServiceFreeResponse)
+    - [CellServiceStartRequest](#runtime-v0-CellServiceStartRequest)
+    - [CellServiceStartResponse](#runtime-v0-CellServiceStartResponse)
+    - [CellServiceStopRequest](#runtime-v0-CellServiceStopRequest)
+    - [CellServiceStopResponse](#runtime-v0-CellServiceStopResponse)
+    - [Container](#runtime-v0-Container)
+    - [Executable](#runtime-v0-Executable)
+    - [Pod](#runtime-v0-Pod)
+    - [PodServiceAllocateRequest](#runtime-v0-PodServiceAllocateRequest)
+    - [PodServiceAllocateResponse](#runtime-v0-PodServiceAllocateResponse)
+    - [PodServiceFreeRequest](#runtime-v0-PodServiceFreeRequest)
+    - [PodServiceFreeResponse](#runtime-v0-PodServiceFreeResponse)
+    - [PodServiceStartRequest](#runtime-v0-PodServiceStartRequest)
+    - [PodServiceStartResponse](#runtime-v0-PodServiceStartResponse)
+    - [PodServiceStopRequest](#runtime-v0-PodServiceStopRequest)
+    - [PodServiceStopResponse](#runtime-v0-PodServiceStopResponse)
   
-    - [CellService](#runtime-CellService)
-    - [Instances](#runtime-Instances)
-    - [Pods](#runtime-Pods)
-    - [Spawn](#runtime-Spawn)
+    - [CellService](#runtime-v0-CellService)
+    - [InstanceService](#runtime-v0-InstanceService)
+    - [PodService](#runtime-v0-PodService)
+    - [SpawnService](#runtime-v0-SpawnService)
   
 - [schedule.proto](#schedule-proto)
 - [Scalar Value Types](#scalar-value-types)
@@ -41,7 +51,7 @@
 
 
 
-<a name="observe-GetAuraeDaemonLogStreamRequest"></a>
+<a name="observe-v0-GetAuraeDaemonLogStreamRequest"></a>
 
 ### GetAuraeDaemonLogStreamRequest
 
@@ -51,7 +61,7 @@
 
 
 
-<a name="observe-GetSubProcessStreamRequest"></a>
+<a name="observe-v0-GetSubProcessStreamRequest"></a>
 
 ### GetSubProcessStreamRequest
 TODO: not implemented
@@ -59,7 +69,7 @@ TODO: not implemented
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| channel_type | [LogChannelType](#observe-LogChannelType) |  |  |
+| channel_type | [LogChannelType](#observe-v0-LogChannelType) |  |  |
 | process_id | [int64](#int64) |  |  |
 
 
@@ -67,7 +77,7 @@ TODO: not implemented
 
 
 
-<a name="observe-LogItem"></a>
+<a name="observe-v0-LogItem"></a>
 
 ### LogItem
 
@@ -86,15 +96,16 @@ TODO: not implemented
  
 
 
-<a name="observe-LogChannelType"></a>
+<a name="observe-v0-LogChannelType"></a>
 
 ### LogChannelType
 
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| CHANNEL_STDOUT | 0 |  |
-| CHANNEL_STDERR | 1 |  |
+| LOG_CHANNEL_TYPE_UNSPECIFIED | 0 |  |
+| LOG_CHANNEL_TYPE_STDOUT | 1 |  |
+| LOG_CHANNEL_TYPE_STDERR | 2 |  |
 
 
  
@@ -102,15 +113,15 @@ TODO: not implemented
  
 
 
-<a name="observe-Observe"></a>
+<a name="observe-v0-ObserveService"></a>
 
-### Observe
+### ObserveService
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| GetAuraeDaemonLogStream | [GetAuraeDaemonLogStreamRequest](#observe-GetAuraeDaemonLogStreamRequest) | [LogItem](#observe-LogItem) stream | request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ). |
-| GetSubProcessStream | [GetSubProcessStreamRequest](#observe-GetSubProcessStreamRequest) | [LogItem](#observe-LogItem) stream | TODO: request log stream for a sub process |
+| GetAuraeDaemonLogStream | [GetAuraeDaemonLogStreamRequest](#observe-v0-GetAuraeDaemonLogStreamRequest) | [LogItem](#observe-v0-LogItem) stream | request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ). |
+| GetSubProcessStream | [GetSubProcessStreamRequest](#observe-v0-GetSubProcessStreamRequest) | [LogItem](#observe-v0-LogItem) stream | TODO: request log stream for a sub process |
 
  
 
@@ -123,43 +134,7 @@ TODO: not implemented
 
 
 
-<a name="runtime-AllocateCellRequest"></a>
-
-### AllocateCellRequest
-An Aurae cell is a name given to Linux control groups (cgroups) that also include
-/ a name, and special pre-exec functionality that is executed from within the same context
-/ as any executables scheduled.
-/
-/ A cell must be allocated for every executable scheduled. A cell defines the resource
-/ constraints of the system to allocate for an arbitrary use case.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cell | [Cell](#runtime-Cell) |  | A smaller resource constrained section of the system. |
-
-
-
-
-
-
-<a name="runtime-AllocateCellResponse"></a>
-
-### AllocateCellResponse
-The response after a cell has been allocated.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cell_name | [string](#string) |  |  |
-| cgroup_v2 | [bool](#bool) |  | A bool that will be set to true if the cgroup was created with / cgroup v2 controller. |
-
-
-
-
-
-
-<a name="runtime-Cell"></a>
+<a name="runtime-v0-Cell"></a>
 
 ### Cell
 An isolation resource used to divide a system into smaller resource
@@ -185,7 +160,139 @@ An isolation resource used to divide a system into smaller resource
 
 
 
-<a name="runtime-Executable"></a>
+<a name="runtime-v0-CellServiceAllocateRequest"></a>
+
+### CellServiceAllocateRequest
+An Aurae cell is a name given to Linux control groups (cgroups) that also include
+/ a name, and special pre-exec functionality that is executed from within the same context
+/ as any executables scheduled.
+/
+/ A cell must be allocated for every executable scheduled. A cell defines the resource
+/ constraints of the system to allocate for an arbitrary use case.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell | [Cell](#runtime-v0-Cell) |  | A smaller resource constrained section of the system. |
+
+
+
+
+
+
+<a name="runtime-v0-CellServiceAllocateResponse"></a>
+
+### CellServiceAllocateResponse
+The response after a cell has been allocated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell_name | [string](#string) |  |  |
+| cgroup_v2 | [bool](#bool) |  | A bool that will be set to true if the cgroup was created with / cgroup v2 controller. |
+
+
+
+
+
+
+<a name="runtime-v0-CellServiceFreeRequest"></a>
+
+### CellServiceFreeRequest
+Used to remove or free a cell after it has been allocated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell_name | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="runtime-v0-CellServiceFreeResponse"></a>
+
+### CellServiceFreeResponse
+Response after removing or freeing a cell.
+
+
+
+
+
+
+<a name="runtime-v0-CellServiceStartRequest"></a>
+
+### CellServiceStartRequest
+A request for starting an executable inside of a Cell.
+/
+/ This is the lowest level of raw executive functionality.
+/ Here you can define shell commands, and meta information about the command.
+/ An executable is started synchronously.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell_name | [string](#string) |  |  |
+| executable | [Executable](#runtime-v0-Executable) |  |  |
+
+
+
+
+
+
+<a name="runtime-v0-CellServiceStartResponse"></a>
+
+### CellServiceStartResponse
+The response after starting an executable within a Cell.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| pid | [int32](#int32) |  | Return a pid as an int32 based on the pid_t type / in various libc libraries. |
+
+
+
+
+
+
+<a name="runtime-v0-CellServiceStopRequest"></a>
+
+### CellServiceStopRequest
+Request to stop an executable at runtime.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell_name | [string](#string) |  |  |
+| executable_name | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="runtime-v0-CellServiceStopResponse"></a>
+
+### CellServiceStopResponse
+
+
+
+
+
+
+
+<a name="runtime-v0-Container"></a>
+
+### Container
+
+
+
+
+
+
+
+<a name="runtime-v0-Executable"></a>
 
 ### Executable
 The most primitive workload in Aurae, a standard executable process.
@@ -202,85 +309,89 @@ The most primitive workload in Aurae, a standard executable process.
 
 
 
-<a name="runtime-FreeCellRequest"></a>
+<a name="runtime-v0-Pod"></a>
 
-### FreeCellRequest
-Used to remove or free a cell after it has been allocated.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cell_name | [string](#string) |  |  |
+### Pod
 
 
 
 
 
 
-<a name="runtime-FreeCellResponse"></a>
 
-### FreeCellResponse
-Response after removing or freeing a cell.
+<a name="runtime-v0-PodServiceAllocateRequest"></a>
 
-
-
-
-
-
-<a name="runtime-StartExecutableRequest"></a>
-
-### StartExecutableRequest
-A request for starting an executable inside of a Cell.
-/
-/ This is the lowest level of raw executive functionality.
-/ Here you can define shell commands, and meta information about the command.
-/ An executable is started synchronously.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cell_name | [string](#string) |  |  |
-| executable | [Executable](#runtime-Executable) |  |  |
+### PodServiceAllocateRequest
 
 
 
 
 
 
-<a name="runtime-StartExecutableResponse"></a>
 
-### StartExecutableResponse
-The response after starting an executable within a Cell.
+<a name="runtime-v0-PodServiceAllocateResponse"></a>
 
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| pid | [int32](#int32) |  | Return a pid as an int32 based on the pid_t type / in various libc libraries. |
+### PodServiceAllocateResponse
 
 
 
 
 
 
-<a name="runtime-StopExecutableRequest"></a>
 
-### StopExecutableRequest
+<a name="runtime-v0-PodServiceFreeRequest"></a>
 
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cell_name | [string](#string) |  |  |
-| executable_name | [string](#string) |  |  |
+### PodServiceFreeRequest
 
 
 
 
 
 
-<a name="runtime-StopExecutableResponse"></a>
 
-### StopExecutableResponse
+<a name="runtime-v0-PodServiceFreeResponse"></a>
+
+### PodServiceFreeResponse
+
+
+
+
+
+
+
+<a name="runtime-v0-PodServiceStartRequest"></a>
+
+### PodServiceStartRequest
+
+
+
+
+
+
+
+<a name="runtime-v0-PodServiceStartResponse"></a>
+
+### PodServiceStartResponse
+
+
+
+
+
+
+
+<a name="runtime-v0-PodServiceStopRequest"></a>
+
+### PodServiceStopRequest
+
+
+
+
+
+
+
+<a name="runtime-v0-PodServiceStopResponse"></a>
+
+### PodServiceStopResponse
 
 
 
@@ -294,7 +405,7 @@ The response after starting an executable within a Cell.
  
 
 
-<a name="runtime-CellService"></a>
+<a name="runtime-v0-CellService"></a>
 
 ### CellService
 Cells is the most fundamental isolation boundary for Aurae.
@@ -306,33 +417,42 @@ Cells is the most fundamental isolation boundary for Aurae.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Allocate | [AllocateCellRequest](#runtime-AllocateCellRequest) | [AllocateCellResponse](#runtime-AllocateCellResponse) | Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources / only. |
-| Free | [FreeCellRequest](#runtime-FreeCellRequest) | [FreeCellResponse](#runtime-FreeCellResponse) | Free up previously requested resources for an existing cell |
-| Start | [StartExecutableRequest](#runtime-StartExecutableRequest) | [StartExecutableResponse](#runtime-StartExecutableResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
-| Stop | [StopExecutableRequest](#runtime-StopExecutableRequest) | [StopExecutableResponse](#runtime-StopExecutableResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
+| Allocate | [CellServiceAllocateRequest](#runtime-v0-CellServiceAllocateRequest) | [CellServiceAllocateResponse](#runtime-v0-CellServiceAllocateResponse) | Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources / only. |
+| Free | [CellServiceFreeRequest](#runtime-v0-CellServiceFreeRequest) | [CellServiceFreeResponse](#runtime-v0-CellServiceFreeResponse) | Free up previously requested resources for an existing cell |
+| Start | [CellServiceStartRequest](#runtime-v0-CellServiceStartRequest) | [CellServiceStartResponse](#runtime-v0-CellServiceStartResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
+| Stop | [CellServiceStopRequest](#runtime-v0-CellServiceStopRequest) | [CellServiceStopResponse](#runtime-v0-CellServiceStopResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
 
 
-<a name="runtime-Instances"></a>
+<a name="runtime-v0-InstanceService"></a>
 
-### Instances
-TODO Instances Service
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-
-
-<a name="runtime-Pods"></a>
-
-### Pods
-TODO Pods Service
+### InstanceService
+TODO Instance Service
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 
 
-<a name="runtime-Spawn"></a>
+<a name="runtime-v0-PodService"></a>
 
-### Spawn
+### PodService
+A pod is a higher level abstraction than Aurae cells, and to most users
+/ will look at feel like one or more &#34;containers&#34;.
+/
+/ Pods will run an OCI compliant container image.
+/
+/ A pod is a group of one or more containers with shared network and storage.
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| Allocate | [PodServiceAllocateRequest](#runtime-v0-PodServiceAllocateRequest) | [PodServiceAllocateResponse](#runtime-v0-PodServiceAllocateResponse) |  |
+| Start | [PodServiceStartRequest](#runtime-v0-PodServiceStartRequest) | [PodServiceStartResponse](#runtime-v0-PodServiceStartResponse) |  |
+| Stop | [PodServiceStopRequest](#runtime-v0-PodServiceStopRequest) | [PodServiceStopResponse](#runtime-v0-PodServiceStopResponse) |  |
+| Free | [PodServiceFreeRequest](#runtime-v0-PodServiceFreeRequest) | [PodServiceFreeResponse](#runtime-v0-PodServiceFreeResponse) |  |
+
+
+<a name="runtime-v0-SpawnService"></a>
+
+### SpawnService
 TODO Spawn Service
 
 | Method Name | Request Type | Response Type | Description |
