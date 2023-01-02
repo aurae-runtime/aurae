@@ -30,69 +30,7 @@
 
 syntax = "proto3";
 
-package aurae.runtime.v0;
-
-option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
-
-/// Runtime
-/// ===
-///
-/// The Runtime API is a resource-oriented set of services.
-/// Resource type API modelled after the "Resource-oriented design" shared by
-/// Source: https://google.aip.dev/121
-
-// TODO Instance Service
-service InstanceService {}
-
-// TODO Spawn Service
-service SpawnService {}
-
-/// Runtime Verbs
-/// ===
-///
-/// We call out a set of common verbs to the runtime subsystem.
-/// These verbs should be generic enough to use for each resource
-/// added to the RPCs and services.
-///
-/// If functionality can not be implemented by one of these
-/// verbs a new verb may be introduced as long as it reasonably
-/// applicable to similar RPCs and services.
-///
-/// * Allocate   Reserve resources, and manage any prerequisites but do not
-/// start
-/// * Free       Free resources, and destroy any prerequisites that have been
-/// started
-/// * Start      Run a resource immediately
-/// * Stop       Stop a resource immediately
-/// * Spawn      A special function that creates a child instance with inherited
-/// properties of the parent
-
-/// A pod is a higher level abstraction than Aurae cells, and to most users
-/// will look at feel like one or more "containers".
-///
-/// Pods will run an OCI compliant container image.
-///
-/// A pod is a group of one or more containers with shared network and storage.
-service PodService {
-
-  rpc Allocate(PodServiceAllocateRequest) returns (PodServiceAllocateResponse) {}
-  rpc Start(PodServiceStartRequest) returns (PodServiceStartResponse) {}
-  rpc Stop(PodServiceStopRequest) returns (PodServiceStopResponse) {}
-  rpc Free(PodServiceFreeRequest) returns (PodServiceFreeResponse) {}
-
-}
-
-message PodServiceAllocateRequest{}
-message PodServiceAllocateResponse{}
-message PodServiceFreeRequest{}
-message PodServiceFreeResponse{}
-message Pod{}
-
-message PodServiceStartRequest{}
-message PodServiceStartResponse{}
-message PodServiceStopRequest{}
-message PodServiceStopResponse{}
-message Container{}
+package aurae.runtime.cell.v0;
 
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be
