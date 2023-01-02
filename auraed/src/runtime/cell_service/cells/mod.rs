@@ -35,9 +35,6 @@ pub use cells::Cells;
 use cgroups::Cgroup;
 pub use cgroups::{CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems};
 pub use error::{CellsError, Result};
-use lazy_static::lazy_static;
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 mod cell;
 mod cell_name;
@@ -45,10 +42,6 @@ mod cell_name;
 mod cells;
 mod cgroups;
 mod error;
-
-lazy_static! {
-    pub static ref CELLS: Arc<Mutex<Cells>> = Default::default();
-}
 
 #[derive(Debug, Clone)]
 pub struct CellSpec {

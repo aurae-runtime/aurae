@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub(crate) use cell_service::{CellService, CELLS};
+pub(crate) use cell_service::CellService;
 
 mod cell_service;
 mod pod_service;

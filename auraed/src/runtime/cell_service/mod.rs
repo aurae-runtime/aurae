@@ -1,5 +1,4 @@
 pub use cell_service::CellService;
-pub use cells::CELLS;
 use error::Result;
 
 #[allow(clippy::module_inception)]

@@ -28,21 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::runtime::CellService;
 use tokio::signal::unix::SignalKind;
+use tracing::error;
 
 /// Waits for a [SIGTERM] signal and...
-/// * Calls [Cells::broadcast_free]
-/// * Calls [Cells::broadcast_kill]
+/// * Calls [CellService::free_all]
 /// ---
 /// Returns after processing the first received signal.
-pub async fn terminate() {
+pub async fn terminate(cell_service: CellService) {
     let mut stream = tokio::signal::unix::signal(SignalKind::terminate())
         .expect("failed to listen for SIGTERM");
 
     let _ = stream.recv().await;
-    let mut cells = crate::runtime::CELLS.lock().await;
-    // First try to gracefully free all cells.
-    cells.broadcast_free();
-    // The cells that remain failed to shut down for some reason.
-    cells.broadcast_kill();
+
+    if let Err(e) = cell_service.free_all().await {
+        error!("Attempt to free all cells on terminate resulted in error: {e}")
+    }
 }
