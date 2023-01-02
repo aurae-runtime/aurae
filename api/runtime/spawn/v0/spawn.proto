@@ -32,5 +32,7 @@ syntax = "proto3";
 
 package aurae.runtime.spawn.v0;
 
+option go_package = "github.com/aurae-runtime/aurae/client-go/pkg/api/runtime/spawn/v0;spawnv0";
+
 // TODO Spawn Service
 service SpawnService {}

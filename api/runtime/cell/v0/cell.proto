@@ -32,6 +32,8 @@ syntax = "proto3";
 
 package aurae.runtime.cell.v0;
 
+option go_package = "github.com/aurae-runtime/aurae/client-go/pkg/api/runtime/cell/v0;cellv0";
+
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be
 /// used to run workloads.

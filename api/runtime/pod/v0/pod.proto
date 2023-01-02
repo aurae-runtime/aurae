@@ -32,6 +32,8 @@ syntax = "proto3";
 
 package aurae.runtime.pod.v0;
 
+option go_package = "github.com/aurae-runtime/aurae/client-go/pkg/api/runtime/pod/v0;podv0";
+
 /// A pod is a higher level abstraction than Aurae cells, and to most users
 /// will look at feel like one or more "containers".
 ///

@@ -32,5 +32,7 @@ syntax = "proto3";
 
 package aurae.runtime.instance.v0;
 
+option go_package = "github.com/aurae-runtime/aurae/client-go/pkg/api/runtime/instance/v0;instancev0";
+
 // TODO Instance Service
 service InstanceService {}
