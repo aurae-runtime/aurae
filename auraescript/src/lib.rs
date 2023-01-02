@@ -78,7 +78,8 @@ pub fn init() -> JsRuntime {
 
 fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
-    ops.extend(runtime::op_decls());
+    ops.extend(runtime::cell::op_decls());
+    ops.extend(runtime::pod::op_decls());
     ops
 }
 

@@ -28,22 +28,32 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::runtime::*;
+pub mod cell {
+    use aurae_proto::runtime::cell::*;
 
-macros::ops_generator!(
-    runtime,
-    {
-        CellService,
-        allocate(CellServiceAllocateRequest) -> CellServiceAllocateResponse,
-        free(CellServiceFreeRequest) -> CellServiceFreeResponse,
-        start(CellServiceStartRequest) -> CellServiceStartResponse,
-        stop(CellServiceStopRequest) -> CellServiceStopResponse,
-    },
-    {
-        PodService,
-        allocate(PodServiceAllocateRequest) -> PodServiceAllocateResponse,
-        free(PodServiceFreeRequest) -> PodServiceFreeResponse,
-        start(PodServiceStartRequest) -> PodServiceStartResponse,
-        stop(PodServiceStopRequest) -> PodServiceStopResponse,
-    },
-);
+    macros::ops_generator!(
+        cell,
+        {
+            CellService,
+            allocate(CellServiceAllocateRequest) -> CellServiceAllocateResponse,
+            free(CellServiceFreeRequest) -> CellServiceFreeResponse,
+            start(CellServiceStartRequest) -> CellServiceStartResponse,
+            stop(CellServiceStopRequest) -> CellServiceStopResponse,
+        },
+    );
+}
+
+pub mod pod {
+    use aurae_proto::runtime::pod::*;
+
+    macros::ops_generator!(
+        pod,
+        {
+            PodService,
+            allocate(PodServiceAllocateRequest) -> PodServiceAllocateResponse,
+            free(PodServiceFreeRequest) -> PodServiceFreeResponse,
+            start(PodServiceStartRequest) -> PodServiceStartResponse,
+            stop(PodServiceStopRequest) -> PodServiceStopResponse,
+        },
+    );
+}

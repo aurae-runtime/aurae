@@ -11,7 +11,7 @@ use syn::{braced, parenthesized, parse_macro_input, Token, Type};
 
 // NOTE: Another approach to generate the typescript files would be to have a macro call
 //       per service and generate intermediate files with only the service implementation
-//       (e.g., runtime.cell_service.ts, runtime.pod_service.ts),
+//       (e.g., runtime.cell.cell_service.ts, runtime.pod.pod_service.ts),
 //       and then each macro call would read all those files and output the
 //       single runtime.ts (last one wins). I don't think the build system is parallel per crate,
 //       so that shouldn't have a race condition issue, but I took the approach of a
@@ -166,7 +166,7 @@ fn typescript_generator(input: &OpsGeneratorInput) {
 
     let ts_path = {
         let mut out_dir = gen_dir.clone();
-        out_dir.push(format!("v0/{module}.ts"));
+        out_dir.push(format!("runtime/{module}/v0/{module}.ts"));
         out_dir
     };
 
