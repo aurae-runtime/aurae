@@ -30,7 +30,7 @@
 
 syntax = "proto3";
 
-package observe.v0;
+package aurae.observe.v0;
 
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/observe";
 
