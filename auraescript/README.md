@@ -2,7 +2,7 @@
 
 AuraeScript is a turing complete language for platform teams built on [Deno](https://deno.land).
 
-AuraeScript is a lightweight client that wraps the [Aurae Standard Library](https://github.com/aurae-runtime/api/blob/main/README.md#the-aurae-standard-library).
+AuraeScript is a lightweight client that wraps the [Aurae Standard Library](https://aurae.io/stdlib/).
 
 AuraeScript is a quick way to access the core Aurae APIs and follows normal UNIX parlance. AuraeScript should feel simple and intuitive for any Go, C, Python, or Rust programmer.
 
