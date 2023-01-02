@@ -22,3 +22,9 @@ plugins:
       - outputEncodeMethods=false
       - outputClientImpl=false
       - lowerCaseServiceMethods=true
+  - plugin: buf.build/protocolbuffers/go:v1.28.1
+    out: client-go/pkg/api
+    opt: paths=source_relative
+  - plugin: buf.build/grpc/go:v1.2.0
+    out: client-go/pkg/api
+    opt: paths=source_relative
