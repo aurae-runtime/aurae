@@ -3,8 +3,8 @@ use super::{
     executables::{auraed::SharedNamespaces, ExecutableName},
 };
 use aurae_proto::runtime::{
-    AllocateCellRequest, Cell, Executable, FreeCellRequest,
-    StartExecutableRequest, StopExecutableRequest,
+    Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
+    CellServiceStartRequest, CellServiceStopRequest, Executable,
 };
 use std::collections::VecDeque;
 use std::ffi::OsString;
@@ -18,12 +18,14 @@ use validation_macros::ValidatedType;
 // TODO: ...and I (@krisnova) read the above statement.
 
 #[derive(Debug, ValidatedType)]
-pub struct ValidatedAllocateCellRequest {
+pub struct ValidatedCellServiceAllocateRequest {
     #[field_type(Option<Cell>)]
     pub cell: ValidatedCell,
 }
 
-impl AllocateCellRequestTypeValidator for AllocateCellRequestValidator {
+impl CellServiceAllocateRequestTypeValidator
+    for CellServiceAllocateRequestValidator
+{
     fn validate_cell(
         cell: Option<Cell>,
         field_name: &str,
@@ -39,23 +41,23 @@ impl AllocateCellRequestTypeValidator for AllocateCellRequestValidator {
 }
 
 #[derive(Debug, ValidatedType)]
-pub struct ValidatedFreeCellRequest {
+pub struct ValidatedCellServiceFreeRequest {
     #[field_type(String)]
     #[validate]
     pub cell_name: CellName,
 }
 
-impl FreeCellRequestTypeValidator for FreeCellRequestValidator {}
+impl CellServiceFreeRequestTypeValidator for CellServiceFreeRequestValidator {}
 
 #[derive(Debug, ValidatedType)]
-pub struct ValidatedStartExecutableRequest {
+pub struct ValidatedCellServiceStartRequest {
     #[field_type(String)]
     pub cell_name: VecDeque<CellName>,
     #[field_type(Option<Executable>)]
     pub executable: ValidatedExecutable,
 }
 
-impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
+impl CellServiceStartRequestTypeValidator for CellServiceStartRequestValidator {
     fn validate_cell_name(
         cell_name: String,
         field_name: &str,
@@ -93,7 +95,7 @@ impl StartExecutableRequestTypeValidator for StartExecutableRequestValidator {
 }
 
 #[derive(Debug, ValidatedType)]
-pub struct ValidatedStopExecutableRequest {
+pub struct ValidatedCellServiceStopRequest {
     #[field_type(String)]
     pub cell_name: VecDeque<CellName>,
     #[field_type(String)]
@@ -101,7 +103,7 @@ pub struct ValidatedStopExecutableRequest {
     pub executable_name: ExecutableName,
 }
 
-impl StopExecutableRequestTypeValidator for StopExecutableRequestValidator {
+impl CellServiceStopRequestTypeValidator for CellServiceStopRequestValidator {
     fn validate_cell_name(
         cell_name: String,
         field_name: &str,

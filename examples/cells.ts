@@ -34,7 +34,7 @@ import * as runtime from "../auraescript/gen/runtime.ts";
 let cells = new runtime.CellServiceClient();
 
 // [ Allocate ]
-let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuQuota: 400 * (10 ** 3), // 0.4 seconds in microseconds
         cpuShares: 2, // Percentage of CPUs
@@ -44,7 +44,7 @@ let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
 helpers.print(allocated)
 
 // [ Start ]
-let started = await cells.start(<runtime.StartExecutableRequest>{
+let started = await cells.start(<runtime.CellServiceStartRequest>{
     cellName: "sleeper-cell",
     executable: runtime.Executable.fromPartial({
         command: "/usr/bin/sleep 42",
@@ -55,14 +55,14 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 helpers.print(started)
 
 // [ Stop ]
-let stopped = await cells.stop(<runtime.StopExecutableRequest>{
+let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
     cellName: "sleeper-cell",
     executableName: "sleep-42",
 })
 helpers.print(stopped)
 
 // [ Free ]
-let freed = await cells.free(<runtime.FreeCellRequest>{
+let freed = await cells.free(<runtime.CellServiceFreeRequest>{
     cellName: "sleeper-cell"
 });
 helpers.print(freed)

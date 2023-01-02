@@ -30,17 +30,17 @@
 
 syntax = "proto3";
 
-package observe;
+package aurae.observe.v0;
 
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/observe";
 
 enum LogChannelType {
-  CHANNEL_STDOUT = 0;
-  CHANNEL_STDERR = 1;
+  LOG_CHANNEL_TYPE_UNSPECIFIED = 0;
+  LOG_CHANNEL_TYPE_STDOUT = 1;
+  LOG_CHANNEL_TYPE_STDERR = 2;
 }
 
-service Observe {
-
+service ObserveService {
 
   // request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
   rpc GetAuraeDaemonLogStream(GetAuraeDaemonLogStreamRequest) returns (stream LogItem) {}

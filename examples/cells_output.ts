@@ -34,7 +34,7 @@ import * as runtime from "../auraescript/gen/runtime.ts";
 let cells = new runtime.CellServiceClient();
 
 // [ Allocate ]
-let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuQuota: 400 * (10 ** 3), // 0.4 seconds in microseconds
         cpuShares: 2, // Percentage of CPUs
@@ -44,7 +44,7 @@ let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
 //helpers.print(allocated)
 
 // [ Start ]
-let started_out = await cells.start(<runtime.StartExecutableRequest>{
+let started_out = await cells.start(<runtime.CellServiceStartRequest>{
     cellName: "echo-cell",
     executable: runtime.Executable.fromPartial({
         command: "/usr/bin/echo 'hello world'",
@@ -55,7 +55,7 @@ let started_out = await cells.start(<runtime.StartExecutableRequest>{
 //helpers.print(started_out)
 
 // [ Start ]
-let started_err = await cells.start(<runtime.StartExecutableRequest>{
+let started_err = await cells.start(<runtime.CellServiceStartRequest>{
     cellName: "echo-cell",
     executable: runtime.Executable.fromPartial({
         command: "/usr/bin/echo 'hello world' 1>&2",
@@ -65,19 +65,19 @@ let started_err = await cells.start(<runtime.StartExecutableRequest>{
 })
 
 // [ Stop ]
-let stopped_out = await cells.stop(<runtime.StopExecutableRequest>{
+let stopped_out = await cells.stop(<runtime.CellServiceStopRequest>{
     cellName: "echo-cell",
     executableName: "echo-stdout",
 })
 // [ Stop ]
-let stopped_err = await cells.stop(<runtime.StopExecutableRequest>{
+let stopped_err = await cells.stop(<runtime.CellServiceStopRequest>{
     cellName: "echo-cell",
     executableName: "echo-stderr",
 })
 //helpers.print(stopped)
 
 // [ Free ]
-let freed = await cells.free(<runtime.FreeCellRequest>{
+let freed = await cells.free(<runtime.CellServiceFreeRequest>{
     cellName: "echo-cell"
 });
 //helpers.print(freed)

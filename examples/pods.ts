@@ -31,4 +31,4 @@
 import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/runtime.ts";
 
-let pods = new runtime.PodsServiceClient();
+let pods = new runtime.PodServiceClient();

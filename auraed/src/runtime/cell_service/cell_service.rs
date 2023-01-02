@@ -29,22 +29,23 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cells::Cells,
     error::CellsServiceError,
     executables::Executables,
     validation::{
-        ValidatedAllocateCellRequest, ValidatedExecutable,
-        ValidatedFreeCellRequest, ValidatedStartExecutableRequest,
-        ValidatedStopExecutableRequest,
+        ValidatedCellServiceAllocateRequest, ValidatedCellServiceFreeRequest,
+        ValidatedCellServiceStartRequest, ValidatedCellServiceStopRequest,
+        ValidatedExecutable,
     },
     Result,
 };
+use crate::runtime::cell_service::cells::Cells;
 use ::validation::ValidatedType;
 use aurae_client::{runtime::cell_service::CellServiceClient, AuraeClient};
 use aurae_proto::runtime::{
-    cell_service_server, AllocateCellRequest, AllocateCellResponse, Executable,
-    FreeCellRequest, FreeCellResponse, StartExecutableRequest,
-    StartExecutableResponse, StopExecutableRequest, StopExecutableResponse,
+    cell_service_server, CellServiceAllocateRequest,
+    CellServiceAllocateResponse, CellServiceFreeRequest,
+    CellServiceFreeResponse, CellServiceStartRequest, CellServiceStartResponse,
+    CellServiceStopRequest, CellServiceStopResponse, Executable,
 };
 use iter_tools::Itertools;
 use std::sync::Arc;
@@ -69,17 +70,17 @@ impl CellService {
     #[tracing::instrument(skip(self))]
     async fn allocate(
         &self,
-        request: ValidatedAllocateCellRequest,
-    ) -> Result<AllocateCellResponse> {
+        request: ValidatedCellServiceAllocateRequest,
+    ) -> Result<CellServiceAllocateResponse> {
         // Initialize the cell
-        let ValidatedAllocateCellRequest { cell } = request;
+        let ValidatedCellServiceAllocateRequest { cell } = request;
         let cell_name = cell.name.clone();
         let cell_spec = cell.into();
 
         let mut cells = self.cells.lock().await;
         let cell = cells.allocate(cell_name, cell_spec)?;
 
-        Ok(AllocateCellResponse {
+        Ok(CellServiceAllocateResponse {
             cell_name: cell.name().clone().into_inner(),
             cgroup_v2: cell.v2().expect("allocated cell returns `Some`"),
         })
@@ -88,23 +89,35 @@ impl CellService {
     #[tracing::instrument(skip(self))]
     async fn free(
         &self,
-        request: ValidatedFreeCellRequest,
-    ) -> Result<FreeCellResponse> {
-        let ValidatedFreeCellRequest { cell_name } = request;
+        request: ValidatedCellServiceFreeRequest,
+    ) -> Result<CellServiceFreeResponse> {
+        let ValidatedCellServiceFreeRequest { cell_name } = request;
 
         info!("CellService: free() cell_name={:?}", cell_name);
         let mut cells = self.cells.lock().await;
         cells.free(&cell_name)?;
 
-        Ok(FreeCellResponse::default())
+        Ok(CellServiceFreeResponse::default())
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn free_all(&self) -> Result<()> {
+        let mut cells = self.cells.lock().await;
+
+        // First try to gracefully free all cells.
+        cells.broadcast_free();
+        // The cells that remain failed to shut down for some reason.
+        cells.broadcast_kill();
+
+        Ok(())
     }
 
     #[tracing::instrument(skip(self))]
     async fn start(
         &self,
-        request: ValidatedStartExecutableRequest,
-    ) -> std::result::Result<Response<StartExecutableResponse>, Status> {
-        let ValidatedStartExecutableRequest { mut cell_name, executable } =
+        request: ValidatedCellServiceStartRequest,
+    ) -> std::result::Result<Response<CellServiceStartResponse>, Status> {
+        let ValidatedCellServiceStartRequest { mut cell_name, executable } =
             request;
 
         info!(
@@ -119,12 +132,16 @@ impl CellService {
                 .start(executable)
                 .map_err(CellsServiceError::ExecutablesError)?;
 
-            let pid = executable.pid().map_err(CellsServiceError::IO)?.expect("pid").as_raw();
+            let pid = executable
+                .pid()
+                .map_err(CellsServiceError::IO)?
+                .expect("pid")
+                .as_raw();
 
             // TODO: either tell the [ObserveService] about this executable's log channels, or
             // provide a way for the observe service to extract the log channels from here.
 
-            Ok(Response::new(StartExecutableResponse { pid }))
+            Ok(Response::new(CellServiceStartResponse { pid }))
         } else {
             // we are in a parent cell
             let child_cell_name = cell_name.pop_front().expect("len > 0");
@@ -145,7 +162,7 @@ impl CellService {
             let ValidatedExecutable { name, command, description } = executable;
 
             client
-                .start(StartExecutableRequest {
+                .start(CellServiceStartRequest {
                     cell_name: cell_name.iter().join("/"),
                     executable: Some(Executable {
                         name: name.into_inner(),
@@ -160,9 +177,9 @@ impl CellService {
     #[tracing::instrument(skip(self))]
     async fn stop(
         &self,
-        request: ValidatedStopExecutableRequest,
-    ) -> std::result::Result<Response<StopExecutableResponse>, Status> {
-        let ValidatedStopExecutableRequest { mut cell_name, executable_name } =
+        request: ValidatedCellServiceStopRequest,
+    ) -> std::result::Result<Response<CellServiceStopResponse>, Status> {
+        let ValidatedCellServiceStopRequest { mut cell_name, executable_name } =
             request;
 
         info!(
@@ -177,7 +194,7 @@ impl CellService {
                 .stop(&executable_name)
                 .map_err(CellsServiceError::ExecutablesError)?;
 
-            Ok(Response::new(StopExecutableResponse::default()))
+            Ok(Response::new(CellServiceStopResponse::default()))
         } else {
             // we are in a parent cell
             let child_cell_name = cell_name.pop_front().expect("len > 0");
@@ -193,7 +210,7 @@ impl CellService {
                 .expect("failed to create AuraeClient");
 
             client
-                .stop(StopExecutableRequest {
+                .stop(CellServiceStopRequest {
                     cell_name: cell_name.iter().join("/"),
                     executable_name: executable_name.into_inner(),
                 })
@@ -215,37 +232,40 @@ impl CellService {
 impl cell_service_server::CellService for CellService {
     async fn allocate(
         &self,
-        request: Request<AllocateCellRequest>,
-    ) -> std::result::Result<Response<AllocateCellResponse>, Status> {
+        request: Request<CellServiceAllocateRequest>,
+    ) -> std::result::Result<Response<CellServiceAllocateResponse>, Status>
+    {
         let request = request.into_inner();
-        let request = ValidatedAllocateCellRequest::validate(request, None)?;
+        let request =
+            ValidatedCellServiceAllocateRequest::validate(request, None)?;
         Ok(Response::new(self.allocate(request).await?))
     }
 
     async fn free(
         &self,
-        request: Request<FreeCellRequest>,
-    ) -> std::result::Result<Response<FreeCellResponse>, Status> {
+        request: Request<CellServiceFreeRequest>,
+    ) -> std::result::Result<Response<CellServiceFreeResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedFreeCellRequest::validate(request, None)?;
+        let request = ValidatedCellServiceFreeRequest::validate(request, None)?;
         Ok(Response::new(self.free(request).await?))
     }
 
     async fn start(
         &self,
-        request: Request<StartExecutableRequest>,
-    ) -> std::result::Result<Response<StartExecutableResponse>, Status> {
+        request: Request<CellServiceStartRequest>,
+    ) -> std::result::Result<Response<CellServiceStartResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStartExecutableRequest::validate(request, None)?;
+        let request =
+            ValidatedCellServiceStartRequest::validate(request, None)?;
         Ok(self.start(request).await?)
     }
 
     async fn stop(
         &self,
-        request: Request<StopExecutableRequest>,
-    ) -> std::result::Result<Response<StopExecutableResponse>, Status> {
+        request: Request<CellServiceStopRequest>,
+    ) -> std::result::Result<Response<CellServiceStopResponse>, Status> {
         let request = request.into_inner();
-        let request = ValidatedStopExecutableRequest::validate(request, None)?;
+        let request = ValidatedCellServiceStopRequest::validate(request, None)?;
         Ok(self.stop(request).await?)
     }
 }

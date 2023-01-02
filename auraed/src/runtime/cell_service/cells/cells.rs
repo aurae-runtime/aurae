@@ -119,7 +119,7 @@ impl Cells {
         res
     }
 
-    pub fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: FnOnce(&mut Cell) -> Result<R>,
     {
@@ -155,6 +155,44 @@ impl Cells {
 
         // Cell exist, but cgroup doesn't
         Err(CellsError::CgroupNotFound { cell_name: cell_name.clone() })
+    }
+
+    /// Calls [Cell::Free] on all cells in the cache, ignoring any errors.
+    /// Successfully freed cells will be removed from the cache.
+    pub fn broadcast_free(&mut self) {
+        let freed_cells = self.do_broadcast(|cell| cell.free());
+
+        for cell_name in freed_cells {
+            let _ = self.cache.remove(&cell_name);
+        }
+    }
+
+    /// Sends a [SIGKILL] to all Cells, ignoring any errors.
+    pub fn broadcast_kill(&mut self) {
+        let killed_cells = self.do_broadcast(|cell| cell.kill());
+
+        for cell_name in killed_cells {
+            let _ = self.cache.remove(&cell_name);
+        }
+    }
+
+    fn do_broadcast<F>(&mut self, f: F) -> Vec<CellName>
+    where
+        F: Fn(&mut Cell) -> Result<()>,
+    {
+        self.cache
+            .values_mut()
+            .flat_map(|cell| {
+                f(cell)?;
+
+                // We clone here because we need a way to reference the cell for the loop
+                // to remove it from the cache. Instead of cloning, we could make [Cell::state]
+                // `pub(crate)` and check the state of the cell, removing the ones in the
+                // [CellState::Freed] state, but that would expose internal functionality of the cell.
+                // We could also create and `is_freed` fn on the cell.
+                Ok::<_, CellsError>(cell.name().clone())
+            })
+            .collect()
     }
 }
 

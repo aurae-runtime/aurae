@@ -33,11 +33,12 @@ use crate::runtime::cell_service::executables::process::Process;
 use aurae_client::AuraeConfig;
 use nix::libc::SIGCHLD;
 use nix::mount::MntFlags;
-use nix::sys::signal::SIGTERM;
+use nix::sys::signal::{Signal, SIGTERM};
 use nix::unistd::Pid;
 use std::io;
 use std::os::unix::process::CommandExt;
 use std::process::{Command, ExitStatus};
+use Signal::SIGKILL;
 
 #[derive(Debug)]
 pub struct NestedAuraed {
@@ -207,11 +208,17 @@ impl NestedAuraed {
         Ok(Self { process, shared_namespaces, client_config })
     }
 
-    pub fn kill(&mut self) -> io::Result<ExitStatus> {
+    /// Sends a graceful shutdown signal to the auraed process.
+    pub fn shutdown(&mut self) -> io::Result<ExitStatus> {
         // TODO: Here, SIGTERM works when using auraescript, but hangs(?) during unit tests.
-        //       SIGKILL, however, works. This may be solved once we proxy
-        //       signals to nested auraeds.
+        //       SIGKILL, however, works.
         self.process.kill(Some(SIGTERM))?;
+        self.process.wait()
+    }
+
+    /// Sends a [SIGKILL] signal to the auraed process.
+    pub fn kill(&mut self) -> io::Result<ExitStatus> {
+        self.process.kill(Some(SIGKILL))?;
         self.process.wait()
     }
 

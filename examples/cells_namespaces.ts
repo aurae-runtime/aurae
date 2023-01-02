@@ -35,7 +35,7 @@ let cells = new runtime.CellServiceClient();
 
 const cellName = "ae-1";
 // [ Allocate Shared NS ]
-let s_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuShares: 2,
         name: cellName,
@@ -50,7 +50,7 @@ let s_allocated = await cells.allocate(<runtime.AllocateCellRequest>{
 helpers.print(s_allocated)
 
 // [ Start ]
-let s_started = await cells.start(<runtime.StartExecutableRequest>{
+let s_started = await cells.start(<runtime.CellServiceStartRequest>{
     cellName: cellName,
     executable: runtime.Executable.fromPartial({
         command: "ls /proc", // Note: you must use the full path now for namespaces!
@@ -61,6 +61,6 @@ let s_started = await cells.start(<runtime.StartExecutableRequest>{
 helpers.print(s_started)
 
 // [ Free ]
-await cells.free(<runtime.FreeCellRequest>{
+await cells.free(<runtime.CellServiceFreeRequest>{
     cellName: cellName
 });

@@ -28,60 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-#![allow(unused)]
-#![allow(clippy::module_inception)]
+use crate::runtime::CellService;
+use tokio::signal::unix::SignalKind;
+use tracing::error;
 
-use aurae_client::{runtime::pod_service::PodServiceClient, AuraeClient};
-use aurae_proto::runtime::{
-    pod_service_server, PodServiceAllocateRequest, PodServiceAllocateResponse,
-    PodServiceFreeRequest, PodServiceFreeResponse, Pod, PodServiceStartRequest,
-    PodServiceStartResponse, PodServiceStopRequest, PodServiceStopResponse,
-};
-// use std::sync::Arc;
-// use tokio::sync::Mutex;
-use tonic::{Request, Response, Status};
+/// Waits for a [SIGTERM] signal and...
+/// * Calls [CellService::free_all]
+/// ---
+/// Returns after processing the first received signal.
+pub async fn terminate(cell_service: CellService) {
+    let mut stream = tokio::signal::unix::signal(SignalKind::terminate())
+        .expect("failed to listen for SIGTERM");
 
-#[derive(Debug, Clone)]
-pub struct PodService {
-    // These are used for the cache as in the cells/executables
-    //pods: Arc<Mutex<Pods>>,
-    //containers: Arc<Mutex<Containers>>,
-}
+    let _ = stream.recv().await;
 
-impl PodService {
-    pub fn new() -> Self {
-        PodService {}
-    }
-}
-
-#[tonic::async_trait]
-impl pod_service_server::PodService for PodService {
-    async fn allocate(
-        &self,
-        request: Request<PodServiceAllocateRequest>,
-    ) -> Result<Response<PodServiceAllocateResponse>, Status> {
-        let _request = request.into_inner();
-        Ok(Response::new(PodServiceAllocateResponse {}))
-    }
-    async fn free(
-        &self,
-        request: Request<PodServiceFreeRequest>,
-    ) -> Result<Response<PodServiceFreeResponse>, Status> {
-        let _request = request.into_inner();
-        Ok(Response::new(PodServiceFreeResponse {}))
-    }
-    async fn start(
-        &self,
-        request: Request<PodServiceStartRequest>,
-    ) -> Result<Response<PodServiceStartResponse>, Status> {
-        let _request = request.into_inner();
-        Ok(Response::new(PodServiceStartResponse {}))
-    }
-    async fn stop(
-        &self,
-        request: Request<PodServiceStopRequest>,
-    ) -> Result<Response<PodServiceStopResponse>, Status> {
-        let _request = request.into_inner();
-        Ok(Response::new(PodServiceStopResponse {}))
+    if let Err(e) = cell_service.free_all().await {
+        error!("Attempt to free all cells on terminate resulted in error: {e}")
     }
 }

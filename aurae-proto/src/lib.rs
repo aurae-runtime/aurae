@@ -34,13 +34,13 @@
 #![allow(clippy::match_single_binding)]
 
 pub mod observe {
-    include!("gen/observe.rs");
+    include!("gen/aurae.observe.v0.rs");
 }
 
 pub mod runtime {
-    include!("gen/runtime.rs");
+    include!("gen/aurae.runtime.v0.rs");
 }
 
 pub mod schedule {
-    include!("gen/schedule.rs");
+    include!("gen/aurae.schedule.v0.rs");
 }
