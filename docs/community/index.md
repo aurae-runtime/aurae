@@ -15,7 +15,6 @@ If you would like to get involved with Aurae development.
 
 # What is Aurae? 
 
-[Aurae](https://github.com/aurae-runtime/aurae) is an opinionated Turing complete scripting language built for the enterprise. Think of it like TypeScript for infrastructure platforms.
+[AuraeScript](https://aurae.io/auraescript/) is an opinionated Turing complete scripting language built for the enterprise. Think of it like TypeScript for infrastructure platforms.
 
-[Auraed](https://github.com/aurae-runtime/auraed) is the project core runtime daemon, auth and identity management system, and gRPC server that listens on a Unix domain socket.
-
+[Auraed](https://aurae.io/auraed/) is the project core runtime daemon, auth and identity management system, and gRPC server that listens on a Unix domain socket.

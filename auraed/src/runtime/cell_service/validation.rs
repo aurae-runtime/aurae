@@ -8,7 +8,7 @@ use aurae_proto::runtime::{
 };
 use std::collections::VecDeque;
 use std::ffi::OsString;
-use std::process::Command;
+use tokio::process::Command;
 use validation::{ValidatedField, ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
 
@@ -240,7 +240,7 @@ impl From<ValidatedExecutable> for super::executables::ExecutableSpec {
 
         // We are checking that command has an arg to assure ourselves that `command.arg`
         // mutates command, and is not making a clone to return
-        assert_eq!(c.get_args().len(), 2);
+        assert_eq!(c.as_std().get_args().len(), 2);
 
         Self { name, command: c, description }
     }
