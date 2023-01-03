@@ -192,6 +192,7 @@ impl CellService {
             let mut executables = self.executables.lock().await;
             let _exit_status = executables
                 .stop(&executable_name)
+                .await
                 .map_err(CellsServiceError::ExecutablesError)?;
 
             Ok(Response::new(CellServiceStopResponse::default()))

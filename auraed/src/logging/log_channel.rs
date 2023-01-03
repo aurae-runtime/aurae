@@ -31,64 +31,40 @@
 // @todo @krisnova remove this once logging is futher along
 #![allow(dead_code)]
 //
+use super::get_timestamp_sec;
 use aurae_proto::observe::LogItem;
 use tokio::sync::broadcast::{self, Receiver, Sender};
-use tracing::error;
-
-use super::get_timestamp_sec;
 
 /// Abstraction Layer for one log generating entity
 /// LogChannel provides channels between Log producers and log consumers
-#[derive(Debug)]
-pub struct LogChannel {
-    producer: Sender<LogItem>,
-    name: String,
+#[derive(Clone, Debug)]
+pub(crate) struct LogChannel {
+    pub name: String,
+    tx: Sender<LogItem>,
 }
 
 impl LogChannel {
     /// Constructor creating the channel for log communication
     pub fn new(name: String) -> LogChannel {
         // TODO: decide for a cap. 40 is arbitrary
-        let (producer, _) = broadcast::channel(40);
-        LogChannel { producer, name }
-    }
-
-    /// Getter for the name
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    /// Getter for producer channel
-    pub fn get_producer(&self) -> Sender<LogItem> {
-        self.producer.clone()
+        let (tx, _) = broadcast::channel(40);
+        LogChannel { name, tx }
     }
 
     /// Getter for consumer channel
-    pub fn get_consumer(&self) -> Receiver<LogItem> {
-        self.producer.subscribe()
+    pub fn subscribe(&self) -> Receiver<LogItem> {
+        self.tx.subscribe()
     }
 
     /// Wrapper that sends a log line to the channel
-    pub fn log_line(producer: Sender<LogItem>, line: String) {
+    pub fn send(&self, line: String) {
         // send returns an Err if there are no receivers. We ignore that.
-        let _ = producer.send(LogItem {
-            channel: "unknown".to_string(),
+        let _ = self.tx.send(LogItem {
+            channel: self.name.clone(),
             line,
             // TODO: milliseconds type in protobuf requires 128bit type
             timestamp: get_timestamp_sec(),
         });
-    }
-
-    // Receives a message from the channel
-    // multiple consumer possible
-    async fn consume_line(consumer: &mut Receiver<LogItem>) -> Option<LogItem> {
-        match consumer.recv().await {
-            Ok(val) => Some(val),
-            Err(e) => {
-                error!("Error: {:?}", e);
-                None
-            }
-        }
     }
 }
 
@@ -111,23 +87,22 @@ mod tests {
     #[tokio::test]
     async fn test_ringbuffer_queue() {
         init_logging();
-        let lrb = LogChannel::new("Test".into());
-        let prod = lrb.get_producer();
-        let mut consumer = lrb.get_consumer();
+        let channel = LogChannel::new("Test".into());
+        let mut rx = channel.subscribe();
 
-        LogChannel::log_line(prod.clone(), "hello".into());
-        LogChannel::log_line(prod.clone(), "aurae".into());
-        LogChannel::log_line(prod.clone(), "bye".into());
+        channel.send("hello".into());
+        channel.send("aurae".into());
+        channel.send("bye".into());
 
-        let cur_item = LogChannel::consume_line(&mut consumer).await;
+        let cur_item = rx.recv().await.ok();
         assert!(cur_item.is_some());
         assert_eq!(cur_item.unwrap().line, "hello".to_string());
 
-        let cur_item = LogChannel::consume_line(&mut consumer).await;
+        let cur_item = rx.recv().await.ok();
         assert!(cur_item.is_some());
         assert_eq!(cur_item.unwrap().line, "aurae".to_string());
 
-        let cur_item = LogChannel::consume_line(&mut consumer).await;
+        let cur_item = rx.recv().await.ok();
         assert!(cur_item.is_some());
         assert_eq!(cur_item.unwrap().line, "bye".to_string());
     }

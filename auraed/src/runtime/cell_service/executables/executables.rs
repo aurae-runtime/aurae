@@ -76,24 +76,26 @@ impl Executables {
         Ok(executable)
     }
 
-    pub fn stop(
+    pub async fn stop(
         &mut self,
         executable_name: &ExecutableName,
     ) -> Result<ExitStatus> {
-        let exit_status = self.get_mut(executable_name, |executable| {
-            executable.kill().map_err(|e| {
-                ExecutablesError::FailedToStopExecutable {
-                    executable_name: executable_name.clone(),
-                    source: e,
-                }
-            })
+        let Some(executable) = self.cache.get_mut(executable_name) else {
+            return Err(ExecutablesError::ExecutableNotFound { executable_name: executable_name.clone() });
+        };
+
+        let exit_status = executable.kill().await.map_err(|e| {
+            ExecutablesError::FailedToStopExecutable {
+                executable_name: executable_name.clone(),
+                source: e,
+            }
         })?;
 
         let Some(exit_status) = exit_status else {
             // Exes that never started return None
-            let _ = self.cache.remove(executable_name).expect("exe in cache");
+            let executable = self.cache.remove(executable_name).expect("exe in cache");
             return Err(ExecutablesError::ExecutableNotFound {
-                executable_name: executable_name.clone(),
+                executable_name: executable.name,
             });
         };
 
@@ -105,20 +107,5 @@ impl Executables {
         })?;
 
         Ok(exit_status)
-    }
-
-    fn get_mut<F, R>(
-        &mut self,
-        executable_name: &ExecutableName,
-        f: F,
-    ) -> Result<R>
-    where
-        F: FnOnce(&mut Executable) -> Result<R>,
-    {
-        let Some(executable) = self.cache.get_mut(executable_name) else {
-            return Err(ExecutablesError::ExecutableNotFound { executable_name: executable_name.clone() });
-        };
-
-        f(executable)
     }
 }

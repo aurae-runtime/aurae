@@ -1,31 +1,21 @@
-use super::process::Process;
 use super::{ExecutableName, ExecutableSpec};
 use crate::logging::log_channel::LogChannel;
-use nix::sys::signal::SIGKILL;
 use nix::unistd::Pid;
 use std::{
     ffi::OsString,
     io,
-    process::{Command, ExitStatus, Stdio},
-    sync::{Arc, Mutex},
-    thread, time,
+    process::{ExitStatus, Stdio},
 };
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::process::{Child, Command};
+use tokio::task::JoinHandle;
 use tracing::{info, info_span};
 
 #[derive(Debug)]
-struct ExecutableInner {
-    name: ExecutableName,
-    description: String,
-    state: ExecutableState,
-    stdout: LogChannel,
-    stderr: LogChannel,
-}
-
-#[derive(Debug)]
 pub struct Executable {
-    // TODO: consider RWLock?
-    inner: Arc<Mutex<ExecutableInner>>,
-    log_thread: Option<thread::JoinHandle<io::Result<()>>>,
+    pub name: ExecutableName,
+    pub description: String,
+    state: ExecutableState,
 }
 
 #[derive(Debug)]
@@ -38,7 +28,9 @@ enum ExecutableState {
         program: OsString,
         #[allow(unused)]
         args: Vec<OsString>,
-        process: Arc<Mutex<Process>>,
+        child: Child,
+        stdout: JoinHandle<()>,
+        stderr: JoinHandle<()>,
     },
     Stopped(ExitStatus),
 }
@@ -47,49 +39,62 @@ impl Executable {
     pub fn new<T: Into<ExecutableSpec>>(spec: T) -> Self {
         let ExecutableSpec { name, description, command } = spec.into();
         let state = ExecutableState::Init { command };
-        let inner = Arc::new(Mutex::new(ExecutableInner {
-            name: name.clone(),
-            description,
-            state,
-            stdout: LogChannel::new(format!("{name}::stdout")),
-            stderr: LogChannel::new(format!("{name}::stderr")),
-        }));
-        Self { inner: inner.clone(), log_thread: Some(spawn_log_thread(inner)) }
-    }
-
-    pub fn name(&self) -> io::Result<ExecutableName> {
-        let inner = self
-            .inner
-            .lock()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
-        Ok(inner.name.clone())
-    }
-
-    pub fn description(&self) -> io::Result<String> {
-        let inner = self
-            .inner
-            .lock()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
-        Ok(inner.description.clone())
+        Self { name, description, state }
     }
 
     /// Starts the underlying process.
     /// Does nothing if [Executable] has previously been started.
     pub fn start(&mut self) -> io::Result<()> {
-        let mut inner = self
-            .inner
-            .lock()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
-        let ExecutableState::Init { command } = &mut inner.state else {
+        let ExecutableState::Init { command } = &mut self.state else {
             return Ok(());
         };
 
-        let process = exec(command)?;
+        let mut child = command
+            .current_dir("/")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?;
 
-        inner.state = ExecutableState::Started {
-            program: command.get_program().to_os_string(),
-            args: command.get_args().map(|arg| arg.to_os_string()).collect(),
-            process: Arc::new(Mutex::new(process)),
+        let stdout = child.stdout.take().expect("stdout");
+        let log_channel = LogChannel::new(format!("{}::stdout", self.name));
+        let span = info_span!("running process", name = ?self.name);
+        let stdout = tokio::spawn(async move {
+            let log_channel = log_channel;
+            let mut span = Some(span);
+            let mut stdout = BufReader::new(stdout).lines();
+            while let Ok(Some(line)) = stdout.next_line().await {
+                let entered_span = span.take().expect("span").entered();
+                info!(level = "info", channel = log_channel.name, line);
+                log_channel.send(line);
+                span = Some(entered_span.exit());
+            }
+        });
+
+        let stderr = child.stderr.take().expect("stderr");
+        let log_channel = LogChannel::new(format!("{}::stderr", self.name));
+        let span = info_span!("running process", name = ?self.name);
+        let stderr = tokio::spawn(async move {
+            let log_channel = log_channel;
+            let mut span = Some(span);
+            let mut stderr = BufReader::new(stderr).lines();
+            while let Ok(Some(line)) = stderr.next_line().await {
+                let entered_span = span.take().expect("span").entered();
+                info!(level = "error", channel = log_channel.name, line);
+                log_channel.send(line);
+                span = Some(entered_span.exit());
+            }
+        });
+
+        self.state = ExecutableState::Started {
+            program: command.as_std().get_program().to_os_string(),
+            args: command
+                .as_std()
+                .get_args()
+                .map(|arg| arg.to_os_string())
+                .collect(),
+            child,
+            stdout,
+            stderr,
         };
 
         Ok(())
@@ -97,118 +102,26 @@ impl Executable {
 
     /// Stops the executable and returns the [ExitStatus].
     /// If the executable has never been started, returns [None].
-    pub fn kill(&mut self) -> io::Result<Option<ExitStatus>> {
-        let exit_status = {
-            let mut inner = self.inner.lock().map_err(|e| {
-                io::Error::new(io::ErrorKind::Other, e.to_string())
-            })?;
-            match &mut inner.state {
-                ExecutableState::Init { .. } => None,
-                ExecutableState::Started { process, .. } => {
-                    let proc_status: ExitStatus;
-                    {
-                        let mut proc = process.lock().map_err(|e| {
-                            io::Error::new(io::ErrorKind::Other, e.to_string())
-                        })?;
-                        proc.kill(Some(SIGKILL))?;
-                        proc_status = proc.wait()?;
-                    }
-                    inner.state = ExecutableState::Stopped(proc_status);
-                    Some(proc_status)
-                }
-                ExecutableState::Stopped(status) => Some(*status),
+    pub async fn kill(&mut self) -> io::Result<Option<ExitStatus>> {
+        Ok(match &mut self.state {
+            ExecutableState::Init { .. } => None,
+            ExecutableState::Started { child, stdout, stderr, .. } => {
+                child.kill().await?;
+                let exit_status = child.wait().await?;
+                let _ = tokio::join!(stdout, stderr);
+                self.state = ExecutableState::Stopped(exit_status);
+                Some(exit_status)
             }
-        };
-        self.log_thread
-            .take()
-            .map(thread::JoinHandle::join)
-            .expect("thread panicked")
-            .expect("join log_thread")
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
-        Ok(exit_status)
+            ExecutableState::Stopped(status) => Some(*status),
+        })
     }
 
     /// Returns the [Pid] while [Executable] is running, otherwise returns [None].
     pub fn pid(&self) -> io::Result<Option<Pid>> {
-        let inner = self
-            .inner
-            .lock()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
-        let ExecutableState::Started { process, .. } = &inner.state else {
+        let ExecutableState::Started { child: process, .. } = &self.state else {
             return Ok(None);
         };
-        let proc = process
-            .lock()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
 
-        Ok(Some(proc.pid()))
+        Ok(process.id().map(|id| Pid::from_raw(id as i32)))
     }
-}
-
-/// Spawns a thread that produces log lines while the [Executable] is running.
-fn spawn_log_thread(
-    inner: Arc<Mutex<ExecutableInner>>,
-) -> thread::JoinHandle<io::Result<()>> {
-    thread::spawn(move || -> io::Result<()> {
-        let mut running = true;
-        while running {
-            let inner = inner.lock().map_err(|e| {
-                io::Error::new(io::ErrorKind::Other, e.to_string())
-            })?;
-            let _span =
-                info_span!("running process", name = ?inner.name).entered();
-            match &inner.state {
-                ExecutableState::Init { .. } => {}
-                ExecutableState::Started { process, .. } => {
-                    let mut proc = process.lock().map_err(|e| {
-                        io::Error::new(io::ErrorKind::Other, e.to_string())
-                    })?;
-                    let lines = proc.read_stdout()?;
-                    for line in lines {
-                        info!(
-                            level = "info",
-                            channel = inner.stdout.name(),
-                            line
-                        );
-                        LogChannel::log_line(
-                            inner.stdout.get_producer().clone(),
-                            line.to_string(),
-                        );
-                    }
-                    let lines = proc.read_stderr()?;
-                    for line in lines {
-                        info!(
-                            level = "error",
-                            channel = inner.stderr.name(),
-                            line
-                        );
-                        LogChannel::log_line(
-                            inner.stderr.get_producer().clone(),
-                            line.to_string(),
-                        );
-                    }
-                }
-                // NOTE: if an executable is stopped, we may miss the last batch of logs.
-                ExecutableState::Stopped { .. } => running = false,
-            }
-            // sleep for a bit to be nice to the CPU and thread scheduler.  this might cause us to
-            // slow down logging from the process.
-            thread::sleep(time::Duration::from_millis(10));
-        }
-        Ok(())
-    })
-}
-
-// Start the child process
-//
-// Here is where we launch an executable within the context of a parent Cell.
-// Aurae makes the assumption that all Executables within a cell share the
-// same namespace isolation rules set up upon creation of the cell.
-fn exec(command: &mut Command) -> io::Result<Process> {
-    let child = command
-        .current_dir("/")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
-    Ok(Process::new_from_spawn(child))
 }
