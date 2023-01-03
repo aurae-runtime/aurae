@@ -60,7 +60,7 @@ impl LogChannel {
     pub fn send(&self, line: String) {
         // send returns an Err if there are no receivers. We ignore that.
         let _ = self.tx.send(LogItem {
-            channel: "unknown".to_string(),
+            channel: self.name.clone(),
             line,
             // TODO: milliseconds type in protobuf requires 128bit type
             timestamp: get_timestamp_sec(),
