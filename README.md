@@ -19,7 +19,7 @@ As we continue to develop the project the APIs will stabilize and eventually a l
 
 At this time the project should not be run in production.
 
-Please read [getting involved](/community#getting-involved) if you are interested in joining the project in its early phases. Contribution types of all types and ranges are welcome. You do not have to know Rust to join the project.
+Please read [getting involved](https://aurae.io/community/#getting-involved) if you are interested in joining the project in its early phases. Contribution types of all types and ranges are welcome. You do not have to know Rust to join the project.
 
 ### Runtime Workloads
 

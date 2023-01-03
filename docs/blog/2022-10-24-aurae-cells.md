@@ -204,7 +204,7 @@ The project is under active development, and many of the features described in t
 
 If you are interested in helping us work on these features please feel welcome to [join the discord](https://discord.gg/aTe2Rjg5rq) where we discuss our progress.
 
-If you are interested in contributing please see the [getting involved](https://github.com/aurae-runtime/community#getting-involved) documentation.
+If you are interested in contributing please see the [getting involved](https://aurae.io/community/#getting-involved) documentation.
 
 If you are interested in finding areas to contribute please see our [good first issues](https://github.com/aurae-runtime/aurae/issues?q=is%3Aopen+is%3Aissue+label%3A%22Good+First+Issue%22) which are designed to be easy for a newcomer to pick up and get started with. 
 
