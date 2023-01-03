@@ -1,7 +1,6 @@
 # Aurae
 
-![Main Build](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml/badge.svg)
-
+[![Main Build (lint, compile, test)](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml/badge.svg?branch=main)](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml)
 
 Aurae is a free and open source Rust project which houses a memory-safe systems runtime daemon built specifically for enterprise distributed systems called `auraed`.
 
