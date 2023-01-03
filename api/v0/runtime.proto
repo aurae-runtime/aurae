@@ -29,7 +29,9 @@
 \* -------------------------------------------------------------------------- */
 
 syntax = "proto3";
-package runtime.v0;
+
+package aurae.runtime.v0;
+
 option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/runtime";
 
 /// Runtime
