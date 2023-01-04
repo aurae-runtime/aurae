@@ -1,0 +1,64 @@
+# syntax = docker/dockerfile:1.4
+FROM rust:1-slim-bullseye as main
+
+LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
+
+## Define ARGs
+ARG BUF_VERSION=1.11.0
+ARG VALE_VERSION=2.21.3
+ARG PROTOC_VERSION=1.5.1
+
+## Install packages
+RUN  apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    curl \
+    libclang-dev \
+    libdbus-1-dev \
+    libseccomp-dev \
+    protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+
+## Setup Rust
+RUN rustup component add clippy
+
+## Setup protoc-gen-doc
+RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
+    tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz && \
+    chmod +x protoc-gen-doc && \
+    mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
+    rm protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+
+## Setup Buf
+RUN curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(uname -s)-$(uname -m)" \
+    -o "/usr/local/bin/buf" && \
+    chmod +x "/usr/local/bin/buf"
+
+## Setup Vale
+RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+    -o vale.tar.gz && \
+    tar -xvzf vale.tar.gz -C bin && \
+    mv bin/vale /usr/local/bin/vale && \
+    rm vale.tar.gz
+
+WORKDIR /app
+
+FROM main AS planner
+RUN cargo install cargo-chef
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+RUN cargo chef cook --recipe-path recipe.json
+
+FROM main as local
+COPY --from=planner /usr/local/cargo/bin /usr/local/cargo/bin
+COPY --from=planner /usr/local/cargo/registry/index/ /usr/local/cargo/registry/index/
+COPY --from=planner /usr/local/cargo/registry/cache/ /usr/local/cargo/registry/cache/
+WORKDIR /app
+ENTRYPOINT ["make"]
+
+FROM main as builder
+COPY --from=planner /usr/local/cargo/bin /usr/local/cargo/bin
+COPY --from=planner /usr/local/cargo/registry/index/ /usr/local/cargo/registry/index/
+COPY --from=planner /usr/local/cargo/registry/cache/ /usr/local/cargo/registry/cache/

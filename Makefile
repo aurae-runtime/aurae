@@ -32,6 +32,7 @@
 branch       ?=  main
 message      ?=  Default commit message. Aurae Runtime environment.
 cargo         =  cargo
+oci           =  DOCKER_BUILDKIT=1 docker
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -159,3 +160,14 @@ start:
 help:  ## Show help messages for make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
 
+.PHONY: oci-image-build
+oci-image-build: ## Build the aurae/auraed OCI images
+	@$(oci) build -t $(tag) -f $(ocifile) $(flags) .
+
+.PHONY: oci-run
+oci-run: ## Run the aurae/auraed OCI images
+	$(oci) run -v $(shell pwd):/app $(flags) $(tag) $(command)
+
+.PHONY: oci-make
+oci-make: ## Run the makefile inside the aurae/auraed OCI images
+	$(oci) run -v $(shell pwd):/app --rm -it $(tag) $(command)
