@@ -28,6 +28,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use iter_tools::Itertools;
+use std::io::{self, ErrorKind};
+use std::path::PathBuf;
+use std::ptr;
+
 #[derive(Debug, Clone, Default)]
 pub struct SharedNamespaces {
     pub mount: bool,
@@ -36,4 +41,415 @@ pub struct SharedNamespaces {
     pub pid: bool,
     pub net: bool,
     pub cgroup: bool,
+}
+
+#[derive(Default)]
+pub(crate) struct Unshare {
+    new_root: Option<PathBuf>,
+}
+
+// NOTE (future-highway):
+//      This is an initial attempt at unsharing namespaces.
+//      The nested auraed sets the proper clone flags on clone to get its own namespaces,
+//      but we usually inherit too much from the parent. The sharing and unsharing of
+//      the mount namespace seems to have the most effect on the other unshares,
+//      but I've mostly focused on working on a single unshare at a time.
+//
+//      A hurdle that I don't know the solution to is that if I change the root of the
+//      process (via chroot or pivot_root), the auraed won't start
+//      (errors with file not found), but changing the root seems imperative to the
+//      isolation. I have tried copying auared into the new root directory, but that
+//      doesn't seems to matter (I'm not sure where it is looking for it anyway,
+//      once the root gets changed).
+impl Unshare {
+    pub fn prep(
+        &mut self,
+        shared_namespaces: &SharedNamespaces,
+    ) -> io::Result<()> {
+        // This is run in the parent
+
+        // We need a new root if
+        // * mount is not shared
+        // * mount is shared, but pid is not shared
+        //
+        // These conditionals are written weirdly to that they align with the points above
+        #[allow(clippy::nonminimal_bool)]
+        if !(!shared_namespaces.mount)
+            && !(shared_namespaces.mount && !shared_namespaces.pid)
+        {
+            return Ok(());
+        }
+
+        println!("unshare prep start");
+
+        let new_root = PathBuf::from(format!("/ae-{}", uuid::Uuid::new_v4()));
+
+        // As long as these are in prep, calls to std are ok. Otherwise, need to use libc and nix.
+        std::fs::create_dir(&new_root)?;
+
+        println!("created new root dir {new_root:?}");
+
+        // NOTES: We are copying auraed into the new root in an attempt to fix the
+        //        "No such file or directory (os error 2) that we will eventually get.
+        //        This change does not fix it and while I'm not 100% sure that the missing
+        //        file is referring to auraed, I feel like it only makes sense that auraed
+        //        be present in the new mount space
+        let _ =
+            std::fs::copy("/root/.cargo/bin/auraed", new_root.join("auraed"))?;
+
+        // we need a directory for each mount point we intend to make
+        for dir in ["dev", "sys", "proc", "bin"] {
+            let dir = new_root.join(dir);
+            std::fs::create_dir_all(&dir)?;
+            println!("created {dir:?} dir under new root dir");
+        }
+
+        // make the new root a mount point
+        nix::mount::mount(
+            Some(&new_root),
+            &new_root,
+            None::<&str>, // ignored,
+            nix::mount::MsFlags::MS_BIND,
+            None::<&str>, // ignored
+        )
+        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        println!("bind mounted new root dir (rec)");
+
+        // TODO: the vfs and other directory mounts seemingly get doubled (why?)
+
+        // mount the vfs directories
+        for dir in [
+            (None, "dev", "devtmpfs"),
+            (None, "sys", "sysfs"),
+            (Some("proc"), "proc", "proc"),
+        ] {
+            let (source, target, fstype) = dir;
+            let target = &new_root.join(target);
+
+            nix::mount::mount(
+                source,
+                target,
+                Some(fstype),
+                nix::mount::MsFlags::empty(),
+                None::<&str>,
+            )
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+            println!("mounted {target:?}");
+        }
+
+        // mount other directories
+        #[allow(clippy::single_element_loop)]
+        for dir in [(Some("/bin"), "bin")] {
+            let (source, target) = dir;
+            let target = &new_root.join(target);
+
+            nix::mount::mount(
+                source,
+                target,
+                None::<&str>, // ignored,
+                nix::mount::MsFlags::MS_BIND | nix::mount::MsFlags::MS_REC,
+                None::<&str>, // ignored
+            )
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+            println!("mounted {target:?}");
+        }
+
+        self.new_root = Some(new_root);
+
+        println!("unshare prep done");
+
+        Ok(())
+    }
+
+    pub fn mount_namespace_unmount_with_exceptions(
+        &mut self,
+        shared_namespaces: &SharedNamespaces,
+    ) -> io::Result<()> {
+        // NOTES: In this approach, we attempt to unmount all the mounts,
+        //        but, unless we make exceptions (including '/') things break.
+
+        if shared_namespaces.mount {
+            // do we want to chroot and remount everything in the new root?
+            // what would that do to the parent?
+        } else {
+            println!("mount namespace start -- unmount");
+
+            // get a list of all the current mount points
+            let mounts = procfs::process::Process::myself()
+                .map_err(|e| io::Error::new(ErrorKind::Other, e))?
+                .mountinfo()
+                .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
+
+            // we are not sharing our mounts, so lets start by making all of them private
+            // by making the root private and using MS_REC
+            nix::mount::mount(
+                None::<&str>, // ignored
+                "/",
+                None::<&str>, // ignored
+                nix::mount::MsFlags::MS_PRIVATE | nix::mount::MsFlags::MS_REC,
+                None::<&str>, // ignored
+            )
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+            println!("made all mounts private");
+
+            // now we want to unmount the mount points that were inherited from the parent
+            // if a mount is below another mount, that has to be unmounted first
+            for mount in mounts.iter().sorted_by_key(|x| x.mnt_id).rev() {
+                // We skip...
+                // - /proc -> this is handled by pid_namespace
+                // - / -> things seem to break without it (but it seems wrong; not sure what to save)
+                // - /run && /run/lock && /run/lock/1000 && /dev/shm ("tmpfs" types) -> same as "/"
+                // - anything in new_root -> are we using it with this mount approach? I don't think so.
+                if matches!(
+                    &*mount.fs_type,
+                    "proc" | "tmpfs" //| "sysfs" | "devtmpfs" | "cgroup2"
+                ) || matches!(&mount.mount_point, path if path.to_string_lossy() == "/" )
+                {
+                    println!(
+                        "Skipping mount point {:?} with type {:?}",
+                        mount.mount_point, mount.fs_type
+                    );
+                    continue;
+                }
+
+                if let Some(new_root) = self.new_root.as_deref() {
+                    let new_root = new_root.to_string_lossy();
+                    if matches!(&mount.mount_point, path if path.to_string_lossy().starts_with(new_root.as_ref()))
+                    {
+                        println!(
+                            "Skipping mount point {:?} with type {:?}",
+                            mount.mount_point, mount.fs_type
+                        );
+                        continue;
+                    }
+                }
+
+                println!(
+                    "Unmounting mount point {:?} with type {:?}",
+                    mount.mount_point, mount.fs_type
+                );
+
+                // now unmount it
+                nix::mount::umount2(
+                    &mount.mount_point,
+                    nix::mount::MntFlags::MNT_DETACH,
+                )
+                .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+            }
+
+            println!("mount namespace end");
+        }
+
+        Ok(())
+    }
+
+    pub fn mount_namespace_pivot_root(
+        &mut self,
+        shared_namespaces: &SharedNamespaces,
+    ) -> io::Result<()> {
+        // NOTES: In this approach, we create a new clean root using pivot_root,
+        //        which seems like the correct and safe approach.
+        //        But, while pre_exec completes (unshared mount + pid), we get
+        //        "No such file or directory (os error 2)" seemingly at the call that
+        //        std's Command makes to libc::execvp.
+        //
+        //        I did not try mounting the parent root onto the new root to mimic
+        //        saving "/" like I did in the other (mount_namespace_unmount_with_exceptions)
+        //        approach.
+
+        if shared_namespaces.mount {
+            // see note in other approach
+            return Ok(());
+        }
+
+        println!("mount namespace start -- pivot root");
+
+        // we are not sharing our mounts, so lets start by making all of them private
+        // by making the root private and using MS_REC
+        nix::mount::mount(
+            None::<&str>, // ignored
+            "/",
+            None::<&str>, // ignored
+            nix::mount::MsFlags::MS_PRIVATE | nix::mount::MsFlags::MS_REC,
+            None::<&str>, // ignored
+        )
+        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        let new_root = self.new_root.as_ref().expect("didn't call prep");
+
+        nix::unistd::chdir(new_root)
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        println!("changed into the soon to be new root dir");
+
+        nix::unistd::pivot_root(".", ".")
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        println!("pivoted the old root to below the new root");
+
+        nix::mount::umount2(".", nix::mount::MntFlags::MNT_DETACH)
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        println!("unmounted old root");
+
+        nix::unistd::chdir("/")
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        println!("changed to new root directory");
+
+        println!("mount namespace done");
+
+        Ok(())
+    }
+
+    pub fn uts_namespace(
+        &mut self,
+        shared_namespaces: &SharedNamespaces,
+    ) -> io::Result<()> {
+        if shared_namespaces.uts {
+            return Ok(());
+        }
+
+        println!("uts namespace start");
+
+        // Note: Should we set the hostname/domainname to something? or maybe clear it out?
+        //
+        //       Using ptr::null makes it appear empty, but the default domainname
+        //       on my system is (none). Is that telling me it is actually not set or
+        //       is it set to "(none)"?
+        //
+        //       I can set domainname to "(none)", but get an error that it is
+        //       invalid for hostname, so I assume it is actually set to "(none)
+        //       for the domainname (not that it is not set).
+
+        if unsafe { nix::libc::sethostname(ptr::null(), 0) } == -1 {
+            return Err(io::Error::last_os_error());
+        }
+
+        if unsafe { nix::libc::setdomainname(ptr::null(), 0) } == -1 {
+            return Err(io::Error::last_os_error());
+        }
+
+        println!("uts namespace done");
+        Ok(())
+    }
+
+    pub fn ipc_namespace(
+        &mut self,
+        shared_namespaces: &SharedNamespaces,
+    ) -> io::Result<()> {
+        if shared_namespaces.ipc {
+            return Ok(());
+        }
+
+        println!("ipc namespace start");
+
+        // what to do?
+        // https://man7.org/linux/man-pages/man7/ipc_namespaces.7.html
+        // what did we inherit from clone?
+
+        println!("ipc namespace done");
+        Ok(())
+    }
+
+    pub fn pid_namespace(
+        &mut self,
+        shared_namespaces: &SharedNamespaces,
+    ) -> io::Result<()> {
+        if shared_namespaces.pid {
+            return Ok(());
+        }
+
+        // NOTES: [Docs](https://man7.org/linux/man-pages/man7/pid_namespaces.7.html)
+        //        say that child processes, should either:
+        //        A) when mount is shared, change the root of the child and mount /proc
+        //           under the new root, or
+        //        B) when mount is not shared, don't change root, just mount over /proc
+        //
+        //        Changing the root causes issues. Probably the same as when we
+        //        pivot_root or unmount "/"
+
+        println!("pid namespace start");
+
+        let target = if shared_namespaces.mount {
+            let new_root = self.new_root.as_deref().expect("didn't call prep");
+            new_root.join("proc")
+        } else {
+            PathBuf::from("/proc")
+        };
+
+        // mount over the parent mount
+        // TODO: check that an umount /proc doesn't expose the parent mount
+        nix::mount::mount(
+            Some("/proc"),
+            &target,
+            Some("proc"),
+            nix::mount::MsFlags::empty(),
+            None::<&str>,
+        )
+        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        println!("mounted proc");
+
+        // NOTE: The docs say to change the root, but if we do, it seems the auraed
+        //       exe cannot be found anymore. However, since we don't, we are seeing the
+        //       parent's version of /proc.
+        if shared_namespaces.mount {
+            // let new_root = self.new_root.as_deref().expect("didn't call prep");
+            // nix::unistd::chroot(new_root)
+            //     .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+        }
+
+        println!("pid namespace end");
+
+        Ok(())
+    }
+
+    pub fn net_namespace(
+        &mut self,
+        shared_namespaces: &SharedNamespaces,
+    ) -> io::Result<()> {
+        if shared_namespaces.net {
+            return Ok(());
+        }
+
+        println!("net namespace start");
+
+        // what to do?
+        // we, seemingly, don't have internet connectivity
+        // using `ifconfig -a` we see a loopback only (parent has an additional item and internet)
+        // we can connect to the process using the socket
+
+        println!("net namespace done");
+        Ok(())
+    }
+
+    pub fn cgroup_namespace(
+        &mut self,
+        shared_namespaces: &SharedNamespaces,
+    ) -> io::Result<()> {
+        if shared_namespaces.cgroup {
+            return Ok(());
+        }
+
+        println!("cgroup namespace start");
+
+        // what to do?
+        // I can see the cgroup I am in. If I add a cgroup in the parent, it shows in the child.
+        //
+        // "When reading the cgroup memberships of a "target" process from
+        //        /proc/[pid]/cgroup, the pathname shown in the third field of each
+        //        record will be relative to the reading process's root directory
+        //        for the corresponding cgroup hierarchy."
+        //
+        // So, if we solve the problems of not being able to start a nested auraed
+        // when changing the root via chroot or pivot_root, maybe this will be fixed
+
+        println!("cgroup namespace done");
+        Ok(())
+    }
 }

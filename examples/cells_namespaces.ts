@@ -39,12 +39,12 @@ let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuShares: 2,
         name: cellName,
-        // nsShareMount: true,
-        // nsShareUts: true,
-        // nsShareIpc: true,
-        // nsSharePid: true,
-        // nsShareNet: true,
-        // nsShareCgroup: true,
+        nsShareMount: true,
+        nsShareUts: true,
+        nsShareIpc: true,
+        nsSharePid: true,
+        nsShareNet: true,
+        nsShareCgroup: true,
     })
 });
 helpers.print(s_allocated)

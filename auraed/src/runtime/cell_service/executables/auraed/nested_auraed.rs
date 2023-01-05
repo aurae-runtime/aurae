@@ -28,11 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::SharedNamespaces;
+use super::{shared_namespaces::Unshare, SharedNamespaces};
 use aurae_client::AuraeConfig;
 use nix::{
     libc::SIGCHLD,
-    mount::MntFlags,
     sys::signal::{Signal, SIGKILL, SIGTERM},
     unistd::Pid,
 };
@@ -61,11 +60,14 @@ impl NestedAuraed {
         // aurae isolation zone.
         //
         // TODO: Consider changing "--nested" to "--nested-cell" or similar
+
+        let random = uuid::Uuid::new_v4();
+
         // TODO: handle expect
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
         client_config.system.socket =
-            format!("/var/run/aurae/aurae-{}.sock", uuid::Uuid::new_v4());
+            format!("/var/run/aurae/aurae-{random}.sock");
 
         let mut command = Command::new("auraed");
         let _ = command.current_dir("/").args([
@@ -82,11 +84,6 @@ impl NestedAuraed {
 
         // Clone docs: https://man7.org/linux/man-pages/man2/clone.2.html
 
-        // If this signal is specified as anything other than SIGCHLD, then the
-        //        parent process must specify the __WALL or __WCLONE options when
-        //        waiting for the child with wait(2).  If no signal (i.e., zero) is
-        //        specified, then the parent process is not signaled when the child
-        //        terminates.
         let signal = SIGCHLD;
 
         let mut pidfd = -1;
@@ -99,118 +96,74 @@ impl NestedAuraed {
         //       and map them to "unshare".
         //       This is by design as the API has a concept of "share".
 
-        // If CLONE_NEWNS is set, the cloned child is started in a
-        // new mount namespace, initialized with a copy of the
-        // namespace of the parent.  If CLONE_NEWNS is not set, the
-        // child lives in the same mount namespace as the parent.
+        // Order: mount, uts, ipc, pid, network, user (don't have), cgroup
+
+        let mut unshare = Unshare::default();
+        unshare.prep(&shared_namespaces)?;
+
         if !shared_namespaces.mount {
             let _ = clone.flag_newns();
         }
 
-        //If CLONE_NEWUTS is set, then create the process in a new
-        // UTS namespace, whose identifiers are initialized by
-        // duplicating the identifiers from the UTS namespace of the
-        // calling process.  If this flag is not set, then (as with
-        // fork(2)) the process is created in the same UTS namespace
-        // as the calling process.
         if !shared_namespaces.uts {
             let _ = clone.flag_newuts();
         }
 
-        // If CLONE_NEWIPC is set, then create the process in a new
-        // IPC namespace.  If this flag is not set, then (as with
-        // fork(2)), the process is created in the same IPC namespace
-        // as the calling process.
         if !shared_namespaces.ipc {
             let _ = clone.flag_newipc();
         }
 
-        // If CLONE_NEWPID is set, then create the process in a new
-        // PID namespace.  If this flag is not set, then (as with
-        // fork(2)) the process is created in the same PID namespace
-        // as the calling process.
         if !shared_namespaces.pid {
             let _ = clone.flag_newpid();
         }
 
-        // If CLONE_NEWNET is set, then create the process in a new
-        // network namespace.  If this flag is not set, then (as with
-        // fork(2)) the process is created in the same network
-        // namespace as the calling process.
         if !shared_namespaces.net {
             let _ = clone.flag_newnet();
         }
 
-        // If this flag is not set, then (as with fork(2)) the process is
-        // created in the same cgroup namespaces as the calling
-        // process.
         if !shared_namespaces.cgroup {
             let _ = clone.flag_newcgroup();
         }
 
         // TODO: clone uses the same pattern as command. Safeguard against changes
 
-        // NOTE: AFTER THIS CALL YOU CAN BE IN THE CURRENT OR CHILD PROCESS.
-        let pid = unsafe { clone.call() }
-            .map_err(|e| io::Error::from_raw_os_error(e.0))?;
+        match unsafe { clone.call() }
+            .map_err(|e| io::Error::from_raw_os_error(e.0))?
+        {
+            0 => {
+                // child
+                let command = {
+                    unsafe {
+                        command.pre_exec(move || {
+                            unshare.mount_namespace_unmount_with_exceptions(
+                                &shared_namespaces,
+                            )?;
+                            unshare.uts_namespace(&shared_namespaces)?;
+                            unshare.ipc_namespace(&shared_namespaces)?;
+                            unshare.pid_namespace(&shared_namespaces)?;
+                            unshare.net_namespace(&shared_namespaces)?;
+                            unshare.cgroup_namespace(&shared_namespaces)?;
 
-        if pid == 0 {
-            // we are in the child
+                            Ok(())
+                        })
+                    }
+                };
 
-            let command = {
-                unsafe {
-                    command.pre_exec(move || {
-                        // We can do the steps for isolation here and leave the rest to
-                        // auraed's init. This would probably require sending the
-                        // shared_namespaces data in the args.
+                // TODO: check that exec should never return, even after exit
+                let e = command.exec();
+                println!("{e:#?}");
+                Err(e)
+            }
+            pid => {
+                // parent
+                println!("Nested auraed has pid {pid}");
 
-                        if !shared_namespaces.mount {
-                            // remount as private
-                            nix::mount::mount(
-                                None::<&str>, // ignored
-                                ".",
-                                None::<&str>, // ignored
-                                nix::mount::MsFlags::MS_PRIVATE
-                                    | nix::mount::MsFlags::MS_REC,
-                                None::<&str>, // ignored
-                            )
-                            .map_err(|e| {
-                                io::Error::from_raw_os_error(e as i32)
-                            })?;
-                        }
+                let process = procfs::process::Process::new(pid)
+                    .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-                        if wants_isolated_pid(&shared_namespaces) {
-                            nix::mount::umount2("/proc", MntFlags::MNT_DETACH)
-                                .map_err(|e| {
-                                    io::Error::from_raw_os_error(e as i32)
-                                })?;
-
-                            nix::mount::mount(
-                                Some("proc"),
-                                "/proc",
-                                Some("proc"),
-                                nix::mount::MsFlags::empty(),
-                                None::<&[u8]>,
-                            )
-                            .map_err(|e| {
-                                io::Error::from_raw_os_error(e as i32)
-                            })?;
-                        }
-
-                        Ok(())
-                    })
-                }
-            };
-
-            // TODO: check that exec should never return, even after exit
-            let e = command.exec();
-            return Err(e);
+                Ok(Self { process, pidfd, shared_namespaces, client_config })
+            }
         }
-
-        let process = procfs::process::Process::new(pid)
-            .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
-
-        Ok(Self { process, pidfd, shared_namespaces, client_config })
     }
 
     /// Sends a graceful shutdown signal to the auraed process.
@@ -268,11 +221,6 @@ impl NestedAuraed {
     pub fn pid(&self) -> Pid {
         Pid::from_raw(self.process.pid)
     }
-}
-
-fn wants_isolated_pid(shared_namespaces: &SharedNamespaces) -> bool {
-    // TODO: This is wrong. A process wants an isolated pid namespace, regardless of mount
-    !shared_namespaces.pid && !shared_namespaces.mount
 }
 
 // On cleaning up other files these todos were there.
