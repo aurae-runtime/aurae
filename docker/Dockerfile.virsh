@@ -1,0 +1,15 @@
+FROM debian:bullseye as main
+
+RUN apt-get update -y && \
+    apt-get install -y make \
+    qemu \
+    libvirt0 \
+    virt-manager \
+    bridge-utils \
+    libssl-dev \
+    qemu uml-utilities \
+    qemu-kvm \
+    qemu-efi \
+    qemu-system-common \
+    qemu-efi-aarch64 \
+    libosinfo-bin

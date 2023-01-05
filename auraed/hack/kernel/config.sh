@@ -31,4 +31,20 @@
 # -------------------------------------------------------------------------- #
 
 export KERNEL_VERSION=5.15.68
-export KERNEL_CONFIG="aurae-linux-${KERNEL_VERSION}.config"
+arch=$(arch)
+case $arch in
+x86)
+    CONFIG_ARCH=x86
+    ;;
+x86_64)
+    CONFIG_ARCH=x86
+    ;;
+aarch64)
+    CONFIG_ARCH=arm
+    ;;
+arm64)
+    CONFIG_ARCH=arm
+    ;;
+esac
+
+export KERNEL_CONFIG="aurae-linux-${CONFIG_ARCH}-${KERNEL_VERSION}.config"

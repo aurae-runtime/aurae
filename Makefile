@@ -166,8 +166,48 @@ oci-image-build: ## Build the aurae/auraed OCI images
 
 .PHONY: oci-run
 oci-run: ## Run the aurae/auraed OCI images
-	$(oci) run -v $(shell pwd):/app $(flags) $(tag) $(command)
+	$(oci) run -v $(shell pwd):/aurae $(flags) $(tag) $(command)
 
 .PHONY: oci-make
 oci-make: ## Run the makefile inside the aurae/auraed OCI images
-	$(oci) run -v $(shell pwd):/app --rm -it $(tag) $(command)
+	$(oci) run -v $(shell pwd):/aurae --rm -it $(tag) $(command)
+
+.PHONY: kernel
+kernel:
+	mkdir -p target/rootfs/boot
+	docker run -it --rm -u $${UID} -v "$(shell pwd):/aurae" aurae-kernel-builder bash -c "cd auraed/hack/kernel && ./mk-kernel"
+
+container-release:
+	docker run -it --rm \
+	-v "$(shell pwd):/aurae" \
+	aurae-kernel-builder \
+	bash -c "cd /aurae/auraescript \
+		&& make release \
+		&& cd /aurae \
+		&& make pki \
+		&& cd /aurae/auraed \
+		&& make release"
+
+initramfs: container-release
+	mkdir -p target/rootfs/bin
+	mkdir -p target/rootfs/etc/aurae
+	cp -r target/release target/rootfs/bin
+	cp -r pki target/rootfs/etc/aurae/
+	cd auraed/target/rootfs && rm -f init && ln -s bin/auraed init
+	docker run -it --rm -u $${UID} \
+		-v "$(shell pwd):/aurae" \
+		aurae-kernel-builder \
+		bash -c "cd /aurae/auraed/hack/initramfs && ./mk-initramfs"
+
+
+docker-image-virsh:
+	make oci-image-build ocifile=docker/Dockerfile.virsh tag=aurae-virsh flags="--no-cache"
+
+docker-virsh:
+	docker run -v "$(shell pwd):/aurae" \
+	-v /dev/null:/dev/null \
+	-v /dev/full:/dev/full \
+	-v /dev/zero:/dev/zero \
+	-v /dev/random:/dev/random \
+	-v /dev/urandom:/dev/urandom \
+	-i --privileged -t aurae-virsh bash

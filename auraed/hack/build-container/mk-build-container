@@ -30,7 +30,7 @@
 #                                                                            #
 # -------------------------------------------------------------------------- #
 
-docker rmi aurae-builder
+docker rmi aurae-kernel-builder
 
 set -e
-docker build . -t aurae-builder
+docker build . -t aurae-kernel-builder

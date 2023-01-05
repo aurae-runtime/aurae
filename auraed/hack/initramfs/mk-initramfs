@@ -34,7 +34,7 @@ set -e
 
 AURAED_CONFIG=${1:-default}
 
-thisDir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+thisDir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 TARGET_DIR=${TARGET_DIR:-$thisDir/../../target}
 ROOTFS_DIR=${thisDir}/../../target/rootfs
 
@@ -43,18 +43,17 @@ ROOTFS_DIR=${thisDir}/../../target/rootfs
 source utils.sh
 source ../kernel/config.sh
 
-pushd $ROOTFS_DIR 
+pushd "$ROOTFS_DIR"
 echo "Create initramfs folder structure"
-mkdir -pv {etc,var,lib64,lib,run,tmp} usr/{bin,lib,sbin} lib/x86_64-linux-gnu usr/lib/x86_64-linux-gnu
+#mkdir -pv {etc,var,lib64,lib,run,tmp} usr/{bin,lib,sbin} lib/x86_64-linux-gnu usr/lib/x86_64-linux-gnu
+mkdir -pv {etc,var,lib64,lib,run,tmp} usr/{bin,lib,sbin} lib/aarch64-linux-gnu usr/lib/aarch64-linux-gnu
 
 mkdir -pv {proc,dev,sys}
 
-
-
 echo "Install libraries for aurae (copy from host)"
-install_libs $ROOTFS_DIR/bin/auraed
+install_libs "$ROOTFS_DIR"/bin/release/auraed
 
 echo "Create initramfs.zst"
-find . -print0 | cpio --create --format=newc --null | zstd -3 > "${TARGET_DIR}/initramfs.zst"
+find . -print0 | cpio --create --format=newc --null | zstd -3 >"${TARGET_DIR}/initramfs.zst"
 
 popd

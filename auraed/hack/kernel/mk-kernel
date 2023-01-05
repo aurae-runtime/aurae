@@ -32,11 +32,12 @@
 
 set -e
 
+arch=$(arch)
 workingDir=$(mktemp -d)
-thisDir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+thisDir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 function clean {
-    rm -rf $workingDir
+    rm -rf "$workingDir"
 }
 trap clean EXIT
 
@@ -46,28 +47,45 @@ TARGET_DIR=${TARGET_DIR:-$thisDir/../../target}
 
 [ ! -d "${TARGET_DIR}" ] && echo "Directory: '$TARGET_DIR' does not exist." && exit 1
 
-[ -f "${TARGET_DIR}/kernel/vmlinuz-$KERNEL_VERSION" ] && 
-[ -f "${TARGET_DIR}/kernel/System.map-$KERNEL_VERSION" ] && 
-[ -f "${TARGET_DIR}/kernel/config-$KERNEL_VERSION" ] && 
-[ -z ${REBUILD_KERNEL+x} ] &&
+[ -f "${TARGET_DIR}/kernel/vmlinuz-$KERNEL_VERSION" ] &&
+    [ -f "${TARGET_DIR}/kernel/System.map-$KERNEL_VERSION" ] &&
+    [ -f "${TARGET_DIR}/kernel/config-$KERNEL_VERSION" ] &&
+    [ -z ${REBUILD_KERNEL+x} ] &&
     echo -e "Skip kernel build, artifacts already exist." &&
     echo -e "\t clean kernel artifacts if you want to rebuild." &&
     exit 0
 
-pushd $workingDir
+pushd "$workingDir"
 
 echo "Downloading Linux Kernel $KERNEL_VERSION"
 wget -qO- --show-progress "https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-${KERNEL_VERSION}.tar.xz" |
     tar xJ
+
+case $arch in
+x86)
+    IMAGE_DIR=arch/x86/boot/zImage
+    ;;
+x86_64)
+    IMAGE_DIR=arch/x86/boot/zImage
+    ;;
+aarch64)
+    IMAGE_DIR=arch/arm64/boot/Image
+    ;;
+arm64)
+    IMAGE_DIR=arch/arm64/boot/Image
+    ;;
+esac
+
 cp "$thisDir/config/$KERNEL_CONFIG" linux-${KERNEL_VERSION}/.config
+
 pushd linux-${KERNEL_VERSION}
-make -j`nproc`
+make -j$(nproc)
 
-mkdir -p ${TARGET_DIR}/kernel
-cp -v arch/x86/boot/bzImage ${TARGET_DIR}/kernel/vmlinuz-$KERNEL_VERSION
-cp -v System.map ${TARGET_DIR}/kernel/System.map-$KERNEL_VERSION
-cp -v .config ${TARGET_DIR}/kernel/config-$KERNEL_VERSION
+mkdir -p "${TARGET_DIR}"/kernel
+cp -v "${IMAGE_DIR}" "${TARGET_DIR}"/kernel/vmlinuz-$KERNEL_VERSION
 
+cp -v System.map "${TARGET_DIR}"/kernel/System.map-$KERNEL_VERSION
+cp -v .config "${TARGET_DIR}"/kernel/config-$KERNEL_VERSION
 
 popd # linux src
 popd # working dir
