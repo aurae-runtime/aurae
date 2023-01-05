@@ -166,7 +166,7 @@ fn typescript_generator(input: &OpsGeneratorInput) {
 
     let ts_path = {
         let mut out_dir = gen_dir.clone();
-        out_dir.push(format!("v0/{module}.ts"));
+        out_dir.push(format!("v0/{module}/{module}.ts"));
         out_dir
     };
 
