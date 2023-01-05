@@ -94,9 +94,8 @@ message PodServiceAllocateRequest{
 message Pod{
   /// Name is the name of the pod.
   string name = 1;
-  // TODO Define how Aurae will manage images
-  // TODO What library (youki?) do we use to manage images and what assumptions are made?
-  /// Image is the image string such as "nginx"
+  // TODO Implement https://github.com/containers/oci-spec-rs
+  /// The container image.
   string image = 2;
 }
 
