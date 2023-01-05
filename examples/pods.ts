@@ -32,3 +32,14 @@ import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/runtime.ts";
 
 let pods = new runtime.PodServiceClient();
+
+// [ Allocate ]
+let allocated = await pods.allocate(<runtime.PodServiceAllocateRequest>{
+    pod: runtime.Pod.fromPartial({
+        name: "nginx-pod",
+        image: "nginx",
+    })
+});
+helpers.print(allocated)
+
+

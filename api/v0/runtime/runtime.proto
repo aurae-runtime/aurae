@@ -80,11 +80,30 @@ service PodService {
 
 }
 
-message PodServiceAllocateRequest{}
+/// The request to allocate a Pod.
+message PodServiceAllocateRequest{
+
+  /// A boring set of containers with shared network and disk.
+  Pod pod = 1;
+
+}
+
+/// OCI image represents a filesystem bundle on disk using familiar parlance.
+///
+/// OCI Filesystem Bundle: https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle
+message Pod{
+  /// Name is the name of the pod.
+  string name = 1;
+  // TODO Define how Aurae will manage images
+  // TODO What library (youki?) do we use to manage images and what assumptions are made?
+  /// Image is the image string such as "nginx"
+  string image = 2;
+}
+
+
 message PodServiceAllocateResponse{}
 message PodServiceFreeRequest{}
 message PodServiceFreeResponse{}
-message Pod{}
 
 message PodServiceStartRequest{}
 message PodServiceStartResponse{}

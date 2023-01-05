@@ -64,8 +64,10 @@
 
 use anyhow::Context;
 use aurae_proto::runtime::cell_service_server::CellServiceServer;
+use aurae_proto::runtime::pod_service_server::PodServiceServer;
 use clap::Parser;
 use runtime::CellService;
+use runtime::PodService;
 use std::{
     fs,
     os::unix::fs::PermissionsExt,
@@ -221,6 +223,8 @@ impl AuraedRuntime {
 
         let cell_service = CellService::new();
         let cell_service_server = CellServiceServer::new(cell_service.clone());
+        let pod_service = PodService::new();
+        let pod_service_server = PodServiceServer::new(pod_service.clone());
 
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.
@@ -228,6 +232,7 @@ impl AuraedRuntime {
             Server::builder()
                 .tls_config(tls)?
                 .add_service(cell_service_server)
+                .add_service(pod_service_server)
                 // .add_service(ObserveServer::new(ObserveService::new(
                 //     log_collector,
                 // )))
