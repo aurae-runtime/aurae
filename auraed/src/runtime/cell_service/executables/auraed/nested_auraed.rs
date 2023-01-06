@@ -58,12 +58,12 @@ impl NestedAuraed {
         // Here we launch a nested auraed with the --nested flag
         // which is used our way of "hooking" into the newly created
         // aurae isolation zone.
-        //
-        // TODO: Consider changing "--nested" to "--nested-cell" or similar
 
+        // TODO: Consider changing "--nested" to "--nested-cell" or similar
         let random = uuid::Uuid::new_v4();
 
         // TODO: handle expect
+        // TODO: consider /sbin/init
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
         client_config.system.socket =
@@ -82,20 +82,39 @@ impl NestedAuraed {
         // to command.args, whose return value we ignored above.
         assert_eq!(command.get_args().len(), 3);
 
+        // *****************************************************************
+        // ██████╗██╗      ██████╗ ███╗   ██╗███████╗██████╗
+        // ██╔════╝██║     ██╔═══██╗████╗  ██║██╔════╝╚════██╗
+        // ██║     ██║     ██║   ██║██╔██╗ ██║█████╗   █████╔╝
+        // ██║     ██║     ██║   ██║██║╚██╗██║██╔══╝   ╚═══██╗
+        // ╚██████╗███████╗╚██████╔╝██║ ╚████║███████╗██████╔╝
+        // ╚═════╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═════╝
         // Clone docs: https://man7.org/linux/man-pages/man2/clone.2.html
+        // *****************************************************************
 
-        let signal = SIGCHLD;
-
-        let mut pidfd = -1;
+        // Prepare clone3 command to "execute" the nested auraed
         let mut clone = clone3::Clone3::default();
+
+        // [ Options ]
+
+        // If the child fails to start, indicate an error
+        // Set the pid file descriptor to -1
+        let mut pidfd = -1;
         let _ = clone.flag_pidfd(&mut pidfd);
+
+        // Freeze the parent until the child calls execvp
         let _ = clone.flag_vfork();
-        let _ = clone.exit_signal(signal as u64);
 
-        // Note: The logic here is reversed. We define the flags as "share'
-        //       and map them to "unshare".
-        //       This is by design as the API has a concept of "share".
+        // Manage SIGCHLD for the nested process
+        // Define SIGCHLD for signal handler
+        let _ = clone.exit_signal(SIGCHLD as u64);
 
+        // [ Namespaces ]
+
+        // The logic here is reversed. We define the flags as "share'
+        // and map them to "unshare".
+        // This is by design as the API has a concept of "share".
+        //
         // Order: mount, uts, ipc, pid, network, user (don't have), cgroup
 
         let mut unshare = Unshare::default();
@@ -126,6 +145,8 @@ impl NestedAuraed {
         }
 
         // TODO: clone uses the same pattern as command. Safeguard against changes
+
+        // Execute the clone system call and create the new process with the relevant namespaces.
 
         match unsafe { clone.call() }
             .map_err(|e| io::Error::from_raw_os_error(e.0))?
@@ -165,7 +186,8 @@ impl NestedAuraed {
             }
             pid => {
                 // parent
-                println!("Nested auraed has pid {pid}");
+                println!("Nested auraed running with host pid {}", pid.clone());
+                //info!("Nested auraed running with host pid {}", pid.clone());
 
                 let process = procfs::process::Process::new(pid)
                     .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
@@ -175,7 +197,7 @@ impl NestedAuraed {
         }
     }
 
-    /// Sends a graceful shutdown signal to the auraed process.
+    /// Sends a graceful shutdown signal to the nested process.
     pub fn shutdown(&mut self) -> io::Result<ExitStatus> {
         // TODO: Here, SIGTERM works when using auraescript, but hangs(?) during unit tests.
         //       SIGKILL, however, works. The hang is avoided if all namespaces are shared.
@@ -184,7 +206,7 @@ impl NestedAuraed {
         self.wait()
     }
 
-    /// Sends a [SIGKILL] signal to the auraed process.
+    /// Sends a [SIGKILL] signal to the nested process.
     pub fn kill(&mut self) -> io::Result<ExitStatus> {
         self.do_kill(Some(SIGKILL))?;
         self.wait()
