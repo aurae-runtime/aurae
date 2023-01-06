@@ -79,9 +79,9 @@ impl pod_service_server::PodService for PodService {
         let mut container = ContainerBuilder::new(name, syscall.as_ref())
             // .with_pid_file(args.pid_file.as_ref())?
             // .with_console_socket(args.console_socket.as_ref())
-            // .with_root_path(root_path)?
-            // .with_preserved_fds(args.preserve_fds)
-            .as_init("examples/nginx.oci.bundle")
+            .with_root_path("/var/run/aurae")
+            .expect("root path")
+            .as_init("examples/busybox.oci/busybox")
             .with_systemd(false)
             .build()
             .expect("build");
