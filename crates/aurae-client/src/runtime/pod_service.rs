@@ -28,9 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::runtime::*;
-
-macros::ops_generator!(
+macros::service!(
     runtime,
     PodService,
     allocate(PodServiceAllocateRequest) -> PodServiceAllocateResponse,

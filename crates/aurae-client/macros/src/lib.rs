@@ -53,7 +53,7 @@
 
 use proc_macro::TokenStream;
 
-mod ops;
+mod service;
 
 // TODO (future-highway): Due to needing to ignore certain tests in CI, we can't format
 //    the code in the docs as cargo test will try to test it. Workaround or add the needed
@@ -66,6 +66,6 @@ mod ops;
 ///     other(OtherRequest) -> OtherResponse
 /// );
 #[proc_macro]
-pub fn ops_generator(input: TokenStream) -> TokenStream {
-    ops::ops_generator(input)
+pub fn service(input: TokenStream) -> TokenStream {
+    service::service(input)
 }

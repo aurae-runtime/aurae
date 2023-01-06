@@ -8,10 +8,10 @@ use syn::{parenthesized, parse_macro_input, Token, Type};
 
 #[allow(clippy::format_push_string)]
 
-pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as OpsGeneratorInput);
+pub(crate) fn service(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as ServiceInput);
 
-    let OpsGeneratorInput { module: _, name, functions } = input;
+    let ServiceInput { module, name, functions } = input;
 
     let client_namespace = Ident::new(
         &format!("{}_client", name.to_string().to_snake_case()),
@@ -20,61 +20,56 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
 
     let client_ident = Ident::new(&format!("{name}Client"), name.span());
 
-    let op_idents =
+    let fn_name_idents =
         functions.iter().map(|FunctionInput { name: fn_name, .. }| {
             Ident::new(&fn_name.to_string().to_snake_case(), fn_name.span())
         });
 
-    let op_signatures = functions.iter().zip(op_idents.clone()).map(
-        |(FunctionInput { name: _, arg, returns }, op_ident)| {
+    let rpc_signatures: Vec<_> = functions.iter().zip(fn_name_idents.clone()).map(
+        |(FunctionInput { name: _, arg, returns }, name)| {
             quote! {
-                async fn #op_ident(
+                async fn #name(
                     &self,
-                    req: #arg
-                ) -> Result<::tonic::Response<#returns>, ::tonic::Status>
+                    req: ::aurae_proto::#module::#arg
+                ) -> Result<::tonic::Response<::aurae_proto::#module::#returns>, ::tonic::Status>
             }
         },
-    );
+    ).collect();
 
-    let op_functions = functions
+    let rpc_implementations: Vec<_> = rpc_signatures
         .iter()
-        .zip(op_idents.clone())
-        .map(|(FunctionInput { name, arg, returns }, op_ident)| {
+        .zip(fn_name_idents)
+        .map(|(signature, name)| {
             quote! {
-                async fn #op_ident(
-                    &self,
-                    req: #arg
-                ) -> Result<::tonic::Response<#returns>, ::tonic::Status> {
-                    let mut client = #client_namespace::#client_ident::new(self.channel.clone());
+                #signature {
+                    let mut client = ::aurae_proto::#module::#client_namespace::#client_ident::new(self.channel.clone());
                     client.#name(req).await
                 }
             }
-        });
+        }).collect();
 
     let expanded = quote! {
         #[::tonic::async_trait]
         pub trait #client_ident {
-            #(#op_signatures;)*
+            #(#rpc_signatures;)*
         }
 
         #[::tonic::async_trait]
         impl #client_ident for crate::client::AuraeClient {
-            #(#op_functions)*
+            #(#rpc_implementations)*
         }
     };
 
     expanded.into()
 }
 
-// TODO: remove allow dead_code
-#[allow(dead_code)]
-struct OpsGeneratorInput {
+struct ServiceInput {
     module: Ident,
     name: Ident,
     functions: Punctuated<FunctionInput, Token![,]>,
 }
 
-impl Parse for OpsGeneratorInput {
+impl Parse for ServiceInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let module = input.parse()?;
         let _: Token![,] = input.parse()?;
