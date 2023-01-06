@@ -52,6 +52,8 @@ ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
 lazy_static = { workspace = true }
 libc = "0.2"
+libcontainer = "0.0.4"
+liboci-cli = "0.0.4"
 log = "0.4.17"
 multi_log = "0.1.2"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition

@@ -40,7 +40,14 @@ use aurae_proto::runtime::{
 };
 // use std::sync::Arc;
 // use tokio::sync::Mutex;
+use anyhow::{Context, Result};
+use libcontainer::{
+    container::builder::ContainerBuilder, syscall::syscall::create_syscall,
+};
+use liboci_cli::Run;
+use std::path::PathBuf;
 use tonic::{Request, Response, Status};
+use tracing::info;
 
 #[derive(Debug, Clone)]
 pub struct PodService {
@@ -61,7 +68,26 @@ impl pod_service_server::PodService for PodService {
         &self,
         request: Request<PodServiceAllocateRequest>,
     ) -> Result<Response<PodServiceAllocateResponse>, Status> {
-        let _request = request.into_inner();
+        let request = request.into_inner();
+        let pod = request.pod.expect("pod");
+        let name = pod.name;
+        info!("PodService: allocate() name={:?}", name);
+
+        // Hack in from: https://github.com/containers/youki/blob/main/crates/youki/src/commands/run.rs
+
+        let syscall = create_syscall();
+        let mut container = ContainerBuilder::new(name, syscall.as_ref())
+            // .with_pid_file(args.pid_file.as_ref())?
+            // .with_console_socket(args.console_socket.as_ref())
+            // .with_root_path(root_path)?
+            // .with_preserved_fds(args.preserve_fds)
+            .as_init("examples/nginx.oci.bundle")
+            .with_systemd(false)
+            .build()
+            .expect("build");
+
+        container.start();
+
         Ok(Response::new(PodServiceAllocateResponse {}))
     }
     async fn free(
