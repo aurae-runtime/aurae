@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v3
       - id: image-tag
         run: |
-          echo "tag=${{ hashFiles('**docker/Dockerfile.build', '**/Cargo.lock') }}-${{env.CACHE_VERSION}}" >> $GITHUB_OUTPUT
+          echo "tag=${{ hashFiles('**docker/Dockerfile.build') }}-${{env.CACHE_VERSION}}" >> $GITHUB_OUTPUT
      
       - name: Check if docker build needs to run
         uses: actions/cache@v3
@@ -31,7 +31,7 @@ jobs:
         with:
           path: |
             docker/Dockerfile.build
-          key: build-image-marker-${{ runner.os }}-${{ hashFiles('**docker/Dockerfile.build', '**/Cargo.lock') }}-${{env.CACHE_VERSION}}
+          key: build-image-marker-${{ runner.os }}-${{ hashFiles('**docker/Dockerfile.build') }}-${{env.CACHE_VERSION}}
 
       - name: Set up Docker Buildx
         if: steps.check-change.outputs.cache-hit != 'true'
