@@ -78,8 +78,6 @@ impl Cell {
 
         let pid = auraed.pid();
 
-        println!("auraed pid {}", pid);
-
         if let Err(e) = cgroup.add_task((pid.as_raw() as u64).into()) {
             // TODO: what if free also fails?
             let _ = self.free();
@@ -90,7 +88,11 @@ impl Cell {
             });
         }
 
-        println!("inserted auraed pid {}", pid);
+        info!(
+            "Attach nested Auraed pid {} to cgroup {}",
+            pid.clone(),
+            self.name.clone()
+        );
 
         self.state = CellState::Allocated { cgroup, nested_auraed: auraed };
 

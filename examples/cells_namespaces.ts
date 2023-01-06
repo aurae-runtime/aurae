@@ -41,8 +41,8 @@ let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
         name: cellName,
         nsShareMount: true,
         nsShareUts: true,
-        nsShareIpc: true,
-        nsSharePid: true,
+        nsShareIpc: true ,
+        nsSharePid: false,
         nsShareNet: true,
         nsShareCgroup: true,
     })
