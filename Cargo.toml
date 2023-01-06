@@ -33,12 +33,12 @@
 members = [
     "auraed",
     "auraescript",
-    "crates/aurae-client",
 ]
 
 [workspace.dependencies]
 anyhow = "1.0.66"
-aurae-proto = { path = "./aurae-proto", version = "0.1.0" }
+aurae-client = { path = "./aurae-client" }
+aurae-proto = { path = "./aurae-proto" }
 lazy_static = "1.4.0"
 thiserror = "1.0.37"
 tokio = "1.22.0"

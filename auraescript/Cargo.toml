@@ -41,7 +41,7 @@ path = "src/bin/main.rs"
 
 [dependencies]
 anyhow = {workspace = true}
-aurae-client = { path = "../crates/aurae-client" }
+aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
 deno_ast = { version = "0.21.0", features = ["transpiling"] }
 deno_core = "0.160.0"

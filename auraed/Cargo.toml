@@ -41,7 +41,7 @@ path = "src/bin/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-aurae-client = { path = "../crates/aurae-client" }
+aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
 cgroups-rs = "0.2.11"
 clap = { version = "3.1.20", features = ["derive"] }
