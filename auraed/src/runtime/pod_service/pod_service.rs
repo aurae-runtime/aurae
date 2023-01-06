@@ -31,6 +31,7 @@
 #![allow(unused)]
 #![allow(clippy::module_inception)]
 
+use anyhow::{Context, Result};
 use aurae_client::{runtime::pod_service::PodServiceClient, AuraeClient};
 use aurae_proto::runtime::{
     pod_service_server, Pod, PodServiceAllocateRequest,
@@ -38,9 +39,6 @@ use aurae_proto::runtime::{
     PodServiceStartRequest, PodServiceStartResponse, PodServiceStopRequest,
     PodServiceStopResponse,
 };
-// use std::sync::Arc;
-// use tokio::sync::Mutex;
-use anyhow::{Context, Result};
 use libcontainer::{
     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
 };
@@ -52,13 +50,14 @@ use tracing::info;
 #[derive(Debug, Clone)]
 pub struct PodService {
     // These are used for the cache as in the cells/executables
+    root_path: PathBuf,
     //pods: Arc<Mutex<Pods>>,
     //containers: Arc<Mutex<Containers>>,
 }
 
 impl PodService {
-    pub fn new() -> Self {
-        PodService {}
+    pub fn new(root_path: PathBuf) -> Self {
+        PodService { root_path }
     }
 }
 
@@ -79,14 +78,14 @@ impl pod_service_server::PodService for PodService {
         let mut container = ContainerBuilder::new(name, syscall.as_ref())
             // .with_pid_file(args.pid_file.as_ref())?
             // .with_console_socket(args.console_socket.as_ref())
-            .with_root_path("/var/run/aurae")
+            .with_root_path(self.root_path.join("bundles"))
             .expect("root path")
-            .as_init("examples/busybox.oci/busybox")
+            .as_init("examples/busybox.oci/busybox") // TODO Implement the download and un-tar logic for container images
             .with_systemd(false)
             .build()
             .expect("build");
 
-        container.start();
+        container.start(); // TODO cache the container and move to start()
 
         Ok(Response::new(PodServiceAllocateResponse {}))
     }
@@ -95,6 +94,10 @@ impl pod_service_server::PodService for PodService {
         request: Request<PodServiceFreeRequest>,
     ) -> Result<Response<PodServiceFreeResponse>, Status> {
         let _request = request.into_inner();
+
+        // TODO Destroy container
+        // TODO Destroy /var/run/bundles/<name>
+
         Ok(Response::new(PodServiceFreeResponse {}))
     }
     async fn start(

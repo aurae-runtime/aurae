@@ -229,6 +229,8 @@ impl AuraedRuntime {
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
             DiscoveryServiceServer::new(discovery_service.clone());
+        let pod_service = PodService::new(PathBuf::from(sock_path));
+        let pod_service_server = PodServiceServer::new(pod_service.clone());
 
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.

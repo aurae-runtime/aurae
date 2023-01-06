@@ -83,11 +83,56 @@ service PodService {
 }
 
 message PodServiceAllocateRequest{}
+
+/// The request to allocate a Pod.
+message PodServiceAllocateRequest{
+
+  /// A boring set of containers with shared network and disk.
+  Pod pod = 1;
+
+}
+
+/// OCI image represents a filesystem bundle on disk using familiar parlance.
+///
+/// OCI Filesystem Bundle: https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle
+message Pod{
+  /// Name is the name of the pod.
+  string name = 1;
+
+  /// Define a remote container image.
+  ///
+  /// This should be a fully qualified URI and not a container "shortname".
+  /// The file type that is returned should be an uncompresed OCI compatible container "bundle"
+  /// as defined in the [OCI spec](https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle)
+  ///
+  /// ## Building a container bundle from an existing OCI image
+  ///
+  /// OCI "images" are effectively just tarballs. You can assemble
+  /// a bundle from an existing known image.
+  ///
+  /// ```bash
+  /// cd examples
+  /// mkdir -p aurae-busybox/rootfs
+  /// docker pull busybox
+  /// docker create --name aurae-busybox busybox
+  /// docker export aurae-busybox | tar -xfC aurae-busybox/rootfs -
+  /// cd aurae-busybox
+  /// runc spec
+  /// ```
+  ///
+  /// Aurae will default pull down am image from a remote location and save to the Aurae socket directory as follows.
+  ///
+  /// ```
+  /// $AURAE_SOCK_PATH/bundle/$NAME
+  ///```
+  ///
+  string image = 2;
+}
+
+
 message PodServiceAllocateResponse{}
 message PodServiceFreeRequest{}
 message PodServiceFreeResponse{}
-message Pod{}
-
 message PodServiceStartRequest{}
 message PodServiceStartResponse{}
 message PodServiceStopRequest{}

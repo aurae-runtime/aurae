@@ -1,7 +1,6 @@
 # Aurae
 
-![Main Build](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml/badge.svg)
-
+[![Main Build (lint, compile, test)](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml/badge.svg?branch=main)](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml) [![Documentation](https://github.com/aurae-runtime/aurae/actions/workflows/build-docs.yml/badge.svg)](https://github.com/aurae-runtime/aurae/actions/workflows/build-docs.yml) [![Deploy (aurae.io)](https://github.com/aurae-runtime/aurae/actions/workflows/deploy-website.yml/badge.svg?branch=main)](https://github.com/aurae-runtime/aurae/actions/workflows/deploy-website.yml)
 
 Aurae is a free and open source Rust project which houses a memory-safe systems runtime daemon built specifically for enterprise distributed systems called `auraed`.
 
@@ -21,6 +20,7 @@ The project is very young and under active development. The APIs are subject to 
 As we continue to develop the project the APIs will stabilize and eventually a long term stable release will be offered.
 
 At this time the project should not be run in production.
+
 
 Please read [getting involved](https://aurae.io/community/#getting-involved) if you are interested in joining the project in its early phases. Contribution types of all types and ranges are welcome. You do not have to know Rust to join the project.
 

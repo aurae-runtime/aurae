@@ -310,7 +310,15 @@ The most primitive workload in Aurae, a standard executable process.
 <a name="aurae-runtime-v0-Pod"></a>
 
 ### Pod
+OCI image represents a filesystem bundle on disk using familiar parlance.
+/
+/ OCI Filesystem Bundle: https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle
 
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | Name is the name of the pod. |
+| image | [string](#string) |  | TODO Implement https://github.com/containers/oci-spec-rs / The container image. |
 
 
 
@@ -320,7 +328,12 @@ The most primitive workload in Aurae, a standard executable process.
 <a name="aurae-runtime-v0-PodServiceAllocateRequest"></a>
 
 ### PodServiceAllocateRequest
+The request to allocate a Pod.
 
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| pod | [Pod](#aurae-runtime-v0-Pod) |  | A boring set of containers with shared network and disk. |
 
 
 
