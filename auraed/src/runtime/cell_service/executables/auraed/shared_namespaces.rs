@@ -66,13 +66,22 @@ impl Unshare {
         &mut self,
         shared_namespaces: &SharedNamespaces,
     ) -> io::Result<()> {
-        // This is run in the parent
+        // This is run in the parent, prior to the call to clone.
+        //
+        // The rest of the functions are called in pre_exec, after clone, and in the following order:
+        //   mount, uts, ipc, pid, network, cgroup
+        //
+        // Ideally, order won't matter, or the code will be refactored so that it can
+        // only be called correctly
 
-        // We need a new root if
+        // So far, we need a new root if
         // * mount is not shared
         // * mount is shared, but pid is not shared
         //
-        // These conditionals are written weirdly to that they align with the points above
+        // However, I suspect we may always want a new root, followed by adding what
+        // we want into that new root.
+        //
+        // These conditionals are written weirdly so that they align with the points above
         #[allow(clippy::nonminimal_bool)]
         if !(!shared_namespaces.mount)
             && !(shared_namespaces.mount && !shared_namespaces.pid)
@@ -118,7 +127,7 @@ impl Unshare {
 
         // TODO: the vfs and other directory mounts seemingly get doubled (why?)
 
-        // mount the vfs directories
+        // mount the vfs directories (same virtual filesystems that are in the init module)
         for dir in [
             (None, "dev", "devtmpfs"),
             (None, "sys", "sysfs"),
@@ -138,6 +147,12 @@ impl Unshare {
 
             println!("mounted {target:?}");
         }
+
+        // NOTE: including bin was an attempt at solving an error where I inserted
+        //       a call to `ls` at the end of pre_exec (when changing the root) to try
+        //       and see the state of the system. It didn't work, so is just left
+        //       as an example/placeholder (aka, I got tired of deleting and rewriting
+        //       seemingly the same code).
 
         // mount other directories
         #[allow(clippy::single_element_loop)]
@@ -172,8 +187,11 @@ impl Unshare {
         //        but, unless we make exceptions (including '/') things break.
 
         if shared_namespaces.mount {
-            // do we want to chroot and remount everything in the new root?
+            // Do we want to chroot and remount everything in the new root?
             // what would that do to the parent?
+            //
+            // Also, if we do use chroot, it does seem to be considered "cosmetic", for
+            // lack of a better vocabulary at this moment :), with pivot root being preferred
         } else {
             println!("mount namespace start -- unmount");
 
@@ -368,7 +386,7 @@ impl Unshare {
         //        say that child processes, should either:
         //        A) when mount is shared, change the root of the child and mount /proc
         //           under the new root, or
-        //        B) when mount is not shared, don't change root, just mount over /proc
+        //        B) when mount is not shared, changing root is not needed, just mount over /proc
         //
         //        Changing the root causes issues. Probably the same as when we
         //        pivot_root or unmount "/"

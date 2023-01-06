@@ -73,7 +73,7 @@ impl NestedAuraed {
         let _ = command.current_dir("/").args([
             "--socket",
             &client_config.system.socket,
-            "--nested",
+            "--nested", // NOTE: for now, the nested flag only signals for the code in the init module to not trigger (i.e., don't run the pid 1 code, run the non pid 1 code)
         ]);
 
         // We have a concern that the "command" API make change/break in the future and this
@@ -135,6 +135,15 @@ impl NestedAuraed {
                 let command = {
                     unsafe {
                         command.pre_exec(move || {
+                            // NOTE: For now, every call is made unconditionally and the condition
+                            //        checks are in the call. This makes it easier to work on
+                            //        everything in one place...in the unshare struct
+
+                            // NOTE: There are 2 approaches for handling the mount namespace:
+                            //         - mount_namespace_unmount_with_exceptions
+                            //         - mount_namespace_pivot_root
+                            //       While I believe we will need to use the pivot root version,
+                            //       it leads to "No such file or directory (os error 2)"
                             unshare.mount_namespace_unmount_with_exceptions(
                                 &shared_namespaces,
                             )?;
