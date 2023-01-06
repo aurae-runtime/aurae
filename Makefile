@@ -83,7 +83,7 @@ stdlibdocs:
 	$(error "No /usr/local/bin/protoc-gen-doc, install from https://github.com/pseudomuto/protoc-gen-doc")
 else
 stdlibdocs:
-	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0 --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*.proto
+	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0/runtime -I api/v0/schedule -I api/v0/observe --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*/*.proto
 endif
 
 crate: ## Build the crate (documentation)

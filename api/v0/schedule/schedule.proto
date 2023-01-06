@@ -32,6 +32,4 @@ syntax = "proto3";
 
 package aurae.schedule.v0;
 
-option go_package = "github.com/aurae-runtime/client-go/pkg/api/v0/schedule";
-
 // TODO Schedule subsystem
