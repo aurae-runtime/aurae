@@ -9,18 +9,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{braced, parenthesized, parse_macro_input, Token, Type};
 
-// NOTE: Another approach to generate the typescript files would be to have a macro call
-//       per service and generate intermediate files with only the service implementation
-//       (e.g., runtime.cell_service.ts, runtime.pod_service.ts),
-//       and then each macro call would read all those files and output the
-//       single runtime.ts (last one wins). I don't think the build system is parallel per crate,
-//       so that shouldn't have a race condition issue, but I took the approach of a
-//       single macro call per proto file.
-
 #[allow(clippy::format_push_string)]
 
-// TODO (future-highway): refactor this to use aurae-client crate
-// TODO (future-highway): make this less ugly
 pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as OpsGeneratorInput);
 
@@ -29,10 +19,8 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
     let OpsGeneratorInput { module, services } = input;
 
     let output: Vec<(Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>)> = services.iter().map(|ServiceInput { name, functions }| {
-        let client_namespace = Ident::new(
-            &format!("{}_client", name.to_string().to_snake_case()),
-            name.span(),
-        );
+        let name_in_snake_case = name.to_string().to_snake_case();
+        let name_in_snake_case_ident = Ident::new(&name_in_snake_case, name.span());
 
         let client_ident = Ident::new(&format!("{}Client", name), name.span());
 
@@ -42,7 +30,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
                     &format!(
                         "ae__{}__{}__{}",
                         module.to_string().to_snake_case(),
-                        name.to_string().to_snake_case(),
+                        name_in_snake_case,
                         fn_name.to_string().to_snake_case(),
                     ),
                     name.span(),
@@ -55,10 +43,18 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
             .map(|(FunctionInput { name, arg, returns }, op_ident)| {
                 quote! {
                     #[::deno_core::op]
-                    pub(crate) async fn #op_ident(req: #arg) -> std::result::Result<#returns, ::anyhow::Error> {
-                        let client = crate::builtin::client::AuraeClient::default().await?;
-                        let mut client = self::#client_namespace::#client_ident::new(client.channel);
-                        let res = client.#name(req).await?;
+                    pub(crate) async fn #op_ident(
+                        req: ::aurae_proto::#module::#arg
+                    ) -> std::result::Result<
+                        ::aurae_proto::#module::#returns,
+                        ::anyhow::Error
+                    > {
+                        let client = ::aurae_client::AuraeClient::default().await?;
+                        let res = ::aurae_client::#module::#name_in_snake_case_ident::#client_ident::#name(
+                            &client,
+                            req
+                        ).await?;
+
                         Ok(res.into_inner())
                     }
                 }

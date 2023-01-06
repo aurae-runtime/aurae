@@ -190,6 +190,7 @@ name = "auraescript"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "aurae-client",
  "aurae-proto",
  "auraescript_macros",
  "deno_ast",
