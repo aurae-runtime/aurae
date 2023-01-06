@@ -56,7 +56,7 @@ jobs:
           context: .
           file: docker/Dockerfile.build
           push: true
-          pull: true
+          build-args: CACHE_VERSION=${{env.CACHE_VERSION}}
           tags: ghcr.io/${{ github.repository }}/aurae-builder:latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
           cache-from: type=gha
           cache-to: type=gha,mode=max

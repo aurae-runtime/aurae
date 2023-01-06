@@ -1,9 +1,9 @@
 # syntax = docker/dockerfile:1.4
 FROM rust:1-slim-bullseye as main
-
 LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
 
 ## Define ARGs
+ARG CACHE_VERSION=v0
 ARG BUF_VERSION=1.11.0
 ARG VALE_VERSION=2.21.3
 ARG PROTOC_VERSION=1.5.1
@@ -25,10 +25,10 @@ RUN rustup component add clippy
 
 ## Setup protoc-gen-doc
 RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
-    tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz && \
+    tar -xzf protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
     chmod +x protoc-gen-doc && \
     mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
-    rm protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+    rm protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz
 
 ## Setup Buf
 RUN curl -sSL \
@@ -45,20 +45,9 @@ RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE
 
 WORKDIR /app
 
-FROM main AS planner
-RUN cargo install cargo-chef
-COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
-RUN cargo chef cook --recipe-path recipe.json
-
 FROM main as local
-COPY --from=planner /usr/local/cargo/bin /usr/local/cargo/bin
-COPY --from=planner /usr/local/cargo/registry/index/ /usr/local/cargo/registry/index/
-COPY --from=planner /usr/local/cargo/registry/cache/ /usr/local/cargo/registry/cache/
 WORKDIR /app
 ENTRYPOINT ["make"]
 
 FROM main as builder
-COPY --from=planner /usr/local/cargo/bin /usr/local/cargo/bin
-COPY --from=planner /usr/local/cargo/registry/index/ /usr/local/cargo/registry/index/
-COPY --from=planner /usr/local/cargo/registry/cache/ /usr/local/cargo/registry/cache/
+WORKDIR /app
