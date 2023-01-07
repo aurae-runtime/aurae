@@ -32,6 +32,8 @@ syntax = "proto3";
 
 package aurae.runtime.v0;
 
+option go_package = "github.com/aurae-runtime/ae/client/pkg/api/runtime/v0;runtimev0";
+
 /// Runtime
 /// ===
 ///
