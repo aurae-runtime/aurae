@@ -77,7 +77,7 @@ impl pod_service_server::PodService for PodService {
             image.clone()
         );
 
-        let _container_bundle = bundle::yoink::container(&image);
+        let _container_bundle = bundle::container::container(&image);
 
         // Hack in from: https://github.com/containers/youki/blob/main/crates/youki/src/commands/run.rs
 

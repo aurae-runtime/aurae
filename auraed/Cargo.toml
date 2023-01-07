@@ -43,7 +43,6 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
-aurae-client = { path = "../crates/aurae-client" }
 bundle = { path = "../crates/bundle" }
 cgroups-rs = "0.2.11"
 clap = { version = "3.1.20", features = ["derive"] }

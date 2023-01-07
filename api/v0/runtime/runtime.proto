@@ -127,6 +127,16 @@ message Pod{
   ///```
   ///
   string image = 2;
+
+  /// Define a public portion of a container registry.
+  ///
+  /// Such as:
+  ///  - ghcr.io
+  ///  - https://registry.hub.docker.com
+  ///
+  /// Registry strings will be joined at runtime with the image
+  /// string such that a working container bundle path can be formed.
+  string registry = 3;
 }
 
 

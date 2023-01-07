@@ -28,9 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-mod yeet;
-pub mod yoink;
-
-pub struct ContainerBundle {}
-
-pub struct ExecutableBundle {}
+pub mod container;

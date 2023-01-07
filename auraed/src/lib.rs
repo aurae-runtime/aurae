@@ -96,6 +96,9 @@ mod signal_handlers;
 /// by an appropriate mTLS Authorization setting in order to maintain
 /// a secure multi tenant system.
 const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
+
+const AURAE_BUNDLE: &str = "/var/lib/aurae";
+
 const EXIT_OKAY: i32 = 0;
 const EXIT_ERROR: i32 = 1;
 
@@ -122,6 +125,9 @@ struct AuraedOptions {
     /// Aurae socket path. Defaults to /var/run/aurae/aurae.sock
     #[clap(short, long, value_parser, default_value = AURAE_SOCK)]
     socket: String,
+    /// Aurae bundle path. Defaults to /var/lib/aurae
+    #[clap(short, long, value_parser, default_value = AURAE_BUNDLE)]
+    bundle: String,
     /// Toggle verbosity. Default false
     #[clap(short, long, alias = "ritz")]
     verbose: bool,
@@ -218,11 +224,13 @@ impl AuraedRuntime {
             .client_ca_root(ca_crt_pem);
 
         info!("Validating SSL Identity and Root Certificate Authority (CA)");
-
         let sock = UnixListener::bind(&self.socket)?;
         let sock_stream = UnixListenerStream::new(sock);
         //let _log_collector = self.log_collector.clone();
 
+        // Initialize the bundler
+
+        // Build gRPC Services
         let cell_service = CellService::new();
         let cell_service_server = CellServiceServer::new(cell_service.clone());
 

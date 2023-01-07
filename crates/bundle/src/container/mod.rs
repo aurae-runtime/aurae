@@ -28,8 +28,27 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::ContainerBundle;
+struct ContainerBundlerDebundler {}
 
-pub fn container(_image: &str) -> ContainerBundle {
-    ContainerBundle {}
+struct ContainerBundle {}
+
+impl ContainerBundlerDebundler {
+    pub fn new() -> Self {
+        ContainerBundlerDebundler {
+            // TODO Default
+        }
+    }
+
+    // Image will ultimately need to be rendered
+    // to a "URL" or "URI"
+    //
+    // Right now many container tools support "short name"
+    // image paths, and we (unfortunately) will need
+    // to manage that somehow.
+    //
+    // "nginx" -> https://registry.hub.docker.com/library/nginx
+    //
+    pub fn pull(_image: &str) -> ContainerBundle {
+        ContainerBundle {}
+    }
 }
