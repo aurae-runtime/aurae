@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.68"
 aurae-proto = { workspace = true }
-macros = { package = "aurae-client-macros", path = "./macros" }
+macros = { package = "aurae-client-macros", path = "macros" }
 serde = "1.0.147"
 tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
 toml = "0.5.9"

@@ -28,13 +28,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::runtime::*;
-
-macros::ops_generator!(
+macros::service!(
     runtime,
-    CellService,
-    allocate(CellServiceAllocateRequest) -> CellServiceAllocateResponse,
-    free(CellServiceFreeRequest) -> CellServiceFreeResponse,
-    start(CellServiceStartRequest) -> CellServiceStartResponse,
-    stop(CellServiceStopRequest) -> CellServiceStopResponse,
+    PodService,
+    allocate(PodServiceAllocateRequest) -> PodServiceAllocateResponse,
+    free(PodServiceFreeRequest) -> PodServiceFreeResponse,
+    start(PodServiceStartRequest) -> PodServiceStartResponse,
+    stop(PodServiceStopRequest) -> PodServiceStopResponse,
 );
