@@ -1,6 +1,6 @@
 # Docker
 
-This folder holds the Dockerfiles that are needed by the project.
+This folder holds the Dockerfiles that are needed by the project. Changes to dockerfiles that are built and stored in the Github Repository via the Github Actions pipeline cannot be merged in from a fork of the repository - the Github Token will not let their repository push to our package registry.
 
 ## Build image (Dockerfile.build)
 

@@ -21,9 +21,11 @@ jobs:
         tag: ${{ steps.image-tag.outputs.tag}}
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - id: image-tag
         run: |
-          echo "tag=${{ hashFiles('**docker/Dockerfile.build') }}-${{env.CACHE_VERSION}}" >> $GITHUB_OUTPUT
+          echo "tag=${{ hashFiles('**docker/Dockerfile.build') }}" >> $GITHUB_OUTPUT
      
       - name: Check if docker build needs to run
         uses: actions/cache@v3
@@ -48,8 +50,8 @@ jobs:
           password:  ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Docker Build Image
-        id: build
-        if: steps.check-change.outputs.cache-hit != 'true'
+        id: build-and-push
+        if: steps.check-change.outputs.cache-hit != 'true' && github.event.pull_request.head.repo.full_name == github.repository
         uses: docker/build-push-action@v2
         timeout-minutes: 15
         with:
@@ -61,12 +63,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Fail if fork is changing Dockerfile
+        id: build
+        if: github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          ## If the fork has changed the Dockerfile, we need to fail the pipeline.
+          ## This is to prevent a case where a forked repo could expect changes in the Dockerfile
+          ## to be used in the build process.
+          git diff --quiet HEAD origin/main -- docker/Dockerfile.build || exit 1
+
   build-docs-with-container:
     name: Build Docs
     runs-on: ubuntu-latest
     needs: build-container
     container:
-      image: ghcr.io/${{ github.repository }}/aurae-builder:${{ needs.build-container.outputs.tag }}
+      image: ghcr.io/${{ github.repository }}/aurae-builder:latest
       credentials:
         username:  ${{ github.actor }}
         password:  ${{ secrets.GITHUB_TOKEN }}
@@ -96,7 +107,7 @@ jobs:
     needs: build-container
     timeout-minutes: 20
     container:
-      image: ghcr.io/${{ github.repository }}/aurae-builder:${{ needs.build-container.outputs.tag }}
+      image: ghcr.io/${{ github.repository }}/aurae-builder:latest
       credentials:
         username:  ${{ github.actor }}
         password:  ${{ secrets.GITHUB_TOKEN }}
