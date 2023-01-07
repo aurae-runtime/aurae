@@ -59,7 +59,14 @@ impl CellSpec {
                 cpu_weight: CpuWeight::new(0),
                 cpuset_mems: CpusetMems::new("".into()),
             },
-            shared_namespaces: Default::default(), // nothing shared in default
+            shared_namespaces: SharedNamespaces {
+                mount: true,
+                uts: true,
+                ipc: true,
+                pid: true,
+                net: true,
+                cgroup: true,
+            },
         }
     }
 }

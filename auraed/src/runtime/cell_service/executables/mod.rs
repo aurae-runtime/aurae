@@ -40,7 +40,6 @@ mod executable;
 mod executable_name;
 #[allow(clippy::module_inception)]
 mod executables;
-mod process;
 
 pub struct ExecutableSpec {
     pub name: ExecutableName,
