@@ -32,7 +32,7 @@ syntax = "proto3";
 
 package aurae.observe.v0;
 
-option go_package = "github.com/aurae-runtime/ae/client/pkg/api/observe/v0;observev0";
+option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/observe;observev0";
 
 enum LogChannelType {
   LOG_CHANNEL_TYPE_UNSPECIFIED = 0;
