@@ -70,7 +70,14 @@ impl pod_service_server::PodService for PodService {
         let request = request.into_inner();
         let pod = request.pod.expect("pod");
         let name = pod.name;
-        info!("PodService: allocate() name={:?}", name);
+        let image = pod.image;
+        info!(
+            "PodService: allocate() name={:?} image={:?}",
+            name.clone(),
+            image.clone()
+        );
+
+        let _container_bundle = bundle::yoink::container(&image);
 
         // Hack in from: https://github.com/containers/youki/blob/main/crates/youki/src/commands/run.rs
 

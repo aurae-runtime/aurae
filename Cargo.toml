@@ -33,6 +33,7 @@
 members = [
     "auraed",
     "auraescript",
+    "crates/aurae-client",
 ]
 
 [workspace.dependencies]
