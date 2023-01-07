@@ -36,9 +36,6 @@
 //! Most of the built-in logic that makes AuraeScript useful to an end-user
 //! lives in this module.
 
-pub mod client;
-pub mod config;
-
 #[allow(dead_code)]
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 #[allow(dead_code)]
