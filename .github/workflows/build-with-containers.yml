@@ -56,7 +56,7 @@ jobs:
         timeout-minutes: 15
         with:
           context: .
-          file: docker/Dockerfile.build
+          file: images/Dockerfile.build
           push: true
           build-args: CACHE_VERSION=${{env.CACHE_VERSION}}
           tags: ghcr.io/${{ github.repository }}/aurae-builder:latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
