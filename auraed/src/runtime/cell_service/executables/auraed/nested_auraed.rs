@@ -29,20 +29,25 @@
 \* -------------------------------------------------------------------------- */
 
 use super::SharedNamespaces;
-use crate::runtime::cell_service::executables::process::Process;
 use aurae_client::AuraeConfig;
-use nix::libc::SIGCHLD;
-use nix::mount::MntFlags;
-use nix::sys::signal::{Signal, SIGTERM};
-use nix::unistd::Pid;
-use std::io;
-use std::os::unix::process::CommandExt;
-use std::process::{Command, ExitStatus};
-use Signal::SIGKILL;
+use nix::{
+    libc::SIGCHLD,
+    mount::MntFlags,
+    sys::signal::{Signal, SIGKILL, SIGTERM},
+    unistd::Pid,
+};
+use std::{
+    io::{self, ErrorKind},
+    os::unix::process::{CommandExt, ExitStatusExt},
+    process::{Command, ExitStatus},
+};
+use tracing::trace;
 
 #[derive(Debug)]
 pub struct NestedAuraed {
-    process: Process,
+    process: procfs::process::Process,
+    #[allow(unused)]
+    pidfd: i32,
     shared_namespaces: SharedNamespaces,
     pub client_config: AuraeConfig,
 }
@@ -153,7 +158,6 @@ impl NestedAuraed {
             // we are in the child
 
             let command = {
-                let shared_namespaces = shared_namespaces.clone();
                 unsafe {
                     command.pre_exec(move || {
                         // We can do the steps for isolation here and leave the rest to
@@ -199,31 +203,70 @@ impl NestedAuraed {
             };
 
             // TODO: check that exec should never return, even after exit
-            let _ = command.exec();
+            let e = command.exec();
+            return Err(e);
         }
 
-        // we are in the parent again
-        let process = Process::new_from_clone(pid, pidfd)?;
+        let process = procfs::process::Process::new(pid)
+            .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-        Ok(Self { process, shared_namespaces, client_config })
+        Ok(Self { process, pidfd, shared_namespaces, client_config })
     }
 
     /// Sends a graceful shutdown signal to the auraed process.
     pub fn shutdown(&mut self) -> io::Result<ExitStatus> {
         // TODO: Here, SIGTERM works when using auraescript, but hangs(?) during unit tests.
-        //       SIGKILL, however, works.
-        self.process.kill(Some(SIGTERM))?;
-        self.process.wait()
+        //       SIGKILL, however, works. The hang is avoided if all namespaces are shared.
+        //       Tests have not been done to figure out which namespace is the cause of the hang.
+        self.do_kill(Some(SIGTERM))?;
+        self.wait()
     }
 
     /// Sends a [SIGKILL] signal to the auraed process.
     pub fn kill(&mut self) -> io::Result<ExitStatus> {
-        self.process.kill(Some(SIGKILL))?;
-        self.process.wait()
+        self.do_kill(Some(SIGKILL))?;
+        self.wait()
+    }
+
+    fn do_kill<T: Into<Option<Signal>>>(
+        &mut self,
+        signal: T,
+    ) -> io::Result<()> {
+        let signal = signal.into();
+        let pid = Pid::from_raw(self.process.pid);
+
+        nix::sys::signal::kill(pid, signal)
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))
+    }
+
+    fn wait(&mut self) -> io::Result<ExitStatus> {
+        let pid = Pid::from_raw(self.process.pid);
+
+        let mut exit_status = 0;
+        let _child_pid = loop {
+            let res =
+                unsafe { libc::waitpid(pid.as_raw(), &mut exit_status, 0) };
+
+            if res == -1 {
+                let err = io::Error::last_os_error();
+                match err.kind() {
+                    ErrorKind::Interrupted => continue,
+                    _ => break Err(err),
+                }
+            }
+
+            break Ok(res);
+        }?;
+
+        let exit_status = ExitStatus::from_raw(exit_status);
+
+        trace!("Pid {pid} exited with status {exit_status}");
+
+        Ok(exit_status)
     }
 
     pub fn pid(&self) -> Pid {
-        self.process.pid()
+        Pid::from_raw(self.process.pid)
     }
 }
 
