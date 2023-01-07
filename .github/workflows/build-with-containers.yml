@@ -13,7 +13,7 @@ env:
   CACHE_VERSION: v0
 jobs:
   build-container:
-    name: Build docker image
+    name: Build container image
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ format('{0}-{1}', github.ref, github.job) }}
@@ -25,23 +25,23 @@ jobs:
           fetch-depth: 0
       - id: image-tag
         run: |
-          echo "tag=${{ hashFiles('**docker/Dockerfile.build') }}" >> $GITHUB_OUTPUT
+          echo "tag=${{ hashFiles('**images/Dockerfile.build') }}" >> $GITHUB_OUTPUT
      
-      - name: Check if docker build needs to run
+      - name: Check if container build needs to run
         uses: actions/cache@v3
         id: check-change
         with:
           path: |
-            docker/Dockerfile.build
-          key: build-image-marker-${{ runner.os }}-${{ hashFiles('**docker/Dockerfile.build') }}-${{env.CACHE_VERSION}}
+            images/Dockerfile.build
+          key: build-image-marker-${{ runner.os }}-${{ hashFiles('**images/Dockerfile.build') }}-${{env.CACHE_VERSION}}
 
-      - name: Set up Docker Buildx
+      - name: Set up container buildx
         if: steps.check-change.outputs.cache-hit != 'true'
         uses: docker/setup-buildx-action@v2
         with:
           install: true
 
-      - name: Login to Github Docker Registry
+      - name: Login to Github Container Registry
         if: steps.check-change.outputs.cache-hit != 'true'
         uses: docker/login-action@v2
         with:
@@ -70,7 +70,7 @@ jobs:
           ## If the fork has changed the Dockerfile, we need to fail the pipeline.
           ## This is to prevent a case where a forked repo could expect changes in the Dockerfile
           ## to be used in the build process.
-          git diff --quiet HEAD origin/main -- docker/Dockerfile.build || exit 1
+          git diff --quiet HEAD origin/main -- images/Dockerfile.build || exit 1
 
   build-docs-with-container:
     name: Build Docs
