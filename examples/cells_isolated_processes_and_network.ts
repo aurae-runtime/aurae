@@ -32,39 +32,45 @@ import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
-const cellName = "ae-1";
-
-// [ Free ]
-// await cells.free(<runtime.CellServiceFreeRequest>{
-//     cellName: cellName
-// });
+const cellName = "ae-net-proc-isolated-1";
 
 // [ Allocate Shared NS ]
-let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
+let net_proc_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuShares: 2,
         name: cellName,
-        isolateNetwork: false,
+        isolateNetwork: true,
         isolateProcess: true,
     })
 });
-helpers.print(s_allocated)
+helpers.print(net_proc_allocated)
 
 // [ Start ]
-let s_started = await cells.start(<runtime.CellServiceStartRequest>{
+let net_proc_started1 = await cells.start(<runtime.CellServiceStartRequest>{
     cellName: cellName,
     executable: runtime.Executable.fromPartial({
-        command: "ls /proc", // Note: you must use the full path now for namespaces!
+        command: "ls /proc",
         description: "List processes",
         name: "ps-aux"
     })
 })
-helpers.print(s_started)
+helpers.print(net_proc_started1)
+
+// [ Start ]
+let net_proc_started2 = await cells.start(<runtime.CellServiceStartRequest>{
+    cellName: cellName,
+    executable: runtime.Executable.fromPartial({
+        command: "ifconfig && ip a && route",
+        description: "Show network info",
+        name: "net-info"
+    })
+})
+helpers.print(net_proc_started2)
 
 let host_started = await cells.start(<runtime.CellServiceStartRequest>{
     cellName: cellName,
     executable: runtime.Executable.fromPartial({
-        command: "hostname", // Note: you must use the full path now for namespaces!
+        command: "hostname",
         description: "Show hostname",
         name: "show-hostname"
     })
