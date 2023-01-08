@@ -9,7 +9,7 @@ use std::{
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::task::JoinHandle;
-use tracing::{info, info_span};
+use tracing::info_span;
 
 #[derive(Debug)]
 pub struct Executable {
@@ -64,7 +64,8 @@ impl Executable {
             let mut stdout = BufReader::new(stdout).lines();
             while let Ok(Some(line)) = stdout.next_line().await {
                 let entered_span = span.take().expect("span").entered();
-                info!(level = "info", channel = log_channel.name, line);
+                //info!(level = "info", channel = log_channel.name, line);
+                //println!("{line}");
                 log_channel.send(line);
                 span = Some(entered_span.exit());
             }
@@ -79,7 +80,8 @@ impl Executable {
             let mut stderr = BufReader::new(stderr).lines();
             while let Ok(Some(line)) = stderr.next_line().await {
                 let entered_span = span.take().expect("span").entered();
-                info!(level = "error", channel = log_channel.name, line);
+                // info!(level = "error", channel = log_channel.name, line);
+                //println!("{line}");
                 log_channel.send(line);
                 span = Some(entered_span.exit());
             }

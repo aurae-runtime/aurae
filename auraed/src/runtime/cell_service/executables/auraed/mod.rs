@@ -28,8 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+pub use isolation_controls::IsolationControls;
 pub use nested_auraed::NestedAuraed;
-pub use shared_namespaces::SharedNamespaces;
 
+mod isolation_controls;
 mod nested_auraed;
-mod shared_namespaces;

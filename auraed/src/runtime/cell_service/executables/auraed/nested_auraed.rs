@@ -28,11 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::SharedNamespaces;
+use crate::runtime::cell_service::executables::auraed::isolation_controls::{
+    Isolation, IsolationControls,
+};
 use aurae_client::AuraeConfig;
 use nix::{
     libc::SIGCHLD,
-    mount::MntFlags,
     sys::signal::{Signal, SIGKILL, SIGTERM},
     unistd::Pid,
 };
@@ -41,37 +42,36 @@ use std::{
     os::unix::process::{CommandExt, ExitStatusExt},
     process::{Command, ExitStatus},
 };
-use tracing::trace;
+use tracing::{error, info, trace};
 
 #[derive(Debug)]
 pub struct NestedAuraed {
     process: procfs::process::Process,
     #[allow(unused)]
     pidfd: i32,
-    shared_namespaces: SharedNamespaces,
+    iso_ctl: IsolationControls,
     pub client_config: AuraeConfig,
 }
 
 impl NestedAuraed {
-    pub fn new(shared_namespaces: SharedNamespaces) -> io::Result<Self> {
-        // Launch nested Auraed
-        //
+    pub fn new(name: &str, iso_ctl: IsolationControls) -> io::Result<Self> {
         // Here we launch a nested auraed with the --nested flag
         // which is used our way of "hooking" into the newly created
         // aurae isolation zone.
-        //
-        // TODO: Consider changing "--nested" to "--nested-cell" or similar
+
+        let random = uuid::Uuid::new_v4();
+
         // TODO: handle expect
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
         client_config.system.socket =
-            format!("/var/run/aurae/aurae-{}.sock", uuid::Uuid::new_v4());
+            format!("/var/run/aurae/aurae-{}.sock", random);
 
         let mut command = Command::new("auraed");
         let _ = command.current_dir("/").args([
             "--socket",
             &client_config.system.socket,
-            "--nested",
+            "--nested", // NOTE: for now, the nested flag only signals for the code in the init module to not trigger (i.e., don't run the pid 1 code, run the non pid 1 code)
         ]);
 
         // We have a concern that the "command" API make change/break in the future and this
@@ -80,140 +80,89 @@ impl NestedAuraed {
         // to command.args, whose return value we ignored above.
         assert_eq!(command.get_args().len(), 3);
 
+        // *****************************************************************
+        // ██████╗██╗      ██████╗ ███╗   ██╗███████╗██████╗
+        // ██╔════╝██║     ██╔═══██╗████╗  ██║██╔════╝╚════██╗
+        // ██║     ██║     ██║   ██║██╔██╗ ██║█████╗   █████╔╝
+        // ██║     ██║     ██║   ██║██║╚██╗██║██╔══╝   ╚═══██╗
+        // ╚██████╗███████╗╚██████╔╝██║ ╚████║███████╗██████╔╝
+        // ╚═════╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═════╝
         // Clone docs: https://man7.org/linux/man-pages/man2/clone.2.html
+        // *****************************************************************
 
-        // If this signal is specified as anything other than SIGCHLD, then the
-        //        parent process must specify the __WALL or __WCLONE options when
-        //        waiting for the child with wait(2).  If no signal (i.e., zero) is
-        //        specified, then the parent process is not signaled when the child
-        //        terminates.
-        let signal = SIGCHLD;
-
-        let mut pidfd = -1;
+        // Prepare clone3 command to "execute" the nested auraed
         let mut clone = clone3::Clone3::default();
+
+        // [ Options ]
+
+        // If the child fails to start, indicate an error
+        // Set the pid file descriptor to -1
+        let mut pidfd = -1;
         let _ = clone.flag_pidfd(&mut pidfd);
+
+        // Freeze the parent until the child calls execvp
         let _ = clone.flag_vfork();
-        let _ = clone.exit_signal(signal as u64);
 
-        // Note: The logic here is reversed. We define the flags as "share'
-        //       and map them to "unshare".
-        //       This is by design as the API has a concept of "share".
+        // Manage SIGCHLD for the nested process
+        // Define SIGCHLD for signal handler
+        let _ = clone.exit_signal(SIGCHLD as u64);
 
-        // If CLONE_NEWNS is set, the cloned child is started in a
-        // new mount namespace, initialized with a copy of the
-        // namespace of the parent.  If CLONE_NEWNS is not set, the
-        // child lives in the same mount namespace as the parent.
-        if !shared_namespaces.mount {
-            let _ = clone.flag_newns();
-        }
+        // [ Namespaces and Isolation ]
 
-        //If CLONE_NEWUTS is set, then create the process in a new
-        // UTS namespace, whose identifiers are initialized by
-        // duplicating the identifiers from the UTS namespace of the
-        // calling process.  If this flag is not set, then (as with
-        // fork(2)) the process is created in the same UTS namespace
-        // as the calling process.
-        if !shared_namespaces.uts {
-            let _ = clone.flag_newuts();
-        }
+        let mut isolation = Isolation::new(name);
+        isolation.setup(&iso_ctl)?;
 
-        // If CLONE_NEWIPC is set, then create the process in a new
-        // IPC namespace.  If this flag is not set, then (as with
-        // fork(2)), the process is created in the same IPC namespace
-        // as the calling process.
-        if !shared_namespaces.ipc {
-            let _ = clone.flag_newipc();
-        }
+        // Always unshare the Cgroup namespace
+        let _ = clone.flag_newcgroup();
 
-        // If CLONE_NEWPID is set, then create the process in a new
-        // PID namespace.  If this flag is not set, then (as with
-        // fork(2)) the process is created in the same PID namespace
-        // as the calling process.
-        if !shared_namespaces.pid {
-            let _ = clone.flag_newpid();
-        }
-
-        // If CLONE_NEWNET is set, then create the process in a new
-        // network namespace.  If this flag is not set, then (as with
-        // fork(2)) the process is created in the same network
-        // namespace as the calling process.
-        if !shared_namespaces.net {
+        // Isolate Network
+        if iso_ctl.isolate_network {
             let _ = clone.flag_newnet();
         }
 
-        // If this flag is not set, then (as with fork(2)) the process is
-        // created in the same cgroup namespaces as the calling
-        // process.
-        if !shared_namespaces.cgroup {
-            let _ = clone.flag_newcgroup();
+        // Isolate Process
+        if iso_ctl.isolate_process {
+            let _ = clone.flag_newpid();
+            let _ = clone.flag_newns();
+            let _ = clone.flag_newipc();
+            let _ = clone.flag_newuts();
         }
 
         // TODO: clone uses the same pattern as command. Safeguard against changes
 
-        // NOTE: AFTER THIS CALL YOU CAN BE IN THE CURRENT OR CHILD PROCESS.
-        let pid = unsafe { clone.call() }
-            .map_err(|e| io::Error::from_raw_os_error(e.0))?;
+        // Execute the clone system call and create the new process with the relevant namespaces.
+        match unsafe { clone.call() }
+            .map_err(|e| io::Error::from_raw_os_error(e.0))?
+        {
+            0 => {
+                // child
+                let command = {
+                    unsafe {
+                        command.pre_exec(move || {
+                            isolation.isolate_process(&iso_ctl)?;
+                            isolation.isolate_network(&iso_ctl)?;
+                            Ok(())
+                        })
+                    }
+                };
 
-        if pid == 0 {
-            // we are in the child
+                // TODO: check that exec should never return, even after exit
+                let e = command.exec();
+                error!("Unexpected exit from child command: {e:#?}");
+                Err(e)
+            }
+            pid => {
+                // parent
+                info!("Nested auraed running with host pid {}", pid.clone());
+                let process = procfs::process::Process::new(pid)
+                    .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-            let command = {
-                unsafe {
-                    command.pre_exec(move || {
-                        // We can do the steps for isolation here and leave the rest to
-                        // auraed's init. This would probably require sending the
-                        // shared_namespaces data in the args.
-
-                        if !shared_namespaces.mount {
-                            // remount as private
-                            nix::mount::mount(
-                                None::<&str>, // ignored
-                                ".",
-                                None::<&str>, // ignored
-                                nix::mount::MsFlags::MS_PRIVATE
-                                    | nix::mount::MsFlags::MS_REC,
-                                None::<&str>, // ignored
-                            )
-                            .map_err(|e| {
-                                io::Error::from_raw_os_error(e as i32)
-                            })?;
-                        }
-
-                        if wants_isolated_pid(&shared_namespaces) {
-                            nix::mount::umount2("/proc", MntFlags::MNT_DETACH)
-                                .map_err(|e| {
-                                    io::Error::from_raw_os_error(e as i32)
-                                })?;
-
-                            nix::mount::mount(
-                                Some("proc"),
-                                "/proc",
-                                Some("proc"),
-                                nix::mount::MsFlags::empty(),
-                                None::<&[u8]>,
-                            )
-                            .map_err(|e| {
-                                io::Error::from_raw_os_error(e as i32)
-                            })?;
-                        }
-
-                        Ok(())
-                    })
-                }
-            };
-
-            // TODO: check that exec should never return, even after exit
-            let e = command.exec();
-            return Err(e);
+                Ok(Self { process, pidfd, iso_ctl, client_config })
+            }
         }
-
-        let process = procfs::process::Process::new(pid)
-            .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
-
-        Ok(Self { process, pidfd, shared_namespaces, client_config })
     }
 
-    /// Sends a graceful shutdown signal to the auraed process.
+    /// Sends a graceful shutdown signal to the nested process.
     pub fn shutdown(&mut self) -> io::Result<ExitStatus> {
         // TODO: Here, SIGTERM works when using auraescript, but hangs(?) during unit tests.
         //       SIGKILL, however, works. The hang is avoided if all namespaces are shared.
@@ -222,7 +171,7 @@ impl NestedAuraed {
         self.wait()
     }
 
-    /// Sends a [SIGKILL] signal to the auraed process.
+    /// Sends a [SIGKILL] signal to the nested process.
     pub fn kill(&mut self) -> io::Result<ExitStatus> {
         self.do_kill(Some(SIGKILL))?;
         self.wait()
@@ -269,23 +218,3 @@ impl NestedAuraed {
         Pid::from_raw(self.process.pid)
     }
 }
-
-fn wants_isolated_pid(shared_namespaces: &SharedNamespaces) -> bool {
-    // TODO: This is wrong. A process wants an isolated pid namespace, regardless of mount
-    !shared_namespaces.pid && !shared_namespaces.mount
-}
-
-// On cleaning up other files these todos were there.
-// We may have avoided the need for tracking namespaces,
-// but I (future-highway) don't want to delete these until we are sure.
-// https://github.com/aurae-runtime/aurae/issues/200#issuecomment-1366279569
-// // TODO We need to track the namespace for all newly
-// //      unshared namespaces within a Cell such that
-// //      we can call command.set_namespace() for
-// //      each of the new namespaces at the cell level!
-// //      This will likely require changing how Cells
-// //      manage namespaces as we need to cache the namespace
-// //      IDs (names?)
-// //
-// // TODO Basically once a namespace has been created for a Cell
-// //      we should put ALL future executables into the same namespace!

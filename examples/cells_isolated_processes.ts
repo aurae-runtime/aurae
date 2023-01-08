@@ -32,19 +32,15 @@ import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
-
 const cellName = "ae-1";
+
 // [ Allocate Shared NS ]
 let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuShares: 2,
         name: cellName,
-        // nsShareMount: true,
-        // nsShareUts: true,
-        // nsShareIpc: true,
-        // nsSharePid: true,
-        // nsShareNet: true,
-        // nsShareCgroup: true,
+        isolateNetwork: false,
+        isolateProcess: true,
     })
 });
 helpers.print(s_allocated)
@@ -53,12 +49,22 @@ helpers.print(s_allocated)
 let s_started = await cells.start(<runtime.CellServiceStartRequest>{
     cellName: cellName,
     executable: runtime.Executable.fromPartial({
-        command: "ls /proc", // Note: you must use the full path now for namespaces!
+        command: "ls /proc",
         description: "List processes",
         name: "ps-aux"
     })
 })
 helpers.print(s_started)
+
+let host_started = await cells.start(<runtime.CellServiceStartRequest>{
+    cellName: cellName,
+    executable: runtime.Executable.fromPartial({
+        command: "hostname",
+        description: "Show hostname",
+        name: "show-hostname"
+    })
+})
+helpers.print(host_started)
 
 // [ Free ]
 await cells.free(<runtime.CellServiceFreeRequest>{

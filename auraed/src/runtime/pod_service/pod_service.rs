@@ -33,9 +33,10 @@
 
 use aurae_client::{runtime::pod_service::PodServiceClient, AuraeClient};
 use aurae_proto::runtime::{
-    pod_service_server, PodServiceAllocateRequest, PodServiceAllocateResponse,
-    PodServiceFreeRequest, PodServiceFreeResponse, Pod, PodServiceStartRequest,
-    PodServiceStartResponse, PodServiceStopRequest, PodServiceStopResponse,
+    pod_service_server, Pod, PodServiceAllocateRequest,
+    PodServiceAllocateResponse, PodServiceFreeRequest, PodServiceFreeResponse,
+    PodServiceStartRequest, PodServiceStartResponse, PodServiceStopRequest,
+    PodServiceStopResponse,
 };
 // use std::sync::Arc;
 // use tokio::sync::Mutex;

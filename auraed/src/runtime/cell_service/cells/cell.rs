@@ -70,15 +70,13 @@ impl Cell {
         let cgroup: Cgroup =
             Cgroup::new(self.name.clone(), self.spec.cgroup_spec.clone());
 
-        let auraed = NestedAuraed::new(self.spec.shared_namespaces.clone())
+        let auraed = NestedAuraed::new(&self.name, self.spec.iso_ctl.clone())
             .map_err(|e| CellsError::FailedToAllocateCell {
-                cell_name: self.name.clone(),
-                source: e,
-            })?;
+            cell_name: self.name.clone(),
+            source: e,
+        })?;
 
         let pid = auraed.pid();
-
-        println!("auraed pid {}", pid);
 
         if let Err(e) = cgroup.add_task((pid.as_raw() as u64).into()) {
             // TODO: what if free also fails?
@@ -90,7 +88,11 @@ impl Cell {
             });
         }
 
-        println!("inserted auraed pid {}", pid);
+        info!(
+            "Attach nested Auraed pid {} to cgroup {}",
+            pid.clone(),
+            self.name.clone()
+        );
 
         self.state = CellState::Allocated { cgroup, nested_auraed: auraed };
 

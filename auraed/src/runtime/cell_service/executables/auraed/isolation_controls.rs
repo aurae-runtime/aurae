@@ -28,41 +28,99 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cell_service::executables::auraed::IsolationControls;
-use cell::Cell;
-pub use cell_name::CellName;
-pub use cells::Cells;
-use cgroups::Cgroup;
-pub use cgroups::{CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems};
-pub use error::{CellsError, Result};
+use libc::c_char;
+use std::io::{self};
+use std::path::PathBuf;
+use tracing::info;
 
-mod cell;
-mod cell_name;
-#[allow(clippy::module_inception)]
-mod cells;
-mod cgroups;
-mod error;
-
-#[derive(Debug, Clone)]
-pub struct CellSpec {
-    pub cgroup_spec: CgroupSpec,
-    pub iso_ctl: IsolationControls,
+#[derive(Debug, Clone, Default)]
+pub struct IsolationControls {
+    pub isolate_process: bool,
+    pub isolate_network: bool,
 }
 
-impl CellSpec {
-    #[cfg(test)]
-    pub(crate) fn new_for_tests() -> Self {
-        Self {
-            cgroup_spec: CgroupSpec {
-                cpu_cpus: CpuCpus::new("".into()),
-                cpu_quota: CpuQuota::new(0),
-                cpu_weight: CpuWeight::new(0),
-                cpuset_mems: CpusetMems::new("".into()),
-            },
-            iso_ctl: IsolationControls {
-                isolate_network: true,
-                isolate_process: true,
-            },
+#[derive(Default)]
+pub(crate) struct Isolation {
+    name: String,
+}
+
+impl Isolation {
+    pub fn new(name: &str) -> Isolation {
+        Isolation { name: name.to_string() }
+    }
+    pub fn setup(&mut self, iso_ctl: &IsolationControls) -> io::Result<()> {
+        // The only setup we will need to do is for isolate_process at this time.
+        // We can exit quickly if we are sharing the process controls with the host.
+        if !iso_ctl.isolate_process {
+            return Ok(());
         }
+
+        // Bind mount root:root with MS_REC and MS_PRIVATE flags
+        // We are not sharing the mounts at this point (in other words we are in a new mount namespace)
+        let root = PathBuf::from("/");
+        nix::mount::mount(
+            Some(&root),
+            &root,
+            None::<&str>, // ignored
+            nix::mount::MsFlags::MS_PRIVATE | nix::mount::MsFlags::MS_REC,
+            None::<&str>, // ignored
+        )
+        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+        info!("Isolation: Mounted root dir (/) in cell");
+        Ok(())
+    }
+
+    pub fn isolate_process(
+        &mut self,
+        iso_ctl: &IsolationControls,
+    ) -> io::Result<()> {
+        if !iso_ctl.isolate_process {
+            return Ok(());
+        }
+
+        //Mount proc in the new pid and mount namespace
+        let target = PathBuf::from("/proc");
+        nix::mount::mount(
+            Some("/proc"),
+            &target,
+            Some("proc"),
+            nix::mount::MsFlags::empty(),
+            None::<&str>,
+        )
+        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
+        // We are in a new UTS namespace so we manage hostname and domainname
+        if unsafe {
+            libc::sethostname(
+                self.name.as_ptr() as *const c_char,
+                self.name.len(),
+            )
+        } == -1
+        {
+            return Err(io::Error::last_os_error());
+        }
+
+        // Set domainname
+        if unsafe {
+            libc::setdomainname(
+                self.name.as_ptr() as *const c_char,
+                self.name.len(),
+            )
+        } == -1
+        {
+            return Err(io::Error::last_os_error());
+        }
+        Ok(())
+    }
+
+    pub fn isolate_network(
+        &mut self,
+        iso_ctl: &IsolationControls,
+    ) -> io::Result<()> {
+        if !iso_ctl.isolate_network {
+            return Ok(());
+        }
+        // Insert pre_exec network logic here
+        Ok(())
     }
 }

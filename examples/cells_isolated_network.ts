@@ -31,4 +31,32 @@
 import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/runtime.ts";
 
-let pods = new runtime.PodServiceClient();
+let cells = new runtime.CellServiceClient();
+const cellName = "ae-net-1";
+
+// [ Allocate Shared NS ]
+let net_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
+    cell: runtime.Cell.fromPartial({
+        cpuShares: 2,
+        name: cellName,
+        isolateNetwork: true,
+        isolateProcess: false,
+    })
+});
+helpers.print(net_allocated)
+
+// [ Start ]
+let net_started = await cells.start(<runtime.CellServiceStartRequest>{
+    cellName: cellName,
+    executable: runtime.Executable.fromPartial({
+        command: "ifconfig && ip a && route",
+        description: "Show network info",
+        name: "net-info"
+    })
+})
+helpers.print(net_started)
+
+// [ Free ]
+await cells.free(<runtime.CellServiceFreeRequest>{
+    cellName: cellName
+});

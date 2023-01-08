@@ -159,17 +159,19 @@ message Cell {
   /// In one period, how much can the tasks run in microseconds.
   int64 cpu_quota = 5;
 
-  /// Linux namespaces to share with the calling process.
-  /// If all values are set to false, the resulting cell
-  /// will be as isolated as possible.
+  /// Will isolate the process (and proc filesystem) from the host.
+  /// Will unshare the pid, ipc, uts, and mount namespaces.
+  /// The cgroup namespace is always unshared with the host.
   ///
-  /// Each shared namespace is a potential security risk.
-  bool ns_share_mount = 10;
-  bool ns_share_uts = 11;
-  bool ns_share_ipc = 12;
-  bool ns_share_pid = 13;
-  bool ns_share_net = 14;
-  bool ns_share_cgroup = 15;
+  /// Default: false
+  bool isolate_process = 10;
+
+  /// Will isolate the network from the host.
+  /// Will unshare the net namespaces.
+  /// The cgroup namespace is always unshared with the host.
+  ///
+  /// Default: false
+  bool isolate_network = 11;
 
 }
 
