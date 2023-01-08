@@ -73,7 +73,6 @@ uuid = { version = "1.2.2", features = ["v4"] }
 validation = { path = "../crates/validation", features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
-youki = "0.0.4"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"

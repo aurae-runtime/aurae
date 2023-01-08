@@ -59,11 +59,13 @@ impl NestedAuraed {
         // which is used our way of "hooking" into the newly created
         // aurae isolation zone.
 
+        let random = uuid::Uuid::new_v4();
+
         // TODO: handle expect
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
         client_config.system.socket =
-            format!("/var/run/aurae/aurae-{random}.sock");
+            format!("/var/run/aurae/aurae-{}.sock", random);
 
         let mut command = Command::new("auraed");
         let _ = command.current_dir("/").args([

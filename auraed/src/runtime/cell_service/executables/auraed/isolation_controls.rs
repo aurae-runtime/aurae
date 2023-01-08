@@ -28,12 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use iter_tools::Itertools;
 use libc::c_char;
-use std::ffi::CString;
-use std::io::{self, ErrorKind};
+use std::io::{self};
 use std::path::PathBuf;
-use std::ptr;
 use tracing::info;
 
 #[derive(Debug, Clone, Default)]

@@ -9,7 +9,7 @@ use std::{
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::task::JoinHandle;
-use tracing::{info, info_span};
+use tracing::info_span;
 
 #[derive(Debug)]
 pub struct Executable {
