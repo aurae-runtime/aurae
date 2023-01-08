@@ -61,6 +61,16 @@ let s_started = await cells.start(<runtime.CellServiceStartRequest>{
 })
 helpers.print(s_started)
 
+let host_started = await cells.start(<runtime.CellServiceStartRequest>{
+    cellName: cellName,
+    executable: runtime.Executable.fromPartial({
+        command: "hostname", // Note: you must use the full path now for namespaces!
+        description: "Show hostname",
+        name: "show-hostname"
+    })
+})
+helpers.print(host_started)
+
 // [ Free ]
 await cells.free(<runtime.CellServiceFreeRequest>{
     cellName: cellName

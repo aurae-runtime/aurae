@@ -29,6 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 use iter_tools::Itertools;
+use libc::c_char;
+use std::ffi::CString;
 use std::io::{self, ErrorKind};
 use std::path::PathBuf;
 use std::ptr;
@@ -42,10 +44,13 @@ pub struct IsolationControls {
 
 #[derive(Default)]
 pub(crate) struct Isolation {
-    new_root: Option<PathBuf>,
+    name: String,
 }
 
 impl Isolation {
+    pub fn new(name: &str) -> Isolation {
+        Isolation { name: name.to_string() }
+    }
     pub fn setup(&mut self, iso_ctl: &IsolationControls) -> io::Result<()> {
         // The only setup we will need to do is for isolate_process at this time.
         // We can exit quickly if we are sharing the process controls with the host.
@@ -76,7 +81,7 @@ impl Isolation {
             return Ok(());
         }
 
-        //Mount proc in the new process
+        //Mount proc in the new pid and mount namespace
         let target = PathBuf::from("/proc");
         nix::mount::mount(
             Some("/proc"),
@@ -87,6 +92,36 @@ impl Isolation {
         )
         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 
+        // We are in a new UTS namespace so we manage hostname and domainname
+
+        // Set hostname
+        // CString::fr
+        // let c_hostname = CString::new(&self.name).unwrap();
+        // let c_const_hostname: *const c_char =
+        //     c_hostname.as_ptr() as *const c_char;
+        if unsafe {
+            libc::sethostname(
+                self.name.as_ptr() as *const c_char,
+                self.name.len(),
+            )
+        } == -1
+        {
+            return Err(io::Error::last_os_error());
+        }
+
+        // Set domainname
+        // let c_domain = CString::new(&self.name).unwrap();
+        // let c_const_domainname: *const c_char =
+        //     c_domain.as_ptr() as *const c_char;
+        if unsafe {
+            libc::setdomainname(
+                self.name.as_ptr() as *const c_char,
+                self.name.len(),
+            )
+        } == -1
+        {
+            return Err(io::Error::last_os_error());
+        }
         info!("Isolate: Process");
         Ok(())
     }
@@ -101,135 +136,4 @@ impl Isolation {
         info!("Isolate: Network");
         Ok(())
     }
-
-    pub fn mount_namespace_unmount_with_exceptions(
-        &mut self,
-    ) -> io::Result<()> {
-        // NOTES: In this approach, we attempt to unmount all the mounts,
-        //        but, unless we make exceptions (including '/') things break.
-
-        // get a list of all the current mount points
-        let mounts = procfs::process::Process::myself()
-            .map_err(|e| io::Error::new(ErrorKind::Other, e))?
-            .mountinfo()
-            .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
-
-        // we are not sharing our mounts, so lets start by making all of them private
-        // by making the root private and using MS_REC
-        nix::mount::mount(
-            None::<&str>, // ignored
-            "/",
-            None::<&str>, // ignored
-            nix::mount::MsFlags::MS_PRIVATE | nix::mount::MsFlags::MS_REC,
-            None::<&str>, // ignored
-        )
-        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-
-        // now we want to unmount the mount points that were inherited from the parent
-        // if a mount is below another mount, that has to be unmounted first
-        for mount in mounts.iter().sorted_by_key(|x| x.mnt_id).rev() {
-            // We skip...
-            // - / -> things seem to break without it (but it seems wrong; not sure what to save)
-            // - /run && /run/lock && /run/lock/1000 && /dev/shm ("tmpfs" types) -> same as "/"
-            // - anything in new_root -> are we using it with this mount approach? I don't think so.
-            if matches!(
-                &*mount.fs_type,
-                "tmpfs" | "procfs" //| "procfs" | "sysfs" | "devtmpfs" | "cgroup2"
-            ) || matches!(&mount.mount_point, path if path.to_string_lossy() == "/" )
-            {
-                println!(
-                    "Skipping mount point {:?} with type {:?}",
-                    mount.mount_point, mount.fs_type
-                );
-                continue;
-            }
-
-            if let Some(new_root) = self.new_root.as_deref() {
-                let new_root = new_root.to_string_lossy();
-                if matches!(&mount.mount_point, path if path.to_string_lossy().starts_with(new_root.as_ref()))
-                {
-                    println!(
-                        "Skipping mount point {:?} with type {:?}",
-                        mount.mount_point, mount.fs_type
-                    );
-                    continue;
-                }
-            }
-
-            println!(
-                "Unmounting mount point {:?} with type {:?}",
-                mount.mount_point, mount.fs_type
-            );
-
-            // now unmount it
-            nix::mount::umount2(
-                &mount.mount_point,
-                nix::mount::MntFlags::MNT_DETACH,
-            )
-            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-        }
-
-        println!("mount namespace end");
-
-        Ok(())
-    }
-    //
-    // pub fn mount_namespace_pivot_root(
-    //     &mut self,
-    //     iso_ctl: &IsolationControls,
-    // ) -> io::Result<()> {
-    //     // NOTES: In this approach, we create a new clean root using pivot_root,
-    //     //        which seems like the correct and safe approach.
-    //     //        But, while pre_exec completes (unshared mount + pid), we get
-    //     //        "No such file or directory (os error 2)" seemingly at the call that
-    //     //        std's Command makes to libc::execvp.
-    //     //
-    //     //        I did not try mounting the parent root onto the new root to mimic
-    //     //        saving "/" like I did in the other (mount_namespace_unmount_with_exceptions)
-    //     //        approach.
-    //
-    //     if shared_namespaces.mount {
-    //         // see note in other approach
-    //         return Ok(());
-    //     }
-    //
-    //     println!("mount namespace start -- pivot root");
-    //
-    //     // we are not sharing our mounts, so lets start by making all of them private
-    //     // by making the root private and using MS_REC
-    //     nix::mount::mount(
-    //         None::<&str>, // ignored
-    //         "/",
-    //         None::<&str>, // ignored
-    //         nix::mount::MsFlags::MS_PRIVATE | nix::mount::MsFlags::MS_REC,
-    //         None::<&str>, // ignored
-    //     )
-    //     .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-    //
-    //     let new_root = self.new_root.as_ref().expect("didn't call prep");
-    //
-    //     nix::unistd::chdir(new_root)
-    //         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-    //
-    //     println!("changed into the soon to be new root dir");
-    //
-    //     nix::unistd::pivot_root(".", ".")
-    //         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-    //
-    //     println!("pivoted the old root to below the new root");
-    //
-    //     nix::mount::umount2(".", nix::mount::MntFlags::MNT_DETACH)
-    //         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-    //
-    //     println!("unmounted old root");
-    //
-    //     nix::unistd::chdir("/")
-    //         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-    //
-    //     println!("changed to new root directory");
-    //
-    //     println!("mount namespace done");
-    //
-    //     Ok(())
-    // }
 }

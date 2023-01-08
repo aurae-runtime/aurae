@@ -54,7 +54,7 @@ pub struct NestedAuraed {
 }
 
 impl NestedAuraed {
-    pub fn new(iso_ctl: IsolationControls) -> io::Result<Self> {
+    pub fn new(name: &str, iso_ctl: IsolationControls) -> io::Result<Self> {
         // Launch nested Auraed
         //
         // Here we launch a nested auraed with the --nested flag
@@ -113,7 +113,7 @@ impl NestedAuraed {
 
         // [ Namespaces and Isolation ]
 
-        let mut isolation = Isolation::default();
+        let mut isolation = Isolation::new(name);
         isolation.setup(&iso_ctl)?;
 
         // Always unshare the Cgroup namespace

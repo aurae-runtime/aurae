@@ -70,13 +70,14 @@ impl Cell {
         let cgroup: Cgroup =
             Cgroup::new(self.name.clone(), self.spec.cgroup_spec.clone());
 
-        let auraed =
-            NestedAuraed::new(self.spec.iso_ctl.clone()).map_err(|e| {
-                CellsError::FailedToAllocateCell {
-                    cell_name: self.name.clone(),
-                    source: e,
-                }
-            })?;
+        let auraed = NestedAuraed::new(
+            &self.name.to_string(),
+            self.spec.iso_ctl.clone(),
+        )
+        .map_err(|e| CellsError::FailedToAllocateCell {
+            cell_name: self.name.clone(),
+            source: e,
+        })?;
 
         let pid = auraed.pid();
 
