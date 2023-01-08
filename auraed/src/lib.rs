@@ -63,9 +63,13 @@
 #![allow(dead_code)]
 
 use anyhow::Context;
-use aurae_proto::runtime::cell_service_server::CellServiceServer;
+use aurae_proto::{
+    runtime::cell_service_server::CellServiceServer,
+    schedule::schedule_service_server::ScheduleServiceServer,
+};
 use clap::Parser;
 use runtime::CellService;
+use schedule::ScheduleService;
 use std::{
     fs,
     os::unix::fs::PermissionsExt,
@@ -222,12 +226,17 @@ impl AuraedRuntime {
         let cell_service = CellService::new();
         let cell_service_server = CellServiceServer::new(cell_service.clone());
 
+        let schedule_service = ScheduleService::new();
+        let schedule_service_server =
+            ScheduleServiceServer::new(schedule_service.clone());
+
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.
         let server_handle = tokio::spawn(async move {
             Server::builder()
                 .tls_config(tls)?
                 .add_service(cell_service_server)
+                .add_service(schedule_service_server)
                 // .add_service(ObserveServer::new(ObserveService::new(
                 //     log_collector,
                 // )))

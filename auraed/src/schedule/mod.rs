@@ -28,5 +28,54 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-#![allow(dead_code)]
-//tonic::include_proto!("schedule");
+use aurae_proto::schedule::{
+    schedule_service_server, PingRequest, PingResponse,
+};
+use thiserror::Error;
+use tonic::{Request, Response, Status};
+use tracing::error;
+
+pub(crate) type Result<T> = std::result::Result<T, ScheduleServiceError>;
+
+const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+
+#[derive(Debug, Error)]
+pub(crate) enum ScheduleServiceError {
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
+}
+
+impl From<ScheduleServiceError> for Status {
+    fn from(err: ScheduleServiceError) -> Self {
+        let msg = err.to_string();
+        error!("{msg}");
+        match err {
+            ScheduleServiceError::IO(_) => Status::internal(msg),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ScheduleService {}
+
+impl ScheduleService {
+    pub fn new() -> Self {
+        ScheduleService {}
+    }
+
+    #[tracing::instrument(skip(self))]
+    fn ping(&self, request: PingRequest) -> Result<PingResponse> {
+        Ok(PingResponse { version: VERSION.unwrap_or("unknown").into() })
+    }
+}
+
+#[tonic::async_trait]
+impl schedule_service_server::ScheduleService for ScheduleService {
+    async fn ping(
+        &self,
+        request: Request<PingRequest>,
+    ) -> std::result::Result<Response<PingResponse>, Status> {
+        let request = request.into_inner();
+        Ok(Response::new(self.ping(request)?))
+    }
+}

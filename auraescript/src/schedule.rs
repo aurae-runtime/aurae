@@ -28,18 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-syntax = "proto3";
-
-package aurae.schedule.v0;
-
-option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/schedule;schedulev0";
-
-service ScheduleService {
-  /// Used to confirm that the host is running Aurae and to get some
-  /// information about the version of Aurae that is running.
-  rpc Ping(PingRequest) returns (PingResponse) {}
-}
-
-message PingRequest {}
-
-message PingResponse { string version = 1; }
+macros::ops_generator!(
+    schedule,
+    {
+        ScheduleService,
+        ping(PingRequest) -> PingResponse,
+    },
+);
