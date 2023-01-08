@@ -153,15 +153,9 @@ pub struct ValidatedCell {
     #[validate(none)]
     pub ns_share_mount: bool,
     #[validate(none)]
-    pub ns_share_uts: bool,
-    #[validate(none)]
-    pub ns_share_ipc: bool,
-    #[validate(none)]
     pub ns_share_pid: bool,
     #[validate(none)]
     pub ns_share_net: bool,
-    #[validate(none)]
-    pub ns_share_cgroup: bool,
 }
 
 impl CellTypeValidator for CellValidator {}
@@ -175,11 +169,8 @@ impl From<ValidatedCell> for super::cells::CellSpec {
             cpu_mems,
             cpu_quota,
             ns_share_mount,
-            ns_share_uts,
-            ns_share_ipc,
             ns_share_pid,
             ns_share_net,
-            ns_share_cgroup,
         } = x;
 
         Self {
@@ -191,11 +182,8 @@ impl From<ValidatedCell> for super::cells::CellSpec {
             },
             shared_namespaces: SharedNamespaces {
                 mount: ns_share_mount,
-                uts: ns_share_uts,
-                ipc: ns_share_ipc,
                 pid: ns_share_pid,
                 net: ns_share_net,
-                cgroup: ns_share_cgroup,
             },
         }
     }

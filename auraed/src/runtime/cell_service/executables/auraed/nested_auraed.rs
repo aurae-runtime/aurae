@@ -115,39 +115,38 @@ impl NestedAuraed {
         // and map them to "unshare".
         // This is by design as the API has a concept of "share".
         //
-        // Order: mount, uts, ipc, pid, network, user (don't have), cgroup
+        // Order: pid, mount, network
 
         let mut unshare = Unshare::default();
-        unshare.prep(&shared_namespaces)?;
-
-        if !shared_namespaces.mount {
-            let _ = clone.flag_newns();
-        }
-
-        if !shared_namespaces.uts {
-            let _ = clone.flag_newuts();
-        }
-
-        if !shared_namespaces.ipc {
-            let _ = clone.flag_newipc();
-        }
+        //unshare.prep(&shared_namespaces)?;
 
         if !shared_namespaces.pid {
             let _ = clone.flag_newpid();
+        }
+
+        if !shared_namespaces.mount {
+            let _ = clone.flag_newns();
         }
 
         if !shared_namespaces.net {
             let _ = clone.flag_newnet();
         }
 
-        if !shared_namespaces.cgroup {
-            let _ = clone.flag_newcgroup();
-        }
+        // Toggle cgroup namespaces for all cells
+        // Set: UNSHARED (This will change the /proc/self/cgroup content from the process perspective)
+        let _ = clone.flag_newcgroup();
+
+        // Toggle IPC namespaces for all cells
+        // Set: SHARED (This will expose IPC message queues from the host)
+        //let _ = clone.flag_newipc();
+
+        // Toggle UTS namespace
+        // Set: SHARED (This will always share the hostname and domain name with the host)
+        //let _ = clone.flag_newuts();
 
         // TODO: clone uses the same pattern as command. Safeguard against changes
 
         // Execute the clone system call and create the new process with the relevant namespaces.
-
         match unsafe { clone.call() }
             .map_err(|e| io::Error::from_raw_os_error(e.0))?
         {
@@ -165,14 +164,12 @@ impl NestedAuraed {
                             //         - mount_namespace_pivot_root
                             //       While I believe we will need to use the pivot root version,
                             //       it leads to "No such file or directory (os error 2)"
-                            unshare.mount_namespace_unmount_with_exceptions(
-                                &shared_namespaces,
-                            )?;
-                            unshare.uts_namespace(&shared_namespaces)?;
-                            unshare.ipc_namespace(&shared_namespaces)?;
-                            unshare.pid_namespace(&shared_namespaces)?;
-                            unshare.net_namespace(&shared_namespaces)?;
-                            unshare.cgroup_namespace(&shared_namespaces)?;
+
+                            //unshare.pid_namespace(&shared_namespaces)?;
+                            // unshare.mount_namespace_unmount_with_exceptions(
+                            //     &shared_namespaces,
+                            // )?;
+                            //unshare.net_namespace(&shared_namespaces)?;
 
                             Ok(())
                         })
@@ -181,6 +178,9 @@ impl NestedAuraed {
 
                 // TODO: check that exec should never return, even after exit
                 let e = command.exec();
+
+                command.spawn().expect("spawning command");
+
                 println!("{e:#?}");
                 Err(e)
             }

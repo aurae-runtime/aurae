@@ -32,19 +32,21 @@ import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
-
 const cellName = "ae-1";
+
+// [ Free ]
+// await cells.free(<runtime.CellServiceFreeRequest>{
+//     cellName: cellName
+// });
+
 // [ Allocate Shared NS ]
 let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuShares: 2,
         name: cellName,
-        nsShareMount: true,
-        nsShareUts: true,
-        nsShareIpc: true ,
+        nsShareMount: false,
         nsSharePid: false,
-        nsShareNet: true,
-        nsShareCgroup: true,
+        nsShareNet: false,
     })
 });
 helpers.print(s_allocated)

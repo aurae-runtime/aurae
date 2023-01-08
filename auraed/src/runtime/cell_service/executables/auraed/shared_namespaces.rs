@@ -32,15 +32,13 @@ use iter_tools::Itertools;
 use std::io::{self, ErrorKind};
 use std::path::PathBuf;
 use std::ptr;
+use tracing::info;
 
 #[derive(Debug, Clone, Default)]
 pub struct SharedNamespaces {
     pub mount: bool,
-    pub uts: bool,
-    pub ipc: bool,
     pub pid: bool,
     pub net: bool,
-    pub cgroup: bool,
 }
 
 #[derive(Default)]
@@ -48,32 +46,19 @@ pub(crate) struct Unshare {
     new_root: Option<PathBuf>,
 }
 
-// NOTE (future-highway):
-//      This is an initial attempt at unsharing namespaces.
-//      The nested auraed sets the proper clone flags on clone to get its own namespaces,
-//      but we usually inherit too much from the parent. The sharing and unsharing of
-//      the mount namespace seems to have the most effect on the other unshares,
-//      but I've mostly focused on working on a single unshare at a time.
-//
-//      A hurdle that I don't know the solution to is that if I change the root of the
-//      process (via chroot or pivot_root), the auraed won't start
-//      (errors with file not found), but changing the root seems imperative to the
-//      isolation. I have tried copying auared into the new root directory, but that
-//      doesn't seems to matter (I'm not sure where it is looking for it anyway,
-//      once the root gets changed).
 impl Unshare {
     pub fn prep(
         &mut self,
         shared_namespaces: &SharedNamespaces,
     ) -> io::Result<()> {
-        // This is run in the parent, prior to the call to clone.
+        // This is run in the parent, prior to the call to clone3.
         //
         // The rest of the functions are called in pre_exec, after clone, and in the following order:
-        //   mount, uts, ipc, pid, network, cgroup
+        //   pid, mount, network.
         //
         // Ideally, order won't matter, or the code will be refactored so that it can
         // only be called correctly
-
+        //
         // So far, we need a new root if
         // * mount is not shared
         // * mount is shared, but pid is not shared
@@ -89,14 +74,10 @@ impl Unshare {
             return Ok(());
         }
 
-        println!("unshare prep start");
-
         let new_root = PathBuf::from(format!("/ae-{}", uuid::Uuid::new_v4()));
 
         // As long as these are in prep, calls to std are ok. Otherwise, need to use libc and nix.
         std::fs::create_dir(&new_root)?;
-
-        println!("created new root dir {new_root:?}");
 
         // NOTES: We are copying auraed into the new root in an attempt to fix the
         //        "No such file or directory (os error 2) that we will eventually get.
@@ -174,8 +155,6 @@ impl Unshare {
 
         self.new_root = Some(new_root);
 
-        println!("unshare prep done");
-
         Ok(())
     }
 
@@ -211,8 +190,6 @@ impl Unshare {
                 None::<&str>, // ignored
             )
             .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-
-            println!("made all mounts private");
 
             // now we want to unmount the mount points that were inherited from the parent
             // if a mount is below another mount, that has to be unmounted first
@@ -324,56 +301,6 @@ impl Unshare {
         Ok(())
     }
 
-    pub fn uts_namespace(
-        &mut self,
-        shared_namespaces: &SharedNamespaces,
-    ) -> io::Result<()> {
-        if shared_namespaces.uts {
-            return Ok(());
-        }
-
-        println!("uts namespace start");
-
-        // Note: Should we set the hostname/domainname to something? or maybe clear it out?
-        //
-        //       Using ptr::null makes it appear empty, but the default domainname
-        //       on my system is (none). Is that telling me it is actually not set or
-        //       is it set to "(none)"?
-        //
-        //       I can set domainname to "(none)", but get an error that it is
-        //       invalid for hostname, so I assume it is actually set to "(none)
-        //       for the domainname (not that it is not set).
-
-        if unsafe { nix::libc::sethostname(ptr::null(), 0) } == -1 {
-            return Err(io::Error::last_os_error());
-        }
-
-        if unsafe { nix::libc::setdomainname(ptr::null(), 0) } == -1 {
-            return Err(io::Error::last_os_error());
-        }
-
-        println!("uts namespace done");
-        Ok(())
-    }
-
-    pub fn ipc_namespace(
-        &mut self,
-        shared_namespaces: &SharedNamespaces,
-    ) -> io::Result<()> {
-        if shared_namespaces.ipc {
-            return Ok(());
-        }
-
-        println!("ipc namespace start");
-
-        // what to do?
-        // https://man7.org/linux/man-pages/man7/ipc_namespaces.7.html
-        // what did we inherit from clone?
-
-        println!("ipc namespace done");
-        Ok(())
-    }
-
     pub fn pid_namespace(
         &mut self,
         shared_namespaces: &SharedNamespaces,
@@ -390,8 +317,6 @@ impl Unshare {
         //
         //        Changing the root causes issues. Probably the same as when we
         //        pivot_root or unmount "/"
-
-        println!("pid namespace start");
 
         let target = if shared_namespaces.mount {
             let new_root = self.new_root.as_deref().expect("didn't call prep");
@@ -411,8 +336,6 @@ impl Unshare {
         )
         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 
-        println!("mounted proc");
-
         // NOTE: The docs say to change the root, but if we do, it seems the auraed
         //       exe cannot be found anymore. However, since we don't, we are seeing the
         //       parent's version of /proc.
@@ -421,9 +344,7 @@ impl Unshare {
             // nix::unistd::chroot(new_root)
             //     .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
         }
-
-        println!("pid namespace end");
-
+        info!("Unshare: New pid namespace");
         Ok(())
     }
 
@@ -434,40 +355,7 @@ impl Unshare {
         if shared_namespaces.net {
             return Ok(());
         }
-
-        println!("net namespace start");
-
-        // what to do?
-        // we, seemingly, don't have internet connectivity
-        // using `ifconfig -a` we see a loopback only (parent has an additional item and internet)
-        // we can connect to the process using the socket
-
-        println!("net namespace done");
-        Ok(())
-    }
-
-    pub fn cgroup_namespace(
-        &mut self,
-        shared_namespaces: &SharedNamespaces,
-    ) -> io::Result<()> {
-        if shared_namespaces.cgroup {
-            return Ok(());
-        }
-
-        println!("cgroup namespace start");
-
-        // what to do?
-        // I can see the cgroup I am in. If I add a cgroup in the parent, it shows in the child.
-        //
-        // "When reading the cgroup memberships of a "target" process from
-        //        /proc/[pid]/cgroup, the pathname shown in the third field of each
-        //        record will be relative to the reading process's root directory
-        //        for the corresponding cgroup hierarchy."
-        //
-        // So, if we solve the problems of not being able to start a nested auraed
-        // when changing the root via chroot or pivot_root, maybe this will be fixed
-
-        println!("cgroup namespace done");
+        info!("Unshare: New net namespace");
         Ok(())
     }
 }
