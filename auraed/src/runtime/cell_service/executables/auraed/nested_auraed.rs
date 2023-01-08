@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use crate::runtime::cell_service::executables::auraed::isolation_controls::{
-    IsolationControls, Unshare,
+    Isolation, IsolationControls,
 };
 use aurae_client::AuraeConfig;
 use nix::{
@@ -113,8 +113,8 @@ impl NestedAuraed {
 
         // [ Namespaces and Isolation ]
 
-        let mut unshare = Unshare::default();
-        unshare.prep(&iso_ctl)?;
+        let mut isolation = Isolation::default();
+        isolation.setup(&iso_ctl)?;
 
         // Always unshare the Cgroup namespace
         let _ = clone.flag_newcgroup();
@@ -143,22 +143,8 @@ impl NestedAuraed {
                 let command = {
                     unsafe {
                         command.pre_exec(move || {
-                            // NOTE: For now, every call is made unconditionally and the condition
-                            //        checks are in the call. This makes it easier to work on
-                            //        everything in one place...in the unshare struct
-
-                            // NOTE: There are 2 approaches for handling the mount namespace:
-                            //         - mount_namespace_unmount_with_exceptions
-                            //         - mount_namespace_pivot_root
-                            //       While I believe we will need to use the pivot root version,
-                            //       it leads to "No such file or directory (os error 2)"
-
-                            unshare.isolate_process(&iso_ctl)?;
-                            // unshare.mount_namespace_unmount_with_exceptions(
-                            //     &shared_namespaces,
-                            // )?;
-                            unshare.isolate_network(&iso_ctl)?;
-
+                            isolation.isolate_process(&iso_ctl)?;
+                            isolation.isolate_network(&iso_ctl)?;
                             Ok(())
                         })
                     }
@@ -166,10 +152,7 @@ impl NestedAuraed {
 
                 // TODO: check that exec should never return, even after exit
                 let e = command.exec();
-
-                command.spawn().expect("spawning command");
-
-                println!("{e:#?}");
+                println!("Unable to execute child command: {e:#?}");
                 Err(e)
             }
             pid => {

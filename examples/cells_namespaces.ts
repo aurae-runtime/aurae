@@ -44,9 +44,8 @@ let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuShares: 2,
         name: cellName,
-        nsShareMount: false,
-        nsSharePid: false,
-        nsShareNet: false,
+        isolateNetwork: false,
+        isolateProcess: true,
     })
 });
 helpers.print(s_allocated)

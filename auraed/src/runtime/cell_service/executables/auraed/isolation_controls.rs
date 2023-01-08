@@ -41,13 +41,46 @@ pub struct IsolationControls {
 }
 
 #[derive(Default)]
-pub(crate) struct Unshare {
+pub(crate) struct Isolation {
     new_root: Option<PathBuf>,
 }
 
-impl Unshare {
-    pub fn prep(&mut self, _iso_ctl: &IsolationControls) -> io::Result<()> {
-        info!("Isolate: Prep");
+impl Isolation {
+    pub fn setup(&mut self, iso_ctl: &IsolationControls) -> io::Result<()> {
+        // The only setup we will need to do is for isolate_process at this time.
+        // We can exit quickly if we are sharing the process controls with the host.
+        if !iso_ctl.isolate_process {
+            return Ok(());
+        }
+
+        // Bind mount root:root
+        let root = PathBuf::from("/");
+        nix::mount::mount(
+            Some(&root),
+            &root,
+            None::<&str>, // ignored
+            nix::mount::MsFlags::MS_BIND,
+            None::<&str>, // ignored
+        )
+        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+        info!("Isolation: Bind mounted root dir (/) in cell");
+
+        for dir in [
+            (Some("proc"), "proc", "proc"),
+            // (None, "dev", "devtmpfs"),
+            // (None, "sys", "sysfs"),
+        ] {
+            let (source, target, fstype) = dir;
+            let target = &root.join(target);
+            nix::mount::mount(
+                source,
+                target,
+                Some(fstype),
+                nix::mount::MsFlags::empty(),
+                None::<&str>,
+            )
+            .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+        }
         Ok(())
     }
 
@@ -55,9 +88,20 @@ impl Unshare {
         &mut self,
         iso_ctl: &IsolationControls,
     ) -> io::Result<()> {
-        if iso_ctl.isolate_process {
+        if !iso_ctl.isolate_process {
             return Ok(());
         }
+
+        // Mount proc in the new process
+        nix::mount::mount(
+            Some("/proc"),
+            "/proc",
+            Some("proc"),
+            nix::mount::MsFlags::empty(),
+            None::<&str>,
+        )
+        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+
         info!("Isolate: Process");
         Ok(())
     }
@@ -102,88 +146,7 @@ impl Unshare {
     //
     //     if
     //
-    //     let new_root = PathBuf::from(format!("/ae-{}", uuid::Uuid::new_v4()));
-    //
-    //     // As long as these are in prep, calls to std are ok. Otherwise, need to use libc and nix.
-    //     std::fs::create_dir(&new_root)?;
-    //
-    //     // NOTES: We are copying auraed into the new root in an attempt to fix the
-    //     //        "No such file or directory (os error 2) that we will eventually get.
-    //     //        This change does not fix it and while I'm not 100% sure that the missing
-    //     //        file is referring to auraed, I feel like it only makes sense that auraed
-    //     //        be present in the new mount space
-    //     let _ =
-    //         std::fs::copy("/root/.cargo/bin/auraed", new_root.join("auraed"))?;
-    //
-    //     // we need a directory for each mount point we intend to make
-    //     for dir in ["dev", "sys", "proc", "bin"] {
-    //         let dir = new_root.join(dir);
-    //         std::fs::create_dir_all(&dir)?;
-    //         println!("created {dir:?} dir under new root dir");
-    //     }
-    //
-    //     // make the new root a mount point
-    //     nix::mount::mount(
-    //         Some(&new_root),
-    //         &new_root,
-    //         None::<&str>, // ignored,
-    //         nix::mount::MsFlags::MS_BIND,
-    //         None::<&str>, // ignored
-    //     )
-    //     .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-    //
-    //     println!("bind mounted new root dir (rec)");
-    //
-    //     // TODO: the vfs and other directory mounts seemingly get doubled (why?)
-    //
-    //     // mount the vfs directories (same virtual filesystems that are in the init module)
-    //     for dir in [
-    //         (None, "dev", "devtmpfs"),
-    //         (None, "sys", "sysfs"),
-    //         (Some("proc"), "proc", "proc"),
-    //     ] {
-    //         let (source, target, fstype) = dir;
-    //         let target = &new_root.join(target);
-    //
-    //         nix::mount::mount(
-    //             source,
-    //             target,
-    //             Some(fstype),
-    //             nix::mount::MsFlags::empty(),
-    //             None::<&str>,
-    //         )
-    //         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-    //
-    //         println!("mounted {target:?}");
-    //     }
-    //
-    //     // NOTE: including bin was an attempt at solving an error where I inserted
-    //     //       a call to `ls` at the end of pre_exec (when changing the root) to try
-    //     //       and see the state of the system. It didn't work, so is just left
-    //     //       as an example/placeholder (aka, I got tired of deleting and rewriting
-    //     //       seemingly the same code).
-    //
-    //     // mount other directories
-    //     #[allow(clippy::single_element_loop)]
-    //     for dir in [(Some("/bin"), "bin")] {
-    //         let (source, target) = dir;
-    //         let target = &new_root.join(target);
-    //
-    //         nix::mount::mount(
-    //             source,
-    //             target,
-    //             None::<&str>, // ignored,
-    //             nix::mount::MsFlags::MS_BIND | nix::mount::MsFlags::MS_REC,
-    //             None::<&str>, // ignored
-    //         )
-    //         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-    //
-    //         println!("mounted {target:?}");
-    //     }
-    //
-    //     self.new_root = Some(new_root);
-    //
-    //     Ok(())
+
     // }
     //
     // pub fn mount_namespace_unmount_with_exceptions(
