@@ -1,6 +1,6 @@
 use super::{
     cells::{CellName, CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems},
-    executables::{auraed::SharedNamespaces, ExecutableName},
+    executables::{auraed::IsolationControls, ExecutableName},
 };
 use aurae_proto::runtime::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
@@ -151,11 +151,9 @@ pub struct ValidatedCell {
     pub cpu_quota: CpuQuota,
 
     #[validate(none)]
-    pub ns_share_mount: bool,
+    pub isolate_process: bool,
     #[validate(none)]
-    pub ns_share_pid: bool,
-    #[validate(none)]
-    pub ns_share_net: bool,
+    pub isolate_network: bool,
 }
 
 impl CellTypeValidator for CellValidator {}
@@ -168,9 +166,8 @@ impl From<ValidatedCell> for super::cells::CellSpec {
             cpu_shares,
             cpu_mems,
             cpu_quota,
-            ns_share_mount,
-            ns_share_pid,
-            ns_share_net,
+            isolate_process,
+            isolate_network,
         } = x;
 
         Self {
@@ -180,11 +177,7 @@ impl From<ValidatedCell> for super::cells::CellSpec {
                 cpu_weight: cpu_shares,
                 cpuset_mems: cpu_mems,
             },
-            shared_namespaces: SharedNamespaces {
-                mount: ns_share_mount,
-                pid: ns_share_pid,
-                net: ns_share_net,
-            },
+            iso_ctl: IsolationControls { isolate_process, isolate_network },
         }
     }
 }

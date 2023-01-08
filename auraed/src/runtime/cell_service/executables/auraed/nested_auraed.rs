@@ -28,7 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{shared_namespaces::Unshare, SharedNamespaces};
+use crate::runtime::cell_service::executables::auraed::isolation_controls::{
+    IsolationControls, Unshare,
+};
 use aurae_client::AuraeConfig;
 use nix::{
     libc::SIGCHLD,
@@ -40,19 +42,19 @@ use std::{
     os::unix::process::{CommandExt, ExitStatusExt},
     process::{Command, ExitStatus},
 };
-use tracing::trace;
+use tracing::{info, trace};
 
 #[derive(Debug)]
 pub struct NestedAuraed {
     process: procfs::process::Process,
     #[allow(unused)]
     pidfd: i32,
-    shared_namespaces: SharedNamespaces,
+    iso_ctl: IsolationControls,
     pub client_config: AuraeConfig,
 }
 
 impl NestedAuraed {
-    pub fn new(shared_namespaces: SharedNamespaces) -> io::Result<Self> {
+    pub fn new(iso_ctl: IsolationControls) -> io::Result<Self> {
         // Launch nested Auraed
         //
         // Here we launch a nested auraed with the --nested flag
@@ -109,40 +111,26 @@ impl NestedAuraed {
         // Define SIGCHLD for signal handler
         let _ = clone.exit_signal(SIGCHLD as u64);
 
-        // [ Namespaces ]
-
-        // The logic here is reversed. We define the flags as "share'
-        // and map them to "unshare".
-        // This is by design as the API has a concept of "share".
-        //
-        // Order: pid, mount, network
+        // [ Namespaces and Isolation ]
 
         let mut unshare = Unshare::default();
-        //unshare.prep(&shared_namespaces)?;
+        unshare.prep(&iso_ctl)?;
 
-        if !shared_namespaces.pid {
-            let _ = clone.flag_newpid();
-        }
+        // Always unshare the Cgroup namespace
+        let _ = clone.flag_newcgroup();
 
-        if !shared_namespaces.mount {
-            let _ = clone.flag_newns();
-        }
-
-        if !shared_namespaces.net {
+        // Isolate Network
+        if iso_ctl.isolate_network {
             let _ = clone.flag_newnet();
         }
 
-        // Toggle cgroup namespaces for all cells
-        // Set: UNSHARED (This will change the /proc/self/cgroup content from the process perspective)
-        let _ = clone.flag_newcgroup();
-
-        // Toggle IPC namespaces for all cells
-        // Set: SHARED (This will expose IPC message queues from the host)
-        //let _ = clone.flag_newipc();
-
-        // Toggle UTS namespace
-        // Set: SHARED (This will always share the hostname and domain name with the host)
-        //let _ = clone.flag_newuts();
+        // Isolate Process
+        if iso_ctl.isolate_process {
+            let _ = clone.flag_newpid();
+            let _ = clone.flag_newns();
+            let _ = clone.flag_newipc();
+            let _ = clone.flag_newuts();
+        }
 
         // TODO: clone uses the same pattern as command. Safeguard against changes
 
@@ -165,11 +153,11 @@ impl NestedAuraed {
                             //       While I believe we will need to use the pivot root version,
                             //       it leads to "No such file or directory (os error 2)"
 
-                            //unshare.pid_namespace(&shared_namespaces)?;
+                            unshare.isolate_process(&iso_ctl)?;
                             // unshare.mount_namespace_unmount_with_exceptions(
                             //     &shared_namespaces,
                             // )?;
-                            //unshare.net_namespace(&shared_namespaces)?;
+                            unshare.isolate_network(&iso_ctl)?;
 
                             Ok(())
                         })
@@ -186,13 +174,12 @@ impl NestedAuraed {
             }
             pid => {
                 // parent
-                println!("Nested auraed running with host pid {}", pid.clone());
-                //info!("Nested auraed running with host pid {}", pid.clone());
+                info!("Nested auraed running with host pid {}", pid.clone());
 
                 let process = procfs::process::Process::new(pid)
                     .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-                Ok(Self { process, pidfd, shared_namespaces, client_config })
+                Ok(Self { process, pidfd, iso_ctl, client_config })
             }
         }
     }

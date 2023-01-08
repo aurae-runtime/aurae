@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cell_service::executables::auraed::SharedNamespaces;
+use crate::runtime::cell_service::executables::auraed::IsolationControls;
 use cell::Cell;
 pub use cell_name::CellName;
 pub use cells::Cells;
@@ -46,7 +46,7 @@ mod error;
 #[derive(Debug, Clone)]
 pub struct CellSpec {
     pub cgroup_spec: CgroupSpec,
-    pub shared_namespaces: SharedNamespaces,
+    pub iso_ctl: IsolationControls,
 }
 
 impl CellSpec {
@@ -59,13 +59,9 @@ impl CellSpec {
                 cpu_weight: CpuWeight::new(0),
                 cpuset_mems: CpusetMems::new("".into()),
             },
-            shared_namespaces: SharedNamespaces {
-                mount: true,
-                uts: true,
-                ipc: true,
-                pid: true,
-                net: true,
-                cgroup: true,
+            iso_ctl: IsolationControls {
+                isolate_network: true,
+                isolate_process: true,
             },
         }
     }
