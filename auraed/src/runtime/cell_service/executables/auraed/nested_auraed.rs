@@ -42,7 +42,7 @@ use std::{
     os::unix::process::{CommandExt, ExitStatusExt},
     process::{Command, ExitStatus},
 };
-use tracing::{info, trace};
+use tracing::{error, info, trace};
 
 #[derive(Debug)]
 pub struct NestedAuraed {
@@ -55,17 +55,11 @@ pub struct NestedAuraed {
 
 impl NestedAuraed {
     pub fn new(name: &str, iso_ctl: IsolationControls) -> io::Result<Self> {
-        // Launch nested Auraed
-        //
         // Here we launch a nested auraed with the --nested flag
         // which is used our way of "hooking" into the newly created
         // aurae isolation zone.
 
-        // TODO: Consider changing "--nested" to "--nested-cell" or similar
-        let random = uuid::Uuid::new_v4();
-
         // TODO: handle expect
-        // TODO: consider /sbin/init
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
         client_config.system.socket =
@@ -152,13 +146,12 @@ impl NestedAuraed {
 
                 // TODO: check that exec should never return, even after exit
                 let e = command.exec();
-                println!("Unable to execute child command: {e:#?}");
+                error!("Unexpected exit from child command: {e:#?}");
                 Err(e)
             }
             pid => {
                 // parent
                 info!("Nested auraed running with host pid {}", pid.clone());
-
                 let process = procfs::process::Process::new(pid)
                     .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
@@ -223,18 +216,3 @@ impl NestedAuraed {
         Pid::from_raw(self.process.pid)
     }
 }
-
-// On cleaning up other files these todos were there.
-// We may have avoided the need for tracking namespaces,
-// but I (future-highway) don't want to delete these until we are sure.
-// https://github.com/aurae-runtime/aurae/issues/200#issuecomment-1366279569
-// // TODO We need to track the namespace for all newly
-// //      unshared namespaces within a Cell such that
-// //      we can call command.set_namespace() for
-// //      each of the new namespaces at the cell level!
-// //      This will likely require changing how Cells
-// //      manage namespaces as we need to cache the namespace
-// //      IDs (names?)
-// //
-// // TODO Basically once a namespace has been created for a Cell
-// //      we should put ALL future executables into the same namespace!

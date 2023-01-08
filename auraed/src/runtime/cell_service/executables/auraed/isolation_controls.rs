@@ -93,12 +93,6 @@ impl Isolation {
         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 
         // We are in a new UTS namespace so we manage hostname and domainname
-
-        // Set hostname
-        // CString::fr
-        // let c_hostname = CString::new(&self.name).unwrap();
-        // let c_const_hostname: *const c_char =
-        //     c_hostname.as_ptr() as *const c_char;
         if unsafe {
             libc::sethostname(
                 self.name.as_ptr() as *const c_char,
@@ -110,9 +104,6 @@ impl Isolation {
         }
 
         // Set domainname
-        // let c_domain = CString::new(&self.name).unwrap();
-        // let c_const_domainname: *const c_char =
-        //     c_domain.as_ptr() as *const c_char;
         if unsafe {
             libc::setdomainname(
                 self.name.as_ptr() as *const c_char,
@@ -122,7 +113,6 @@ impl Isolation {
         {
             return Err(io::Error::last_os_error());
         }
-        info!("Isolate: Process");
         Ok(())
     }
 
@@ -133,7 +123,7 @@ impl Isolation {
         if !iso_ctl.isolate_network {
             return Ok(());
         }
-        info!("Isolate: Network");
+        // Insert pre_exec network logic here
         Ok(())
     }
 }
