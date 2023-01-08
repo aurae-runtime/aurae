@@ -65,7 +65,7 @@ impl Executable {
             while let Ok(Some(line)) = stdout.next_line().await {
                 let entered_span = span.take().expect("span").entered();
                 //info!(level = "info", channel = log_channel.name, line);
-                println!("{line}");
+                //println!("{line}");
                 log_channel.send(line);
                 span = Some(entered_span.exit());
             }
@@ -81,7 +81,7 @@ impl Executable {
             while let Ok(Some(line)) = stderr.next_line().await {
                 let entered_span = span.take().expect("span").entered();
                 // info!(level = "error", channel = log_channel.name, line);
-                println!("{line}");
+                //println!("{line}");
                 log_channel.send(line);
                 span = Some(entered_span.exit());
             }

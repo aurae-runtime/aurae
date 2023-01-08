@@ -66,7 +66,7 @@ impl Isolation {
             None::<&str>, // ignored
         )
         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
-        info!("Isolation: Bind mounted root dir (/) in cell");
+        info!("Isolation: Mounted root dir (/) in cell");
         Ok(())
     }
 
