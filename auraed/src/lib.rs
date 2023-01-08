@@ -136,15 +136,6 @@ struct AuraedOptions {
 pub async fn daemon() -> i32 {
     let options = AuraedOptions::parse();
 
-    // // TODO: Take this out eventually.
-    // // I (future-highway) use this to stop the nested auraed before things
-    // // can go wrong so I can nsenter into it's namespaces
-    // if options.nested {
-    //     nix::sys::signal::raise(nix::sys::signal::Signal::SIGSTOP)
-    //         .map_err(|e| std::io::Error::from_raw_os_error(e as i32))
-    //         .expect("stopped");
-    // }
-
     // Initializes Logging and prepares system if auraed is run as pid=1
     init::init(options.verbose, options.nested).await;
 

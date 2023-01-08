@@ -40,13 +40,6 @@ use aurae_proto::runtime::{
 };
 // use std::sync::Arc;
 // use tokio::sync::Mutex;
-use anyhow::{Context, Result};
-// LEFT OFF HERE NEED TO CARGO.TOML FOLLOWING: https://github.com/containers/youki/blob/main/crates/youki/Cargo.toml
-// use libcontainer::{
-//     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
-// };
-// use liboci_cli::Run;
-// use std::path::PathBuf;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Clone)]
@@ -69,22 +62,6 @@ impl pod_service_server::PodService for PodService {
         request: Request<PodServiceAllocateRequest>,
     ) -> Result<Response<PodServiceAllocateResponse>, Status> {
         let _request = request.into_inner();
-        //let name = request.pod.name;
-
-        // Hack in from: https://github.com/containers/youki/blob/main/crates/youki/src/commands/run.rs
-
-        //let syscall = create_syscall();
-        //let mut container = ContainerBuilder::new(name, syscall.as_ref())
-        // .with_pid_file(args.pid_file.as_ref())?
-        // .with_console_socket(args.console_socket.as_ref())
-        // .with_root_path(root_path)?
-        // .with_preserved_fds(args.preserve_fds)
-        // .as_init(&args.bundle)
-        // .with_systemd(systemd_cgroup)
-        //.build()?;
-
-        //container.start();
-
         Ok(Response::new(PodServiceAllocateResponse {}))
     }
     async fn free(
