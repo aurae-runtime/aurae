@@ -71,7 +71,6 @@ use aurae_proto::{
 use clap::Parser;
 use discovery::DiscoveryService;
 use runtime::CellService;
-use runtime::PodService;
 use std::{
     fs,
     os::unix::fs::PermissionsExt,
@@ -227,8 +226,6 @@ impl AuraedRuntime {
 
         let cell_service = CellService::new();
         let cell_service_server = CellServiceServer::new(cell_service.clone());
-        let pod_service = PodService::new();
-        let pod_service_server = PodServiceServer::new(pod_service.clone());
 
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
@@ -240,7 +237,6 @@ impl AuraedRuntime {
             Server::builder()
                 .tls_config(tls)?
                 .add_service(cell_service_server)
-                .add_service(pod_service_server)
                 .add_service(discovery_service_server)
                 // .add_service(ObserveServer::new(ObserveService::new(
                 //     log_collector,
