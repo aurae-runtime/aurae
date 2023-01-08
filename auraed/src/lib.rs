@@ -66,7 +66,6 @@ use anyhow::Context;
 use aurae_proto::{
     discovery::discovery_service_server::DiscoveryServiceServer,
     runtime::cell_service_server::CellServiceServer,
-    runtime::pod_service_server::PodServiceServer,
 };
 use clap::Parser;
 use discovery::DiscoveryService;
