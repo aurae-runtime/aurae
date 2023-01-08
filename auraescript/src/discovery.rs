@@ -28,8 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::service!(
-    schedule,
-    ScheduleService,
-    ping(PingRequest) -> PingResponse,
+macros::ops_generator!(
+    discovery,
+    {
+        DiscoveryService,
+        health(HealthRequest) -> HealthResponse,
+    },
 );

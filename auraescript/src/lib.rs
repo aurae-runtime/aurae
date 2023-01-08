@@ -64,8 +64,8 @@ use std::pin::Pin;
 use std::rc::Rc;
 
 mod builtin;
+mod discovery;
 mod runtime;
-mod schedule;
 
 pub fn init() -> JsRuntime {
     let extension = Extension::builder().ops(stdlib()).build();
@@ -80,7 +80,7 @@ pub fn init() -> JsRuntime {
 fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
     ops.extend(runtime::op_decls());
-    ops.extend(schedule::op_decls());
+    ops.extend(discovery::op_decls());
     ops
 }
 

@@ -28,53 +28,56 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::schedule::{
-    schedule_service_server, PingRequest, PingResponse,
+use aurae_proto::discovery::{
+    discovery_service_server, HealthRequest, HealthResponse,
 };
 use thiserror::Error;
 use tonic::{Request, Response, Status};
 use tracing::error;
 
-pub(crate) type Result<T> = std::result::Result<T, ScheduleServiceError>;
+pub(crate) type Result<T> = std::result::Result<T, DiscoveryServiceError>;
 
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, Error)]
-pub(crate) enum ScheduleServiceError {
+pub(crate) enum DiscoveryServiceError {
     #[error(transparent)]
     IO(#[from] std::io::Error),
 }
 
-impl From<ScheduleServiceError> for Status {
-    fn from(err: ScheduleServiceError) -> Self {
+impl From<DiscoveryServiceError> for Status {
+    fn from(err: DiscoveryServiceError) -> Self {
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            ScheduleServiceError::IO(_) => Status::internal(msg),
+            DiscoveryServiceError::IO(_) => Status::internal(msg),
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct ScheduleService {}
+pub struct DiscoveryService {}
 
-impl ScheduleService {
+impl DiscoveryService {
     pub fn new() -> Self {
-        ScheduleService {}
+        DiscoveryService {}
     }
 
     #[tracing::instrument(skip(self))]
-    fn ping(&self, request: PingRequest) -> Result<PingResponse> {
-        Ok(PingResponse { version: VERSION.unwrap_or("unknown").into() })
+    fn ping(&self, request: HealthRequest) -> Result<HealthResponse> {
+        Ok(HealthResponse {
+            healthy: true,
+            version: VERSION.unwrap_or("unknown").into(),
+        })
     }
 }
 
 #[tonic::async_trait]
-impl schedule_service_server::ScheduleService for ScheduleService {
-    async fn ping(
+impl discovery_service_server::DiscoveryService for DiscoveryService {
+    async fn health(
         &self,
-        request: Request<PingRequest>,
-    ) -> std::result::Result<Response<PingResponse>, Status> {
+        request: Request<HealthRequest>,
+    ) -> std::result::Result<Response<HealthResponse>, Status> {
         let request = request.into_inner();
         Ok(Response::new(self.ping(request)?))
     }

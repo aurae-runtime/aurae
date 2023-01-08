@@ -33,14 +33,14 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 #![allow(clippy::match_single_binding)]
 
+pub mod discovery {
+    include!("gen/aurae.discovery.v0.rs");
+}
+
 pub mod observe {
     include!("gen/aurae.observe.v0.rs");
 }
 
 pub mod runtime {
     include!("gen/aurae.runtime.v0.rs");
-}
-
-pub mod schedule {
-    include!("gen/aurae.schedule.v0.rs");
 }

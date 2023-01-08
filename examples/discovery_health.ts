@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -27,19 +28,11 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+import * as helpers from "../auraescript/gen/helpers.ts";
+import * as discovery from "../auraescript/gen/discovery.ts";
 
-syntax = "proto3";
+let discovery_service = new discovery.DiscoveryServiceClient();
 
-package aurae.schedule.v0;
-
-option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/schedule;schedulev0";
-
-service ScheduleService {
-  /// Used to confirm that the host is running Aurae and to get some
-  /// information about the version of Aurae that is running.
-  rpc Ping(PingRequest) returns (PingResponse) {}
-}
-
-message PingRequest {}
-
-message PingResponse { string version = 1; }
+// [ Ping ]
+let ack = await discovery_service.health(<discovery.HealthRequest>{});
+helpers.print(ack)

@@ -28,10 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::ops_generator!(
-    schedule,
-    {
-        ScheduleService,
-        ping(PingRequest) -> PingResponse,
-    },
-);
+syntax = "proto3";
+
+package aurae.discovery.v0;
+
+option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/discovery;discoveryv0";
+
+service DiscoveryService {
+  /// Used to confirm that the host is running Aurae and to get some
+  /// information including the version of Aurae that is running.
+  rpc Health(HealthRequest) returns (HealthResponse) {}
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  bool healthy = 1;
+  string version = 2;
+}

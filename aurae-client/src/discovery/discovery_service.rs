@@ -1,4 +1,3 @@
-#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -28,11 +27,9 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as schedule from "../auraescript/gen/schedule.ts";
 
-let scheduler = new schedule.ScheduleServiceClient();
-
-// [ Ping ]
-let ack = await scheduler.ping(<schedule.PingRequest>{});
-helpers.print(ack)
+macros::service!(
+    discovery,
+    DiscoveryService,
+    health(HealthRequest) -> HealthResponse,
+);
