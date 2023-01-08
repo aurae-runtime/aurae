@@ -63,8 +63,12 @@
 #![allow(dead_code)]
 
 use anyhow::Context;
-use aurae_proto::runtime::cell_service_server::CellServiceServer;
+use aurae_proto::{
+    discovery::discovery_service_server::DiscoveryServiceServer,
+    runtime::cell_service_server::CellServiceServer,
+};
 use clap::Parser;
+use discovery::DiscoveryService;
 use runtime::CellService;
 use std::{
     fs,
@@ -76,11 +80,11 @@ use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
 
+mod discovery;
 pub mod init;
 pub mod logging;
 mod observe;
 mod runtime;
-mod schedule;
 mod signal_handlers;
 
 /// Default Unix domain socket path for `auraed`.
@@ -222,12 +226,17 @@ impl AuraedRuntime {
         let cell_service = CellService::new();
         let cell_service_server = CellServiceServer::new(cell_service.clone());
 
+        let discovery_service = DiscoveryService::new();
+        let discovery_service_server =
+            DiscoveryServiceServer::new(discovery_service.clone());
+
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.
         let server_handle = tokio::spawn(async move {
             Server::builder()
                 .tls_config(tls)?
                 .add_service(cell_service_server)
+                .add_service(discovery_service_server)
                 // .add_service(ObserveServer::new(ObserveService::new(
                 //     log_collector,
                 // )))

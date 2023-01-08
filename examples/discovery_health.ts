@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -27,20 +28,11 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+import * as helpers from "../auraescript/gen/helpers.ts";
+import * as discovery from "../auraescript/gen/discovery.ts";
 
-//! Generated Protobuf definitions for the Aurae Standard Library
+let discovery_service = new discovery.DiscoveryServiceClient();
 
-#![allow(clippy::derive_partial_eq_without_eq)]
-#![allow(clippy::match_single_binding)]
-
-pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
-}
-
-pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
-}
-
-pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
-}
+// [ Ping ]
+let ack = await discovery_service.health(<discovery.HealthRequest>{});
+helpers.print(ack)

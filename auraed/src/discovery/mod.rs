@@ -28,19 +28,57 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Generated Protobuf definitions for the Aurae Standard Library
+use aurae_proto::discovery::{
+    discovery_service_server, HealthRequest, HealthResponse,
+};
+use thiserror::Error;
+use tonic::{Request, Response, Status};
+use tracing::error;
 
-#![allow(clippy::derive_partial_eq_without_eq)]
-#![allow(clippy::match_single_binding)]
+pub(crate) type Result<T> = std::result::Result<T, DiscoveryServiceError>;
 
-pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
+const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+
+#[derive(Debug, Error)]
+pub(crate) enum DiscoveryServiceError {
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
 }
 
-pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
+impl From<DiscoveryServiceError> for Status {
+    fn from(err: DiscoveryServiceError) -> Self {
+        let msg = err.to_string();
+        error!("{msg}");
+        match err {
+            DiscoveryServiceError::IO(_) => Status::internal(msg),
+        }
+    }
 }
 
-pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
+#[derive(Debug, Clone)]
+pub struct DiscoveryService {}
+
+impl DiscoveryService {
+    pub fn new() -> Self {
+        DiscoveryService {}
+    }
+
+    #[tracing::instrument(skip(self))]
+    fn ping(&self, request: HealthRequest) -> Result<HealthResponse> {
+        Ok(HealthResponse {
+            healthy: true,
+            version: VERSION.unwrap_or("unknown").into(),
+        })
+    }
+}
+
+#[tonic::async_trait]
+impl discovery_service_server::DiscoveryService for DiscoveryService {
+    async fn health(
+        &self,
+        request: Request<HealthRequest>,
+    ) -> std::result::Result<Response<HealthResponse>, Status> {
+        let request = request.into_inner();
+        Ok(Response::new(self.ping(request)?))
+    }
 }

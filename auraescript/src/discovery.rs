@@ -28,10 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-syntax = "proto3";
-
-package aurae.schedule.v0;
-
-option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/schedule;schedulev0";
-
-// TODO Schedule subsystem
+macros::ops_generator!(
+    discovery,
+    {
+        DiscoveryService,
+        health(HealthRequest) -> HealthResponse,
+    },
+);
