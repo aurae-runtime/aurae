@@ -53,13 +53,14 @@ impl Isolation {
             return Ok(());
         }
 
-        // Bind mount root:root
+        // Bind mount root:root with MS_REC and MS_PRIVATE flags
+        // We are not sharing the mounts at this point (in other words we are in a new mount namespace)
         let root = PathBuf::from("/");
         nix::mount::mount(
             Some(&root),
             &root,
             None::<&str>, // ignored
-            nix::mount::MsFlags::MS_BIND,
+            nix::mount::MsFlags::MS_PRIVATE | nix::mount::MsFlags::MS_REC,
             None::<&str>, // ignored
         )
         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
@@ -74,9 +75,6 @@ impl Isolation {
         if !iso_ctl.isolate_process {
             return Ok(());
         }
-
-        // self.mount_namespace_unmount_with_exceptions()
-        //     .expect("Unable to unmount");
 
         //Mount proc in the new process
         let target = PathBuf::from("/proc");
