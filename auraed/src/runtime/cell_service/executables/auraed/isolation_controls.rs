@@ -57,10 +57,9 @@ impl Isolation {
 
         // Bind mount root:root with MS_REC and MS_PRIVATE flags
         // We are not sharing the mounts at this point (in other words we are in a new mount namespace)
-        let root = PathBuf::from("/");
         nix::mount::mount(
-            Some(&root),
-            &root,
+            None::<&str>, // ignored
+            "/",
             None::<&str>, // ignored
             nix::mount::MsFlags::MS_PRIVATE | nix::mount::MsFlags::MS_REC,
             None::<&str>, // ignored
@@ -89,8 +88,10 @@ impl Isolation {
         )
         .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
 
-        // We are in a new UTS namespace so we manage hostname and domainname
+        // We are in a new UTS namespace so we manage hostname and domainname.
+        // hostname and domainname both allow null bytes and are not required to be null terminated.
         if unsafe {
+            #[allow(trivial_casts)]
             libc::sethostname(
                 self.name.as_ptr() as *const c_char,
                 self.name.len(),
@@ -102,6 +103,7 @@ impl Isolation {
 
         // Set domainname
         if unsafe {
+            #[allow(trivial_casts)]
             libc::setdomainname(
                 self.name.as_ptr() as *const c_char,
                 self.name.len(),
