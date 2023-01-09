@@ -30,9 +30,9 @@
 # ---------------------------------------------------------------------------- #
 
 sha=$(git rev-parse HEAD)
-ocifile=images/Dockerfile.nested
 
-sudo -E tag="krisnova/aurae:latest" ocifile=$ocifile make oci-image-build-raw
-sudo -E tag="krisnova/aurae:$sha" ocifile=$ocifile make oci-image-build-raw
-sudo -E tag="krisnova/aurae:latest" make oci-push
-sudo -E tag="krisnova/aurae:$sha" make oci-push
+sudo -E docker build -t krisnova/aurae:latest -t krisnova/aurae:$sha -f images/Dockerfile.nested .
+sudo -E docker push krisnova/aurae:latest
+sudo -E docker push krisnova/aurae:$sha
+
+

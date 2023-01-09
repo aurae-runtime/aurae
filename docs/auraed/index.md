@@ -53,3 +53,23 @@ cargo install --debug --path .
 ```
 
 
+## Running Auraed in a Container 
+
+It is possible to run Auraed in a container as long as the following is considered:
+
+ - Populating mTLS certificate material into the container.
+ - Exposing either the socket or a network interface from the container for client connections.
+
+Building the container (replace with your values).
+
+```
+sudo -E docker build -t krisnova/aurae:latest -t krisnova/aurae:$sha -f images/Dockerfile.nested .
+sudo -E docker push krisnova/aurae:latest
+sudo -E docker push krisnova/aurae:$sha
+```
+
+Running the container as pid 1
+
+```
+sudo -E docker run -v /etc/aurae:/etc/aurae -v /var/run/aurae:/var/run/aurae -it krisnova/aurae:latest /sbin/init
+```

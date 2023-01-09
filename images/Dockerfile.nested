@@ -85,10 +85,10 @@ WORKDIR /app
 RUN PKG_CONFIG_SYSROOT_DIR=/usr/lib/ make release -j4
 
 # Release container
-#FROM alpine:latest
-#RUN apk --no-cache add ca-certificates
-#WORKDIR /app
-#COPY --from=main /app/target/release/auraed /sbin/init
-#COPY --from=main /app/target/release/auraed /bin/auraed
-#COPY --from=main /app/target/release/auraescript /bin/auraescript
-#CMD ["/sbin/auraed"]
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /app
+COPY --from=main /app/target/release/auraed /bin/auraed
+COPY --from=main /app/target/release/auraescript /bin/auraescript
+RUN ln -s /sbin/init /bin/auraed
+CMD ["/sbin/init"]
