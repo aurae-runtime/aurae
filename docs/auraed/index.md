@@ -71,5 +71,6 @@ sudo -E docker push krisnova/aurae:$sha
 Running the container as pid 1
 
 ```
+make pki config
 sudo -E docker run -v /etc/aurae:/etc/aurae -v /var/run/aurae:/var/run/aurae -it krisnova/aurae:latest /sbin/init
 ```
