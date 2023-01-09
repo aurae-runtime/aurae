@@ -37,13 +37,22 @@ impl Pid1SystemRuntime {
 
 #[async_trait]
 impl SystemRuntime for Pid1SystemRuntime {
+    // Executing as PID 1 ccontext
     async fn init(self, verbose: bool) -> Result<(), InitError> {
+        // Load the PID 1 execution banner
         println!("{}", BANNER);
 
+        // Initialize the PID 1 logger
         logging::init(verbose)?;
         trace!("Logging started");
 
         trace!("Configure filesystem");
+
+        // TODO We need to determine how we want to handle mountings these filesystems.
+        // TODO From within the context of a container (cgroup trailing / in cgroup namespace)
+        // TODO We likely to do not need to mount these filesystems.
+        // TODO Do we want to have a way to "try" these mounts and continue without erroring?
+
         fs::mount_vfs(
             &CString::new("none").expect("valid CString"),
             &CString::new("/dev").expect("valid CString"),
