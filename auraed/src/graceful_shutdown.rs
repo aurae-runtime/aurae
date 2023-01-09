@@ -30,19 +30,63 @@
 
 use crate::runtime::CellService;
 use tokio::signal::unix::SignalKind;
+use tokio::sync::watch::{channel, Receiver, Sender};
 use tracing::error;
 
-/// Waits for a [SIGTERM] signal and...
-/// * Calls [CellService::free_all]
-/// ---
-/// Returns after processing the first received signal.
-pub async fn terminate(cell_service: CellService) {
+pub(crate) struct GracefulShutdown {
+    pub cell_service: CellService,
+    shutdown_broadcaster: Sender<()>,
+}
+
+impl GracefulShutdown {
+    pub fn new(cell_service: CellService) -> Self {
+        let (tx, _) = channel(());
+        Self { cell_service, shutdown_broadcaster: tx }
+    }
+
+    /// Subscribe to the shutdown broadcast channel
+    pub fn subscribe(&self) -> Receiver<()> {
+        self.shutdown_broadcaster.subscribe()
+    }
+
+    /// Waits for a signal and then...
+    /// * Broadcasts a shutdown signal to all subscribers. See [subscribe]
+    /// * Waits for all subscribers to drop
+    /// * Calls [CellService::free_all]
+    /// ---
+    /// Signals:
+    /// * [SIGTERM]
+    /// * [SIGINT]
+    /// ---
+    /// Returns after processing the first received signal.
+    pub async fn wait(self) {
+        tokio::select! {
+            _ = wait_for_sigterm() => {},
+            _ = wait_for_sigint() => {},
+        }
+
+        self.shutdown_broadcaster.send_replace(());
+        // wait for all subscribers to drop
+        self.shutdown_broadcaster.closed().await;
+
+        if let Err(e) = self.cell_service.free_all().await {
+            error!(
+                "Attempt to free all cells on terminate resulted in error: {e}"
+            )
+        }
+    }
+}
+
+pub async fn wait_for_sigterm() {
     let mut stream = tokio::signal::unix::signal(SignalKind::terminate())
         .expect("failed to listen for SIGTERM");
 
     let _ = stream.recv().await;
+}
 
-    if let Err(e) = cell_service.free_all().await {
-        error!("Attempt to free all cells on terminate resulted in error: {e}")
-    }
+pub async fn wait_for_sigint() {
+    let mut stream = tokio::signal::unix::signal(SignalKind::interrupt())
+        .expect("failed to listen for SIGINT");
+
+    let _ = stream.recv().await;
 }

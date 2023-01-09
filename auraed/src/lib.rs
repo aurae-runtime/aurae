@@ -81,11 +81,11 @@ use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
 
 mod discovery;
+mod graceful_shutdown;
 pub mod init;
 pub mod logging;
 mod observe;
 mod runtime;
-mod signal_handlers;
 
 /// Default Unix domain socket path for `auraed`.
 ///
@@ -230,6 +230,10 @@ impl AuraedRuntime {
         let discovery_service_server =
             DiscoveryServiceServer::new(discovery_service.clone());
 
+        let graceful_shutdown =
+            graceful_shutdown::GracefulShutdown::new(cell_service);
+        let graceful_shutdown_signal = graceful_shutdown.subscribe();
+
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.
         let server_handle = tokio::spawn(async move {
@@ -241,14 +245,9 @@ impl AuraedRuntime {
                 //     log_collector,
                 // )))
                 .serve_with_incoming_shutdown(sock_stream, async {
-                    let _signal = tokio::signal::unix::signal(
-                        tokio::signal::unix::SignalKind::terminate(),
-                    )
-                    .expect("failed to create shutdown signal stream")
-                    .recv()
-                    .await;
-
-                    info!("Received shutdown signal...");
+                    let mut graceful_shutdown_signal = graceful_shutdown_signal;
+                    let _ = graceful_shutdown_signal.changed().await;
+                    info!("gRPC server received shutdown signal...");
                 })
                 .await?;
 
@@ -266,12 +265,11 @@ impl AuraedRuntime {
         info!("User Access Socket Created: {}", self.socket.display());
 
         // Event loop
-        let terminate_handle = tokio::spawn(async {
-            signal_handlers::terminate(cell_service).await
-        });
+        let graceful_shutdown_handle =
+            tokio::spawn(async { graceful_shutdown.wait().await });
 
         let (server_result, _) =
-            tokio::try_join!(server_handle, terminate_handle)?;
+            tokio::try_join!(server_handle, graceful_shutdown_handle)?;
 
         if let Err(e) = server_result {
             error!("gRPC server exited with error: {e}");
