@@ -80,7 +80,6 @@ impl pod_service_server::PodService for PodService {
             // .with_console_socket(args.console_socket.as_ref())
             .with_root_path(self.root_path.join("bundles"))
             .expect("root path")
-            .as_tenant()
             .as_init("examples/busybox.oci/busybox") // TODO This needs to be a lightweight "pause" container assembled at runtime from local data in the binary.
             .with_systemd(false)
             .build()
