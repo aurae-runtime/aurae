@@ -28,17 +28,29 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use error::{PodsError, Result};
-use image::Image;
-use pod::Pod;
-use pod_name::PodName;
+use std::fmt::{Debug, Display, Formatter};
+use std::ops::Deref;
 
-mod error;
-mod image;
-mod pod;
-mod pod_name;
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct PodName(String);
 
-#[derive(Debug)]
-pub struct PodSpec {
-    image: Image,
+impl PodName {
+    #[cfg(test)]
+    pub fn new(name: String) -> Self {
+        Self(name)
+    }
+}
+
+impl Display for PodName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
+}
+
+impl Deref for PodName {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
