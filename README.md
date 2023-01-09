@@ -62,7 +62,7 @@ Aurae brings enterprise identity as low as the socket layer in a system, which u
 
 Aurae offers a Turing complete scripting language built on top of TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript). AuraeScript embeds the [Deno](https://deno.land) source code directly, and offers a remote client and SDK to interface directly with Aurae remotely. The AuraeScript library is automatically generated from the `.proto` files defined in the [Aurae Standard Library](https://aurae.io/stdlib/).
 
-Valid TypeScript files can be leveraged to replace static manifests, as well as interact directly with a running system.
+Valid TypeScript files can be leveraged to replace static manifests, such as YAML, as well as interact directly with a running system.
 
 ```typescript
 #!/usr/bin/env auraescript
