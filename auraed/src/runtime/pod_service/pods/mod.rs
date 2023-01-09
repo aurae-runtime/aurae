@@ -37,6 +37,8 @@ mod error;
 mod image;
 mod pod;
 mod pod_name;
+#[allow(clippy::module_inception)]
+mod pods;
 
 #[derive(Debug)]
 pub struct PodSpec {

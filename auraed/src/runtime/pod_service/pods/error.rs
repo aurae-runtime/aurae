@@ -37,6 +37,12 @@ pub type Result<T> = std::result::Result<T, PodsError>;
 
 #[derive(Error, Debug)]
 pub enum PodsError {
+    #[error("pod '{pod_name}' already exists'")]
+    PodExists { pod_name: PodName },
+    #[error("pod '{pod_name}' not found")]
+    PodNotFound { pod_name: PodName },
+    #[error("pod '{pod_name}' is not allocated")]
+    PodNotAllocated { pod_name: PodName },
     #[error(
         "pod '{pod_name}' failed to create directory '{root_path}': {source}"
     )]

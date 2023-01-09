@@ -139,7 +139,7 @@ impl Pod {
             root_path: self.root_path.clone(),
             source: e,
         })?
-        .as_init(image_path)
+        .as_init(image_path) // TODO (via @krisnova) This needs to be a lightweight "pause" container assembled at runtime from local data in the binary.
         .with_systemd(false) // defaults to true
         .build()
         .map_err(|e| PodsError::FailedToBuildContainer {
