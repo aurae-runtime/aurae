@@ -82,21 +82,11 @@ service PodService {
 
 }
 
-message PodServiceAllocateRequest{}
 
-/// The request to allocate a Pod.
-message PodServiceAllocateRequest{
 
-  /// A boring set of containers with shared network and disk.
-  Pod pod = 1;
+message Container{
 
-}
-
-/// OCI image represents a filesystem bundle on disk using familiar parlance.
-///
-/// OCI Filesystem Bundle: https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle
-message Pod{
-  /// Name is the name of the pod.
+  /// The name of the container.
   string name = 1;
 
   /// Define a remote container image.
@@ -140,14 +130,39 @@ message Pod{
 }
 
 
+/// OCI image represents a filesystem bundle on disk using familiar parlance.
+///
+/// OCI Filesystem Bundle: https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle
+message Pod{
+  /// Name is the name of the pod.
+  string name = 1;
+
+  // TODO Pod settings
+
+}
+
+/// The request to allocate a Pod.
+message PodServiceAllocateRequest{
+
+  /// A boring set of containers with shared network and disk.
+  Pod pod = 1;
+
+}
 message PodServiceAllocateResponse{}
+
 message PodServiceFreeRequest{}
 message PodServiceFreeResponse{}
-message PodServiceStartRequest{}
+
+message PodServiceStartRequest{
+  string name = 1;
+}
 message PodServiceStartResponse{}
-message PodServiceStopRequest{}
+
+message PodServiceStopRequest{
+  string pod_name = 1;
+  string container_name = 2;
+}
 message PodServiceStopResponse{}
-message Container{}
 
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be

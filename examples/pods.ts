@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -27,28 +28,36 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+import * as helpers from "../auraescript/gen/helpers.ts";
+import * as runtime from "../auraescript/gen/runtime.ts";
 
-struct ContainerBundlerDebundler {}
+let pods = new runtime.PodServiceClient();
 
-struct ContainerBundle {}
+// [ Allocate ]
+let pod_allocated = await pods.allocate(<runtime.PodServiceAllocateRequest>{
+    pod: runtime.Pod.fromPartial({
+        name: "ingress",
+    })
+});
+helpers.print(pod_allocated)
 
-impl ContainerBundlerDebundler {
-    pub fn new() -> Self {
-        ContainerBundlerDebundler {
-            // TODO Default
-        }
-    }
+// [ Start ]
+let pod_nginx = await pods.start(<runtime.PodServiceStartRequest>{
+    name: "nginx-server",
+    image: "nginx",
+    registry: "",
+})
+helpers.print(pod_nginx)
 
-    // Image will ultimately need to be rendered
-    // to a "URL" or "URI"
-    //
-    // Right now many container tools support "short name"
-    // image paths, and we (unfortunately) will need
-    // to manage that somehow.
-    //
-    // "nginx" -> https://registry.hub.docker.com/library/nginx
-    //
-    pub fn pull(_image: &str) -> ContainerBundle {
-        ContainerBundle {}
-    }
-}
+// [ Stop ]
+let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
+    podName: "ingress",
+    containerName: "nginx-server",
+})
+helpers.print(stopped)
+
+// [ Free ]
+let freed = await cells.free(<runtime.CellServiceFreeRequest>{
+    cellName: "sleeper-cell"
+});
+helpers.print(freed)

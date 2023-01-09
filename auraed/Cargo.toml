@@ -43,7 +43,6 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
-bundle = { path = "../crates/bundle" }
 cgroups-rs = "0.2.11"
 clap = { version = "3.1.20", features = ["derive"] }
 clone3 = "0.2.3"
@@ -59,6 +58,7 @@ log = "0.4.17"
 multi_log = "0.1.2"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { version = "0.26.1", features = ["sched"] }
+ocipkg = "0.2.8"
 procfs = "0.14.2"
 rtnetlink = "0.11.0"
 simplelog = "0.12.0"

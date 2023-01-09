@@ -70,16 +70,9 @@ impl pod_service_server::PodService for PodService {
         let request = request.into_inner();
         let pod = request.pod.expect("pod");
         let name = pod.name;
-        let image = pod.image;
-        info!(
-            "PodService: allocate() name={:?} image={:?}",
-            name.clone(),
-            image.clone()
-        );
 
-        let _container_bundle = bundle::container::container(&image);
-
-        // Hack in from: https://github.com/containers/youki/blob/main/crates/youki/src/commands/run.rs
+        // TODO Set up a "Pause" container that is the only container that runs with ".as_init()"
+        // TODO We do NOT want a network dependency here, so we will likely need to be able to "build" the image from data within the binary.
 
         let syscall = create_syscall();
         let mut container = ContainerBuilder::new(name, syscall.as_ref())
@@ -87,7 +80,8 @@ impl pod_service_server::PodService for PodService {
             // .with_console_socket(args.console_socket.as_ref())
             .with_root_path(self.root_path.join("bundles"))
             .expect("root path")
-            .as_init("examples/busybox.oci/busybox") // TODO Implement the download and un-tar logic for container images
+            .as_tenant()
+            .as_init("examples/busybox.oci/busybox") // TODO This needs to be a lightweight "pause" container assembled at runtime from local data in the binary.
             .with_systemd(false)
             .build()
             .expect("build");
@@ -102,8 +96,7 @@ impl pod_service_server::PodService for PodService {
     ) -> Result<Response<PodServiceFreeResponse>, Status> {
         let _request = request.into_inner();
 
-        // TODO Destroy container
-        // TODO Destroy /var/run/bundles/<name>
+        // TODO Destroy pod
 
         Ok(Response::new(PodServiceFreeResponse {}))
     }
@@ -111,6 +104,11 @@ impl pod_service_server::PodService for PodService {
         &self,
         request: Request<PodServiceStartRequest>,
     ) -> Result<Response<PodServiceStartResponse>, Status> {
+        // TODO Schedule container .as_tenant() alongside the "pause" container above.
+
+        // Here is how you get an image from a name
+        //ocipkg::distribution::get_image(&ocipkg::ImageName::parse());
+
         let _request = request.into_inner();
         Ok(Response::new(PodServiceStartResponse {}))
     }

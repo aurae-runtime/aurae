@@ -66,10 +66,12 @@ use anyhow::Context;
 use aurae_proto::{
     discovery::discovery_service_server::DiscoveryServiceServer,
     runtime::cell_service_server::CellServiceServer,
+    runtime::pod_service_server::PodServiceServer,
 };
 use clap::Parser;
 use discovery::DiscoveryService;
 use runtime::CellService;
+use runtime::PodService;
 use std::{
     fs,
     os::unix::fs::PermissionsExt,
@@ -247,9 +249,7 @@ impl AuraedRuntime {
                 .tls_config(tls)?
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
-                // .add_service(ObserveServer::new(ObserveService::new(
-                //     log_collector,
-                // )))
+                .add_service(pod_service_server)
                 .serve_with_incoming_shutdown(sock_stream, async {
                     let _signal = tokio::signal::unix::signal(
                         tokio::signal::unix::SignalKind::terminate(),
