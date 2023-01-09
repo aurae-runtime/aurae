@@ -66,9 +66,9 @@ tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread", "sync
 tokio-stream = { version = "0.1", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
 tracing = { workspace = true, features = ["log"] }
-tracing-journald = "0.3"
 tracing-log = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
+tracing-rfc-5424 = { version = "0.1.0" }  # syslog tracing
 uuid = { version = "1.2.2", features = ["v4"] }
 validation = { path = "../crates/validation", features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
