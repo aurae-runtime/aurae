@@ -165,7 +165,7 @@ impl NestedAuraed {
     /// Sends a graceful shutdown signal to the nested process.
     pub fn shutdown(&mut self) -> io::Result<ExitStatus> {
         // TODO: Here, SIGTERM works when using auraescript, but hangs(?) during unit tests.
-        //       SIGKILL, however, works. The hang is avoided if all namespaces are shared.
+        //       SIGKILL, however, works. The hang is avoided if the process is not isolated.
         //       Tests have not been done to figure out which namespace is the cause of the hang.
         self.do_kill(Some(SIGTERM))?;
         self.wait()

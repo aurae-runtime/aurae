@@ -60,8 +60,8 @@ impl CellSpec {
                 cpuset_mems: CpusetMems::new("".into()),
             },
             iso_ctl: IsolationControls {
-                isolate_network: true,
-                isolate_process: true,
+                isolate_network: false,
+                isolate_process: false,
             },
         }
     }
