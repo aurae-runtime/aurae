@@ -32,6 +32,7 @@ use crate::runtime::cell_service::executables::auraed::isolation_controls::{
     Isolation, IsolationControls,
 };
 use aurae_client::AuraeConfig;
+use clone3::Flags;
 use nix::{
     libc::SIGCHLD,
     sys::signal::{Signal, SIGKILL, SIGTERM},
@@ -100,6 +101,11 @@ impl NestedAuraed {
         let mut pidfd = -1;
         let _ = clone.flag_pidfd(&mut pidfd);
 
+        // We have a concern that the "clone" API changes/breaks in the future and this
+        // test is intended to help safeguard against that!
+        // We check that the clone we kept has set the first flag we set above.
+        assert_eq!(clone.as_clone_args().flags, Flags::PIDFD.bits());
+
         // Freeze the parent until the child calls execvp
         let _ = clone.flag_vfork();
 
@@ -128,8 +134,6 @@ impl NestedAuraed {
             let _ = clone.flag_newuts();
         }
 
-        // TODO: clone uses the same pattern as command. Safeguard against changes
-
         // Execute the clone system call and create the new process with the relevant namespaces.
         match unsafe { clone.call() }
             .map_err(|e| io::Error::from_raw_os_error(e.0))?
@@ -146,7 +150,6 @@ impl NestedAuraed {
                     }
                 };
 
-                // TODO: check that exec should never return, even after exit
                 let e = command.exec();
                 error!("Unexpected exit from child command: {e:#?}");
                 Err(e)
