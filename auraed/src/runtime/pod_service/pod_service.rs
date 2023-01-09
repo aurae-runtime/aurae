@@ -39,9 +39,9 @@ use aurae_proto::runtime::{
     PodServiceStartRequest, PodServiceStartResponse, PodServiceStopRequest,
     PodServiceStopResponse,
 };
-use libcontainer::{
-    container::builder::ContainerBuilder, syscall::syscall::create_syscall,
-};
+// use libcontainer::{
+//     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
+// };
 use liboci_cli::Run;
 use std::path::PathBuf;
 use tonic::{Request, Response, Status};
@@ -74,18 +74,18 @@ impl pod_service_server::PodService for PodService {
         // TODO Set up a "Pause" container that is the only container that runs with ".as_init()"
         // TODO We do NOT want a network dependency here, so we will likely need to be able to "build" the image from data within the binary.
 
-        let syscall = create_syscall();
-        let mut container = ContainerBuilder::new(name, syscall.as_ref())
-            // .with_pid_file(args.pid_file.as_ref())?
-            // .with_console_socket(args.console_socket.as_ref())
-            .with_root_path(self.root_path.join("bundles"))
-            .expect("root path")
-            .as_init("examples/busybox.oci/busybox") // TODO This needs to be a lightweight "pause" container assembled at runtime from local data in the binary.
-            .with_systemd(false)
-            .build()
-            .expect("build");
-
-        container.start(); // TODO cache the container and move to start()
+        // let syscall = create_syscall();
+        // let mut container = ContainerBuilder::new(name, syscall.as_ref())
+        //     // .with_pid_file(args.pid_file.as_ref())?
+        //     // .with_console_socket(args.console_socket.as_ref())
+        //     .with_root_path(self.root_path.join("bundles"))
+        //     .expect("root path")
+        //     .as_init("examples/busybox.oci/busybox") // TODO This needs to be a lightweight "pause" container assembled at runtime from local data in the binary.
+        //     .with_systemd(false)
+        //     .build()
+        //     .expect("build");
+        //
+        // container.start(); // TODO cache the container and move to start()
 
         Ok(Response::new(PodServiceAllocateResponse {}))
     }

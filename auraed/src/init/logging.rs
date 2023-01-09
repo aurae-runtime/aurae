@@ -22,8 +22,8 @@ pub(crate) enum LoggingError {
 }
 
 pub(crate) fn init(verbose: bool) -> Result<(), LoggingError> {
-    // The logger will log to stdout and possibly jourald depending on
-    // whether we are initializing as pid1 or not.
+    // The logger will log to stdout.
+    //
     // We hold the opinion that the program is either "verbose"
     // or it's not.
     //
@@ -33,6 +33,7 @@ pub(crate) fn init(verbose: bool) -> Result<(), LoggingError> {
 
     match std::process::id() {
         1 => init_pid1_logging(tracing_level),
+<<<<<<< HEAD
         _ => init_daemon_logging(tracing_level),
     }
 }
@@ -55,11 +56,48 @@ fn init_daemon_logging(tracing_level: Level) -> Result<(), LoggingError> {
     tracing_subscriber::registry()
         .with(syslog_layer)
         .with(stdout_layer)
+=======
+        _ => init_stdout_logging(tracing_level),
+    }
+}
+
+fn init_stdout_logging(tracing_level: Level) -> Result<(), LoggingError> {
+    info!("initializing stdout logging");
+    tracing_subscriber::fmt()
+        .compact()
+        .with_env_filter(format!("auraed={tracing_level}"))
+        .finish()
+>>>>>>> 06defde (Introduce auraed in a container)
         .try_init()
         .map_err(|e| e.into())
 }
 
+<<<<<<< HEAD
 /// when we run as pid1 we want to log to stdout only.
+=======
+// #[deprecated(
+//     note = "please use `init_stdout_logging` instead, we are unable to build on systemd"
+// )]
+// fn init_journald_logging(tracing_level: Level) -> Result<(), LoggingError> {
+//     info!("initializing journald logging");
+//     let journald_layer = tracing_journald::layer()?
+//         .with_syslog_identifier(AURAED_SYSLOG_IDENT.into());
+//     tracing_subscriber::fmt()
+//         .compact()
+//         .with_env_filter(format!("auraed={tracing_level}"))
+//         .finish()
+//         .with(journald_layer)
+//         .try_init()
+//         .map_err(|e| e.into())
+// }
+
+// To discuss here https://github.com/aurae-runtime/auraed/issues/24:
+//      The "syslog" logger requires unix sockets.
+//      Syslog assumes that either /dev/log or /var/run/syslog are available [1].
+// TODO: We need to discuss if there is a use case to log via unix sockets,
+//      other than fullfill the requirement of syslog crate.
+//      [1] https://docs.rs/syslog/latest/src/syslog/lib.rs.html#232-243
+>>>>>>> 06defde (Introduce auraed in a container)
 fn init_pid1_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing pid1 logging");
     tracing_subscriber::fmt()

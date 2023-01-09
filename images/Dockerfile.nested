@@ -28,11 +28,6 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# The primary Aurae builder container, used to cache and support the GitHub
-# builds.
-#
-# This container image is NOT intended to run Aurae in production.
-# This container image is only intended for internal builds.
 #
 # syntax = docker/dockerfile:1.4
 FROM rust:1-slim-bullseye as main
@@ -54,6 +49,8 @@ RUN  apt-get update && \
     libclang-dev \
     libdbus-1-dev \
     libseccomp-dev \
+    musl-tools \
+    pkg-config \
     protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
 
@@ -80,11 +77,18 @@ RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE
     mv bin/vale /usr/local/bin/vale && \
     rm vale.tar.gz
 
+# Copy the source code to the container image
+COPY . /app
 WORKDIR /app
 
-FROM main as local
-WORKDIR /app
-ENTRYPOINT ["make"]
+# Compile the Aurae suite
+RUN PKG_CONFIG_SYSROOT_DIR=/usr/lib/ make release -j4
 
-FROM main as builder
-WORKDIR /app
+# Release container
+#FROM alpine:latest
+#RUN apk --no-cache add ca-certificates
+#WORKDIR /app
+#COPY --from=main /app/target/release/auraed /sbin/init
+#COPY --from=main /app/target/release/auraed /bin/auraed
+#COPY --from=main /app/target/release/auraescript /bin/auraescript
+#CMD ["/sbin/auraed"]

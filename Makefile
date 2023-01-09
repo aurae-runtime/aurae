@@ -32,7 +32,8 @@
 branch       ?=  main
 message      ?=  Default commit message. Aurae Runtime environment.
 cargo         =  cargo
-oci           =  DOCKER_BUILDKIT=1 docker
+oci           =  docker
+ociopts       =  DOCKER_BUILDKIT=1
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -54,9 +55,13 @@ install: ## Build and install (debug) 🎉
 	@$(cargo) install --path ./auraescript --debug
 	@$(cargo) install --path ./auraed --debug
 
-release: ## Build and install (release) 🎉
-	@$(cargo) install --path ./auraescript
+
+release: ## Build (static+musl) and install (release) 🎉
+	#rustup target add x86_64-unknown-linux-musl
+	#@$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed # Todo compile with musl without dbus
 	@$(cargo) install --path ./auraed
+	@$(cargo) install --path ./auraescript
+
 
 .PHONY: auraescript
 auraescript: proto ## Initialize and compile aurae
@@ -162,12 +167,24 @@ help:  ## Show help messages for make targets
 
 .PHONY: oci-image-build
 oci-image-build: ## Build the aurae/auraed OCI images
-	@$(oci) build -t $(tag) -f $(ocifile) $(flags) .
+	$(ociopts) $(oci) build -t $(tag) -f $(ocifile) $(flags) .
 
 .PHONY: oci-run
 oci-run: ## Run the aurae/auraed OCI images
-	$(oci) run -v $(shell pwd):/app $(flags) $(tag) $(command)
+	$(ociopts) $(oci) run -v $(shell pwd):/app $(flags) $(tag) $(command)
 
 .PHONY: oci-make
 oci-make: ## Run the makefile inside the aurae/auraed OCI images
-	$(oci) run -v $(shell pwd):/app --rm -it $(tag) $(command)
+	$(ociopts) $(oci) run -v $(shell pwd):/app --rm -it $(tag) $(command)
+
+.PHONY: oci-push
+oci-push: ## Push to a user repository
+	$(ociopts) $(oci) push $(tag)
+
+.PHONY: oci-image-build-raw
+oci-image-build-raw: ## Plain Jane oci build
+	$(oci) build -t $(tag) -f $(ocifile) $(flags) .
+
+.PHONY: container
+container: ## Build the container defined in hack/container
+	./hack/container
