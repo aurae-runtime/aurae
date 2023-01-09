@@ -33,7 +33,6 @@ pub(crate) fn init(verbose: bool) -> Result<(), LoggingError> {
 
     match std::process::id() {
         1 => init_pid1_logging(tracing_level),
-<<<<<<< HEAD
         _ => init_daemon_logging(tracing_level),
     }
 }
@@ -41,6 +40,8 @@ pub(crate) fn init(verbose: bool) -> Result<(), LoggingError> {
 /// when we run as a daemon we want to log to stdout and syslog.
 fn init_daemon_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing syslog logging");
+
+    // Syslog
     let syslog_layer = tracing_rfc_5424::layer::Layer::<
         tracing_subscriber::Registry,
         Rfc3164,
@@ -48,6 +49,7 @@ fn init_daemon_logging(tracing_level: Level) -> Result<(), LoggingError> {
         UnixSocket,
     >::try_default()?;
 
+    // Stdout
     let stdout_layer = tracing_subscriber::Layer::with_filter(
         tracing_subscriber::fmt::layer().compact(),
         EnvFilter::new(format!("auraed={tracing_level}")),
@@ -56,9 +58,8 @@ fn init_daemon_logging(tracing_level: Level) -> Result<(), LoggingError> {
     tracing_subscriber::registry()
         .with(syslog_layer)
         .with(stdout_layer)
-=======
-        _ => init_stdout_logging(tracing_level),
-    }
+        .try_init()
+        .map_err(|e| e.into())
 }
 
 fn init_stdout_logging(tracing_level: Level) -> Result<(), LoggingError> {
@@ -67,29 +68,9 @@ fn init_stdout_logging(tracing_level: Level) -> Result<(), LoggingError> {
         .compact()
         .with_env_filter(format!("auraed={tracing_level}"))
         .finish()
->>>>>>> 06defde (Introduce auraed in a container)
         .try_init()
         .map_err(|e| e.into())
 }
-
-<<<<<<< HEAD
-/// when we run as pid1 we want to log to stdout only.
-=======
-// #[deprecated(
-//     note = "please use `init_stdout_logging` instead, we are unable to build on systemd"
-// )]
-// fn init_journald_logging(tracing_level: Level) -> Result<(), LoggingError> {
-//     info!("initializing journald logging");
-//     let journald_layer = tracing_journald::layer()?
-//         .with_syslog_identifier(AURAED_SYSLOG_IDENT.into());
-//     tracing_subscriber::fmt()
-//         .compact()
-//         .with_env_filter(format!("auraed={tracing_level}"))
-//         .finish()
-//         .with(journald_layer)
-//         .try_init()
-//         .map_err(|e| e.into())
-// }
 
 // To discuss here https://github.com/aurae-runtime/auraed/issues/24:
 //      The "syslog" logger requires unix sockets.
@@ -97,7 +78,6 @@ fn init_stdout_logging(tracing_level: Level) -> Result<(), LoggingError> {
 // TODO: We need to discuss if there is a use case to log via unix sockets,
 //      other than fullfill the requirement of syslog crate.
 //      [1] https://docs.rs/syslog/latest/src/syslog/lib.rs.html#232-243
->>>>>>> 06defde (Introduce auraed in a container)
 fn init_pid1_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing pid1 logging");
     tracing_subscriber::fmt()
