@@ -39,7 +39,7 @@ pub(crate) struct CellSystemRuntime;
 impl SystemRuntime for CellSystemRuntime {
     async fn init(self, verbose: bool) -> Result<(), InitError> {
         println!("{}", BANNER);
-        logging::init(verbose)?;
+        logging::init(verbose, false)?;
         info!("Running as a cell");
         Ok(())
     }

@@ -69,7 +69,7 @@ impl SystemRuntime for Pid1SystemRuntime {
         println!("{}", BANNER);
 
         // Initialize the PID 1 logger
-        logging::init(verbose)?;
+        logging::init(verbose, false)?;
         info!("Running as pid 1");
         trace!("Configure filesystem");
 

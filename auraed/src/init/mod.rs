@@ -120,7 +120,7 @@ impl Context {
 // are executing inside an Aurae pod container.
 //
 // Auraed container: /proc/self/cgroup: 0::/
-// Auraed cell     : /proc
+// Auraed cell     : /proc/self/cgroup: 0::/../../../ae-1/_
 // Systemd init    : /proc/self/cgroup: 0::/init.scope
 // User slice      : /proc/self/cgroup: 0::/user.slice/user-1000.slice/session-3.scope
 //

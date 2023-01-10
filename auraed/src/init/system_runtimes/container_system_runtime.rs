@@ -39,7 +39,7 @@ pub(crate) struct ContainerSystemRuntime;
 impl SystemRuntime for ContainerSystemRuntime {
     async fn init(self, verbose: bool) -> Result<(), InitError> {
         println!("{}", BANNER);
-        logging::init(verbose)?;
+        logging::init(verbose, true)?;
         info!("Running as a container.");
         Ok(())
     }

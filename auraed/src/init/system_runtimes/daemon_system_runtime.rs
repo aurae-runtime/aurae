@@ -39,7 +39,7 @@ pub(crate) struct DaemonSystemRuntime;
 impl SystemRuntime for DaemonSystemRuntime {
     async fn init(self, verbose: bool) -> Result<(), InitError> {
         println!("{}", BANNER);
-        logging::init(verbose)?;
+        logging::init(verbose, false)?;
         info!("Running as a daemon.");
         Ok(())
     }
