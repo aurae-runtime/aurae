@@ -30,10 +30,10 @@
 
 use super::SystemRuntime;
 use crate::init::{
-    fs, logging, network, power::spawn_thread_power_button_listener, InitError,
-    BANNER,
+    fs::MountSpec, logging, network, power::spawn_thread_power_button_listener,
+    InitError, BANNER,
 };
-use std::{ffi::CString, path::Path};
+use std::path::Path;
 use tonic::async_trait;
 use tracing::{error, info, trace};
 
@@ -85,21 +85,18 @@ impl SystemRuntime for Pid1SystemRuntime {
         // TODO We likely to do not need to mount these filesystems.
         // TODO Do we want to have a way to "try" these mounts and continue without erroring?
 
-        fs::mount_vfs(
-            &CString::new("none").expect("valid CString"),
-            &CString::new("/dev").expect("valid CString"),
-            &CString::new("devtmpfs").expect("valid CString"),
-        )?;
-        fs::mount_vfs(
-            &CString::new("none").expect("valid CString"),
-            &CString::new("/sys").expect("valid CString"),
-            &CString::new("sysfs").expect("valid CString"),
-        )?;
-        fs::mount_vfs(
-            &CString::new("proc").expect("valid CString"),
-            &CString::new("/proc").expect("valid CString"),
-            &CString::new("proc").expect("valid CString"),
-        )?;
+        MountSpec { source: None, target: "/dev", fstype: Some("devtmpfs") }
+            .mount()?;
+
+        MountSpec { source: None, target: "/sys", fstype: Some("sysfs") }
+            .mount()?;
+
+        MountSpec {
+            source: Some("proc"),
+            target: "/proc",
+            fstype: Some("proc"),
+        }
+        .mount()?;
 
         trace!("configure network");
         //show_dir("/sys/class/net/", false); // Show available network interfaces

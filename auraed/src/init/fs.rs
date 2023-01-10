@@ -1,59 +1,37 @@
+use std::io;
 use tracing::{error, info};
-use std::ffi::CStr;
-use std::{io, ptr};
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum FsError {
-    #[error("Failed to mount (source_name={source_name}, target_name={target_name}, fstype={fstype}) due to error: {source}")]
-    MountFailure {
-        source_name: String,
-        target_name: String,
-        fstype: String,
-        source: io::Error,
-    },
+    #[error("Failed to mount {spec:?} due to error: {source}")]
+    MountFailure { spec: MountSpec, source: io::Error },
 }
 
-pub(crate) fn mount_vfs(
-    source_name: &CStr,
-    target_name: &CStr,
-    fstype: &CStr,
-) -> Result<(), FsError> {
-    info!("Mounting {:?}", target_name);
+#[derive(Debug)]
+pub(crate) struct MountSpec {
+    pub source: Option<&'static str>,
+    pub target: &'static str,
+    pub fstype: Option<&'static str>,
+}
 
-    let ret = {
-        #[cfg(not(target_os = "macos"))]
-        unsafe {
-            libc::mount(
-                source_name.as_ptr(),
-                target_name.as_ptr(),
-                fstype.as_ptr(),
-                0,
-                ptr::null(),
-            )
+impl MountSpec {
+    pub fn mount(self) -> Result<(), FsError> {
+        info!("Mounting {}", self.target);
+
+        if let Err(e) = nix::mount::mount(
+            self.source,
+            self.target,
+            self.fstype,
+            nix::mount::MsFlags::empty(),
+            None::<&str>,
+        ) {
+            error!("Failed to mount {:?}", self);
+            return Err(FsError::MountFailure {
+                spec: self,
+                source: io::Error::from_raw_os_error(e as i32),
+            });
         }
 
-        #[cfg(target_os = "macos")]
-        unsafe {
-            libc::mount(
-                src_c_str.as_ptr(),
-                target_name_c_str.as_ptr(),
-                0,
-                ptr::null_mut(),
-            )
-        }
-    };
-
-    if ret < 0 {
-        let error = io::Error::last_os_error();
-        error!("Failed to mount ({})", error);
-
-        Err(FsError::MountFailure {
-            source_name: source_name.to_string_lossy().to_string(),
-            target_name: target_name.to_string_lossy().to_string(),
-            fstype: fstype.to_string_lossy().to_string(),
-            source: error,
-        })
-    } else {
         Ok(())
     }
 }
