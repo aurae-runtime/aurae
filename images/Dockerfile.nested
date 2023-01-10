@@ -40,7 +40,6 @@ ARG VALE_VERSION=2.21.3
 ARG PROTOC_VERSION=1.5.1
 
 ## Install packages
-## TODO: Remove libdbus
 RUN  apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
@@ -78,8 +77,8 @@ RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE
     rm vale.tar.gz
 
 # Copy the source code to the container image
-COPY . /app
-WORKDIR /app
+COPY . /aurae
+WORKDIR /aurae
 
 # Compile the Aurae suite
 RUN PKG_CONFIG_SYSROOT_DIR=/usr/lib/ make release -j16
@@ -87,9 +86,18 @@ RUN PKG_CONFIG_SYSROOT_DIR=/usr/lib/ make release -j16
 # Release container
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-WORKDIR /app
-COPY --from=main /app/target/release/auraed /bin/auraed
-COPY --from=main /app/target/release/auraescript /bin/auraescript
+
+## Dynamic Libraries for Auraed
+RUN apk add \
+    libc6-compat \
+    gcompat \
+    libseccomp \
+    dbus-libs \
+    gcc \
+    bash
+
+WORKDIR /aurae
+COPY --from=main /aurae/target/release/auraed /bin/auraed
 RUN rm -f /sbin/init # This is a /bin/busyboxy symlink in alpine
 RUN ln -s /bin/auraed /sbin/init
 CMD ["/sbin/init"]

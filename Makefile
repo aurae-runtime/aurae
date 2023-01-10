@@ -60,7 +60,7 @@ release: ## Build (static+musl) and install (release) 🎉
 	#rustup target add x86_64-unknown-linux-musl
 	#@$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed # Todo compile with musl without dbus
 	@$(cargo) install --path ./auraed
-	@$(cargo) install --path ./auraescript
+	#@$(cargo) install --path ./auraescript
 
 
 .PHONY: auraescript

@@ -146,7 +146,6 @@ pub async fn daemon() -> i32 {
     init::init(options.verbose, options.nested).await;
 
     info!("Starting Aurae Daemon Runtime");
-    info!("Options: {options:#?}");
     info!("Aurae Daemon is pid {}", std::process::id());
 
     let runtime = AuraedRuntime {

@@ -38,11 +38,12 @@ use self::{
     logging::LoggingError,
     network::NetworkError,
     system_runtimes::{
-        CellSystemRuntime, ContainerSystemRuntime, Pid1SystemRuntime,
-        SystemRuntime,
+        CellSystemRuntime, ContainerSystemRuntime, DaemonSystemRuntime,
+        Pid1SystemRuntime, SystemRuntime,
     },
 };
-
+use std::fs::File;
+use std::io::{BufReader, Read};
 mod fileio;
 mod fs;
 mod logging;
@@ -59,9 +60,7 @@ const BANNER: &str = "
     ┃  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ ┃
     ┃  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ┃
     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-         Distributed Systems Runtime Daemon
-                 Executing PID 1
-    \n";
+         Distributed Systems Runtime Daemon\n";
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum InitError {
@@ -75,10 +74,11 @@ pub(crate) enum InitError {
 
 /// Run Aurae as an init pid 1 instance.
 pub async fn init(verbose: bool, nested: bool) {
-    let init_result = match Context::get(nested, false) {
+    let init_result = match Context::get(nested) {
         Context::Pid1 => Pid1SystemRuntime {}.init(verbose),
         Context::Cell => CellSystemRuntime {}.init(verbose),
         Context::Container => ContainerSystemRuntime {}.init(verbose),
+        Context::Daemon => DaemonSystemRuntime {}.init(verbose),
     }
     .await;
 
@@ -94,20 +94,52 @@ enum Context {
     Cell,
     /// auraed is running in a [Pod] as the init container
     Container,
+    /// auraed is running as [Daemon] or arbitrarily on a host
+    Daemon,
 }
 
 impl Context {
-    fn get(nested: bool, container: bool) -> Self {
-        // TODO: This is where we need to figure out what the context is without any args.
-
+    fn get(nested: bool) -> Self {
+        // TODO: Manage nested bool without passing --nested
+        let in_c = in_container();
         if nested {
             Self::Cell
-        } else if container {
-            Self::Container
         } else if std::process::id() == 1 {
-            Self::Pid1
+            if in_c {
+                Self::Container
+            } else {
+                Self::Pid1
+            }
         } else {
-            panic!("auraed context could not be determined")
+            Self::Daemon
         }
     }
+}
+
+// Here we have bespoke "in_container" logic that will check and see if we
+// are executing inside an Aurae pod container.
+//
+// Auraed container: /proc/self/cgroup: 0::/
+// Auraed cell     : /proc
+// Systemd init    : /proc/self/cgroup: 0::/init.scope
+// User slice      : /proc/self/cgroup: 0::/user.slice/user-1000.slice/session-3.scope
+//
+//        When reading the cgroup memberships of a "target" process from
+//        /proc/[pid]/cgroup, the pathname shown in the third field of each
+//        record will be relative to the reading process's root directory
+//        for the corresponding cgroup hierarchy.  If the cgroup directory
+//        of the target process lies outside the root directory of the
+//        reading process's cgroup namespace, then the pathname will show
+//        ../ entries for each ancestor level in the cgroup hierarchy.
+//
+// Source: https://man7.org/linux/man-pages/man7/cgroup_namespaces.7.html
+fn in_container() -> bool {
+    let file =
+        File::open("/proc/self/cgroup").expect("opening /proc/self/cgroup");
+    let mut reader = BufReader::new(file);
+    let mut contents = String::new();
+    let _ = reader
+        .read_to_string(&mut contents)
+        .expect("reading /proc/self/cgroup");
+    contents.to_string().ends_with('/')
 }

@@ -66,13 +66,11 @@ impl Pid1SystemRuntime {
 impl SystemRuntime for Pid1SystemRuntime {
     // Executing as PID 1 ccontext
     async fn init(self, verbose: bool) -> Result<(), InitError> {
-        // Load the PID 1 execution banner
         println!("{}", BANNER);
 
         // Initialize the PID 1 logger
         logging::init(verbose)?;
-        trace!("Logging started");
-
+        info!("Running as pid 1");
         trace!("Configure filesystem");
 
         // NOTE: THESE TODOS WERE ALL HERE, BUT...

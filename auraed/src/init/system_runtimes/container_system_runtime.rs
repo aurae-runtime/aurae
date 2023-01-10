@@ -29,15 +29,18 @@
 \* -------------------------------------------------------------------------- */
 
 use super::SystemRuntime;
-use crate::init::{logging, InitError};
+use crate::init::{logging, InitError, BANNER};
 use tonic::async_trait;
+use tracing::info;
 
 pub(crate) struct ContainerSystemRuntime;
 
 #[async_trait]
 impl SystemRuntime for ContainerSystemRuntime {
     async fn init(self, verbose: bool) -> Result<(), InitError> {
+        println!("{}", BANNER);
         logging::init(verbose)?;
+        info!("Running as a container.");
         Ok(())
     }
 }

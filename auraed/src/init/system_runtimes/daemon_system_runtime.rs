@@ -27,19 +27,20 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-use super::InitError;
-pub(crate) use cell_system_runtime::CellSystemRuntime;
-pub(crate) use container_system_runtime::ContainerSystemRuntime;
-pub(crate) use daemon_system_runtime::DaemonSystemRuntime;
-pub(crate) use pid1_system_runtime::Pid1SystemRuntime;
-use tonic::async_trait;
 
-mod cell_system_runtime;
-mod container_system_runtime;
-mod daemon_system_runtime;
-mod pid1_system_runtime;
+use super::SystemRuntime;
+use crate::init::{logging, InitError, BANNER};
+use tonic::async_trait;
+use tracing::info;
+
+pub(crate) struct DaemonSystemRuntime;
 
 #[async_trait]
-pub(crate) trait SystemRuntime {
-    async fn init(self, verbose: bool) -> Result<(), InitError>;
+impl SystemRuntime for DaemonSystemRuntime {
+    async fn init(self, verbose: bool) -> Result<(), InitError> {
+        println!("{}", BANNER);
+        logging::init(verbose)?;
+        info!("Running as a daemon.");
+        Ok(())
+    }
 }
