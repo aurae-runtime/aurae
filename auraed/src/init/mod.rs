@@ -83,7 +83,7 @@ pub async fn init(verbose: bool, nested: bool) {
     .await;
 
     if let Err(e) = init_result {
-        panic!("Failed to initialize: {e:?}")
+        panic!("Failed to initialize: {:?}", e)
     }
 }
 
@@ -101,15 +101,16 @@ enum Context {
 impl Context {
     fn get(nested: bool) -> Self {
         // TODO: Manage nested bool without passing --nested
-        let in_c = in_container();
+        let in_c = in_new_cgroup_namespace();
+        if in_c && !nested {
+            // If we are in a container, we should always run this setup no matter pid 1 or not
+            return Self::Container;
+        }
+        if std::process::id() == 1 {
+            return Self::Pid1;
+        }
         if nested {
             Self::Cell
-        } else if std::process::id() == 1 {
-            if in_c {
-                Self::Container
-            } else {
-                Self::Pid1
-            }
         } else {
             Self::Daemon
         }
@@ -133,7 +134,7 @@ impl Context {
 //        ../ entries for each ancestor level in the cgroup hierarchy.
 //
 // Source: https://man7.org/linux/man-pages/man7/cgroup_namespaces.7.html
-fn in_container() -> bool {
+fn in_new_cgroup_namespace() -> bool {
     let file =
         File::open("/proc/self/cgroup").expect("opening /proc/self/cgroup");
     let mut reader = BufReader::new(file);
@@ -141,5 +142,19 @@ fn in_container() -> bool {
     let _ = reader
         .read_to_string(&mut contents)
         .expect("reading /proc/self/cgroup");
-    contents.to_string().ends_with('/')
+
+    // Here we examine the last few bytes of /proc/self/cgroup
+    // We know if the cgroup string ends with a \n newline
+    // as well as a / as in "0::/" we are in a new (and nested)
+    // cgroup namespace.
+    //
+    // For all intents and purposes this is the closest way we
+    // can guarantee that we are in "a container".
+    //
+    // It is important to note that Aurae cells (by default)
+    // will also schedule themselves in a new cgroup namespace.
+    // Therefore we would expect Aurae cells to also match this
+    // pattern.
+    //
+    contents.to_string().ends_with("/\n")
 }
