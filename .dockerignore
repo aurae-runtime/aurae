@@ -4,5 +4,6 @@
 .gitignore
 .idea*
 Dockerfile
+docs*
 docs/crate/*
 target*

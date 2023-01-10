@@ -82,7 +82,7 @@ COPY . /app
 WORKDIR /app
 
 # Compile the Aurae suite
-RUN PKG_CONFIG_SYSROOT_DIR=/usr/lib/ make release -j4
+RUN PKG_CONFIG_SYSROOT_DIR=/usr/lib/ make release -j16
 
 # Release container
 FROM alpine:latest
@@ -90,5 +90,6 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=main /app/target/release/auraed /bin/auraed
 COPY --from=main /app/target/release/auraescript /bin/auraescript
-RUN ln -s /sbin/init /bin/auraed
+RUN rm -f /sbin/init # This is a /bin/busyboxy symlink in alpine
+RUN ln -s /bin/auraed /sbin/init
 CMD ["/sbin/init"]

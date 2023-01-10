@@ -45,7 +45,6 @@ impl SystemRuntime for Pid1SystemRuntime {
         // Initialize the PID 1 logger
         logging::init(verbose)?;
         trace!("Logging started");
-
         trace!("Configure filesystem");
 
         // TODO We need to determine how we want to handle mountings these filesystems.
@@ -53,21 +52,21 @@ impl SystemRuntime for Pid1SystemRuntime {
         // TODO We likely to do not need to mount these filesystems.
         // TODO Do we want to have a way to "try" these mounts and continue without erroring?
 
-        fs::mount_vfs(
-            &CString::new("none").expect("valid CString"),
-            &CString::new("/dev").expect("valid CString"),
-            &CString::new("devtmpfs").expect("valid CString"),
-        )?;
-        fs::mount_vfs(
-            &CString::new("none").expect("valid CString"),
-            &CString::new("/sys").expect("valid CString"),
-            &CString::new("sysfs").expect("valid CString"),
-        )?;
-        fs::mount_vfs(
-            &CString::new("proc").expect("valid CString"),
-            &CString::new("/proc").expect("valid CString"),
-            &CString::new("proc").expect("valid CString"),
-        )?;
+        // fs::mount_vfs(
+        //     &CString::new("none").expect("valid CString"),
+        //     &CString::new("/dev").expect("valid CString"),
+        //     &CString::new("devtmpfs").expect("valid CString"),
+        // )?;
+        // fs::mount_vfs(
+        //     &CString::new("none").expect("valid CString"),
+        //     &CString::new("/sys").expect("valid CString"),
+        //     &CString::new("sysfs").expect("valid CString"),
+        // )?;
+        // fs::mount_vfs(
+        //     &CString::new("proc").expect("valid CString"),
+        //     &CString::new("/proc").expect("valid CString"),
+        //     &CString::new("proc").expect("valid CString"),
+        // )?;
 
         trace!("configure network");
         //show_dir("/sys/class/net/", false); // Show available network interfaces
