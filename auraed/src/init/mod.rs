@@ -33,11 +33,14 @@
 //! The Aurae daemon assumes that if the current process id (PID) is 1 to
 //! run itself as an initialization program, otherwise bypass the init module.
 
-use crate::init::{
+use self::{
     fs::FsError,
     logging::LoggingError,
     network::NetworkError,
-    system_runtime::{Pid1SystemRuntime, PidGt1SystemRuntime, SystemRuntime},
+    system_runtimes::{
+        CellSystemRuntime, ContainerSystemRuntime, Pid1SystemRuntime,
+        SystemRuntime,
+    },
 };
 
 mod fileio;
@@ -45,7 +48,7 @@ mod fs;
 mod logging;
 mod network;
 mod power;
-mod system_runtime;
+mod system_runtimes;
 
 const BANNER: &str = "
     ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -72,16 +75,39 @@ pub(crate) enum InitError {
 
 /// Run Aurae as an init pid 1 instance.
 pub async fn init(verbose: bool, nested: bool) {
-    let res = match (std::process::id(), nested) {
-        (0, _) => unreachable!(
-            "process is running as PID 0, which should be impossible"
-        ),
-        (1, false) => Pid1SystemRuntime {}.init(verbose),
-        _ => PidGt1SystemRuntime {}.init(verbose),
+    let init_result = match Context::get(nested, false) {
+        Context::Pid1 => Pid1SystemRuntime {}.init(verbose),
+        Context::Cell => CellSystemRuntime {}.init(verbose),
+        Context::Container => ContainerSystemRuntime {}.init(verbose),
     }
     .await;
 
-    if let Err(e) = res {
-        panic!("Failed to initialize: {:?}", e)
+    if let Err(e) = init_result {
+        panic!("Failed to initialize: {e:?}")
+    }
+}
+
+enum Context {
+    /// auraed is running as true PID 1
+    Pid1,
+    /// auraed is nested in a [Cell]
+    Cell,
+    /// auraed is running in a [Pod] as the init container
+    Container,
+}
+
+impl Context {
+    fn get(nested: bool, container: bool) -> Self {
+        // TODO: This is where we need to figure out what the context is without any args.
+
+        if nested {
+            Self::Cell
+        } else if container {
+            Self::Container
+        } else if std::process::id() == 1 {
+            Self::Pid1
+        } else {
+            panic!("auraed context could not be determined")
+        }
     }
 }
