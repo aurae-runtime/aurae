@@ -28,18 +28,18 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# This is the main compile time check for Aurae.
+# This is the main test for Aurae.
+# This is the main linter for Aurae.
 #
 # This build check will introduce confidence for the following:
 #
-# - That the binary does not have unexpected dependencies.
-# - We intentionally build this on a clean ubuntu image, to prove that we can
-#   generate a static binary with minimal dependencies.
-# - That the code does not warn (due to clippy errors/warnings)
+# - That the tests pass.
+# - That the linter passes.
 #
-# When this build passes we should have a "clean cargo" output!
+# When this build passes we should have a safe and tested codebase
+# with best linting practices.
 #
-name: "Cargo Install (001) [ubuntu:latest]"
+name: "Cargo Test Lint (005) [ubuntu:latest]"
 on:
   push:
     branches: main
@@ -86,9 +86,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-      - name: Cargo Install [make build]
+      - name: Cargo Test Lint [make test lint]
         # This should remain the only command we execute as this matches the title of the file.
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file
         # named with a good name.
-        run: make build
+        run: make proto test lint
