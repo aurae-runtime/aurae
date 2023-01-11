@@ -100,4 +100,4 @@ WORKDIR /aurae
 COPY --from=main /aurae/target/release/auraed /bin/auraed
 RUN rm -f /sbin/init # This is a /bin/busyboxy symlink in alpine
 RUN ln -s /bin/auraed /sbin/init
-CMD ["/sbin/init"]
+ENTRYPOINT ["/sbin/init"]

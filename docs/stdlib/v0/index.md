@@ -3,42 +3,101 @@
 
 ## Table of Contents
 
-- [Protocol Documentation](#protocol-documentation)
-  - [Table of Contents](#table-of-contents)
-  - [observe.proto](#observeproto)
-    - [GetAuraeDaemonLogStreamRequest](#getauraedaemonlogstreamrequest)
-    - [GetSubProcessStreamRequest](#getsubprocessstreamrequest)
-    - [LogItem](#logitem)
-    - [LogChannelType](#logchanneltype)
-    - [ObserveService](#observeservice)
-  - [runtime.proto](#runtimeproto)
-    - [Cell](#cell)
-    - [CellServiceAllocateRequest](#cellserviceallocaterequest)
-    - [CellServiceAllocateResponse](#cellserviceallocateresponse)
-    - [CellServiceFreeRequest](#cellservicefreerequest)
-    - [CellServiceFreeResponse](#cellservicefreeresponse)
-    - [CellServiceStartRequest](#cellservicestartrequest)
-    - [CellServiceStartResponse](#cellservicestartresponse)
-    - [CellServiceStopRequest](#cellservicestoprequest)
-    - [CellServiceStopResponse](#cellservicestopresponse)
-    - [Container](#container)
-    - [Executable](#executable)
-    - [Pod](#pod)
-    - [PodServiceAllocateRequest](#podserviceallocaterequest)
-    - [PodServiceAllocateResponse](#podserviceallocateresponse)
-    - [PodServiceFreeRequest](#podservicefreerequest)
-    - [PodServiceFreeResponse](#podservicefreeresponse)
-    - [PodServiceStartRequest](#podservicestartrequest)
-    - [PodServiceStartResponse](#podservicestartresponse)
-    - [PodServiceStopRequest](#podservicestoprequest)
-    - [PodServiceStopResponse](#podservicestopresponse)
-    - [CellService](#cellservice)
-    - [InstanceService](#instanceservice)
-    - [PodService](#podservice)
-    - [SpawnService](#spawnservice)
-  - [discovery.proto](#discoveryproto)
-    - [DiscoveryService](#discoveryservice)
-  - [Scalar Value Types](#scalar-value-types)
+- [discovery.proto](#discovery-proto)
+    - [HealthRequest](#aurae-discovery-v0-HealthRequest)
+    - [HealthResponse](#aurae-discovery-v0-HealthResponse)
+  
+    - [DiscoveryService](#aurae-discovery-v0-DiscoveryService)
+  
+- [observe.proto](#observe-proto)
+    - [GetAuraeDaemonLogStreamRequest](#aurae-observe-v0-GetAuraeDaemonLogStreamRequest)
+    - [GetSubProcessStreamRequest](#aurae-observe-v0-GetSubProcessStreamRequest)
+    - [LogItem](#aurae-observe-v0-LogItem)
+  
+    - [LogChannelType](#aurae-observe-v0-LogChannelType)
+  
+    - [ObserveService](#aurae-observe-v0-ObserveService)
+  
+- [runtime.proto](#runtime-proto)
+    - [Cell](#aurae-runtime-v0-Cell)
+    - [CellServiceAllocateRequest](#aurae-runtime-v0-CellServiceAllocateRequest)
+    - [CellServiceAllocateResponse](#aurae-runtime-v0-CellServiceAllocateResponse)
+    - [CellServiceFreeRequest](#aurae-runtime-v0-CellServiceFreeRequest)
+    - [CellServiceFreeResponse](#aurae-runtime-v0-CellServiceFreeResponse)
+    - [CellServiceStartRequest](#aurae-runtime-v0-CellServiceStartRequest)
+    - [CellServiceStartResponse](#aurae-runtime-v0-CellServiceStartResponse)
+    - [CellServiceStopRequest](#aurae-runtime-v0-CellServiceStopRequest)
+    - [CellServiceStopResponse](#aurae-runtime-v0-CellServiceStopResponse)
+    - [Container](#aurae-runtime-v0-Container)
+    - [Executable](#aurae-runtime-v0-Executable)
+    - [Pod](#aurae-runtime-v0-Pod)
+    - [PodServiceAllocateRequest](#aurae-runtime-v0-PodServiceAllocateRequest)
+    - [PodServiceAllocateResponse](#aurae-runtime-v0-PodServiceAllocateResponse)
+    - [PodServiceFreeRequest](#aurae-runtime-v0-PodServiceFreeRequest)
+    - [PodServiceFreeResponse](#aurae-runtime-v0-PodServiceFreeResponse)
+    - [PodServiceStartRequest](#aurae-runtime-v0-PodServiceStartRequest)
+    - [PodServiceStartResponse](#aurae-runtime-v0-PodServiceStartResponse)
+    - [PodServiceStopRequest](#aurae-runtime-v0-PodServiceStopRequest)
+    - [PodServiceStopResponse](#aurae-runtime-v0-PodServiceStopResponse)
+  
+    - [CellService](#aurae-runtime-v0-CellService)
+    - [InstanceService](#aurae-runtime-v0-InstanceService)
+    - [PodService](#aurae-runtime-v0-PodService)
+    - [SpawnService](#aurae-runtime-v0-SpawnService)
+  
+- [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="discovery-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## discovery.proto
+
+
+
+<a name="aurae-discovery-v0-HealthRequest"></a>
+
+### HealthRequest
+
+
+
+
+
+
+
+<a name="aurae-discovery-v0-HealthResponse"></a>
+
+### HealthResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| healthy | [bool](#bool) |  |  |
+| version | [string](#string) |  |  |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+
+<a name="aurae-discovery-v0-DiscoveryService"></a>
+
+### DiscoveryService
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| Health | [HealthRequest](#aurae-discovery-v0-HealthRequest) | [HealthResponse](#aurae-discovery-v0-HealthResponse) | Used to confirm that the host is running Aurae and to get some / information including the version of Aurae that is running. |
+
+ 
 
 
 
@@ -65,10 +124,10 @@
 TODO: not implemented
 
 
-| Field        | Type                                               | Label | Description |
-| ------------ | -------------------------------------------------- | ----- | ----------- |
-| channel_type | [LogChannelType](#aurae-observe-v0-LogChannelType) |       |             |
-| process_id   | [int64](#int64)                                    |       |             |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| channel_type | [LogChannelType](#aurae-observe-v0-LogChannelType) |  |  |
+| process_id | [int64](#int64) |  |  |
 
 
 
@@ -81,11 +140,11 @@ TODO: not implemented
 
 
 
-| Field     | Type              | Label | Description |
-| --------- | ----------------- | ----- | ----------- |
-| channel   | [string](#string) |       |             |
-| line      | [string](#string) |       |             |
-| timestamp | [int64](#int64)   |       |             |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| channel | [string](#string) |  |  |
+| line | [string](#string) |  |  |
+| timestamp | [int64](#int64) |  |  |
 
 
 
@@ -99,11 +158,11 @@ TODO: not implemented
 ### LogChannelType
 
 
-| Name                         | Number | Description |
-| ---------------------------- | ------ | ----------- |
-| LOG_CHANNEL_TYPE_UNSPECIFIED | 0      |             |
-| LOG_CHANNEL_TYPE_STDOUT      | 1      |             |
-| LOG_CHANNEL_TYPE_STDERR      | 2      |             |
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| LOG_CHANNEL_TYPE_UNSPECIFIED | 0 |  |
+| LOG_CHANNEL_TYPE_STDOUT | 1 |  |
+| LOG_CHANNEL_TYPE_STDERR | 2 |  |
 
 
  
@@ -116,10 +175,10 @@ TODO: not implemented
 ### ObserveService
 
 
-| Method Name             | Request Type                                                                       | Response Type                               | Description                                                                                            |
-| ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
 | GetAuraeDaemonLogStream | [GetAuraeDaemonLogStreamRequest](#aurae-observe-v0-GetAuraeDaemonLogStreamRequest) | [LogItem](#aurae-observe-v0-LogItem) stream | request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ). |
-| GetSubProcessStream     | [GetSubProcessStreamRequest](#aurae-observe-v0-GetSubProcessStreamRequest)         | [LogItem](#aurae-observe-v0-LogItem) stream | TODO: request log stream for a sub process                                                             |
+| GetSubProcessStream | [GetSubProcessStreamRequest](#aurae-observe-v0-GetSubProcessStreamRequest) | [LogItem](#aurae-observe-v0-LogItem) stream | TODO: request log stream for a sub process |
 
  
 
@@ -139,19 +198,15 @@ An isolation resource used to divide a system into smaller resource
 / boundaries.
 
 
-| Field           | Type              | Label | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| --------------- | ----------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name            | [string](#string) |       | Resource parameters for control groups (cgroups) / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) / crate. See / [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)                                                                                                                                                                                                                                                                                  |
-| cpu_cpus        | [string](#string) |       | A comma-separated list of CPU IDs where the task in the control group / can run. Dashes between numbers indicate ranges.                                                                                                                                                                                                                                                                                                                                                                                         |
-| cpu_shares      | [uint64](#uint64) |       | Cgroups can be guaranteed a minimum number of &#34;CPU shares&#34; / when a system is busy. This does not limit a cgroup&#39;s CPU / usage if the CPUs are not busy. For further information, / see Documentation/scheduler/sched-design-CFS.rst (or / Documentation/scheduler/sched-design-CFS.txt in Linux 5.2 / and earlier). / / Weight of how much of the total CPU time should this control / group get. Note that this is hierarchical, so this is weighted / against the siblings of this control group. |
-| cpu_mems        | [string](#string) |       | Same syntax as the cpus field of this structure, but applies to / memory nodes instead of processors.                                                                                                                                                                                                                                                                                                                                                                                                            |
-| cpu_quota       | [int64](#int64)   |       | In one period, how much can the tasks run in microseconds.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ns_share_mount  | [bool](#bool)     |       | Linux namespaces to share with the calling process. / If all values are set to false, the resulting cell / will be as isolated as possible. / / Each shared namespace is a potential security risk.                                                                                                                                                                                                                                                                                                              |
-| ns_share_uts    | [bool](#bool)     |       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ns_share_ipc    | [bool](#bool)     |       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ns_share_pid    | [bool](#bool)     |       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ns_share_net    | [bool](#bool)     |       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ns_share_cgroup | [bool](#bool)     |       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | Resource parameters for control groups (cgroups) / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) / crate. See / [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs) |
+| cpu_cpus | [string](#string) |  | A comma-separated list of CPU IDs where the task in the control group / can run. Dashes between numbers indicate ranges. |
+| cpu_shares | [uint64](#uint64) |  | Cgroups can be guaranteed a minimum number of &#34;CPU shares&#34; / when a system is busy. This does not limit a cgroup&#39;s CPU / usage if the CPUs are not busy. For further information, / see Documentation/scheduler/sched-design-CFS.rst (or / Documentation/scheduler/sched-design-CFS.txt in Linux 5.2 / and earlier). / / Weight of how much of the total CPU time should this control / group get. Note that this is hierarchical, so this is weighted / against the siblings of this control group. |
+| cpu_mems | [string](#string) |  | Same syntax as the cpus field of this structure, but applies to / memory nodes instead of processors. |
+| cpu_quota | [int64](#int64) |  | In one period, how much can the tasks run in microseconds. |
+| isolate_process | [bool](#bool) |  | Will isolate the process (and proc filesystem) from the host. / Will unshare the pid, ipc, uts, and mount namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
+| isolate_network | [bool](#bool) |  | Will isolate the network from the host. / Will unshare the net namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
 
 
 
@@ -169,9 +224,9 @@ An Aurae cell is a name given to Linux control groups (cgroups) that also includ
 / constraints of the system to allocate for an arbitrary use case.
 
 
-| Field | Type                           | Label | Description                                           |
-| ----- | ------------------------------ | ----- | ----------------------------------------------------- |
-| cell  | [Cell](#aurae-runtime-v0-Cell) |       | A smaller resource constrained section of the system. |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell | [Cell](#aurae-runtime-v0-Cell) |  | A smaller resource constrained section of the system. |
 
 
 
@@ -184,10 +239,10 @@ An Aurae cell is a name given to Linux control groups (cgroups) that also includ
 The response after a cell has been allocated.
 
 
-| Field     | Type              | Label | Description                                                                            |
-| --------- | ----------------- | ----- | -------------------------------------------------------------------------------------- |
-| cell_name | [string](#string) |       |                                                                                        |
-| cgroup_v2 | [bool](#bool)     |       | A bool that will be set to true if the cgroup was created with / cgroup v2 controller. |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell_name | [string](#string) |  |  |
+| cgroup_v2 | [bool](#bool) |  | A bool that will be set to true if the cgroup was created with / cgroup v2 controller. |
 
 
 
@@ -200,9 +255,9 @@ The response after a cell has been allocated.
 Used to remove or free a cell after it has been allocated.
 
 
-| Field     | Type              | Label | Description |
-| --------- | ----------------- | ----- | ----------- |
-| cell_name | [string](#string) |       |             |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell_name | [string](#string) |  |  |
 
 
 
@@ -229,10 +284,10 @@ A request for starting an executable inside of a Cell.
 / An executable is started synchronously.
 
 
-| Field      | Type                                       | Label | Description |
-| ---------- | ------------------------------------------ | ----- | ----------- |
-| cell_name  | [string](#string)                          |       |             |
-| executable | [Executable](#aurae-runtime-v0-Executable) |       |             |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell_name | [string](#string) |  |  |
+| executable | [Executable](#aurae-runtime-v0-Executable) |  |  |
 
 
 
@@ -245,9 +300,9 @@ A request for starting an executable inside of a Cell.
 The response after starting an executable within a Cell.
 
 
-| Field | Type            | Label | Description                                                                   |
-| ----- | --------------- | ----- | ----------------------------------------------------------------------------- |
-| pid   | [int32](#int32) |       | Return a pid as an int32 based on the pid_t type / in various libc libraries. |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| pid | [int32](#int32) |  | Return a pid as an int32 based on the pid_t type / in various libc libraries. |
 
 
 
@@ -260,10 +315,10 @@ The response after starting an executable within a Cell.
 Request to stop an executable at runtime.
 
 
-| Field           | Type              | Label | Description |
-| --------------- | ----------------- | ----- | ----------- |
-| cell_name       | [string](#string) |       |             |
-| executable_name | [string](#string) |       |             |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell_name | [string](#string) |  |  |
+| executable_name | [string](#string) |  |  |
 
 
 
@@ -286,6 +341,13 @@ Request to stop an executable at runtime.
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | The name of the container. |
+| image | [string](#string) |  | Define a remote container image. / / This should be a fully qualified URI and not a container &#34;shortname&#34;. / The file type that is returned should be an uncompresed OCI compatible container &#34;bundle&#34; / as defined in the [OCI spec](https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle) / / ## Building a container bundle from an existing OCI image / / OCI &#34;images&#34; are effectively just tarballs. You can assemble / a bundle from an existing known image. / / ```bash / cd examples / mkdir -p aurae-busybox/rootfs / docker pull busybox / docker create --name aurae-busybox busybox / docker export aurae-busybox | tar -xfC aurae-busybox/rootfs - / cd aurae-busybox / runc spec / ``` / / Aurae will default pull down am image from a remote location and save to the Aurae socket directory as follows. / / ``` / $AURAE_SOCK_PATH/bundle/$NAME /``` / |
+| registry | [string](#string) |  | Define a public portion of a container registry. / / Such as: / - ghcr.io / - https://registry.hub.docker.com / / Registry strings will be joined at runtime with the image / string such that a working container bundle path can be formed. |
+
+
 
 
 
@@ -296,11 +358,11 @@ Request to stop an executable at runtime.
 The most primitive workload in Aurae, a standard executable process.
 
 
-| Field       | Type              | Label | Description |
-| ----------- | ----------------- | ----- | ----------- |
-| name        | [string](#string) |       |             |
-| command     | [string](#string) |       |             |
-| description | [string](#string) |       |             |
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
+| command | [string](#string) |  |  |
+| description | [string](#string) |  |  |
 
 
 
@@ -318,7 +380,6 @@ OCI image represents a filesystem bundle on disk using familiar parlance.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  | Name is the name of the pod. |
-| image | [string](#string) |  | TODO Implement https://github.com/containers/oci-spec-rs / The container image. |
 
 
 
@@ -376,6 +437,11 @@ The request to allocate a Pod.
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
+
+
 
 
 
@@ -394,6 +460,12 @@ The request to allocate a Pod.
 
 ### PodServiceStopRequest
 
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| pod_name | [string](#string) |  |  |
+| container_name | [string](#string) |  |  |
 
 
 
@@ -426,12 +498,12 @@ Cells is the most fundamental isolation boundary for Aurae.
 / A cell is composed of a unique cgroup namespace, and unshared kernel
 / namespaces.
 
-| Method Name | Request Type                                                               | Response Type                                                                | Description                                                                                                                         |
-| ----------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Allocate    | [CellServiceAllocateRequest](#aurae-runtime-v0-CellServiceAllocateRequest) | [CellServiceAllocateResponse](#aurae-runtime-v0-CellServiceAllocateResponse) | Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources / only. |
-| Free        | [CellServiceFreeRequest](#aurae-runtime-v0-CellServiceFreeRequest)         | [CellServiceFreeResponse](#aurae-runtime-v0-CellServiceFreeResponse)         | Free up previously requested resources for an existing cell                                                                         |
-| Start       | [CellServiceStartRequest](#aurae-runtime-v0-CellServiceStartRequest)       | [CellServiceStartResponse](#aurae-runtime-v0-CellServiceStartResponse)       | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell.    |
-| Stop        | [CellServiceStopRequest](#aurae-runtime-v0-CellServiceStopRequest)         | [CellServiceStopResponse](#aurae-runtime-v0-CellServiceStopResponse)         | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable.          |
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| Allocate | [CellServiceAllocateRequest](#aurae-runtime-v0-CellServiceAllocateRequest) | [CellServiceAllocateResponse](#aurae-runtime-v0-CellServiceAllocateResponse) | Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources / only. |
+| Free | [CellServiceFreeRequest](#aurae-runtime-v0-CellServiceFreeRequest) | [CellServiceFreeResponse](#aurae-runtime-v0-CellServiceFreeResponse) | Free up previously requested resources for an existing cell |
+| Start | [CellServiceStartRequest](#aurae-runtime-v0-CellServiceStartRequest) | [CellServiceStartResponse](#aurae-runtime-v0-CellServiceStartResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
+| Stop | [CellServiceStopRequest](#aurae-runtime-v0-CellServiceStopRequest) | [CellServiceStopResponse](#aurae-runtime-v0-CellServiceStopResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
 
 
 <a name="aurae-runtime-v0-InstanceService"></a>
@@ -440,7 +512,7 @@ Cells is the most fundamental isolation boundary for Aurae.
 TODO Instance Service
 
 | Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ----------- |
+| ----------- | ------------ | ------------- | ------------|
 
 
 <a name="aurae-runtime-v0-PodService"></a>
@@ -453,12 +525,12 @@ A pod is a higher level abstraction than Aurae cells, and to most users
 /
 / A pod is a group of one or more containers with shared network and storage.
 
-| Method Name | Request Type                                                             | Response Type                                                              | Description |
-| ----------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ----------- |
-| Allocate    | [PodServiceAllocateRequest](#aurae-runtime-v0-PodServiceAllocateRequest) | [PodServiceAllocateResponse](#aurae-runtime-v0-PodServiceAllocateResponse) |             |
-| Start       | [PodServiceStartRequest](#aurae-runtime-v0-PodServiceStartRequest)       | [PodServiceStartResponse](#aurae-runtime-v0-PodServiceStartResponse)       |             |
-| Stop        | [PodServiceStopRequest](#aurae-runtime-v0-PodServiceStopRequest)         | [PodServiceStopResponse](#aurae-runtime-v0-PodServiceStopResponse)         |             |
-| Free        | [PodServiceFreeRequest](#aurae-runtime-v0-PodServiceFreeRequest)         | [PodServiceFreeResponse](#aurae-runtime-v0-PodServiceFreeResponse)         |             |
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| Allocate | [PodServiceAllocateRequest](#aurae-runtime-v0-PodServiceAllocateRequest) | [PodServiceAllocateResponse](#aurae-runtime-v0-PodServiceAllocateResponse) |  |
+| Start | [PodServiceStartRequest](#aurae-runtime-v0-PodServiceStartRequest) | [PodServiceStartResponse](#aurae-runtime-v0-PodServiceStartResponse) |  |
+| Stop | [PodServiceStopRequest](#aurae-runtime-v0-PodServiceStopRequest) | [PodServiceStopResponse](#aurae-runtime-v0-PodServiceStopResponse) |  |
+| Free | [PodServiceFreeRequest](#aurae-runtime-v0-PodServiceFreeRequest) | [PodServiceFreeResponse](#aurae-runtime-v0-PodServiceFreeResponse) |  |
 
 
 <a name="aurae-runtime-v0-SpawnService"></a>
@@ -467,27 +539,7 @@ A pod is a higher level abstraction than Aurae cells, and to most users
 TODO Spawn Service
 
 | Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ----------- |
-
- 
-
-
-
-<a name="discovery-proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## discovery.proto
-
-### DiscoveryService
-
-| Method Name | Request Type                                       | Response Type                                        | Description                                                                  |
-| ----------- | -------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Health      | [HealthRequest](#aurae-discovery-v0-HealthRequest) | [HealthResponse](#aurae-discovery-v0-HealthResponse) | A simple check that auraed is running, and some information about the server |
- 
-
- 
-
- 
+| ----------- | ------------ | ------------- | ------------|
 
  
 
@@ -495,21 +547,21 @@ TODO Spawn Service
 
 ## Scalar Value Types
 
-| .proto Type                    | Notes                                                                                                                                           | C++    | Java       | Python      | Go      | C#         | PHP            | Ruby                           |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | ----------- | ------- | ---------- | -------------- | ------------------------------ |
-| <a name="double" /> double     |                                                                                                                                                 | double | double     | float       | float64 | double     | float          | Float                          |
-| <a name="float" /> float       |                                                                                                                                                 | float  | float      | float       | float32 | float      | float          | Float                          |
-| <a name="int32" /> int32       | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead. | int32  | int        | int         | int32   | int        | integer        | Bignum or Fixnum (as required) |
-| <a name="int64" /> int64       | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead. | int64  | long       | int/long    | int64   | long       | integer/string | Bignum                         |
-| <a name="uint32" /> uint32     | Uses variable-length encoding.                                                                                                                  | uint32 | int        | int/long    | uint32  | uint       | integer        | Bignum or Fixnum (as required) |
-| <a name="uint64" /> uint64     | Uses variable-length encoding.                                                                                                                  | uint64 | long       | int/long    | uint64  | ulong      | integer/string | Bignum or Fixnum (as required) |
-| <a name="sint32" /> sint32     | Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.                            | int32  | int        | int         | int32   | int        | integer        | Bignum or Fixnum (as required) |
-| <a name="sint64" /> sint64     | Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.                            | int64  | long       | int/long    | int64   | long       | integer/string | Bignum                         |
-| <a name="fixed32" /> fixed32   | Always four bytes. More efficient than uint32 if values are often greater than 2^28.                                                            | uint32 | int        | int         | uint32  | uint       | integer        | Bignum or Fixnum (as required) |
-| <a name="fixed64" /> fixed64   | Always eight bytes. More efficient than uint64 if values are often greater than 2^56.                                                           | uint64 | long       | int/long    | uint64  | ulong      | integer/string | Bignum                         |
-| <a name="sfixed32" /> sfixed32 | Always four bytes.                                                                                                                              | int32  | int        | int         | int32   | int        | integer        | Bignum or Fixnum (as required) |
-| <a name="sfixed64" /> sfixed64 | Always eight bytes.                                                                                                                             | int64  | long       | int/long    | int64   | long       | integer/string | Bignum                         |
-| <a name="bool" /> bool         |                                                                                                                                                 | bool   | boolean    | boolean     | bool    | bool       | boolean        | TrueClass/FalseClass           |
-| <a name="string" /> string     | A string must always contain UTF-8 encoded or 7-bit ASCII text.                                                                                 | string | String     | str/unicode | string  | string     | string         | String (UTF-8)                 |
-| <a name="bytes" /> bytes       | May contain any arbitrary sequence of bytes.                                                                                                    | string | ByteString | str         | []byte  | ByteString | string         | String (ASCII-8BIT)            |
+| .proto Type | Notes | C++ | Java | Python | Go | C# | PHP | Ruby |
+| ----------- | ----- | --- | ---- | ------ | -- | -- | --- | ---- |
+| <a name="double" /> double |  | double | double | float | float64 | double | float | Float |
+| <a name="float" /> float |  | float | float | float | float32 | float | float | Float |
+| <a name="int32" /> int32 | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead. | int32 | int | int | int32 | int | integer | Bignum or Fixnum (as required) |
+| <a name="int64" /> int64 | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead. | int64 | long | int/long | int64 | long | integer/string | Bignum |
+| <a name="uint32" /> uint32 | Uses variable-length encoding. | uint32 | int | int/long | uint32 | uint | integer | Bignum or Fixnum (as required) |
+| <a name="uint64" /> uint64 | Uses variable-length encoding. | uint64 | long | int/long | uint64 | ulong | integer/string | Bignum or Fixnum (as required) |
+| <a name="sint32" /> sint32 | Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s. | int32 | int | int | int32 | int | integer | Bignum or Fixnum (as required) |
+| <a name="sint64" /> sint64 | Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s. | int64 | long | int/long | int64 | long | integer/string | Bignum |
+| <a name="fixed32" /> fixed32 | Always four bytes. More efficient than uint32 if values are often greater than 2^28. | uint32 | int | int | uint32 | uint | integer | Bignum or Fixnum (as required) |
+| <a name="fixed64" /> fixed64 | Always eight bytes. More efficient than uint64 if values are often greater than 2^56. | uint64 | long | int/long | uint64 | ulong | integer/string | Bignum |
+| <a name="sfixed32" /> sfixed32 | Always four bytes. | int32 | int | int | int32 | int | integer | Bignum or Fixnum (as required) |
+| <a name="sfixed64" /> sfixed64 | Always eight bytes. | int64 | long | int/long | int64 | long | integer/string | Bignum |
+| <a name="bool" /> bool |  | bool | boolean | boolean | bool | bool | boolean | TrueClass/FalseClass |
+| <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
+| <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
 

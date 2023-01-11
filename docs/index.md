@@ -10,9 +10,7 @@ The `auraed` daemon can be run as a PID 1 on a Linux kernel and manages containe
 
 Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
 
-Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mTLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. This ownership enables Aurae to eliminate the complexity related to distributed systems that originate from the traditional assumption that a single user is using a single machine by consolidating critical processes such as logging, monitoring, execution, runtime, security, etc.
-
-With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
+Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mTLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
 
 ### Project Status
 
@@ -64,7 +62,7 @@ Aurae brings enterprise identity as low as the socket layer in a system, which u
 
 Aurae offers a Turing complete scripting language built on top of TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript). AuraeScript embeds the [Deno](https://deno.land) source code directly, and offers a remote client and SDK to interface directly with Aurae remotely. The AuraeScript library is automatically generated from the `.proto` files defined in the [Aurae Standard Library](https://aurae.io/stdlib/).
 
-Valid TypeScript files can be leveraged to replace static manifests, as well as interact directly with a running system.
+Valid TypeScript files can be leveraged to replace static manifests, such as YAML, as well as interact directly with a running system.
 
 ```typescript
 #!/usr/bin/env auraescript

@@ -73,6 +73,7 @@ impl pod_service_server::PodService for PodService {
 
         // TODO Set up a "Pause" container that is the only container that runs with ".as_init()"
         // TODO We do NOT want a network dependency here, so we will likely need to be able to "build" the image from data within the binary.
+        todo!("pod service incomplete!");
 
         // let syscall = create_syscall();
         // let mut container = ContainerBuilder::new(name, syscall.as_ref())
@@ -96,6 +97,7 @@ impl pod_service_server::PodService for PodService {
         let _request = request.into_inner();
 
         // TODO Destroy pod
+        todo!("pod service incomplete!");
 
         Ok(Response::new(PodServiceFreeResponse {}))
     }
@@ -107,6 +109,7 @@ impl pod_service_server::PodService for PodService {
 
         // Here is how you get an image from a name
         //ocipkg::distribution::get_image(&ocipkg::ImageName::parse());
+        todo!("pod service incomplete!");
 
         let _request = request.into_inner();
         Ok(Response::new(PodServiceStartResponse {}))
@@ -116,6 +119,9 @@ impl pod_service_server::PodService for PodService {
         request: Request<PodServiceStopRequest>,
     ) -> Result<Response<PodServiceStopResponse>, Status> {
         let _request = request.into_inner();
+
+        todo!("pod service incomplete!");
+
         Ok(Response::new(PodServiceStopResponse {}))
     }
 }
