@@ -40,7 +40,9 @@ members = [
 anyhow = "1.0.66"
 aurae-client = { path = "./aurae-client" }
 aurae-proto = { path = "./aurae-proto" }
+fancy-regex = "0.10.0"
 lazy_static = "1.4.0"
+serde = "1.0"
 thiserror = "1.0.37"
 tokio = "1.22.0"
 tonic = "0.8.2"
