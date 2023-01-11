@@ -32,13 +32,14 @@ import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/runtime.ts";
 
 let cells = new runtime.CellServiceClient();
+let cellName = "ae-sleeper-cell";
 
 // [ Allocate ]
 let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpuQuota: 300000, // 30% of the CPU
         cpuShares: 2, // Percentage of CPUs
-        name: "sleeper-cell",
+        name: cellName,
     })
 });
 helpers.print(allocated)
@@ -46,7 +47,7 @@ helpers.print(allocated)
 
 // [ Start ]
 let started = await cells.start(<runtime.CellServiceStartRequest>{
-    cellName: "sleeper-cell",
+    cellName,
     executable: runtime.Executable.fromPartial({
         command: "/usr/bin/sleep 42",
         description: "Sleep for 42 seconds",
