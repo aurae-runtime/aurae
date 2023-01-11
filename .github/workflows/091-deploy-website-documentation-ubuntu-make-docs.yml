@@ -28,42 +28,33 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# This is the main test for Aurae.
-# This is the main linter for Aurae.
+# This will check the documentation, and deploy the https://aurae.io website
+# from the current code base upon merge -> main.
 #
 # This build check will introduce confidence for the following:
 #
-# - That the tests pass.
-# - That the linter passes.
+# - That the documentation is updated and passes our spelling checks.
+# - That the website is deployed with a fresh copy of the new docs.
 #
-# When this build passes we should have a safe and tested codebase
-# with best linting practices.
+# When this build passes we should have confidence that our documentation is
+# updated on the website complete with best practices.
 #
-name: "Cargo Test Lint (005) [ubuntu:latest]"
+name: "Deploy Website Documentation (090) [ubuntu:latest]"
 on:
   push:
-    branches: main
-  pull_request:
-    branches: main
-env:
-  CARGO_TERM_COLOR: always
+    branches:
+      - main
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
-      - uses: actions/cache@v3
+      - uses: actions/setup-python@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: build-compile-test-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          python-version: 3.x
       - name: Install protoc-gen-doc in [ubuntu:latest]
         run: |
           wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
@@ -72,27 +63,7 @@ jobs:
           cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
-      - name: Install buf in [ubuntu:latest]
-        run: |
-          curl -sSL "https://github.com/bufbuild/buf/releases/download/v1.11.0/buf-$(uname -s)-$(uname -m)" -o "/usr/local/bin/buf" 
-          chmod +x "/usr/local/bin/buf"
-      - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
-        # Please (seriously please) be careful about adding commands here.
-        # This is our core way of validating that our binary is "healthy"
-        # If we need to install anything with the word "lib" in it to get
-        # the build to pass, we likely should be having other discussions
-        # instead of adding commands here.
-        #
-        # For example we should NOT be adding libraries such as "libseccomp"
-        # or "libdbus".
-        #
-        # If in doubt, please ask in Discord in the build channel.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-      - name: Cargo Test Lint [make test lint]
-        # This should remain the only command we execute as this matches the title of the file.
-        # The goal is for this to be easy to find from the GitHub dashboard.
-        # Instead of adding more commands here, consider another make target or a new YAML file
-        # named with a good name.
-        run: make musl proto test lint
+      - name: Build Documentation [make docs]
+        run: make docs
+      - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
+        run: mkdocs gh-deploy --force

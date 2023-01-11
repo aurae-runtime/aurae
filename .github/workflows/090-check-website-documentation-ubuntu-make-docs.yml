@@ -28,22 +28,21 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# This will check the documentation, and deploy the https://aurae.io website
-# from the current code base upon merge -> main.
+# This will check the documentation (only).
 #
 # This build check will introduce confidence for the following:
 #
 # - That the documentation is updated and passes our spelling checks.
-# - That the website is deployed with a fresh copy of the new docs.
 #
 # When this build passes we should have confidence that our documentation is
-# updated on the website complete with best practices.
+# ready to be pushed to the website.
 #
-name: "Website Documentation (090) [ubuntu:latest]"
+name: "Check Website Documentation (090) [ubuntu:latest]"
 on:
   push:
-    branches:
-      - main
+    branches: main
+  pull_request:
+    branches: main
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -65,5 +64,3 @@ jobs:
           sudo apt-get install -y protobuf-compiler
       - name: Build Documentation [make docs]
         run: make docs
-      - name: Update 'aurae.io' Website [mkdocs gh-deploy]
-        run: mkdocs gh-deploy --force
