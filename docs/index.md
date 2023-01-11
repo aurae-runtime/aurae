@@ -4,7 +4,7 @@
 
 Aurae is a free and open source Rust project which houses a memory-safe systems runtime daemon built specifically for enterprise distributed systems called `auraed`.
 
-The `auraed` daemon can be run as a pid 1 on a Linux kernel and manages containers, virtual machines, and spawning short-lived nested virtual instances of itself for an additional layer of isolation.
+The `auraed` daemon can be run as a PID 1 on a Linux kernel and manages containers, virtual machines, and spawning short-lived nested virtual instances of itself for an additional layer of isolation.
 
 ### Mission
 
@@ -32,7 +32,7 @@ Aurae offers a runtime API which is capable of managing:
  - [Pods](https://aurae.io/stdlib/v0/#pod) (Cells running in spawned instances)
  - [Virtual Machines](https://aurae.io/stdlib/v0/#virtualmachine) (Long-lived arbitrary virtual machines)
 
-### auraed
+### Auraed
 
 Think of [auraed](https://github.com/aurae-runtime/aurae/tree/main/auraed) as a PID 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
 

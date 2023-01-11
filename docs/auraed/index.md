@@ -8,7 +8,7 @@ The Aurae Daemon runs as a gRPC server which listens over a Unix domain socket b
 /var/run/aurae/aurae.sock
 ```
 
-## Running Auraed 
+## Running auraed 
 
 Running as `/sbin/init` is currently under active development.
 
@@ -32,7 +32,7 @@ cargo install --debug --path .
 ```
 
 
-## Running Auraed in a Container 
+## Running auraed in a Container 
 
 It is possible to run Auraed in a container as long as the following is considered:
 
