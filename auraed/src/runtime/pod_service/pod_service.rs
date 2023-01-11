@@ -31,6 +31,7 @@
 #![allow(unused)]
 #![allow(clippy::module_inception)]
 
+use anyhow::{Context, Result};
 use aurae_client::{runtime::pod_service::PodServiceClient, AuraeClient};
 use aurae_proto::runtime::{
     pod_service_server, Pod, PodServiceAllocateRequest,
@@ -38,20 +39,25 @@ use aurae_proto::runtime::{
     PodServiceStartRequest, PodServiceStartResponse, PodServiceStopRequest,
     PodServiceStopResponse,
 };
-// use std::sync::Arc;
-// use tokio::sync::Mutex;
+// use libcontainer::{
+//     container::builder::ContainerBuilder, syscall::syscall::create_syscall,
+// };
+use liboci_cli::Run;
+use std::path::PathBuf;
 use tonic::{Request, Response, Status};
+use tracing::info;
 
 #[derive(Debug, Clone)]
 pub struct PodService {
     // These are used for the cache as in the cells/executables
+    root_path: PathBuf,
     //pods: Arc<Mutex<Pods>>,
     //containers: Arc<Mutex<Containers>>,
 }
 
 impl PodService {
-    pub fn new() -> Self {
-        PodService {}
+    pub fn new(root_path: PathBuf) -> Self {
+        PodService { root_path }
     }
 }
 
@@ -61,7 +67,27 @@ impl pod_service_server::PodService for PodService {
         &self,
         request: Request<PodServiceAllocateRequest>,
     ) -> Result<Response<PodServiceAllocateResponse>, Status> {
-        let _request = request.into_inner();
+        let request = request.into_inner();
+        let pod = request.pod.expect("pod");
+        let name = pod.name;
+
+        // TODO Set up a "Pause" container that is the only container that runs with ".as_init()"
+        // TODO We do NOT want a network dependency here, so we will likely need to be able to "build" the image from data within the binary.
+        todo!("pod service incomplete!");
+
+        // let syscall = create_syscall();
+        // let mut container = ContainerBuilder::new(name, syscall.as_ref())
+        //     // .with_pid_file(args.pid_file.as_ref())?
+        //     // .with_console_socket(args.console_socket.as_ref())
+        //     .with_root_path(self.root_path.join("bundles"))
+        //     .expect("root path")
+        //     .as_init("examples/busybox.oci/busybox") // TODO This needs to be a lightweight "pause" container assembled at runtime from local data in the binary.
+        //     .with_systemd(false)
+        //     .build()
+        //     .expect("build");
+        //
+        // container.start(); // TODO cache the container and move to start()
+
         Ok(Response::new(PodServiceAllocateResponse {}))
     }
     async fn free(
@@ -69,12 +95,22 @@ impl pod_service_server::PodService for PodService {
         request: Request<PodServiceFreeRequest>,
     ) -> Result<Response<PodServiceFreeResponse>, Status> {
         let _request = request.into_inner();
+
+        // TODO Destroy pod
+        todo!("pod service incomplete!");
+
         Ok(Response::new(PodServiceFreeResponse {}))
     }
     async fn start(
         &self,
         request: Request<PodServiceStartRequest>,
     ) -> Result<Response<PodServiceStartResponse>, Status> {
+        // TODO Schedule container .as_tenant() alongside the "pause" container above.
+
+        // Here is how you get an image from a name
+        //ocipkg::distribution::get_image(&ocipkg::ImageName::parse());
+        todo!("pod service incomplete!");
+
         let _request = request.into_inner();
         Ok(Response::new(PodServiceStartResponse {}))
     }
@@ -83,6 +119,9 @@ impl pod_service_server::PodService for PodService {
         request: Request<PodServiceStopRequest>,
     ) -> Result<Response<PodServiceStopResponse>, Status> {
         let _request = request.into_inner();
+
+        todo!("pod service incomplete!");
+
         Ok(Response::new(PodServiceStopResponse {}))
     }
 }

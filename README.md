@@ -32,7 +32,7 @@ Aurae offers a runtime API which is capable of managing:
  - [Pods](https://aurae.io/stdlib/v0/#pod) (Cells running in spawned instances)
  - [Virtual Machines](https://aurae.io/stdlib/v0/#virtualmachine) (Long-lived arbitrary virtual machines)
 
-### Auraed
+### auraed
 
 Think of [auraed](https://github.com/aurae-runtime/aurae/tree/main/auraed) as a PID 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
 

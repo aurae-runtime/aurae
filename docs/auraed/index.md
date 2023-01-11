@@ -8,32 +8,11 @@ The Aurae Daemon runs as a gRPC server which listens over a Unix domain socket b
 /var/run/aurae/aurae.sock
 ```
 
-## Running Auraed 
+## Running auraed 
 
-Running as `/init` is currently under active development.
+Running as `/sbin/init` is currently under active development.
 
 To run auraed as a standard library server you can run the daemon alongside your current init system.
-
-```bash 
-sudo -E auraed
-```
-
-Additional flags are listed below.
-
-```
-USAGE:
-    auraed [OPTIONS]
-
-OPTIONS:
-        --ca-crt <CA_CRT>            [default: /etc/aurae/pki/ca.crt]
-    -h, --help                       Print help information
-    -s, --socket <SOCKET>            [default: /var/run/aurae/aurae.sock]
-        --server-crt <SERVER_CRT>    [default: /etc/aurae/pki/_signed.server.crt]
-        --server-key <SERVER_KEY>    [default: /etc/aurae/pki/server.key]
-    -v, --verbose                    
-    -V, --version                    Print version information
-
-```
 
 ## Building from source
 
@@ -53,3 +32,26 @@ cargo install --debug --path .
 ```
 
 
+## Running auraed in a Container 
+
+It is possible to run auraed in a container as long as the following is considered:
+
+ - Populating mTLS certificate material into the container.
+ - Exposing either the socket or a network interface from the container for client connections.
+
+Building the container (replace with your values).
+
+```
+sudo -E docker build -t krisnova/aurae:latest -t krisnova/aurae:$sha -f images/Dockerfile.nested .
+sudo -E docker push krisnova/aurae:latest
+sudo -E docker push krisnova/aurae:$sha
+```
+
+Running the container as PID 1:
+
+**Note**: This pattern (and the `krisnova` registry) will never be officially supported by the project. This is temporary as with bootstrap the project.
+
+```
+make pki config
+sudo -E docker run -v /etc/aurae:/etc/aurae krisnova/aurae:latest
+```

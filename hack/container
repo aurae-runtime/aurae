@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # ---------------------------------------------------------------------------- #
 #             Apache 2.0 License Copyright © 2022 The Aurae Authors            #
 #                                                                              #
@@ -27,64 +28,11 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-#
-# The primary Aurae builder container, used to cache and support the GitHub
-# builds.
-#
-# This container image is NOT intended to run Aurae in production.
-# This container image is only intended for internal builds.
-#
-# syntax = docker/dockerfile:1.4
-FROM rust:1-slim-bullseye as main
-LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
 
-## Define ARGs
-ARG CACHE_VERSION=v0
-ARG BUF_VERSION=1.11.0
-ARG VALE_VERSION=2.21.3
-ARG PROTOC_VERSION=1.5.1
+sha=$(git rev-parse HEAD)
 
-## Install packages
-## TODO: Remove libdbus
-RUN  apt-get update && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    ca-certificates \
-    curl \
-    libclang-dev \
-    libdbus-1-dev \
-    libseccomp-dev \
-    protobuf-compiler \
-    && rm -rf /var/lib/apt/lists/*
+sudo -E docker build -t krisnova/aurae:latest -t krisnova/aurae:$sha -f images/Dockerfile.nested .
+sudo -E docker push krisnova/aurae:latest
+sudo -E docker push krisnova/aurae:$sha
 
-## Setup Rust
-RUN rustup component add clippy
 
-## Setup protoc-gen-doc
-RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
-    tar -xzf protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
-    chmod +x protoc-gen-doc && \
-    mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
-    rm protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz
-
-## Setup Buf
-RUN curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(uname -s)-$(uname -m)" \
-    -o "/usr/local/bin/buf" && \
-    chmod +x "/usr/local/bin/buf"
-
-## Setup Vale
-RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
-    -o vale.tar.gz && \
-    tar -xvzf vale.tar.gz -C bin && \
-    mv bin/vale /usr/local/bin/vale && \
-    rm vale.tar.gz
-
-WORKDIR /app
-
-FROM main as local
-WORKDIR /app
-ENTRYPOINT ["make"]
-
-FROM main as builder
-WORKDIR /app

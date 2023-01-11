@@ -1,7 +1,6 @@
 # Aurae
 
-![Main Build](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml/badge.svg)
-
+[![Main Build (lint, compile, test)](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml/badge.svg?branch=main)](https://github.com/aurae-runtime/aurae/actions/workflows/build-compile-test.yml) [![Documentation](https://github.com/aurae-runtime/aurae/actions/workflows/build-docs.yml/badge.svg)](https://github.com/aurae-runtime/aurae/actions/workflows/build-docs.yml) [![Deploy (aurae.io)](https://github.com/aurae-runtime/aurae/actions/workflows/deploy-website.yml/badge.svg?branch=main)](https://github.com/aurae-runtime/aurae/actions/workflows/deploy-website.yml)
 
 Aurae is a free and open source Rust project which houses a memory-safe systems runtime daemon built specifically for enterprise distributed systems called `auraed`.
 
@@ -11,9 +10,7 @@ The `auraed` daemon can be run as a PID 1 on a Linux kernel and manages containe
 
 Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
 
-Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mTLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. This ownership enables Aurae to eliminate the complexity related to distributed systems that originate from the traditional assumption that a single user is using a single machine by consolidating critical processes such as logging, monitoring, execution, runtime, security, etc.
-
-With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
+Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mTLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
 
 ### Project Status
 
@@ -21,6 +18,7 @@ The project is very young and under active development. The APIs are subject to 
 As we continue to develop the project the APIs will stabilize and eventually a long term stable release will be offered.
 
 At this time the project should not be run in production.
+
 
 Please read [getting involved](https://aurae.io/community/#getting-involved) if you are interested in joining the project in its early phases. Contribution types of all types and ranges are welcome. You do not have to know Rust to join the project.
 
@@ -34,7 +32,7 @@ Aurae offers a runtime API which is capable of managing:
  - [Pods](https://aurae.io/stdlib/v0/#pod) (Cells running in spawned instances)
  - [Virtual Machines](https://aurae.io/stdlib/v0/#virtualmachine) (Long-lived arbitrary virtual machines)
 
-### Auraed
+### auraed
 
 Think of [auraed](https://github.com/aurae-runtime/aurae/tree/main/auraed) as a PID 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
 
@@ -64,7 +62,7 @@ Aurae brings enterprise identity as low as the socket layer in a system, which u
 
 Aurae offers a Turing complete scripting language built on top of TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript). AuraeScript embeds the [Deno](https://deno.land) source code directly, and offers a remote client and SDK to interface directly with Aurae remotely. The AuraeScript library is automatically generated from the `.proto` files defined in the [Aurae Standard Library](https://aurae.io/stdlib/).
 
-Valid TypeScript files can be leveraged to replace static manifests, as well as interact directly with a running system.
+Valid TypeScript files can be leveraged to replace static manifests, such as YAML, as well as interact directly with a running system.
 
 ```typescript
 #!/usr/bin/env auraescript

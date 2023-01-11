@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -27,37 +28,36 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+import * as helpers from "../auraescript/gen/helpers.ts";
+import * as runtime from "../auraescript/gen/runtime.ts";
 
-use super::CellName;
-use std::io;
-use thiserror::Error;
-use tracing::error;
+let pods = new runtime.PodServiceClient();
 
-pub type Result<T> = std::result::Result<T, CellsError>;
+// [ Allocate ]
+let pod_allocated = await pods.allocate(<runtime.PodServiceAllocateRequest>{
+    pod: runtime.Pod.fromPartial({
+        name: "ingress",
+    })
+});
+helpers.print(pod_allocated)
 
-#[derive(Error, Debug)]
-pub enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' is not allocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be allocated: {source}")]
-    FailedToAllocateCell { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' allocation was aborted: {source}")]
-    AbortedAllocateCell {
-        cell_name: CellName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("cell '{cell_name}' could not kill children: {source}")]
-    FailedToKillCellChildren { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cgroup '{cell_name}' exists on host, but is not controlled by auraed"
-    )]
-    CgroupIsNotACell { cell_name: CellName },
-    #[error("cgroup '{cell_name}` not found on host")]
-    CgroupNotFound { cell_name: CellName },
-}
+// [ Start ]
+let pod_nginx = await pods.start(<runtime.PodServiceStartRequest>{
+    name: "nginx-server",
+    image: "nginx",
+    registry: "",
+})
+helpers.print(pod_nginx)
+
+// [ Stop ]
+let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
+    podName: "ingress",
+    containerName: "nginx-server",
+})
+helpers.print(stopped)
+
+// [ Free ]
+let freed = await cells.free(<runtime.CellServiceFreeRequest>{
+    cellName: "sleeper-cell"
+});
+helpers.print(freed)
