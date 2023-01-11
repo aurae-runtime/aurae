@@ -108,8 +108,7 @@ impl SystemRuntime for Pid1SystemRuntime {
         trace!("init of auraed as pid1 done");
 
         // TODO: plumb through as default to configure_nic and here.
-        const DEFAULT_NET_DEV_IPV6: &str = "fe80::2";
-        let socket_addr = DEFAULT_NET_DEV_IPV6.parse::<SocketAddr>()?;
+        let socket_addr = "0.0.0.0:8080".parse::<SocketAddr>()?;
         create_tcp_socket_stream(socket_addr).await
     }
 }
