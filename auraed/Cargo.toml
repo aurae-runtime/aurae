@@ -54,14 +54,12 @@ libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
 libcontainer = "0.0.4"
 liboci-cli = "0.0.4"
 log = "0.4.17"
-multi_log = "0.1.2"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { version = "0.26.1", features = ["sched"] }
 ocipkg = "0.2.8"
 procfs = "0.14.2"
 rtnetlink = "0.11.0"
 simplelog = "0.12.0"
-syslog = "6.0.1"
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread", "sync", "signal", "process"] }
 tokio-stream = { version = "0.1", features = ["net", "sync"] }
