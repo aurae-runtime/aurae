@@ -1,0 +1,2052 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://aurae.io/stdlib/v0/">
+      
+      
+      
+      <link rel="icon" href="../../assets/logo-540x540.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.3">
+    
+    
+      
+        <title>Protocol Documentation - Aurae Runtime</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6b71719e.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gotham:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Gotham";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/aurae.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="yellow">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#protocol-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Aurae Runtime" class="md-header__button md-logo" aria-label="Aurae Runtime" data-md-component="logo">
+      
+  <img src="../../assets/logo-540x540.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Aurae Runtime
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Protocol Documentation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/aurae-runtime/aurae" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Aurae Runtime" class="md-nav__button md-logo" aria-label="Aurae Runtime" data-md-component="logo">
+      
+  <img src="../../assets/logo-540x540.png" alt="logo">
+
+    </a>
+    Aurae Runtime
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/aurae-runtime/aurae" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/auraed" class="md-nav__link">
+        Auraed
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/auraescript" class="md-nav__link">
+        AuraeScript
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4" tabindex="0" aria-expanded="false">
+          Aurae Standard Library
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Aurae Standard Library" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Aurae Standard Library
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/stdlib" class="md-nav__link">
+        Specification
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/stdlib/v0" class="md-nav__link">
+        V0
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5" tabindex="0" aria-expanded="false">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Getting Started" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Getting Started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/build" class="md-nav__link">
+        Building from Source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/quickstart" class="md-nav__link">
+        Quick Start
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/m1" class="md-nav__link">
+        M1 Development
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/signals" class="md-nav__link">
+        Signals
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/certs" class="md-nav__link">
+        Certificates
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_8" tabindex="0" aria-expanded="false">
+          Community
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Community" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Community
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/community" class="md-nav__link">
+        Aurae Community
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/community/code-of-conduct" class="md-nav__link">
+        Code of Conduct
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/community/contribution-guidelines" class="md-nav__link">
+        Contribution Guidelines
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://discord.gg/aTe2Rjg5rq" class="md-nav__link">
+        Join our Discord
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_9" tabindex="0" aria-expanded="false">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/crate/auraed" class="md-nav__link">
+        auraed
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/crate/auraescript" class="md-nav__link">
+        auraescript
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/crate/implementors" class="md-nav__link">
+        implementors
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/crate/macros" class="md-nav__link">
+        macros
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_9_5" type="checkbox" id="__nav_9_5" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_9_5" tabindex="0" aria-expanded="false">
+          src
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="src" data-md-level="2">
+        <label class="md-nav__title" for="__nav_9_5">
+          <span class="md-nav__icon md-icon"></span>
+          src
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/crate/src/auraed/lib.rs.html" class="md-nav__link">
+        auraed
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/crate/src/auraescript/lib.rs.html" class="md-nav__link">
+        auraescript
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/crate/src/macros/lib.rs.html" class="md-nav__link">
+        macros
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_10" tabindex="0" aria-expanded="false">
+          Blog
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Blog" data-md-level="1">
+        <label class="md-nav__title" for="__nav_10">
+          <span class="md-nav__icon md-icon"></span>
+          Blog
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/blog/2022-10-24-aurae-cells" class="md-nav__link">
+        Isolation with Aurae Cells
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/blog/2022-12-11-cgroups" class="md-nav__link">
+        Cgroups in Aurae
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    Table of Contents
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#discoveryproto" class="md-nav__link">
+    discovery.proto
+  </a>
+  
+    <nav class="md-nav" aria-label="discovery.proto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#healthrequest" class="md-nav__link">
+    HealthRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#healthresponse" class="md-nav__link">
+    HealthResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discoveryservice" class="md-nav__link">
+    DiscoveryService
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observeproto" class="md-nav__link">
+    observe.proto
+  </a>
+  
+    <nav class="md-nav" aria-label="observe.proto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#getauraedaemonlogstreamrequest" class="md-nav__link">
+    GetAuraeDaemonLogStreamRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getsubprocessstreamrequest" class="md-nav__link">
+    GetSubProcessStreamRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logitem" class="md-nav__link">
+    LogItem
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logchanneltype" class="md-nav__link">
+    LogChannelType
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observeservice" class="md-nav__link">
+    ObserveService
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtimeproto" class="md-nav__link">
+    runtime.proto
+  </a>
+  
+    <nav class="md-nav" aria-label="runtime.proto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cell" class="md-nav__link">
+    Cell
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellserviceallocaterequest" class="md-nav__link">
+    CellServiceAllocateRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellserviceallocateresponse" class="md-nav__link">
+    CellServiceAllocateResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellservicefreerequest" class="md-nav__link">
+    CellServiceFreeRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellservicefreeresponse" class="md-nav__link">
+    CellServiceFreeResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellservicestartrequest" class="md-nav__link">
+    CellServiceStartRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellservicestartresponse" class="md-nav__link">
+    CellServiceStartResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellservicestoprequest" class="md-nav__link">
+    CellServiceStopRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellservicestopresponse" class="md-nav__link">
+    CellServiceStopResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#container" class="md-nav__link">
+    Container
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#executable" class="md-nav__link">
+    Executable
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pod" class="md-nav__link">
+    Pod
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podserviceallocaterequest" class="md-nav__link">
+    PodServiceAllocateRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podserviceallocateresponse" class="md-nav__link">
+    PodServiceAllocateResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podservicefreerequest" class="md-nav__link">
+    PodServiceFreeRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podservicefreeresponse" class="md-nav__link">
+    PodServiceFreeResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podservicestartrequest" class="md-nav__link">
+    PodServiceStartRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podservicestartresponse" class="md-nav__link">
+    PodServiceStartResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podservicestoprequest" class="md-nav__link">
+    PodServiceStopRequest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podservicestopresponse" class="md-nav__link">
+    PodServiceStopResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellservice" class="md-nav__link">
+    CellService
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instanceservice" class="md-nav__link">
+    InstanceService
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#podservice" class="md-nav__link">
+    PodService
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spawnservice" class="md-nav__link">
+    SpawnService
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scalar-value-types" class="md-nav__link">
+    Scalar Value Types
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="protocol-documentation">Protocol Documentation</h1>
+<p><a name="top"></a></p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li>
+<p><a href="#discovery-proto">discovery.proto</a></p>
+<ul>
+<li><a href="#aurae-discovery-v0-HealthRequest">HealthRequest</a></li>
+<li>
+<p><a href="#aurae-discovery-v0-HealthResponse">HealthResponse</a></p>
+</li>
+<li>
+<p><a href="#aurae-discovery-v0-DiscoveryService">DiscoveryService</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p><a href="#observe-proto">observe.proto</a></p>
+<ul>
+<li><a href="#aurae-observe-v0-GetAuraeDaemonLogStreamRequest">GetAuraeDaemonLogStreamRequest</a></li>
+<li><a href="#aurae-observe-v0-GetSubProcessStreamRequest">GetSubProcessStreamRequest</a></li>
+<li>
+<p><a href="#aurae-observe-v0-LogItem">LogItem</a></p>
+</li>
+<li>
+<p><a href="#aurae-observe-v0-LogChannelType">LogChannelType</a></p>
+</li>
+<li>
+<p><a href="#aurae-observe-v0-ObserveService">ObserveService</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p><a href="#runtime-proto">runtime.proto</a></p>
+<ul>
+<li><a href="#aurae-runtime-v0-Cell">Cell</a></li>
+<li><a href="#aurae-runtime-v0-CellServiceAllocateRequest">CellServiceAllocateRequest</a></li>
+<li><a href="#aurae-runtime-v0-CellServiceAllocateResponse">CellServiceAllocateResponse</a></li>
+<li><a href="#aurae-runtime-v0-CellServiceFreeRequest">CellServiceFreeRequest</a></li>
+<li><a href="#aurae-runtime-v0-CellServiceFreeResponse">CellServiceFreeResponse</a></li>
+<li><a href="#aurae-runtime-v0-CellServiceStartRequest">CellServiceStartRequest</a></li>
+<li><a href="#aurae-runtime-v0-CellServiceStartResponse">CellServiceStartResponse</a></li>
+<li><a href="#aurae-runtime-v0-CellServiceStopRequest">CellServiceStopRequest</a></li>
+<li><a href="#aurae-runtime-v0-CellServiceStopResponse">CellServiceStopResponse</a></li>
+<li><a href="#aurae-runtime-v0-Container">Container</a></li>
+<li><a href="#aurae-runtime-v0-Executable">Executable</a></li>
+<li><a href="#aurae-runtime-v0-Pod">Pod</a></li>
+<li><a href="#aurae-runtime-v0-PodServiceAllocateRequest">PodServiceAllocateRequest</a></li>
+<li><a href="#aurae-runtime-v0-PodServiceAllocateResponse">PodServiceAllocateResponse</a></li>
+<li><a href="#aurae-runtime-v0-PodServiceFreeRequest">PodServiceFreeRequest</a></li>
+<li><a href="#aurae-runtime-v0-PodServiceFreeResponse">PodServiceFreeResponse</a></li>
+<li><a href="#aurae-runtime-v0-PodServiceStartRequest">PodServiceStartRequest</a></li>
+<li><a href="#aurae-runtime-v0-PodServiceStartResponse">PodServiceStartResponse</a></li>
+<li><a href="#aurae-runtime-v0-PodServiceStopRequest">PodServiceStopRequest</a></li>
+<li>
+<p><a href="#aurae-runtime-v0-PodServiceStopResponse">PodServiceStopResponse</a></p>
+</li>
+<li>
+<p><a href="#aurae-runtime-v0-CellService">CellService</a></p>
+</li>
+<li><a href="#aurae-runtime-v0-InstanceService">InstanceService</a></li>
+<li><a href="#aurae-runtime-v0-PodService">PodService</a></li>
+<li><a href="#aurae-runtime-v0-SpawnService">SpawnService</a></li>
+</ul>
+</li>
+<li>
+<p><a href="#scalar-value-types">Scalar Value Types</a></p>
+</li>
+</ul>
+<p><a name="discovery-proto"></a></p>
+<p align="right"><a href="#top">Top</a></p>
+
+<h2 id="discoveryproto">discovery.proto</h2>
+<p><a name="aurae-discovery-v0-HealthRequest"></a></p>
+<h3 id="healthrequest">HealthRequest</h3>
+<p><a name="aurae-discovery-v0-HealthResponse"></a></p>
+<h3 id="healthresponse">HealthResponse</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>healthy</td>
+<td><a href="#bool">bool</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>version</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-discovery-v0-DiscoveryService"></a></p>
+<h3 id="discoveryservice">DiscoveryService</h3>
+<table>
+<thead>
+<tr>
+<th>Method Name</th>
+<th>Request Type</th>
+<th>Response Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Health</td>
+<td><a href="#aurae-discovery-v0-HealthRequest">HealthRequest</a></td>
+<td><a href="#aurae-discovery-v0-HealthResponse">HealthResponse</a></td>
+<td>Used to confirm that the host is running Aurae and to get some / information including the version of Aurae that is running.</td>
+</tr>
+</tbody>
+</table>
+<p><a name="observe-proto"></a></p>
+<p align="right"><a href="#top">Top</a></p>
+
+<h2 id="observeproto">observe.proto</h2>
+<p><a name="aurae-observe-v0-GetAuraeDaemonLogStreamRequest"></a></p>
+<h3 id="getauraedaemonlogstreamrequest">GetAuraeDaemonLogStreamRequest</h3>
+<p><a name="aurae-observe-v0-GetSubProcessStreamRequest"></a></p>
+<h3 id="getsubprocessstreamrequest">GetSubProcessStreamRequest</h3>
+<p>TODO: not implemented</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>channel_type</td>
+<td><a href="#aurae-observe-v0-LogChannelType">LogChannelType</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>process_id</td>
+<td><a href="#int64">int64</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-observe-v0-LogItem"></a></p>
+<h3 id="logitem">LogItem</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>channel</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>line</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td><a href="#int64">int64</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-observe-v0-LogChannelType"></a></p>
+<h3 id="logchanneltype">LogChannelType</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Number</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LOG_CHANNEL_TYPE_UNSPECIFIED</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>LOG_CHANNEL_TYPE_STDOUT</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>LOG_CHANNEL_TYPE_STDERR</td>
+<td>2</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-observe-v0-ObserveService"></a></p>
+<h3 id="observeservice">ObserveService</h3>
+<table>
+<thead>
+<tr>
+<th>Method Name</th>
+<th>Request Type</th>
+<th>Response Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GetAuraeDaemonLogStream</td>
+<td><a href="#aurae-observe-v0-GetAuraeDaemonLogStreamRequest">GetAuraeDaemonLogStreamRequest</a></td>
+<td><a href="#aurae-observe-v0-LogItem">LogItem</a> stream</td>
+<td>request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).</td>
+</tr>
+<tr>
+<td>GetSubProcessStream</td>
+<td><a href="#aurae-observe-v0-GetSubProcessStreamRequest">GetSubProcessStreamRequest</a></td>
+<td><a href="#aurae-observe-v0-LogItem">LogItem</a> stream</td>
+<td>TODO: request log stream for a sub process</td>
+</tr>
+</tbody>
+</table>
+<p><a name="runtime-proto"></a></p>
+<p align="right"><a href="#top">Top</a></p>
+
+<h2 id="runtimeproto">runtime.proto</h2>
+<p><a name="aurae-runtime-v0-Cell"></a></p>
+<h3 id="cell">Cell</h3>
+<p>An isolation resource used to divide a system into smaller resource
+/ boundaries.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td>Resource parameters for control groups (cgroups) / Build on the <a href="https://github.com/kata-containers/cgroups-rs">cgroups-rs</a> / crate. See / <a href="https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs">examples</a></td>
+</tr>
+<tr>
+<td>cpu_cpus</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td>A comma-separated list of CPU IDs where the task in the control group / can run. Dashes between numbers indicate ranges.</td>
+</tr>
+<tr>
+<td>cpu_shares</td>
+<td><a href="#uint64">uint64</a></td>
+<td></td>
+<td>Cgroups can be guaranteed a minimum number of &#34;CPU shares&#34; / when a system is busy. This does not limit a cgroup&#39;s CPU / usage if the CPUs are not busy. For further information, / see Documentation/scheduler/sched-design-CFS.rst (or / Documentation/scheduler/sched-design-CFS.txt in Linux 5.2 / and earlier). / / Weight of how much of the total CPU time should this control / group get. Note that this is hierarchical, so this is weighted / against the siblings of this control group.</td>
+</tr>
+<tr>
+<td>cpu_mems</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td>Same syntax as the cpus field of this structure, but applies to / memory nodes instead of processors.</td>
+</tr>
+<tr>
+<td>cpu_quota</td>
+<td><a href="#int64">int64</a></td>
+<td></td>
+<td>In one period, how much can the tasks run in microseconds.</td>
+</tr>
+<tr>
+<td>isolate_process</td>
+<td><a href="#bool">bool</a></td>
+<td></td>
+<td>Will isolate the process (and proc filesystem) from the host. / Will unshare the pid, ipc, uts, and mount namespaces. / The cgroup namespace is always unshared with the host. / / Default: false</td>
+</tr>
+<tr>
+<td>isolate_network</td>
+<td><a href="#bool">bool</a></td>
+<td></td>
+<td>Will isolate the network from the host. / Will unshare the net namespaces. / The cgroup namespace is always unshared with the host. / / Default: false</td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-CellServiceAllocateRequest"></a></p>
+<h3 id="cellserviceallocaterequest">CellServiceAllocateRequest</h3>
+<p>An Aurae cell is a name given to Linux control groups (cgroups) that also include
+/ a name, and special pre-exec functionality that is executed from within the same context
+/ as any executables scheduled.
+/
+/ A cell must be allocated for every executable scheduled. A cell defines the resource
+/ constraints of the system to allocate for an arbitrary use case.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cell</td>
+<td><a href="#aurae-runtime-v0-Cell">Cell</a></td>
+<td></td>
+<td>A smaller resource constrained section of the system.</td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-CellServiceAllocateResponse"></a></p>
+<h3 id="cellserviceallocateresponse">CellServiceAllocateResponse</h3>
+<p>The response after a cell has been allocated.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cell_name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cgroup_v2</td>
+<td><a href="#bool">bool</a></td>
+<td></td>
+<td>A bool that will be set to true if the cgroup was created with / cgroup v2 controller.</td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-CellServiceFreeRequest"></a></p>
+<h3 id="cellservicefreerequest">CellServiceFreeRequest</h3>
+<p>Used to remove or free a cell after it has been allocated.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cell_name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-CellServiceFreeResponse"></a></p>
+<h3 id="cellservicefreeresponse">CellServiceFreeResponse</h3>
+<p>Response after removing or freeing a cell.</p>
+<p><a name="aurae-runtime-v0-CellServiceStartRequest"></a></p>
+<h3 id="cellservicestartrequest">CellServiceStartRequest</h3>
+<p>A request for starting an executable inside of a Cell.
+/
+/ This is the lowest level of raw executive functionality.
+/ Here you can define shell commands, and meta information about the command.
+/ An executable is started synchronously.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cell_name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>executable</td>
+<td><a href="#aurae-runtime-v0-Executable">Executable</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-CellServiceStartResponse"></a></p>
+<h3 id="cellservicestartresponse">CellServiceStartResponse</h3>
+<p>The response after starting an executable within a Cell.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pid</td>
+<td><a href="#int32">int32</a></td>
+<td></td>
+<td>Return a pid as an int32 based on the pid_t type / in various libc libraries.</td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-CellServiceStopRequest"></a></p>
+<h3 id="cellservicestoprequest">CellServiceStopRequest</h3>
+<p>Request to stop an executable at runtime.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cell_name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>executable_name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-CellServiceStopResponse"></a></p>
+<h3 id="cellservicestopresponse">CellServiceStopResponse</h3>
+<p><a name="aurae-runtime-v0-Container"></a></p>
+<h3 id="container">Container</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td>The name of the container.</td>
+</tr>
+<tr>
+<td>image</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td>Define a remote container image. / / This should be a fully qualified URI and not a container &#34;shortname&#34;. / The file type that is returned should be an uncompresed OCI compatible container &#34;bundle&#34; / as defined in the <a href="https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle">OCI spec</a> / / ## Building a container bundle from an existing OCI image / / OCI &#34;images&#34; are effectively just tarballs. You can assemble / a bundle from an existing known image. / / <code>bash / cd examples / mkdir -p aurae-busybox/rootfs / docker pull busybox / docker create --name aurae-busybox busybox / docker export aurae-busybox | tar -xfC aurae-busybox/rootfs - / cd aurae-busybox / runc spec /</code> / / Aurae will default pull down am image from a remote location and save to the Aurae socket directory as follows. / / <code>/ $AURAE_SOCK_PATH/bundle/$NAME /</code> /</td>
+</tr>
+<tr>
+<td>registry</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td>Define a public portion of a container registry. / / Such as: / - ghcr.io / - https://registry.hub.docker.com / / Registry strings will be joined at runtime with the image / string such that a working container bundle path can be formed.</td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-Executable"></a></p>
+<h3 id="executable">Executable</h3>
+<p>The most primitive workload in Aurae, a standard executable process.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>command</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>description</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-Pod"></a></p>
+<h3 id="pod">Pod</h3>
+<p>OCI image represents a filesystem bundle on disk using familiar parlance.
+/
+/ OCI Filesystem Bundle: https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td>Name is the name of the pod.</td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-PodServiceAllocateRequest"></a></p>
+<h3 id="podserviceallocaterequest">PodServiceAllocateRequest</h3>
+<p>The request to allocate a Pod.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pod</td>
+<td><a href="#aurae-runtime-v0-Pod">Pod</a></td>
+<td></td>
+<td>A boring set of containers with shared network and disk.</td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-PodServiceAllocateResponse"></a></p>
+<h3 id="podserviceallocateresponse">PodServiceAllocateResponse</h3>
+<p><a name="aurae-runtime-v0-PodServiceFreeRequest"></a></p>
+<h3 id="podservicefreerequest">PodServiceFreeRequest</h3>
+<p><a name="aurae-runtime-v0-PodServiceFreeResponse"></a></p>
+<h3 id="podservicefreeresponse">PodServiceFreeResponse</h3>
+<p><a name="aurae-runtime-v0-PodServiceStartRequest"></a></p>
+<h3 id="podservicestartrequest">PodServiceStartRequest</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-PodServiceStartResponse"></a></p>
+<h3 id="podservicestartresponse">PodServiceStartResponse</h3>
+<p><a name="aurae-runtime-v0-PodServiceStopRequest"></a></p>
+<h3 id="podservicestoprequest">PodServiceStopRequest</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Label</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pod_name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>container_name</td>
+<td><a href="#string">string</a></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-PodServiceStopResponse"></a></p>
+<h3 id="podservicestopresponse">PodServiceStopResponse</h3>
+<p><a name="aurae-runtime-v0-CellService"></a></p>
+<h3 id="cellservice">CellService</h3>
+<p>Cells is the most fundamental isolation boundary for Aurae.
+/ A cell is an isolate set of resources of the system which can be
+/ used to run workloads.
+/
+/ A cell is composed of a unique cgroup namespace, and unshared kernel
+/ namespaces.</p>
+<table>
+<thead>
+<tr>
+<th>Method Name</th>
+<th>Request Type</th>
+<th>Response Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Allocate</td>
+<td><a href="#aurae-runtime-v0-CellServiceAllocateRequest">CellServiceAllocateRequest</a></td>
+<td><a href="#aurae-runtime-v0-CellServiceAllocateResponse">CellServiceAllocateResponse</a></td>
+<td>Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources / only.</td>
+</tr>
+<tr>
+<td>Free</td>
+<td><a href="#aurae-runtime-v0-CellServiceFreeRequest">CellServiceFreeRequest</a></td>
+<td><a href="#aurae-runtime-v0-CellServiceFreeResponse">CellServiceFreeResponse</a></td>
+<td>Free up previously requested resources for an existing cell</td>
+</tr>
+<tr>
+<td>Start</td>
+<td><a href="#aurae-runtime-v0-CellServiceStartRequest">CellServiceStartRequest</a></td>
+<td><a href="#aurae-runtime-v0-CellServiceStartResponse">CellServiceStartResponse</a></td>
+<td>Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell.</td>
+</tr>
+<tr>
+<td>Stop</td>
+<td><a href="#aurae-runtime-v0-CellServiceStopRequest">CellServiceStopRequest</a></td>
+<td><a href="#aurae-runtime-v0-CellServiceStopResponse">CellServiceStopResponse</a></td>
+<td>Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable.</td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-InstanceService"></a></p>
+<h3 id="instanceservice">InstanceService</h3>
+<p>TODO Instance Service</p>
+<table>
+<thead>
+<tr>
+<th>Method Name</th>
+<th>Request Type</th>
+<th>Response Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-PodService"></a></p>
+<h3 id="podservice">PodService</h3>
+<p>A pod is a higher level abstraction than Aurae cells, and to most users
+/ will look at feel like one or more &#34;containers&#34;.
+/
+/ Pods will run an OCI compliant container image.
+/
+/ A pod is a group of one or more containers with shared network and storage.</p>
+<table>
+<thead>
+<tr>
+<th>Method Name</th>
+<th>Request Type</th>
+<th>Response Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Allocate</td>
+<td><a href="#aurae-runtime-v0-PodServiceAllocateRequest">PodServiceAllocateRequest</a></td>
+<td><a href="#aurae-runtime-v0-PodServiceAllocateResponse">PodServiceAllocateResponse</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Start</td>
+<td><a href="#aurae-runtime-v0-PodServiceStartRequest">PodServiceStartRequest</a></td>
+<td><a href="#aurae-runtime-v0-PodServiceStartResponse">PodServiceStartResponse</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Stop</td>
+<td><a href="#aurae-runtime-v0-PodServiceStopRequest">PodServiceStopRequest</a></td>
+<td><a href="#aurae-runtime-v0-PodServiceStopResponse">PodServiceStopResponse</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Free</td>
+<td><a href="#aurae-runtime-v0-PodServiceFreeRequest">PodServiceFreeRequest</a></td>
+<td><a href="#aurae-runtime-v0-PodServiceFreeResponse">PodServiceFreeResponse</a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><a name="aurae-runtime-v0-SpawnService"></a></p>
+<h3 id="spawnservice">SpawnService</h3>
+<p>TODO Spawn Service</p>
+<table>
+<thead>
+<tr>
+<th>Method Name</th>
+<th>Request Type</th>
+<th>Response Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="scalar-value-types">Scalar Value Types</h2>
+<table>
+<thead>
+<tr>
+<th>.proto Type</th>
+<th>Notes</th>
+<th>C++</th>
+<th>Java</th>
+<th>Python</th>
+<th>Go</th>
+<th>C#</th>
+<th>PHP</th>
+<th>Ruby</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a name="double" /> double</td>
+<td></td>
+<td>double</td>
+<td>double</td>
+<td>float</td>
+<td>float64</td>
+<td>double</td>
+<td>float</td>
+<td>Float</td>
+</tr>
+<tr>
+<td><a name="float" /> float</td>
+<td></td>
+<td>float</td>
+<td>float</td>
+<td>float</td>
+<td>float32</td>
+<td>float</td>
+<td>float</td>
+<td>Float</td>
+</tr>
+<tr>
+<td><a name="int32" /> int32</td>
+<td>Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead.</td>
+<td>int32</td>
+<td>int</td>
+<td>int</td>
+<td>int32</td>
+<td>int</td>
+<td>integer</td>
+<td>Bignum or Fixnum (as required)</td>
+</tr>
+<tr>
+<td><a name="int64" /> int64</td>
+<td>Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead.</td>
+<td>int64</td>
+<td>long</td>
+<td>int/long</td>
+<td>int64</td>
+<td>long</td>
+<td>integer/string</td>
+<td>Bignum</td>
+</tr>
+<tr>
+<td><a name="uint32" /> uint32</td>
+<td>Uses variable-length encoding.</td>
+<td>uint32</td>
+<td>int</td>
+<td>int/long</td>
+<td>uint32</td>
+<td>uint</td>
+<td>integer</td>
+<td>Bignum or Fixnum (as required)</td>
+</tr>
+<tr>
+<td><a name="uint64" /> uint64</td>
+<td>Uses variable-length encoding.</td>
+<td>uint64</td>
+<td>long</td>
+<td>int/long</td>
+<td>uint64</td>
+<td>ulong</td>
+<td>integer/string</td>
+<td>Bignum or Fixnum (as required)</td>
+</tr>
+<tr>
+<td><a name="sint32" /> sint32</td>
+<td>Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.</td>
+<td>int32</td>
+<td>int</td>
+<td>int</td>
+<td>int32</td>
+<td>int</td>
+<td>integer</td>
+<td>Bignum or Fixnum (as required)</td>
+</tr>
+<tr>
+<td><a name="sint64" /> sint64</td>
+<td>Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.</td>
+<td>int64</td>
+<td>long</td>
+<td>int/long</td>
+<td>int64</td>
+<td>long</td>
+<td>integer/string</td>
+<td>Bignum</td>
+</tr>
+<tr>
+<td><a name="fixed32" /> fixed32</td>
+<td>Always four bytes. More efficient than uint32 if values are often greater than 2^28.</td>
+<td>uint32</td>
+<td>int</td>
+<td>int</td>
+<td>uint32</td>
+<td>uint</td>
+<td>integer</td>
+<td>Bignum or Fixnum (as required)</td>
+</tr>
+<tr>
+<td><a name="fixed64" /> fixed64</td>
+<td>Always eight bytes. More efficient than uint64 if values are often greater than 2^56.</td>
+<td>uint64</td>
+<td>long</td>
+<td>int/long</td>
+<td>uint64</td>
+<td>ulong</td>
+<td>integer/string</td>
+<td>Bignum</td>
+</tr>
+<tr>
+<td><a name="sfixed32" /> sfixed32</td>
+<td>Always four bytes.</td>
+<td>int32</td>
+<td>int</td>
+<td>int</td>
+<td>int32</td>
+<td>int</td>
+<td>integer</td>
+<td>Bignum or Fixnum (as required)</td>
+</tr>
+<tr>
+<td><a name="sfixed64" /> sfixed64</td>
+<td>Always eight bytes.</td>
+<td>int64</td>
+<td>long</td>
+<td>int/long</td>
+<td>int64</td>
+<td>long</td>
+<td>integer/string</td>
+<td>Bignum</td>
+</tr>
+<tr>
+<td><a name="bool" /> bool</td>
+<td></td>
+<td>bool</td>
+<td>boolean</td>
+<td>boolean</td>
+<td>bool</td>
+<td>bool</td>
+<td>boolean</td>
+<td>TrueClass/FalseClass</td>
+</tr>
+<tr>
+<td><a name="string" /> string</td>
+<td>A string must always contain UTF-8 encoded or 7-bit ASCII text.</td>
+<td>string</td>
+<td>String</td>
+<td>str/unicode</td>
+<td>string</td>
+<td>string</td>
+<td>string</td>
+<td>String (UTF-8)</td>
+</tr>
+<tr>
+<td><a name="bytes" /> bytes</td>
+<td>May contain any arbitrary sequence of bytes.</td>
+<td>string</td>
+<td>ByteString</td>
+<td>str</td>
+<td>[]byte</td>
+<td>ByteString</td>
+<td>string</td>
+<td>String (ASCII-8BIT)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2022 The Aurae Runtime Project
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    <a href="mailto:<info@aurae.io>" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M498.1 5.6c10.1 7 15.4 19.1 13.5 31.2l-64 416c-1.5 9.7-7.4 18.2-16 23s-18.9 5.4-28 1.6L284 427.7l-68.5 74.1c-8.9 9.7-22.9 12.9-35.2 8.1S160 493.2 160 480v-83.6c0-4 1.5-7.8 4.2-10.7l167.6-182.9c5.8-6.3 5.6-16-.4-22s-15.7-6.4-22-.7L106 360.8l-88.3-44.2C7.1 311.3.3 300.7 0 288.9s5.9-22.8 16.1-28.7l448-256c10.7-6.1 23.9-5.5 34 1.4z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.ba449ae6.min.js"></script>
+      
+    
+  </body>
+</html>

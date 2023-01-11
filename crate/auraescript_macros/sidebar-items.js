@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":[["ops_generator","Example:"]]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"derive":[["ValidatedType","Same as `ValidatingType`, but the `validation` function is on the validated type."],["ValidatingType","Scaffolds validation and provides a `validate` function on the unvalidated type by implementing `validation::ValidatingType`"]]};

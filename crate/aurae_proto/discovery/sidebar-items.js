@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["FILE_DESCRIPTOR_SET","Encoded file descriptor set for the `aurae.discovery.v0` package"]],"mod":[["discovery_service_client","Generated client implementations."],["discovery_service_server","Generated server implementations."]],"struct":[["HealthRequest",""],["HealthResponse",""]]};

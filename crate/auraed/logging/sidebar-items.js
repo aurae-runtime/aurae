@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["get_timestamp_sec","Get UNIX timestamp in seconds for logging"]],"mod":[["log_channel","Abstraction Layer for one log generating entity LogChannel provides channels between Log producers and log consumers"],["stream_logger","Implements Log trait. Used to add grpc API to log targets for rust internal logging"]]};

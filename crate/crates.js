@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["aurae_client","aurae_client_macros","aurae_proto","auraed","auraescript","auraescript_macros","validation","validation_macros"];

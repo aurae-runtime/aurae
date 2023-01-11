@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["daemon",""]],"mod":[["init","Run the Aurae daemon as a pid 1 init program."],["logging","Internal logging system for Auraed and all spawned Executables, Containers and Instances."]]};

@@ -1,0 +1,29 @@
+@font-face {
+  font-family: "Gotham";
+  src: url("gotham.book.otf") format("opentype");
+}
+
+@font-face {
+  font-family: "Gotham-light";
+  src: url("gotham.light.otf") format("opentype");
+
+}
+
+:root > * {
+  --md-primary-fg-color:        #0D0337; // Dark purple (brand color)
+  --md-primary-fg-color--light: #86809e; // Light purple/gray (brand accent)
+  --md-primary-fg-color--dark:  #2D3702; // Dark brown (complimentary) Note: #0C0237 is also complimentary
+}
+
+h1 {
+ font-family: "Gotham";
+}
+
+.md-header__topic:first-child {
+ font-family: "Gotham";
+ font-weight: 250;
+}
+
+md-logo {
+ width: 100;
+}

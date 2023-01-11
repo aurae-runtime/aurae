@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["discovery",""],["runtime",""]],"struct":[["AuraeClient","Instance of a single client for an Aurae consumer."],["AuraeConfig","Configuration for AuraeScript client"],["AuthConfig","Authentication material for an AuraeScript client."],["SystemConfig","The system configuration for AuraeScript."]]};

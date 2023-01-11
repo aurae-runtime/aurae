@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["StreamLogger","Sends log messages generated in rust code to the logging channel The logging channel is consumed by the observe API"]]};

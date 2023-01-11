@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["CellServiceClient","/ Cells is the most fundamental isolation boundary for Aurae. / A cell is an isolate set of resources of the system which can be / used to run workloads. / / A cell is composed of a unique cgroup namespace, and unshared kernel / namespaces."]]};
