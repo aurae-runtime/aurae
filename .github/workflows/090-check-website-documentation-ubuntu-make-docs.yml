@@ -27,54 +27,40 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-
-[package]
-name = "auraed"
-version = "0.1.0"
-edition = "2021"
-authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
-license = "Apache-2.0"
-
-[[bin]]
-name = "auraed"
-path = "src/bin/main.rs"
-
-[dependencies]
-anyhow = { workspace = true }
-aurae-client = { workspace = true }
-aurae-proto = { workspace = true }
-cgroups-rs = "0.2.12"
-clap = { version = "3.1.20", features = ["derive"] }
-clone3 = "0.2.3"
-fancy-regex = { workspace = true }
-futures = "0.3.23"
-ipnetwork = "0.20.0"
-iter_tools = "0.1.4"
-libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
-lazy_static = { workspace = true }
-#libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-build-6.1.1-kernel" }
-liboci-cli = "0.0.4"
-log = "0.4.17"
-netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
-nix = { version = "0.26.1", features = ["sched"] }
-ocipkg = "0.2.8"
-procfs = "0.14.2"
-rtnetlink = "0.11.0"
-simplelog = "0.12.0"
-thiserror = { workspace = true }
-tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread", "sync", "signal", "process"] }
-tokio-stream = { version = "0.1", features = ["net", "sync"] }
-tonic = { workspace = true, features = ["tls"] }
-tracing = { workspace = true, features = ["log"] }
-tracing-log = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
-tracing-rfc-5424 = { version = "0.1.0" }  # syslog tracing
-uuid = { version = "1.2.2", features = ["v4"] }
-validation = { path = "../crates/validation", features = ["regex", "tonic"] }
-validation_macros = { path = "../crates/validation/macros" }
-walkdir = "2"
-multi_log = "0.1.2"
-
-[dev-dependencies]
-simple_test_case = "1.1.0"
-
+#
+# This will check the documentation (only).
+#
+# This build check will introduce confidence for the following:
+#
+# - That the documentation is updated and passes our spelling checks.
+#
+# When this build passes we should have confidence that our documentation is
+# ready to be pushed to the website.
+#
+name: "Check Website Documentation (090) [ubuntu:latest]"
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - name: Install protoc-gen-doc in [ubuntu:latest]
+        run: |
+          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          chmod +x protoc-gen-doc
+          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+      - name: Build Documentation [make docs]
+        run: make docs
