@@ -47,7 +47,7 @@ sudo -E docker push krisnova/aurae:latest
 sudo -E docker push krisnova/aurae:$sha
 ```
 
-Running the container as pid 1:
+Running the container as PID 1:
 
 **Note**: This pattern (and the `krisnova` registry) will never be officially supported by the project. This is temporary as with bootstrap the project.
 
