@@ -1,0 +1,94 @@
+# ---------------------------------------------------------------------------- #
+#             Apache 2.0 License Copyright © 2022 The Aurae Authors            #
+#                                                                              #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#   Licensed under the Apache License, Version 2.0 (the "License");            #
+#   you may not use this file except in compliance with the License.           #
+#   You may obtain a copy of the License at                                    #
+#                                                                              #
+#       http://www.apache.org/licenses/LICENSE-2.0                             #
+#                                                                              #
+#   Unless required by applicable law or agreed to in writing, software        #
+#   distributed under the License is distributed on an "AS IS" BASIS,          #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+#   See the License for the specific language governing permissions and        #
+#   limitations under the License.                                             #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+#
+# This is the main test for Aurae.
+# This is the main linter for Aurae.
+#
+# This build check will introduce confidence for the following:
+#
+# - That the tests pass.
+# - That the linter passes.
+#
+# When this build passes we should have a safe and tested codebase
+# with best linting practices.
+#
+name: "Cargo Test Lint (005) [ubuntu-latest] [make test lint]"
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: build-compile-test-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install protoc-gen-doc in [ubuntu:latest]
+        run: |
+          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          chmod +x protoc-gen-doc
+          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+      - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
+        # Please (seriously please) be careful about adding commands here.
+        # This is our core way of validating that our binary is "healthy"
+        # If we need to install anything with the word "lib" in it to get
+        # the build to pass, we likely should be having other discussions
+        # instead of adding commands here.
+        #
+        # For example we should NOT be adding libraries such as "libseccomp"
+        # or "libdbus".
+        #
+        # If in doubt, please ask in Discord in the build channel.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+      - name: Cargo Test Lint [make test lint]
+        # This should remain the only command we execute as this matches the title of the file.
+        # The goal is for this to be easy to find from the GitHub dashboard.
+        # Instead of adding more commands here, consider another make target or a new YAML file
+        # named with a good name.
+        run: make test lint
