@@ -49,7 +49,7 @@ env:
   CARGO_TERM_COLOR: always
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: rust:1-slim-bullseye
     steps:
       - uses: actions/checkout@v3
       - uses: bufbuild/buf-setup-action@v1
