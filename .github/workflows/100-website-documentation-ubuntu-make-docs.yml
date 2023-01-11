@@ -55,6 +55,14 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
+      - name: Install protoc-gen-doc in [ubuntu:latest]
+        run: |
+          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          chmod +x protoc-gen-doc
+          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
       - name: Build Documentation [make docs]
         run: make docs
       - name: Update 'aurae.io' Website [mkdocs gh-deploy]
