@@ -41,12 +41,12 @@ pub(crate) struct DaemonSystemRuntime;
 
 #[async_trait]
 impl SystemRuntime for DaemonSystemRuntime {
-    async fn init(self, verbose: bool) -> Result<SocketStream, InitError> {
+    async fn init(self, verbose: bool, socket_address: Option<String>) -> Result<SocketStream, InitError> {
         println!("{}", BANNER);
         logging::init(verbose, false)?;
         info!("Running as a daemon.");
         // TODO: pass this default through
-        create_unix_socket_stream(PathBuf::from(AURAE_SOCK)).await
-        //create_tcp_socket_stream("0.0.0.0:8080".parse::<SocketAddr>()?).await
+        create_unix_socket_stream(PathBuf::from(socket_address.unwrap_or_else(||AURAE_SOCK.into()))).await
+        //create_tcp_socket_stream(socket_address.unwrap_or_else(||DEFAULT_NETWORK_SOCKET_ADDR.into()).parse::<SocketAddr>()?).await
     }
 }

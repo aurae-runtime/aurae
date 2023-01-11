@@ -39,11 +39,11 @@ pub(crate) struct CellSystemRuntime;
 
 #[async_trait]
 impl SystemRuntime for CellSystemRuntime {
-    async fn init(self, verbose: bool) -> Result<SocketStream, InitError> {
+    async fn init(self, verbose: bool, socket_address: Option<String>) -> Result<SocketStream, InitError> {
         println!("{}", BANNER);
         logging::init(verbose, false)?;
         info!("Running as a cell");
         // TODO: pass this default through
-        create_unix_socket_stream(PathBuf::from(AURAE_SOCK)).await
+        create_unix_socket_stream(PathBuf::from(socket_address.unwrap_or_else(|| AURAE_SOCK.into()))).await
     }
 }

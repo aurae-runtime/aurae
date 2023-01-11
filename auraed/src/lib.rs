@@ -122,9 +122,13 @@ struct AuraedOptions {
     /// The CA certificate. Defaults to /etc/aurae/pki/ca.crt
     #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
     ca_crt: String,
-    /// Aurae socket path. Defaults to /var/run/aurae/aurae.sock
-    #[clap(short, long, value_parser, default_value = AURAE_SOCK)]
-    socket: String,
+    /// Aurae socket address.  Depending on context, this should be a file or a network address.
+    /// Defaults to /var/run/aurae/aurae.sock or 0.0.0.0:8080 respectively.
+    #[clap(short, long, value_parser)]
+    socket: Option<String>,
+    /// Aurae runtime path.  Defaults to /var/run/aurae.
+    #[clap(short, long, value_parser, default_value = "/var/run/aurae")]
+    runtime_dir: String,
     /// Aurae bundle path. Defaults to /var/lib/aurae
     #[clap(short, long, value_parser, default_value = AURAE_BUNDLE)]
     bundle: String,
@@ -147,11 +151,11 @@ pub async fn daemon() -> i32 {
         server_crt: PathBuf::from(options.server_crt),
         server_key: PathBuf::from(options.server_key),
         ca_crt: PathBuf::from(options.ca_crt),
-        socket: PathBuf::from(options.socket),
+        runtime_dir: PathBuf::from(options.runtime_dir),
     };
 
     // TODO: pass in the socket option as a default but can be path _or_ address.
-    let e = match init::init(options.verbose, options.nested).await {
+    let e = match init::init(options.verbose, options.nested, options.socket).await {
         SocketStream::Tcp{stream}  => runtime.run(stream).await,
         SocketStream::Unix{stream} => runtime.run(stream).await,
     };
@@ -178,9 +182,8 @@ struct AuraedRuntime {
     pub server_crt: PathBuf,
     /// The secret key for this unique instance.
     pub server_key: PathBuf,
-    /// Configurable socket path. Defaults to the value of
-    /// `pub const AURAE_SOCK`
-    pub socket: PathBuf,
+    /// Configurable runtime directory. Defaults to /var/run/aurae.
+    pub runtime_dir: PathBuf,
     // /// Provides logging channels to expose auraed logging via grpc
     //pub log_collector: Arc<LogChannel>,
 }
@@ -218,9 +221,14 @@ impl AuraedRuntime {
         info!("Validating SSL Identity and Root Certificate Authority (CA)");
         //let _log_collector = self.log_collector.clone();
 
-        let sock_path = Path::new(&self.socket)
-            .parent()
-            .ok_or("unable to find socket path")?;
+        let runtime_dir = Path::new(&self.runtime_dir);
+        // Create runtime directory
+        tokio::fs::create_dir_all(runtime_dir).await.with_context(|| {
+            format!(
+                "Failed to create runtime directory: {}",
+                self.runtime_dir.display()
+            )
+        })?;
 
         // Initialize the bundler
 
@@ -232,7 +240,7 @@ impl AuraedRuntime {
         let discovery_service_server =
             DiscoveryServiceServer::new(discovery_service.clone());
 
-        let pod_service = PodService::new(PathBuf::from(sock_path));
+        let pod_service = PodService::new(self.runtime_dir.clone());
         let pod_service_server = PodServiceServer::new(pod_service.clone());
 
         let graceful_shutdown =

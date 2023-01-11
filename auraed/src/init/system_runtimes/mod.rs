@@ -63,7 +63,7 @@ pub enum SocketStream {
 
 #[async_trait]
 pub(crate) trait SystemRuntime {
-    async fn init(self, verbose: bool) -> Result<SocketStream, InitError>;
+    async fn init(self, verbose: bool, socket_address: Option<String>) -> Result<SocketStream, InitError>;
 }
 
 async fn create_unix_socket_stream(socket_path: PathBuf) -> Result<SocketStream, InitError> {
