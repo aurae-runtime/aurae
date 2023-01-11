@@ -247,7 +247,7 @@ impl AuraedRuntime {
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
                 .add_service(pod_service_server)
-                .serve_with_incoming_shutdown(sock_stream, async {
+                .serve_with_incoming_shutdown(socket_stream, async {
                     let mut graceful_shutdown_signal = graceful_shutdown_signal;
                     let _ = graceful_shutdown_signal.changed().await;
                     info!("gRPC server received shutdown signal...");
