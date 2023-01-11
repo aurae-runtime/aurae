@@ -49,7 +49,7 @@ env:
   CARGO_TERM_COLOR: always
 jobs:
   build:
-    runs-on: rust:1-slim-bullseye
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: bufbuild/buf-setup-action@v1
@@ -95,4 +95,4 @@ jobs:
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file
         # named with a good name.
-        run: sudo make musl proto test lint
+        run: sudo -E make musl proto test lint
