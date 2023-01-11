@@ -42,6 +42,7 @@ use self::{
         Pid1SystemRuntime, SystemRuntime,
     },
 };
+pub use self::system_runtimes::SocketStream;
 use std::fs::File;
 use std::io::{BufReader, Read};
 mod fileio;
@@ -70,10 +71,16 @@ pub(crate) enum InitError {
     Fs(#[from] FsError),
     #[error(transparent)]
     Network(#[from] NetworkError),
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
+    #[error(transparent)]
+    AddrParse(#[from] std::net::AddrParseError),
 }
 
-/// Run Aurae as an init pid 1 instance.
-pub async fn init(verbose: bool, nested: bool) {
+/// Initialize aurae, depending on our context.
+pub async fn init(verbose: bool, nested: bool) -> SocketStream {
     let init_result = match Context::get(nested) {
         Context::Pid1 => Pid1SystemRuntime {}.init(verbose),
         Context::Cell => CellSystemRuntime {}.init(verbose),
@@ -85,6 +92,7 @@ pub async fn init(verbose: bool, nested: bool) {
     if let Err(e) = init_result {
         panic!("Failed to initialize: {:?}", e)
     }
+    init_result.expect("this is impossible as we check for error just above")
 }
 
 enum Context {

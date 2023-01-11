@@ -28,12 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::SystemRuntime;
+use super::{SystemRuntime, SocketStream};
 use crate::init::{
     fs::MountSpec, logging, network, power::spawn_thread_power_button_listener,
-    InitError, BANNER,
+    InitError, BANNER, system_runtimes::create_tcp_socket_stream,
 };
-use std::path::Path;
+use std::{path::Path, net::SocketAddr};
 use tonic::async_trait;
 use tracing::{error, info, trace};
 
@@ -64,8 +64,9 @@ impl Pid1SystemRuntime {
 
 #[async_trait]
 impl SystemRuntime for Pid1SystemRuntime {
+
     // Executing as PID 1 ccontext
-    async fn init(self, verbose: bool) -> Result<(), InitError> {
+    async fn init(self, verbose: bool) -> Result<SocketStream, InitError> {
         println!("{}", BANNER);
 
         // Initialize the PID 1 logger
@@ -105,6 +106,10 @@ impl SystemRuntime for Pid1SystemRuntime {
         self.spawn_system_runtime_threads();
 
         trace!("init of auraed as pid1 done");
-        Ok(())
+
+        // TODO: plumb through as default to configure_nic and here.
+        const DEFAULT_NET_DEV_IPV6: &str = "fe80::2";
+        let socket_addr = DEFAULT_NET_DEV_IPV6.parse::<SocketAddr>()?;
+        create_tcp_socket_stream(socket_addr).await
     }
 }

@@ -31,8 +31,8 @@
 //! Systems daemon built for higher order simple, safe, secure multi-tenant
 //! distributed systems.
 //!
-//! Runs as pid 1 (init) and serves standard library functionality over a mTLS
-//! backed gRPC server.
+//! Whether run as pid 1 (init), or a [Container], or a [Pod] it serves standard library
+//! functionality over an mTLS backed gRPC server.
 //!
 //! The Aurae Daemon (auraed) is the main server implementation of the Aurae
 //! Standard Library.
@@ -70,15 +70,13 @@ use aurae_proto::{
 };
 use clap::Parser;
 use discovery::DiscoveryService;
+use init::SocketStream;
 use runtime::CellService;
 use runtime::PodService;
-use std::{
-    fs,
-    os::unix::fs::PermissionsExt,
-    path::{Path, PathBuf},
-};
-use tokio::net::UnixListener;
-use tokio_stream::wrappers::UnixListenerStream;
+use tokio::io::AsyncRead;
+use tokio::io::AsyncWrite;
+use tonic::transport::server::Connected;
+use std::path::{Path, PathBuf};
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
 
@@ -142,9 +140,6 @@ struct AuraedOptions {
 pub async fn daemon() -> i32 {
     let options = AuraedOptions::parse();
 
-    // Initializes Logging and prepares system if auraed is run as pid=1
-    init::init(options.verbose, options.nested).await;
-
     info!("Starting Aurae Daemon Runtime");
     info!("Aurae Daemon is pid {}", std::process::id());
 
@@ -155,12 +150,14 @@ pub async fn daemon() -> i32 {
         socket: PathBuf::from(options.socket),
     };
 
-    let e = runtime.run().await;
-    if e.is_err() {
-        error!("{:?}", e);
-    }
+    // TODO: pass in the socket option as a default but can be path _or_ address.
+    let e = match init::init(options.verbose, options.nested).await {
+        SocketStream::Tcp{stream}  => runtime.run(stream).await,
+        SocketStream::Unix{stream} => runtime.run(stream).await,
+    };
 
     if e.is_err() {
+        error!("{:?}", e);
         EXIT_ERROR
     } else {
         EXIT_OKAY
@@ -192,18 +189,12 @@ struct AuraedRuntime {
 /// Aurae.
 impl AuraedRuntime {
     /// Starts the runtime loop for the daemon.
-    pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let _ = fs::remove_file(&self.socket);
-        let sock_path = Path::new(&self.socket)
-            .parent()
-            .ok_or("unable to find socket path")?;
-        // Create socket directory
-        tokio::fs::create_dir_all(sock_path).await.with_context(|| {
-            format!(
-                "Failed to create directory for socket: {}",
-                self.socket.display()
-            )
-        })?;
+    pub async fn run<T, IO, IE>(&self, socket_stream: T)
+        -> Result<(), Box<dyn std::error::Error>>
+        where
+            T: tokio_stream::Stream<Item = Result<IO, IE>> + Send + 'static,
+            IO: AsyncRead + AsyncWrite + Connected + Unpin + Send + 'static,
+            IE: Into<Box<dyn std::error::Error + Send + Sync>> {
         trace!("{:#?}", self);
 
         let server_crt =
@@ -225,9 +216,11 @@ impl AuraedRuntime {
             .client_ca_root(ca_crt_pem);
 
         info!("Validating SSL Identity and Root Certificate Authority (CA)");
-        let sock = UnixListener::bind(&self.socket)?;
-        let sock_stream = UnixListenerStream::new(sock);
         //let _log_collector = self.log_collector.clone();
+
+        let sock_path = Path::new(&self.socket)
+            .parent()
+            .ok_or("unable to find socket path")?;
 
         // Initialize the bundler
 
@@ -238,6 +231,7 @@ impl AuraedRuntime {
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
             DiscoveryServiceServer::new(discovery_service.clone());
+
         let pod_service = PodService::new(PathBuf::from(sock_path));
         let pod_service_server = PodServiceServer::new(pod_service.clone());
 
@@ -264,14 +258,6 @@ impl AuraedRuntime {
 
             Ok::<_, tonic::transport::Error>(())
         });
-
-        trace!("Setting socket mode {} -> 766", &self.socket.display());
-
-        // We set the mode to 766 for the Unix domain socket.
-        // This is what allows non-root users to dial the socket
-        // and authenticate with mTLS.
-        fs::set_permissions(&self.socket, fs::Permissions::from_mode(0o766))?;
-        info!("User Access Socket Created: {}", self.socket.display());
 
         // Event loop
         let graceful_shutdown_handle =

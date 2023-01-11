@@ -28,8 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::SystemRuntime;
-use crate::init::{logging, InitError, BANNER};
+use std::path::PathBuf;
+//use std::net::SocketAddr;
+
+use super::{SystemRuntime, SocketStream};
+use crate::{init::{logging, InitError, BANNER, system_runtimes::create_unix_socket_stream}, AURAE_SOCK};
+//use crate::init::system_runtimes::create_tcp_socket_stream;
 use tonic::async_trait;
 use tracing::info;
 
@@ -37,10 +41,12 @@ pub(crate) struct DaemonSystemRuntime;
 
 #[async_trait]
 impl SystemRuntime for DaemonSystemRuntime {
-    async fn init(self, verbose: bool) -> Result<(), InitError> {
+    async fn init(self, verbose: bool) -> Result<SocketStream, InitError> {
         println!("{}", BANNER);
         logging::init(verbose, false)?;
         info!("Running as a daemon.");
-        Ok(())
+        // TODO: pass this default through
+        create_unix_socket_stream(PathBuf::from(AURAE_SOCK)).await
+        //create_tcp_socket_stream("0.0.0.0:8080".parse::<SocketAddr>()?).await
     }
 }
