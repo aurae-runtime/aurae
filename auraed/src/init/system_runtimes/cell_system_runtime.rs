@@ -43,7 +43,6 @@ impl SystemRuntime for CellSystemRuntime {
         println!("{}", BANNER);
         logging::init(verbose, false)?;
         info!("Running as a cell");
-        // TODO: pass this default through
         create_unix_socket_stream(PathBuf::from(socket_address.unwrap_or_else(|| AURAE_SOCK.into()))).await
     }
 }

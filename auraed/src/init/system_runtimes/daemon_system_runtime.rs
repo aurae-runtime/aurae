@@ -28,16 +28,16 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use std::path::PathBuf;
-//use std::net::SocketAddr;
+use std::{net::SocketAddr, path::PathBuf, str::FromStr};
 
 use super::{SystemRuntime, SocketStream};
-use crate::{init::{logging, InitError, BANNER, system_runtimes::create_unix_socket_stream}, AURAE_SOCK};
-//use crate::init::system_runtimes::create_tcp_socket_stream;
+use crate::{init::{logging, InitError, BANNER, system_runtimes::{create_unix_socket_stream, create_tcp_socket_stream}}, AURAE_SOCK};
 use tonic::async_trait;
-use tracing::info;
+use tracing::{info, trace};
 
 pub(crate) struct DaemonSystemRuntime;
+
+const DEFAULT_NETWORK_SOCKET_ADDR: &str = "[::1]:8080";
 
 #[async_trait]
 impl SystemRuntime for DaemonSystemRuntime {
@@ -45,8 +45,16 @@ impl SystemRuntime for DaemonSystemRuntime {
         println!("{}", BANNER);
         logging::init(verbose, false)?;
         info!("Running as a daemon.");
-        // TODO: pass this default through
-        create_unix_socket_stream(PathBuf::from(socket_address.unwrap_or_else(||AURAE_SOCK.into()))).await
-        //create_tcp_socket_stream(socket_address.unwrap_or_else(||DEFAULT_NETWORK_SOCKET_ADDR.into()).parse::<SocketAddr>()?).await
+
+        // Running as a daemon supports both TCP and Unix sockets for listening, depending on the
+        // socket address that's passed in.
+        let sockaddr = socket_address.unwrap_or_else(||AURAE_SOCK.into());
+        if let Ok(addr) = SocketAddr::from_str(&sockaddr) {
+            trace!("Listening on TCP: {addr:?}");
+            create_tcp_socket_stream(addr).await
+        } else {
+            trace!("Listening on UNIX: {sockaddr:?}");
+            create_unix_socket_stream(PathBuf::from(sockaddr)).await
+        }
     }
 }

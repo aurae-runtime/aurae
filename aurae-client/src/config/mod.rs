@@ -70,6 +70,7 @@ impl AuraeConfig {
 
         for path in search_paths {
             if let Ok(config) = Self::parse_from_file(path) {
+                println!("read aurae config from {path:?}: {config:?}");
                 return Ok(config);
             }
         }

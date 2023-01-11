@@ -76,6 +76,7 @@ use runtime::PodService;
 use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
 use tonic::transport::server::Connected;
+use tracing::info_span;
 use std::path::{Path, PathBuf};
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
@@ -252,6 +253,7 @@ impl AuraedRuntime {
         let server_handle = tokio::spawn(async move {
             Server::builder()
                 .tls_config(tls)?
+                .trace_fn(|_| info_span!("incoming request"))
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
                 .add_service(pod_service_server)

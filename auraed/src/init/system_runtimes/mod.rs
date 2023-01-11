@@ -93,6 +93,7 @@ async fn create_unix_socket_stream(socket_path: PathBuf) -> Result<SocketStream,
 }
 
 async fn create_tcp_socket_stream(socket_addr: SocketAddr) -> Result<SocketStream, InitError> {
+    trace!("creating tcp stream for {:?}", socket_addr);
     let sock = TcpListener::bind(&socket_addr).await?;
     info!("TCP Access Socket created: {:?}", socket_addr);
     Ok(SocketStream::Tcp{stream: TcpListenerStream::new(sock)})
