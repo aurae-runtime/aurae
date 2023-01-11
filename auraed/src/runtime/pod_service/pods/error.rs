@@ -28,36 +28,66 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::CellName;
-use std::io;
+use crate::runtime::pod_service::pods::image::Image;
+use crate::runtime::pod_service::pods::pod_name::PodName;
+use std::{io, path::PathBuf};
 use thiserror::Error;
-use tracing::error;
 
-pub type Result<T> = std::result::Result<T, CellsError>;
+pub type Result<T> = std::result::Result<T, PodsError>;
 
 #[derive(Error, Debug)]
-pub enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' is not allocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be allocated: {source}")]
-    FailedToAllocateCell { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' allocation was aborted: {source}")]
-    AbortedAllocateCell {
-        cell_name: CellName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("cell '{cell_name}' could not kill children: {source}")]
-    FailedToKillCellChildren { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
+pub enum PodsError {
+    #[error("pod '{pod_name}' already exists'")]
+    PodExists { pod_name: PodName },
+    #[error("pod '{pod_name}' not found")]
+    PodNotFound { pod_name: PodName },
+    #[error("pod '{pod_name}' is not allocated")]
+    PodNotAllocated { pod_name: PodName },
     #[error(
-        "cgroup '{cell_name}' exists on host, but is not controlled by auraed"
+        "pod '{pod_name}' failed to create directory '{root_path}': {source}"
     )]
-    CgroupIsNotACell { cell_name: CellName },
-    #[error("cgroup '{cell_name}` not found on host")]
-    CgroupNotFound { cell_name: CellName },
+    FailedToCreateRootPathDirectory {
+        pod_name: PodName,
+        root_path: PathBuf,
+        source: io::Error,
+    },
+    #[error(
+        "pod '{pod_name}' failed to remove directory '{root_path}': {source}"
+    )]
+    FailedToRemoveRootPathDirectory {
+        pod_name: PodName,
+        root_path: PathBuf,
+        source: io::Error,
+    },
+    #[error("pod '{pod_name}' failed to get local image list: {source}")]
+    FailedToGetLocalImageList {
+        pod_name: PodName,
+        source: ocipkg::error::Error,
+    },
+    #[error("pod '{pod_name}' failed to pull image '{image}': {source}")]
+    FailedToPullImage {
+        pod_name: PodName,
+        image: Image,
+        source: ocipkg::error::Error,
+    },
+    #[error("pod '{pod_name}' failed to find local image '{image}': {source}")]
+    FailedToFindLocalImage {
+        pod_name: PodName,
+        image: Image,
+        source: ocipkg::error::Error,
+    },
+    #[error("pod '{pod_name}' failed to set directory '{root_path}' as container root path: {source}")]
+    FailedToSetContainerRootPath {
+        pod_name: PodName,
+        root_path: PathBuf,
+        source: anyhow::Error,
+    },
+    #[error("pod '{pod_name}' failed to build container: {source}")]
+    FailedToBuildContainer { pod_name: PodName, source: anyhow::Error },
+    #[error("pod '{pod_name}' failed to stop container: {source}")]
+    FailedToStopContainer { pod_name: PodName, source: anyhow::Error },
+    #[error("pod '{pod_name}' failed to kill container: {source}")]
+    FailedToKillContainer { pod_name: PodName, source: anyhow::Error },
+    #[error(transparent)]
+    TaskJoinError(#[from] tokio::task::JoinError),
 }

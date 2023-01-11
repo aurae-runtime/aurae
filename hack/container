@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # ---------------------------------------------------------------------------- #
 #             Apache 2.0 License Copyright © 2022 The Aurae Authors            #
 #                                                                              #
@@ -28,22 +29,10 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
-[workspace]
+sha=$(git rev-parse HEAD)
 
-members = [
-    "auraed",
-    "auraescript",
-    "aurae-client",
-]
+sudo -E docker build -t krisnova/aurae:latest -t krisnova/aurae:$sha -f images/Dockerfile.nested .
+sudo -E docker push krisnova/aurae:latest
+sudo -E docker push krisnova/aurae:$sha
 
-[workspace.dependencies]
-anyhow = "1.0.66"
-aurae-client = { path = "./aurae-client" }
-aurae-proto = { path = "./aurae-proto" }
-fancy-regex = "0.10.0"
-lazy_static = "1.4.0"
-serde = "1.0"
-thiserror = "1.0.37"
-tokio = "1.22.0"
-tonic = "0.8.2"
-tracing = "0.1"
+

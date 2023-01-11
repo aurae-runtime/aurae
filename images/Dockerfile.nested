@@ -27,23 +27,77 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
+#
+#
+# syntax = docker/dockerfile:1.4
+FROM rust:1-slim-bullseye as main
+LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
 
-[workspace]
+## Define ARGs
+ARG CACHE_VERSION=v0
+ARG BUF_VERSION=1.11.0
+ARG VALE_VERSION=2.21.3
+ARG PROTOC_VERSION=1.5.1
 
-members = [
-    "auraed",
-    "auraescript",
-    "aurae-client",
-]
+## Install packages
+RUN  apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    curl \
+    libclang-dev \
+    libdbus-1-dev \
+    libseccomp-dev \
+    musl-tools \
+    pkg-config \
+    protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
 
-[workspace.dependencies]
-anyhow = "1.0.66"
-aurae-client = { path = "./aurae-client" }
-aurae-proto = { path = "./aurae-proto" }
-fancy-regex = "0.10.0"
-lazy_static = "1.4.0"
-serde = "1.0"
-thiserror = "1.0.37"
-tokio = "1.22.0"
-tonic = "0.8.2"
-tracing = "0.1"
+## Setup Rust
+RUN rustup component add clippy
+
+## Setup protoc-gen-doc
+RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
+    tar -xzf protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
+    chmod +x protoc-gen-doc && \
+    mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
+    rm protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz
+
+## Setup Buf
+RUN curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(uname -s)-$(uname -m)" \
+    -o "/usr/local/bin/buf" && \
+    chmod +x "/usr/local/bin/buf"
+
+## Setup Vale
+RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+    -o vale.tar.gz && \
+    tar -xvzf vale.tar.gz -C bin && \
+    mv bin/vale /usr/local/bin/vale && \
+    rm vale.tar.gz
+
+# Copy the source code to the container image
+COPY . /aurae
+WORKDIR /aurae
+
+# Compile the Aurae suite
+RUN PKG_CONFIG_SYSROOT_DIR=/usr/lib/ make release -j16
+
+# Release container
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+
+## Dynamic Libraries for Auraed
+RUN apk add \
+    libc6-compat \
+    gcompat \
+    libseccomp \
+    dbus-libs \
+    gcc \
+    bash
+
+WORKDIR /aurae
+COPY --from=main /aurae/target/release/auraed /bin/auraed
+RUN rm -f /sbin/init # This is a /bin/busyboxy symlink in alpine
+RUN ln -s /bin/auraed /sbin/init
+ENTRYPOINT ["/sbin/init"]

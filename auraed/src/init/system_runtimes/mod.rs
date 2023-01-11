@@ -27,37 +27,19 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+use super::InitError;
+pub(crate) use cell_system_runtime::CellSystemRuntime;
+pub(crate) use container_system_runtime::ContainerSystemRuntime;
+pub(crate) use daemon_system_runtime::DaemonSystemRuntime;
+pub(crate) use pid1_system_runtime::Pid1SystemRuntime;
+use tonic::async_trait;
 
-use super::CellName;
-use std::io;
-use thiserror::Error;
-use tracing::error;
+mod cell_system_runtime;
+mod container_system_runtime;
+mod daemon_system_runtime;
+mod pid1_system_runtime;
 
-pub type Result<T> = std::result::Result<T, CellsError>;
-
-#[derive(Error, Debug)]
-pub enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' is not allocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be allocated: {source}")]
-    FailedToAllocateCell { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' allocation was aborted: {source}")]
-    AbortedAllocateCell {
-        cell_name: CellName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("cell '{cell_name}' could not kill children: {source}")]
-    FailedToKillCellChildren { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cgroup '{cell_name}' exists on host, but is not controlled by auraed"
-    )]
-    CgroupIsNotACell { cell_name: CellName },
-    #[error("cgroup '{cell_name}` not found on host")]
-    CgroupNotFound { cell_name: CellName },
+#[async_trait]
+pub(crate) trait SystemRuntime {
+    async fn init(self, verbose: bool) -> Result<(), InitError>;
 }

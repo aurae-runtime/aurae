@@ -45,6 +45,7 @@ ARG VALE_VERSION=2.21.3
 ARG PROTOC_VERSION=1.5.1
 
 ## Install packages
+## TODO: Remove libdbus
 RUN  apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \

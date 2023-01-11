@@ -28,36 +28,72 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::CellName;
-use std::io;
-use thiserror::Error;
-use tracing::error;
+use super::{Pod, PodName, PodSpec, PodsError, Result};
+use std::collections::HashMap;
 
-pub type Result<T> = std::result::Result<T, CellsError>;
+type Cache = HashMap<PodName, Pod>;
 
-#[derive(Error, Debug)]
-pub enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' is not allocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be allocated: {source}")]
-    FailedToAllocateCell { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' allocation was aborted: {source}")]
-    AbortedAllocateCell {
-        cell_name: CellName,
-        source: cgroups_rs::error::Error,
-    },
-    #[error("cell '{cell_name}' could not kill children: {source}")]
-    FailedToKillCellChildren { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: cgroups_rs::error::Error },
-    #[error(
-        "cgroup '{cell_name}' exists on host, but is not controlled by auraed"
-    )]
-    CgroupIsNotACell { cell_name: CellName },
-    #[error("cgroup '{cell_name}` not found on host")]
-    CgroupNotFound { cell_name: CellName },
+/// The in-memory cache of pods ([Pod]) created with Aurae.
+#[derive(Debug, Default)]
+pub struct Pods {
+    cache: Cache,
+}
+
+impl Pods {
+    pub async fn allocate(
+        &mut self,
+        pod_name: PodName,
+        pod_spec: PodSpec,
+    ) -> Result<&Pod> {
+        if self.cache.contains_key(&pod_name) {
+            return Err(PodsError::PodExists { pod_name });
+        }
+
+        let pod = Pod::new(pod_name.clone(), pod_spec).await?;
+        let pod = self.cache.entry(pod_name).or_insert(pod);
+
+        pod.allocate().await?;
+
+        Ok(pod)
+    }
+
+    pub fn free(&mut self, pod_name: &PodName) -> Result<()> {
+        self.get_mut(pod_name, |pod| pod.free())?;
+        let _ = self.cache.remove(pod_name);
+        Ok(())
+    }
+
+    pub fn get<F, R>(&mut self, pod_name: &PodName, f: F) -> Result<R>
+    where
+        F: Fn(&Pod) -> Result<R>,
+    {
+        let Some(pod) = self.cache.get(pod_name) else {
+            return Err(PodsError::PodNotFound { pod_name: pod_name.clone() });
+        };
+
+        let res = f(pod);
+
+        if matches!(res, Err(PodsError::PodNotAllocated { .. })) {
+            let _ = self.cache.remove(pod_name);
+        }
+
+        res
+    }
+
+    fn get_mut<F, R>(&mut self, pod_name: &PodName, f: F) -> Result<R>
+    where
+        F: FnOnce(&mut Pod) -> Result<R>,
+    {
+        let Some(pod) = self.cache.get_mut(pod_name) else {
+            return Err(PodsError::PodNotFound { pod_name: pod_name.clone() });
+        };
+
+        let res = f(pod);
+
+        if matches!(res, Err(PodsError::PodNotAllocated { .. })) {
+            let _ = self.cache.remove(pod_name);
+        }
+
+        res
+    }
 }

@@ -66,10 +66,12 @@ use anyhow::Context;
 use aurae_proto::{
     discovery::discovery_service_server::DiscoveryServiceServer,
     runtime::cell_service_server::CellServiceServer,
+    runtime::pod_service_server::PodServiceServer,
 };
 use clap::Parser;
 use discovery::DiscoveryService;
 use runtime::CellService;
+use runtime::PodService;
 use std::{
     fs,
     os::unix::fs::PermissionsExt,
@@ -96,6 +98,9 @@ mod runtime;
 /// by an appropriate mTLS Authorization setting in order to maintain
 /// a secure multi tenant system.
 const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
+
+const AURAE_BUNDLE: &str = "/var/lib/aurae";
+
 const EXIT_OKAY: i32 = 0;
 const EXIT_ERROR: i32 = 1;
 
@@ -122,6 +127,9 @@ struct AuraedOptions {
     /// Aurae socket path. Defaults to /var/run/aurae/aurae.sock
     #[clap(short, long, value_parser, default_value = AURAE_SOCK)]
     socket: String,
+    /// Aurae bundle path. Defaults to /var/lib/aurae
+    #[clap(short, long, value_parser, default_value = AURAE_BUNDLE)]
+    bundle: String,
     /// Toggle verbosity. Default false
     #[clap(short, long, alias = "ritz")]
     verbose: bool,
@@ -138,7 +146,6 @@ pub async fn daemon() -> i32 {
     init::init(options.verbose, options.nested).await;
 
     info!("Starting Aurae Daemon Runtime");
-    info!("Options: {options:#?}");
     info!("Aurae Daemon is pid {}", std::process::id());
 
     let runtime = AuraedRuntime {
@@ -218,17 +225,21 @@ impl AuraedRuntime {
             .client_ca_root(ca_crt_pem);
 
         info!("Validating SSL Identity and Root Certificate Authority (CA)");
-
         let sock = UnixListener::bind(&self.socket)?;
         let sock_stream = UnixListenerStream::new(sock);
         //let _log_collector = self.log_collector.clone();
 
+        // Initialize the bundler
+
+        // Build gRPC Services
         let cell_service = CellService::new();
         let cell_service_server = CellServiceServer::new(cell_service.clone());
 
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
             DiscoveryServiceServer::new(discovery_service.clone());
+        let pod_service = PodService::new(PathBuf::from(sock_path));
+        let pod_service_server = PodServiceServer::new(pod_service.clone());
 
         let graceful_shutdown =
             graceful_shutdown::GracefulShutdown::new(cell_service);
@@ -241,9 +252,7 @@ impl AuraedRuntime {
                 .tls_config(tls)?
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
-                // .add_service(ObserveServer::new(ObserveService::new(
-                //     log_collector,
-                // )))
+                .add_service(pod_service_server)
                 .serve_with_incoming_shutdown(sock_stream, async {
                     let mut graceful_shutdown_signal = graceful_shutdown_signal;
                     let _ = graceful_shutdown_signal.changed().await;
