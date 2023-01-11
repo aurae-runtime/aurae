@@ -77,4 +77,3 @@ cgroups-rs = "0.3.0"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
-
