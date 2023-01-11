@@ -34,6 +34,7 @@ members = [
     "auraed",
     "auraescript",
     "aurae-client",
+    "aurae-proto",
 ]
 
 [workspace.dependencies]
