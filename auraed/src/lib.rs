@@ -78,7 +78,6 @@ use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
 use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
-use tracing::info_span;
 use tracing::{error, info, trace};
 
 mod discovery;
