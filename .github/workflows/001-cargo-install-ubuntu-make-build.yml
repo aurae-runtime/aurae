@@ -73,16 +73,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
       - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
+        #
+        # Do not at GNU libraries here! Do not add GNU libraries here!
+        #
         # Please (seriously please) be careful about adding commands here.
         # This is our core way of validating that our binary is "healthy"
         # If we need to install anything with the word "lib" in it to get
         # the build to pass, we likely should be having other discussions
         # instead of adding commands here.
         #
+        # Do not at GNU libraries here! Do not add GNU libraries here!
+        #
         # For example we should NOT be adding libraries such as "libseccomp"
         # or "libdbus".
         #
         # If in doubt, please ask in Discord in the build channel.
+        #
+        # Do not at GNU libraries here! Do not add GNU libraries here!
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools

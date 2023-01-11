@@ -72,6 +72,10 @@ jobs:
           cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
+      - name: Install buf in [ubuntu:latest]
+        run: |
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/v1.11.0/buf-$(uname -s)-$(uname -m)" -o "/usr/local/bin/buf" 
+          chmod +x "/usr/local/bin/buf"
       - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
         # Please (seriously please) be careful about adding commands here.
         # This is our core way of validating that our binary is "healthy"
@@ -91,4 +95,4 @@ jobs:
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file
         # named with a good name.
-        run: sudo -E make proto test lint
+        run: sudo make proto test lint
