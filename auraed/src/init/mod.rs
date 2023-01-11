@@ -33,6 +33,7 @@
 //! The Aurae daemon assumes that if the current process id (PID) is 1 to
 //! run itself as an initialization program, otherwise bypass the init module.
 
+pub use self::system_runtimes::SocketStream;
 use self::{
     fs::FsError,
     logging::LoggingError,
@@ -42,7 +43,6 @@ use self::{
         Pid1SystemRuntime, SystemRuntime,
     },
 };
-pub use self::system_runtimes::SocketStream;
 use std::fs::File;
 use std::io::{BufReader, Read};
 mod fileio;
@@ -80,11 +80,17 @@ pub(crate) enum InitError {
 }
 
 /// Initialize aurae, depending on our context.
-pub async fn init(verbose: bool, nested: bool, socket_address: Option<String>) -> SocketStream {
+pub async fn init(
+    verbose: bool,
+    nested: bool,
+    socket_address: Option<String>,
+) -> SocketStream {
     let init_result = match Context::get(nested) {
         Context::Pid1 => Pid1SystemRuntime {}.init(verbose, socket_address),
         Context::Cell => CellSystemRuntime {}.init(verbose, socket_address),
-        Context::Container => ContainerSystemRuntime {}.init(verbose, socket_address),
+        Context::Container => {
+            ContainerSystemRuntime {}.init(verbose, socket_address)
+        }
         Context::Daemon => DaemonSystemRuntime {}.init(verbose, socket_address),
     }
     .await;

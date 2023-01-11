@@ -28,12 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{SystemRuntime, SocketStream};
+use super::{SocketStream, SystemRuntime};
 use crate::init::{
     fs::MountSpec, logging, network, power::spawn_thread_power_button_listener,
-    InitError, BANNER, system_runtimes::create_tcp_socket_stream,
+    system_runtimes::create_tcp_socket_stream, InitError, BANNER,
 };
-use std::{path::Path, net::SocketAddr};
+use std::{net::SocketAddr, path::Path};
 use tonic::async_trait;
 use tracing::{error, info, trace};
 
@@ -65,9 +65,12 @@ impl Pid1SystemRuntime {
 
 #[async_trait]
 impl SystemRuntime for Pid1SystemRuntime {
-
     // Executing as PID 1 context
-    async fn init(self, verbose: bool, socket_address: Option<String>) -> Result<SocketStream, InitError> {
+    async fn init(
+        self,
+        verbose: bool,
+        socket_address: Option<String>,
+    ) -> Result<SocketStream, InitError> {
         println!("{}", BANNER);
 
         // Initialize the PID 1 logger
@@ -110,7 +113,9 @@ impl SystemRuntime for Pid1SystemRuntime {
 
         trace!("init of auraed as pid1 done");
 
-        let socket_addr = socket_address.unwrap_or_else(|| DEFAULT_NETWORK_SOCKET_ADDR.into()).parse::<SocketAddr>()?;
+        let socket_addr = socket_address
+            .unwrap_or_else(|| DEFAULT_NETWORK_SOCKET_ADDR.into())
+            .parse::<SocketAddr>()?;
         create_tcp_socket_stream(socket_addr).await
     }
 }

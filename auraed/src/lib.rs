@@ -73,12 +73,12 @@ use discovery::DiscoveryService;
 use init::SocketStream;
 use runtime::CellService;
 use runtime::PodService;
+use std::path::{Path, PathBuf};
 use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
 use tonic::transport::server::Connected;
-use tracing::info_span;
-use std::path::{Path, PathBuf};
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
+use tracing::info_span;
 use tracing::{error, info, trace};
 
 mod discovery;
@@ -155,9 +155,11 @@ pub async fn daemon() -> i32 {
         runtime_dir: PathBuf::from(options.runtime_dir),
     };
 
-    let e = match init::init(options.verbose, options.nested, options.socket).await {
-        SocketStream::Tcp{stream}  => runtime.run(stream).await,
-        SocketStream::Unix{stream} => runtime.run(stream).await,
+    let e = match init::init(options.verbose, options.nested, options.socket)
+        .await
+    {
+        SocketStream::Tcp { stream } => runtime.run(stream).await,
+        SocketStream::Unix { stream } => runtime.run(stream).await,
     };
 
     if e.is_err() {
@@ -192,12 +194,15 @@ struct AuraedRuntime {
 /// Aurae.
 impl AuraedRuntime {
     /// Starts the runtime loop for the daemon.
-    pub async fn run<T, IO, IE>(&self, socket_stream: T)
-        -> Result<(), Box<dyn std::error::Error>>
-        where
-            T: tokio_stream::Stream<Item = Result<IO, IE>> + Send + 'static,
-            IO: AsyncRead + AsyncWrite + Connected + Unpin + Send + 'static,
-            IE: Into<Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn run<T, IO, IE>(
+        &self,
+        socket_stream: T,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        T: tokio_stream::Stream<Item = Result<IO, IE>> + Send + 'static,
+        IO: AsyncRead + AsyncWrite + Connected + Unpin + Send + 'static,
+        IE: Into<Box<dyn std::error::Error + Send + Sync>>,
+    {
         trace!("{:#?}", self);
 
         let server_crt =
