@@ -41,7 +41,7 @@ export GIT_PAGER = cat
 default: auraed auraescript ## Build and install (debug) 🎉
 all: auraed auraescript ## Build and install (debug) 🎉
 install: auraed auraescript ## Build and install (debug) 🎉
-build: musl auraed auraescript ## Build and install (debug) (+musl) 🎉
+build: auraed auraescript ## Build and install (debug) (+musl) 🎉
 
 prcheck: build lint test
 
@@ -49,7 +49,7 @@ lint: ## Lint the code
 	@$(cargo) clippy --all-features --workspace -- -D clippy::all -D warnings
 
 release: ## Build (static+musl) and install (release) 🎉
-	$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed
+	$(cargo) install --path ./auraed
 	$(cargo) install --path ./auraescript
 
 .PHONY: auraescript
@@ -63,7 +63,7 @@ musl: ## Add target for musl
 .PHONY: auraed
 auraed: proto ## Initialize and static-compile auraed with musl
 	@$(cargo) clippy -p auraed
-	@$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed --debug --force
+	@$(cargo) install --path ./auraed --debug --force
 
 .PHONY: check-docs
 check-docs: # spell checking
