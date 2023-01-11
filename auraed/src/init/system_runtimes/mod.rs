@@ -50,13 +50,13 @@ mod pid1_system_runtime;
 pub enum SocketStream {
     /// Contains a stream for listening over a TCP socket.
     Tcp {
-        /// The stream
+        /// A stream that listens over a TCP socket.
         stream: TcpListenerStream
     },
 
     /// Contains a stream for listening over a Unix socket.
     Unix {
-        /// The stream
+        /// A stream that listens over a Unix socket.
         stream: UnixListenerStream
     },
 }

@@ -124,7 +124,7 @@ struct AuraedOptions {
     #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
     ca_crt: String,
     /// Aurae socket address.  Depending on context, this should be a file or a network address.
-    /// Defaults to /var/run/aurae/aurae.sock or 0.0.0.0:8080 respectively.
+    /// Defaults to /var/run/aurae/aurae.sock or [::1]:8080 respectively.
     #[clap(short, long, value_parser)]
     socket: Option<String>,
     /// Aurae runtime path.  Defaults to /var/run/aurae.
@@ -155,7 +155,6 @@ pub async fn daemon() -> i32 {
         runtime_dir: PathBuf::from(options.runtime_dir),
     };
 
-    // TODO: pass in the socket option as a default but can be path _or_ address.
     let e = match init::init(options.verbose, options.nested, options.socket).await {
         SocketStream::Tcp{stream}  => runtime.run(stream).await,
         SocketStream::Unix{stream} => runtime.run(stream).await,
@@ -253,7 +252,6 @@ impl AuraedRuntime {
         let server_handle = tokio::spawn(async move {
             Server::builder()
                 .tls_config(tls)?
-                .trace_fn(|_| info_span!("incoming request"))
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
                 .add_service(pod_service_server)
