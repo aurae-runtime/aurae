@@ -74,7 +74,6 @@ validation = { path = "../crates/validation", features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
 multi_log = "0.1.2"
-simplelog = "0.12.0"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
