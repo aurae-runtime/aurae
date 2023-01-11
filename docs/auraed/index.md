@@ -34,7 +34,7 @@ cargo install --debug --path .
 
 ## Running auraed in a Container 
 
-It is possible to run Auraed in a container as long as the following is considered:
+It is possible to run auraed in a container as long as the following is considered:
 
  - Populating mTLS certificate material into the container.
  - Exposing either the socket or a network interface from the container for client connections.
