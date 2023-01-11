@@ -40,15 +40,10 @@ name = "auraescript"
 path = "src/bin/main.rs"
 
 [dependencies]
-anyhow = {workspace = true}
+anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
 deno_ast = { version = "0.21.0", features = ["transpiling"] }
 deno_core = "0.160.0"
 macros = { package = "auraescript_macros", path = "./macros" }
-serde = "1.0.147"
 tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
-toml = "0.5.9"
-tonic = { workspace = true, features = ["tls"] }
-tower = "0.4.13"
-x509-certificate = "0.15.0"
