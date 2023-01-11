@@ -38,40 +38,32 @@ ociopts       =  DOCKER_BUILDKIT=1
 # Configuration Options
 export GIT_PAGER = cat
 
-default: compile install
-all: compile install
-
-compile: auraescript auraed ## Compile for the local architecture ⚙
+default: auraed auraescript ## Build and install (debug) 🎉
+all: auraed auraescript ## Build and install (debug) 🎉
+install: auraed auraescript ## Build and install (debug) 🎉
+build: musl auraed auraescript ## Build and install (debug) (+musl) 🎉
 
 prcheck: build lint test
 
-build: proto
-	@$(cargo) build
-
-lint:
+lint: ## Lint the code
 	@$(cargo) clippy --all-features --workspace -- -D clippy::all -D warnings
 
-install: ## Build and install (debug) 🎉
-	@$(cargo) install --path ./auraescript --debug
-	@$(cargo) install --path ./auraed --debug
-
-
 release: ## Build (static+musl) and install (release) 🎉
-	#rustup target add x86_64-unknown-linux-musl
-	#@$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed # Todo compile with musl without dbus
-	@$(cargo) install --path ./auraed
-	#@$(cargo) install --path ./auraescript
-
+	$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed
+	$(cargo) install --path ./auraescript
 
 .PHONY: auraescript
 auraescript: proto ## Initialize and compile aurae
 	@$(cargo) clippy -p auraescript
 	@$(cargo) install --path ./auraescript --debug --force
 
+musl: ## Add target for musl
+	rustup target add x86_64-unknown-linux-musl
+
 .PHONY: auraed
-auraed: proto ## Initialize and compile auraed
+auraed: proto ## Initialize and static-compile auraed with musl
 	@$(cargo) clippy -p auraed
-	@$(cargo) install --path ./auraed --debug --force
+	@$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed --debug --force
 
 .PHONY: check-docs
 check-docs: # spell checking

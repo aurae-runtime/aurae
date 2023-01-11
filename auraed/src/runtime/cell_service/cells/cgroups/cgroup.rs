@@ -49,7 +49,7 @@ impl Cgroup {
         let name = format!("{cell_name}/_");
         let hierarchy = hierarchy();
 
-        let inner = CgroupBuilder::new(&name)
+        let builder = CgroupBuilder::new(&name)
             // CPU Controller
             .cpu()
             .shares(cpu_weight.into_inner())
@@ -60,6 +60,8 @@ impl Cgroup {
             .done()
             // Final Build
             .build(hierarchy);
+
+        let inner = builder.expect("inner from builder");
 
         Self { cell_name, inner }
     }

@@ -124,8 +124,8 @@ jobs:
             target/
           key: build-lint-test-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{env.CACHE_VERSION}}
 
-      - name: Build (make build)
-        run: make build
+#      - name: Build (make build)
+#        run: make build
 
       - name: Lint (make lint)
         run: make lint

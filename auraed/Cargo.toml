@@ -43,7 +43,7 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
-cgroups-rs = "0.2.11"
+cgroups-rs = "0.2.12"
 clap = { version = "3.1.20", features = ["derive"] }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
@@ -51,7 +51,8 @@ futures = "0.3.23"
 ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
 libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
-libcontainer = "0.0.4"
+lazy_static = { workspace = true }
+#libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-build-6.1.1-kernel" }
 liboci-cli = "0.0.4"
 log = "0.4.17"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
@@ -72,6 +73,8 @@ uuid = { version = "1.2.2", features = ["v4"] }
 validation = { path = "../crates/validation", features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
+multi_log = "0.1.2"
+simplelog = "0.12.0"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
