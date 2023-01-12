@@ -41,6 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
+        id: cargo-cache
         with:
           path: |
             ~/.cargo/bin/
@@ -79,6 +80,7 @@ jobs:
         with:
           toolchain: nightly
       - name: Install cargo-udeps
+        if: steps.cargo-cache.outputs.cache-hit != 'true'
         run: cargo install cargo-udeps --locked
       - name: Build [make build]
         run: make build
