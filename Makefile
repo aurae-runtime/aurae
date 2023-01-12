@@ -34,6 +34,7 @@ message      ?=  Default commit message. Aurae Runtime environment.
 cargo         =  cargo
 oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
+uname_m       =  $(shell uname -m)
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -48,7 +49,7 @@ lint: ## Lint the code
 	@$(cargo) clippy --all-features --workspace -- -D clippy::all -D warnings
 
 release: ## Build (static+musl) and install (release) 🎉
-	$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed
+	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed
 	$(cargo) install --path ./auraescript
 
 .PHONY: auraescript
@@ -57,12 +58,12 @@ auraescript: proto ## Initialize and compile aurae
 	@$(cargo) install --path ./auraescript --debug --force
 
 musl: ## Add target for musl
-	rustup target add x86_64-unknown-linux-musl
+	rustup target add $(uname_m)-unknown-linux-musl
 
 .PHONY: auraed
 auraed: proto ## Initialize and static-compile auraed with musl
 	@$(cargo) clippy -p auraed
-	@$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed --debug --force
+	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
 
 .PHONY: check-docs
 check-docs: # spell checking
@@ -90,11 +91,11 @@ serve: docs ## Run the aurae.io static website locally
 	sudo -E ./hack/serve.sh
 
 test: ## Run the tests
-	@$(cargo) test --target x86_64-unknown-linux-musl --workspace --exclude auraescript
+	@$(cargo) test --target $(uname_m)-unknown-linux-musl --workspace --exclude auraescript
 	@$(cargo) test -p auraescript
 
 test-all: ## Run the tests (including ignored)
-	@sudo -E $(cargo) test --target x86_64-unknown-linux-musl --workspace --exclude auraescript -- --include-ignored
+	@sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl --workspace --exclude auraescript -- --include-ignored
 	@$(cargo) test -p auraescript -- --include-ignored
 
 .PHONY: config
@@ -179,23 +180,3 @@ container: ## Build the container defined in hack/container
 .PHONY: check-deps
 check-deps: ## Check if there are any unused dependencies in Cargo.toml
 	cargo +nightly udeps --all-targets
-
-#For aarch64 development
-
-build-m: musl-m auraed-m auraescript ## Build and install (debug) (+musl) 🎉 (aarch64-unknown-linux-musl)
-prcheck-m: build-m lint test-all-m ## Meant to mimic the GHA checks that are performed when opening a PR (aarch64-unknown-linux-musl)
-
-musl-m: ## Add target for musl (aarch64-unknown-linux-musl)
-	rustup target add aarch64-unknown-linux-musl
-
-auraed-m: proto ## Initialize and static-compile auraed with musl (aarch64-unknown-linux-musl)
-	@$(cargo) clippy -p auraed
-	@$(cargo) install --target aarch64-unknown-linux-musl --path ./auraed --debug --force
-
-test-m: ## ## Run the tests (aarch64-unknown-linux-musl)
-	@$(cargo) test --target aarch64-unknown-linux-musl --workspace --exclude auraescript
-	@$(cargo) test -p auraescript
-
-test-all-m: ## Run the tests (including ignored) (aarch64-unknown-linux-musl)
-	@sudo -E $(cargo) test --target aarch64-unknown-linux-musl --workspace --exclude auraescript -- --include-ignored
-	@$(cargo) test -p auraescript -- --include-ignored
