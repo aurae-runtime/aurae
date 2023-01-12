@@ -180,3 +180,7 @@ oci-image-build-raw: ## Plain Jane oci build
 .PHONY: container
 container: ## Build the container defined in hack/container
 	./hack/container
+
+.PHONY: check-deps
+check-deps: ## Check if there are any unused dependencies in Cargo.toml
+	cargo +nightly udeps --all-targets
