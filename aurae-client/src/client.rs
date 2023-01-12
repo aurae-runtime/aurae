@@ -108,13 +108,20 @@ impl AuraeClient {
             key_algorithm,
         };
 
-        let channel = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
-            .tls_config(tls_config)?
-            .connect_with_connector(service_fn(move |_: Uri| {
-                UnixStream::connect(system.socket.clone())
-            }))
-            .await
-            .with_context(|| "unable to connect auraed system socket")?;
+        // If the system socket looks like a URI, bind to it directly.  Otherwise, connect as a
+        // UNIX socket (assume it's a file path).
+        let socket = system.socket.clone();
+        let channel = if let Ok(uri) = Uri::try_from(&socket) {
+            Channel::builder(uri).tls_config(tls_config)?.connect().await
+        } else {
+            Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
+                .tls_config(tls_config)?
+                .connect_with_connector(service_fn(move |_: Uri| {
+                    UnixStream::connect(system.socket.clone())
+                }))
+                .await
+        }
+        .with_context(|| format!("unable to connect to socket {socket:?}"))?;
 
         Ok(Self { channel, x509_details })
     }

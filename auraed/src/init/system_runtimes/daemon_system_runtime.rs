@@ -28,19 +28,53 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::SystemRuntime;
-use crate::init::{logging, InitError, BANNER};
+use std::{net::SocketAddr, path::PathBuf, str::FromStr};
+
+use super::{SocketStream, SystemRuntime, SystemRuntimeError};
+use crate::{
+    init::{
+        logging,
+        system_runtimes::{
+            create_tcp_socket_stream, create_unix_socket_stream,
+        },
+        BANNER,
+    },
+    AURAE_RUNTIME_DIR, AURAE_SOCK,
+};
 use tonic::async_trait;
-use tracing::info;
+use tracing::{info, trace};
 
 pub(crate) struct DaemonSystemRuntime;
 
+const DEFAULT_NETWORK_SOCKET_ADDR: &str = "[::1]:8080";
+
 #[async_trait]
 impl SystemRuntime for DaemonSystemRuntime {
-    async fn init(self, verbose: bool) -> Result<(), InitError> {
+    async fn init(
+        self,
+        verbose: bool,
+        socket_address: Option<String>,
+    ) -> Result<SocketStream, SystemRuntimeError> {
         println!("{}", BANNER);
         logging::init(verbose, false)?;
         info!("Running as a daemon.");
-        Ok(())
+
+        // Running as a daemon supports both TCP and Unix sockets for listening, depending on the
+        // socket address that's passed in.
+        let mut default_aurae_sock_path = PathBuf::from(AURAE_RUNTIME_DIR);
+        default_aurae_sock_path.push(AURAE_SOCK);
+        let sockaddr = socket_address.unwrap_or_else(|| {
+            default_aurae_sock_path
+                .to_str()
+                .expect("valid default aurae sock path")
+                .into()
+        });
+        if let Ok(addr) = SocketAddr::from_str(&sockaddr) {
+            trace!("Listening on TCP: {addr:?}");
+            create_tcp_socket_stream(addr).await
+        } else {
+            trace!("Listening on UNIX: {sockaddr:?}");
+            create_unix_socket_stream(PathBuf::from(sockaddr)).await
+        }
     }
 }

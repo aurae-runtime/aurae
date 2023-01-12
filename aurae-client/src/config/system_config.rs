@@ -35,6 +35,6 @@ use serde::Deserialize;
 /// Used to define settings for AuraeScript at runtime.
 #[derive(Debug, Clone, Deserialize)]
 pub struct SystemConfig {
-    /// Socket to connect the client to.
+    /// Socket to connect the client to.  Can be a path (unix socket) or a network socket address.
     pub socket: String,
 }
