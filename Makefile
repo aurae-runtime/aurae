@@ -181,6 +181,12 @@ oci-image-build-raw: ## Plain Jane oci build
 container: ## Build the container defined in hack/container
 	./hack/container
 
+
 .PHONY: test-workflow
 test-workflow: ## Tests a github actions workflow locally using `act`
 	@act -W ./.github/workflows/$(file)
+
+.PHONY: check-deps
+check-deps: ## Check if there are any unused dependencies in Cargo.toml
+	cargo +nightly udeps --all-targets
+
