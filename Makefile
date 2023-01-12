@@ -34,6 +34,7 @@ message      ?=  Default commit message. Aurae Runtime environment.
 cargo         =  cargo
 oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
+uname_m       =  $(shell uname -m)
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -42,14 +43,13 @@ default: all ## Build and install (debug) 🎉
 all: install ## Build and install (debug) 🎉
 install: build ## Build and install (debug) 🎉
 build: musl auraed auraescript ## Build and install (debug) (+musl) 🎉
-
-prcheck: build lint test
+prcheck: build lint test-all ## Meant to mimic the GHA checks (includes ignored tests)
 
 lint: ## Lint the code
 	@$(cargo) clippy --all-features --workspace -- -D clippy::all -D warnings
 
 release: ## Build (static+musl) and install (release) 🎉
-	$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed
+	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed
 	$(cargo) install --path ./auraescript
 
 .PHONY: auraescript
@@ -58,12 +58,12 @@ auraescript: proto ## Initialize and compile aurae
 	@$(cargo) install --path ./auraescript --debug --force
 
 musl: ## Add target for musl
-	rustup target add x86_64-unknown-linux-musl
+	rustup target add $(uname_m)-unknown-linux-musl
 
 .PHONY: auraed
 auraed: proto ## Initialize and static-compile auraed with musl
 	@$(cargo) clippy -p auraed
-	@$(cargo) install --target x86_64-unknown-linux-musl --path ./auraed --debug --force
+	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
 
 .PHONY: check-docs
 check-docs: # spell checking
@@ -91,10 +91,12 @@ serve: docs ## Run the aurae.io static website locally
 	sudo -E ./hack/serve.sh
 
 test: ## Run the tests
-	@$(cargo) test -- --ignored
+	@$(cargo) test --target $(uname_m)-unknown-linux-musl --workspace --exclude auraescript
+	@$(cargo) test -p auraescript
 
-testci: ## Run the tests that we can in CI
-	@$(cargo) test
+test-all: ## Run the tests (including ignored)
+	@sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl --workspace --exclude auraescript -- --include-ignored
+	@$(cargo) test -p auraescript -- --include-ignored
 
 .PHONY: config
 config: ## Set up default config
@@ -121,12 +123,6 @@ clean-certs: ## Clean the cert material
 
 fmt: headers ## Format the entire code base(s)
 	@./hack/code-format
-
-clean-auraescript:
-	cd auraescript && make clean 
-
-clean-auraed:
-	cd auraed && make clean
 
 .PHONY: proto
 proto: ## Generate code from protobuf schemas
