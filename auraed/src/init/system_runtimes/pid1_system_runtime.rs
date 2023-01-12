@@ -113,9 +113,8 @@ impl SystemRuntime for Pid1SystemRuntime {
 
         trace!("init of auraed as pid1 done");
 
-        let socket_addr = socket_address
-            .unwrap_or_else(|| DEFAULT_NETWORK_SOCKET_ADDR.into())
-            .parse::<SocketAddr>()?;
+        // TODO: plumb through as default to configure_nic and here.
+        let socket_addr = "0.0.0.0:8080".parse::<SocketAddr>()?;
         create_tcp_socket_stream(socket_addr).await
     }
 }
