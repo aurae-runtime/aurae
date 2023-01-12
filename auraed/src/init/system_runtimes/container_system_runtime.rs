@@ -30,12 +30,10 @@
 
 use std::path::PathBuf;
 
-use super::{SocketStream, SystemRuntime};
+use super::{SocketStream, SystemRuntime, SystemRuntimeError};
 use crate::{
-    init::{
-        logging, system_runtimes::create_unix_socket_stream, InitError, BANNER,
-    },
-    AURAE_SOCK,
+    init::{logging, system_runtimes::create_unix_socket_stream, BANNER},
+    AURAE_RUNTIME_DIR, AURAE_SOCK,
 };
 use tonic::async_trait;
 use tracing::info;
@@ -48,13 +46,17 @@ impl SystemRuntime for ContainerSystemRuntime {
         self,
         verbose: bool,
         socket_address: Option<String>,
-    ) -> Result<SocketStream, InitError> {
+    ) -> Result<SocketStream, SystemRuntimeError> {
         println!("{}", BANNER);
         logging::init(verbose, true)?;
         info!("Running as a container.");
-        create_unix_socket_stream(PathBuf::from(
-            socket_address.unwrap_or_else(|| AURAE_SOCK.into()),
-        ))
+        let mut default_aurae_sock_path = PathBuf::from(AURAE_RUNTIME_DIR);
+        default_aurae_sock_path.push(AURAE_SOCK);
+        create_unix_socket_stream(
+            socket_address
+                .map(PathBuf::from)
+                .unwrap_or_else(|| default_aurae_sock_path),
+        )
         .await
     }
 }

@@ -33,7 +33,6 @@ use std::{
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-use super::InitError;
 use anyhow::{anyhow, Context};
 pub(crate) use cell_system_runtime::CellSystemRuntime;
 pub(crate) use container_system_runtime::ContainerSystemRuntime;
@@ -44,25 +43,37 @@ use tokio_stream::wrappers::{TcpListenerStream, UnixListenerStream};
 use tonic::async_trait;
 use tracing::{info, trace};
 
+use super::{fs::FsError, logging::LoggingError, network::NetworkError};
+
 mod cell_system_runtime;
 mod container_system_runtime;
 mod daemon_system_runtime;
 mod pid1_system_runtime;
 
+#[derive(thiserror::Error, Debug)]
+pub(crate) enum SystemRuntimeError {
+    #[error(transparent)]
+    FsError(#[from] FsError),
+    #[error(transparent)]
+    Logging(#[from] LoggingError),
+    #[error(transparent)]
+    Network(#[from] NetworkError),
+    #[error(transparent)]
+    AddrParse(#[from] std::net::AddrParseError),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
+}
+
 /// A [SocketStream] can represent either a TCP or Unix socket stream.
 #[derive(Debug)]
 pub enum SocketStream {
     /// Contains a stream for listening over a TCP socket.
-    Tcp {
-        /// A stream that listens over a TCP socket.
-        stream: TcpListenerStream,
-    },
+    Tcp(TcpListenerStream),
 
     /// Contains a stream for listening over a Unix socket.
-    Unix {
-        /// A stream that listens over a Unix socket.
-        stream: UnixListenerStream,
-    },
+    Unix(UnixListenerStream),
 }
 
 #[async_trait]
@@ -71,16 +82,16 @@ pub(crate) trait SystemRuntime {
         self,
         verbose: bool,
         socket_address: Option<String>,
-    ) -> Result<SocketStream, InitError>;
+    ) -> Result<SocketStream, SystemRuntimeError>;
 }
 
 async fn create_unix_socket_stream(
     socket_path: PathBuf,
-) -> Result<SocketStream, InitError> {
+) -> Result<SocketStream, SystemRuntimeError> {
     let _ = std::fs::remove_file(&socket_path);
-    let sock_path = Path::new(&socket_path)
-        .parent()
-        .ok_or_else(|| anyhow!("unable to find socket path"))?;
+    let sock_path = Path::new(&socket_path).parent().ok_or_else(|| {
+        anyhow!("not a valid socket path: {:?}", &socket_path)
+    })?;
     // Create socket directory
     tokio::fs::create_dir_all(sock_path).await.with_context(|| {
         format!(
@@ -102,14 +113,14 @@ async fn create_unix_socket_stream(
     )?;
     info!("User Access Socket Created: {}", socket_path.display());
 
-    Ok(SocketStream::Unix { stream: UnixListenerStream::new(sock) })
+    Ok(SocketStream::Unix(UnixListenerStream::new(sock)))
 }
 
 async fn create_tcp_socket_stream(
     socket_addr: SocketAddr,
-) -> Result<SocketStream, InitError> {
+) -> Result<SocketStream, SystemRuntimeError> {
     trace!("creating tcp stream for {:?}", socket_addr);
     let sock = TcpListener::bind(&socket_addr).await?;
     info!("TCP Access Socket created: {:?}", socket_addr);
-    Ok(SocketStream::Tcp { stream: TcpListenerStream::new(sock) })
+    Ok(SocketStream::Tcp(TcpListenerStream::new(sock)))
 }

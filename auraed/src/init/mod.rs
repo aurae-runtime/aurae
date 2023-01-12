@@ -34,14 +34,9 @@
 //! run itself as an initialization program, otherwise bypass the init module.
 
 pub use self::system_runtimes::SocketStream;
-use self::{
-    fs::FsError,
-    logging::LoggingError,
-    network::NetworkError,
-    system_runtimes::{
-        CellSystemRuntime, ContainerSystemRuntime, DaemonSystemRuntime,
-        Pid1SystemRuntime, SystemRuntime,
-    },
+use self::system_runtimes::{
+    CellSystemRuntime, ContainerSystemRuntime, DaemonSystemRuntime,
+    Pid1SystemRuntime, SystemRuntime, SystemRuntimeError,
 };
 use std::fs::File;
 use std::io::{BufReader, Read};
@@ -65,18 +60,14 @@ const BANNER: &str = "
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum InitError {
+    //    #[error(transparent)]
+    //    Logging(#[from] LoggingError),
+    //    #[error(transparent)]
+    //    Fs(#[from] FsError),
+    //    #[error(transparent)]
+    //    Network(#[from] NetworkError),
     #[error(transparent)]
-    Logging(#[from] LoggingError),
-    #[error(transparent)]
-    Fs(#[from] FsError),
-    #[error(transparent)]
-    Network(#[from] NetworkError),
-    #[error(transparent)]
-    Anyhow(#[from] anyhow::Error),
-    #[error(transparent)]
-    IO(#[from] std::io::Error),
-    #[error(transparent)]
-    AddrParse(#[from] std::net::AddrParseError),
+    SystemRuntimeError(#[from] SystemRuntimeError),
 }
 
 /// Initialize aurae, depending on our context.
@@ -95,10 +86,10 @@ pub async fn init(
     }
     .await;
 
-    if let Err(e) = init_result {
-        panic!("Failed to initialize: {:?}", e)
+    match init_result {
+        Ok(x) => x,
+        Err(e) => panic!("Failed to initialize: {:?}", e),
     }
-    init_result.expect("this is impossible as we check for error just above")
 }
 
 enum Context {

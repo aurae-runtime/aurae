@@ -28,10 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{SocketStream, SystemRuntime};
+use super::{SocketStream, SystemRuntime, SystemRuntimeError};
 use crate::init::{
     fs::MountSpec, logging, network, power::spawn_thread_power_button_listener,
-    system_runtimes::create_tcp_socket_stream, InitError, BANNER,
+    system_runtimes::create_tcp_socket_stream, BANNER,
 };
 use std::{net::SocketAddr, path::Path};
 use tonic::async_trait;
@@ -70,7 +70,7 @@ impl SystemRuntime for Pid1SystemRuntime {
         self,
         verbose: bool,
         socket_address: Option<String>,
-    ) -> Result<SocketStream, InitError> {
+    ) -> Result<SocketStream, SystemRuntimeError> {
         println!("{}", BANNER);
 
         // Initialize the PID 1 logger

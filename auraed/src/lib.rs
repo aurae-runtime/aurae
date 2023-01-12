@@ -95,8 +95,8 @@ mod runtime;
 /// processes and commands. Access to the socket must be governed
 /// by an appropriate mTLS Authorization setting in order to maintain
 /// a secure multi tenant system.
-const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
-
+const AURAE_RUNTIME_DIR: &str = "/var/run/aurae";
+const AURAE_SOCK: &str = "aurae.sock";
 const AURAE_BUNDLE: &str = "/var/lib/aurae";
 
 const EXIT_OKAY: i32 = 0;
@@ -123,11 +123,11 @@ struct AuraedOptions {
     #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
     ca_crt: String,
     /// Aurae socket address.  Depending on context, this should be a file or a network address.
-    /// Defaults to /var/run/aurae/aurae.sock or [::1]:8080 respectively.
+    /// Defaults to ${runtime_dir}/aurae.sock or [::1]:8080 respectively.
     #[clap(short, long, value_parser)]
     socket: Option<String>,
     /// Aurae runtime path.  Defaults to /var/run/aurae.
-    #[clap(short, long, value_parser, default_value = "/var/run/aurae")]
+    #[clap(short, long, value_parser, default_value = AURAE_RUNTIME_DIR)]
     runtime_dir: String,
     /// Aurae bundle path. Defaults to /var/lib/aurae
     #[clap(short, long, value_parser, default_value = AURAE_BUNDLE)]
@@ -157,8 +157,8 @@ pub async fn daemon() -> i32 {
     let e = match init::init(options.verbose, options.nested, options.socket)
         .await
     {
-        SocketStream::Tcp { stream } => runtime.run(stream).await,
-        SocketStream::Unix { stream } => runtime.run(stream).await,
+        SocketStream::Tcp(stream) => runtime.run(stream).await,
+        SocketStream::Unix(stream) => runtime.run(stream).await,
     };
 
     if e.is_err() {
@@ -292,6 +292,6 @@ mod tests {
 
     #[test]
     fn test_socket_path() {
-        assert_eq!(AURAE_SOCK, "/var/run/aurae/aurae.sock");
+        assert_eq!(AURAE_RUNTIME_DIR, "/var/run/aurae");
     }
 }
