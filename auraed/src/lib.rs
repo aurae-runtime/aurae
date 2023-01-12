@@ -62,6 +62,7 @@
 #![warn(missing_docs)]
 #![allow(dead_code)]
 
+use crate::spawn::spawn_auraed_oci_to;
 use anyhow::Context;
 use aurae_proto::{
     discovery::discovery_service_server::DiscoveryServiceServer,
@@ -88,6 +89,7 @@ pub mod init;
 pub mod logging;
 mod observe;
 mod runtime;
+mod spawn;
 
 /// Default Unix domain socket path for `auraed`.
 ///
@@ -137,12 +139,15 @@ struct AuraedOptions {
     #[clap(long)]
     nested: bool,
     #[clap(subcommand)]
-    spawn: Option<Spawn>,
+    subcmd: Option<SubCommands>,
 }
 
 #[derive(Subcommand, Debug)]
-enum Spawn {
-    Add { output: Option<String> },
+enum SubCommands {
+    Spawn {
+        #[clap(short, long, value_parser, default_value = ".")]
+        output: String,
+    },
 }
 
 #[allow(missing_docs)] // TODO
@@ -152,13 +157,13 @@ pub async fn daemon() -> i32 {
     // Initializes Logging and prepares system if auraed is run as pid=1
     init::init(options.verbose, options.nested).await;
 
-    match &options.spawn {
-        Some(Spawn::Add { output }) => {
-            println!("'auraed spawn' was used, output is: {:?}", output)
+    match &options.subcmd {
+        Some(SubCommands::Spawn { output }) => {
+            info!("Spawning Auraed OCI bundle: {}", output);
+            spawn_auraed_oci_to(output).expect("spawning");
+            return EXIT_OKAY;
         }
-        None => {
-            println!("Default subcommand");
-        }
+        None => {}
     }
 
     info!("Starting Aurae Daemon Runtime");
