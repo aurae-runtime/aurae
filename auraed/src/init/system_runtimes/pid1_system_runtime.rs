@@ -113,7 +113,9 @@ impl SystemRuntime for Pid1SystemRuntime {
 
         trace!("init of auraed as pid1 done");
 
-        let socket_addr = socket_address.unwrap_or_else(|| "0.0.0.0:8080".into()).parse::<SocketAddr>()?;
+        let socket_addr = socket_address
+            .unwrap_or_else(|| "0.0.0.0:8080".into())
+            .parse::<SocketAddr>()?;
         create_tcp_socket_stream(socket_addr).await
     }
 }

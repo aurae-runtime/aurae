@@ -33,7 +33,7 @@ use std::path::PathBuf;
 use super::{SocketStream, SystemRuntime, SystemRuntimeError};
 use crate::{
     init::{logging, system_runtimes::create_unix_socket_stream, BANNER},
-    AURAE_SOCK, AURAE_RUNTIME_DIR,
+    AURAE_RUNTIME_DIR, AURAE_SOCK,
 };
 use tonic::async_trait;
 use tracing::info;
