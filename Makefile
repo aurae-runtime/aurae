@@ -180,3 +180,7 @@ oci-image-build-raw: ## Plain Jane oci build
 .PHONY: container
 container: ## Build the container defined in hack/container
 	./hack/container
+
+.PHONY: test-workflow
+test-workflow: ## Tests a github actions workflow locally using `act`
+	@act -W ./.github/workflows/$(file)

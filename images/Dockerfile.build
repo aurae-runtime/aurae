@@ -45,18 +45,29 @@ ARG VALE_VERSION=2.21.3
 ARG PROTOC_VERSION=1.5.1
 
 ## Install packages
-## TODO: Remove libdbus
+#
+# Do not at GNU libraries here! Do not add GNU libraries here!
+#
+# Please (seriously please) be careful about adding commands here.
+# This is our core way of validating that our binary is "healthy"
+# If we need to install anything with the word "lib" in it to get
+# the build to pass, we likely should be having other discussions
+# instead of adding commands here.
+#
+# Do not add GNU libraries here! Do not add GNU libraries here!
+#
+# For example we should NOT be adding libraries such as "libseccomp"
+# or "libdbus".
+#
+# If in doubt, please ask in Discord in the build channel.
+#
+# Do not at GNU libraries here! Do not add GNU libraries here!
 RUN  apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
-    ca-certificates \
     curl \
-    libclang-dev \
-    libdbus-1-dev \
-    libseccomp-dev \
-    protobuf-compiler \
-    build-essential
-
+    make \
+    musl-tools \
+    protobuf-compiler
 RUN rm -rf /var/lib/apt/lists/*
 
 ## Setup Rust

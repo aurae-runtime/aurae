@@ -27,54 +27,46 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
+#
+name: "Cargo Test Lint (035) [aurae-builder:latest]"
+on:
+ push:
+   branches: main
+ pull_request:
+   branches: main
 
-[package]
-name = "auraed"
-version = "0.1.0"
-edition = "2021"
-authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
-license = "Apache-2.0"
-
-[[bin]]
-name = "auraed"
-path = "src/bin/main.rs"
-
-[dependencies]
-anyhow = { workspace = true }
-aurae-client = { workspace = true }
-aurae-proto = { workspace = true }
-clap = { version = "3.1.20", features = ["derive"] }
-clone3 = "0.2.3"
-fancy-regex = { workspace = true }
-futures = "0.3.23"
-ipnetwork = "0.20.0"
-iter_tools = "0.1.4"
-libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
-lazy_static = { workspace = true }
-#libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-build-6.1.1-kernel" }
-liboci-cli = "0.0.4"
-log = "0.4.17"
-netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
-nix = { version = "0.26.1", features = ["sched"] }
-ocipkg = "0.2.8"
-procfs = "0.14.2"
-rtnetlink = "0.11.0"
-simplelog = "0.12.0"
-thiserror = { workspace = true }
-tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread", "sync", "signal", "process"] }
-tokio-stream = { version = "0.1", features = ["net", "sync"] }
-tonic = { workspace = true, features = ["tls"] }
-tracing = { workspace = true, features = ["log"] }
-tracing-log = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
-tracing-rfc-5424 = { version = "0.1.0" }  # syslog tracing
-uuid = { version = "1.2.2", features = ["v4"] }
-validation = { path = "../crates/validation", features = ["regex", "tonic"] }
-validation_macros = { path = "../crates/validation/macros" }
-walkdir = "2"
-multi_log = "0.1.2"
-cgroups-rs = "0.3.0"
-
-[dev-dependencies]
-simple_test_case = "1.1.0"
-
+permissions:
+ contents: read
+ packages: write
+env:
+ CARGO_TERM_COLOR: always
+jobs:
+ build-container:
+   uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build.yml
+ build:
+   name: Build (lint, compile, test)
+   runs-on: ubuntu-latest
+   needs: build-container
+   timeout-minutes: 20
+   container:
+     image: ghcr.io/${{ github.repository }}/aurae-builder:latest
+     credentials:
+       username:  ${{ github.actor }}
+       password:  ${{ secrets.GITHUB_TOKEN }}
+   steps:
+     - uses: actions/checkout@v3
+     - uses: actions/cache@v3
+       with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: build-compile-test-container-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+     - name: Cargo Test Lint [make test lint]
+       # This should remain the only command we execute as this matches the title of the file.
+       # The goal is for this to be easy to find from the GitHub dashboard.
+       # Instead of adding more commands here, consider another make target or a new YAML file
+       # named with a good name.
+       run: make musl proto test lint
