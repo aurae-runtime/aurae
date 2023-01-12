@@ -60,12 +60,6 @@ const BANNER: &str = "
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum InitError {
-    //    #[error(transparent)]
-    //    Logging(#[from] LoggingError),
-    //    #[error(transparent)]
-    //    Fs(#[from] FsError),
-    //    #[error(transparent)]
-    //    Network(#[from] NetworkError),
     #[error(transparent)]
     SystemRuntimeError(#[from] SystemRuntimeError),
 }
