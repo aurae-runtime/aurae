@@ -38,9 +38,9 @@ ociopts       =  DOCKER_BUILDKIT=1
 # Configuration Options
 export GIT_PAGER = cat
 
-default: auraed auraescript ## Build and install (debug) 🎉
-all: auraed auraescript ## Build and install (debug) 🎉
-install: auraed auraescript ## Build and install (debug) 🎉
+default: all ## Build and install (debug) 🎉
+all: install ## Build and install (debug) 🎉
+install: build ## Build and install (debug) 🎉
 build: musl auraed auraescript ## Build and install (debug) (+musl) 🎉
 
 prcheck: build lint test
