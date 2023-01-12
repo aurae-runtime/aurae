@@ -27,54 +27,60 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-
-[package]
-name = "auraed"
-version = "0.1.0"
-edition = "2021"
-authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
-license = "Apache-2.0"
-
-[[bin]]
-name = "auraed"
-path = "src/bin/main.rs"
-
-[dependencies]
-anyhow = { workspace = true }
-aurae-client = { workspace = true }
-aurae-proto = { workspace = true }
-clap = { version = "3.1.20", features = ["derive"] }
-clone3 = "0.2.3"
-fancy-regex = { workspace = true }
-futures = "0.3.23"
-ipnetwork = "0.20.0"
-iter_tools = "0.1.4"
-libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
-lazy_static = { workspace = true }
-#libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-build-6.1.1-kernel" }
-liboci-cli = "0.0.4"
-log = "0.4.17"
-netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
-nix = { version = "0.26.1", features = ["sched"] }
-#ocipkg = "0.2.8"
-procfs = "0.14.2"
-rtnetlink = "0.11.0"
-simplelog = "0.12.0"
-thiserror = { workspace = true }
-tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread", "sync", "signal", "process"] }
-tokio-stream = { version = "0.1", features = ["net", "sync"] }
-tonic = { workspace = true, features = ["tls"] }
-tracing = { workspace = true, features = ["log"] }
-tracing-log = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
-tracing-rfc-5424 = { version = "0.1.0" }  # syslog tracing
-uuid = { version = "1.2.2", features = ["v4"] }
-validation = { path = "../crates/validation", features = ["regex", "tonic"] }
-validation_macros = { path = "../crates/validation/macros" }
-walkdir = "2"
-multi_log = "0.1.2"
-cgroups-rs = "0.3.0"
-
-[dev-dependencies]
-simple_test_case = "1.1.0"
-
+name: "Cargo Udeps (007) [ubuntu:latest]"
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  check-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: check-deps-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install protoc-gen-doc in [ubuntu:latest]
+        run: |
+          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          chmod +x protoc-gen-doc
+          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+      - name: Install buf in [ubuntu:latest]
+        run: |
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/v1.11.0/buf-$(uname -s)-$(uname -m)" -o "/usr/local/bin/buf" 
+          chmod +x "/usr/local/bin/buf"
+      - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
+        # Please (seriously please) be careful about adding commands here.
+        # This is our core way of validating that our binary is "healthy"
+        # If we need to install anything with the word "lib" in it to get
+        # the build to pass, we likely should be having other discussions
+        # instead of adding commands here.
+        #
+        # For example we should NOT be adding libraries such as "libseccomp"
+        # or "libdbus".
+        #
+        # If in doubt, please ask in Discord in the build channel.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+      - name: Install cargo-udeps
+        run: cargo install cargo-udeps --locked
+      - name: Build [make build]
+        run: make build
+      - name: Cargo udeps [make check-deps]
+        run: make check-deps
