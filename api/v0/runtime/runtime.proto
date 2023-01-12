@@ -105,7 +105,7 @@ message Container{
   /// mkdir -p aurae-busybox/rootfs
   /// docker pull busybox
   /// docker create --name aurae-busybox busybox
-  /// docker export aurae-busybox | tar -xfC aurae-busybox/rootfs -
+  /// docker export aurae-busybox | tar -C aurae-busybox/rootfs -xf -
   /// cd aurae-busybox
   /// runc spec
   /// ```
