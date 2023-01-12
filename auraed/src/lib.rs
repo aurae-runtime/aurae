@@ -68,7 +68,7 @@ use aurae_proto::{
     runtime::cell_service_server::CellServiceServer,
     runtime::pod_service_server::PodServiceServer,
 };
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use discovery::DiscoveryService;
 use runtime::CellService;
 use runtime::PodService;
@@ -136,6 +136,13 @@ struct AuraedOptions {
     /// Run auraed as a nested instance of itself in an Aurae cell.
     #[clap(long)]
     nested: bool,
+    #[clap(subcommand)]
+    spawn: Option<Spawn>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Spawn {
+    Add { output: Option<String> },
 }
 
 #[allow(missing_docs)] // TODO
@@ -144,6 +151,15 @@ pub async fn daemon() -> i32 {
 
     // Initializes Logging and prepares system if auraed is run as pid=1
     init::init(options.verbose, options.nested).await;
+
+    match &options.spawn {
+        Some(Spawn::Add { output }) => {
+            println!("'auraed spawn' was used, output is: {:?}", output)
+        }
+        None => {
+            println!("Default subcommand");
+        }
+    }
 
     info!("Starting Aurae Daemon Runtime");
     info!("Aurae Daemon is pid {}", std::process::id());
