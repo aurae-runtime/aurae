@@ -33,14 +33,10 @@
 //! The Aurae daemon assumes that if the current process id (PID) is 1 to
 //! run itself as an initialization program, otherwise bypass the init module.
 
-use self::{
-    fs::FsError,
-    logging::LoggingError,
-    network::NetworkError,
-    system_runtimes::{
-        CellSystemRuntime, ContainerSystemRuntime, DaemonSystemRuntime,
-        Pid1SystemRuntime, SystemRuntime,
-    },
+pub use self::system_runtimes::SocketStream;
+use self::system_runtimes::{
+    CellSystemRuntime, ContainerSystemRuntime, DaemonSystemRuntime,
+    Pid1SystemRuntime, SystemRuntime, SystemRuntimeError,
 };
 use std::fs::File;
 use std::io::{BufReader, Read};
@@ -65,25 +61,28 @@ const BANNER: &str = "
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum InitError {
     #[error(transparent)]
-    Logging(#[from] LoggingError),
-    #[error(transparent)]
-    Fs(#[from] FsError),
-    #[error(transparent)]
-    Network(#[from] NetworkError),
+    SystemRuntimeError(#[from] SystemRuntimeError),
 }
 
-/// Run Aurae as an init pid 1 instance.
-pub async fn init(verbose: bool, nested: bool) {
+/// Initialize aurae, depending on our context.
+pub async fn init(
+    verbose: bool,
+    nested: bool,
+    socket_address: Option<String>,
+) -> SocketStream {
     let init_result = match Context::get(nested) {
-        Context::Pid1 => Pid1SystemRuntime {}.init(verbose),
-        Context::Cell => CellSystemRuntime {}.init(verbose),
-        Context::Container => ContainerSystemRuntime {}.init(verbose),
-        Context::Daemon => DaemonSystemRuntime {}.init(verbose),
+        Context::Pid1 => Pid1SystemRuntime {}.init(verbose, socket_address),
+        Context::Cell => CellSystemRuntime {}.init(verbose, socket_address),
+        Context::Container => {
+            ContainerSystemRuntime {}.init(verbose, socket_address)
+        }
+        Context::Daemon => DaemonSystemRuntime {}.init(verbose, socket_address),
     }
     .await;
 
-    if let Err(e) = init_result {
-        panic!("Failed to initialize: {:?}", e)
+    match init_result {
+        Ok(x) => x,
+        Err(e) => panic!("Failed to initialize: {:?}", e),
     }
 }
 

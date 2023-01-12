@@ -28,16 +28,17 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::SystemRuntime;
+use super::{SocketStream, SystemRuntime, SystemRuntimeError};
 use crate::init::{
     fs::MountSpec, logging, network, power::spawn_thread_power_button_listener,
-    InitError, BANNER,
+    system_runtimes::create_tcp_socket_stream, BANNER,
 };
-use std::path::Path;
+use std::{net::SocketAddr, path::Path};
 use tonic::async_trait;
 use tracing::{error, info, trace};
 
 const POWER_BUTTON_DEVICE: &str = "/dev/input/event0";
+const DEFAULT_NETWORK_SOCKET_ADDR: &str = "0.0.0.0:8080";
 
 pub(crate) struct Pid1SystemRuntime;
 
@@ -64,8 +65,12 @@ impl Pid1SystemRuntime {
 
 #[async_trait]
 impl SystemRuntime for Pid1SystemRuntime {
-    // Executing as PID 1 ccontext
-    async fn init(self, verbose: bool) -> Result<(), InitError> {
+    // Executing as PID 1 context
+    async fn init(
+        self,
+        verbose: bool,
+        socket_address: Option<String>,
+    ) -> Result<SocketStream, SystemRuntimeError> {
         println!("{}", BANNER);
 
         // Initialize the PID 1 logger
@@ -102,9 +107,15 @@ impl SystemRuntime for Pid1SystemRuntime {
         network.init().await?;
         network.show_network_info().await;
 
+        // TODO: do we need to create an interface and address for socket_address?
+
         self.spawn_system_runtime_threads();
 
         trace!("init of auraed as pid1 done");
-        Ok(())
+
+        let socket_addr = socket_address
+            .unwrap_or_else(|| "0.0.0.0:8080".into())
+            .parse::<SocketAddr>()?;
+        create_tcp_socket_stream(socket_addr).await
     }
 }

@@ -91,12 +91,6 @@ fn init_stdout_logging(tracing_level: Level) -> Result<(), LoggingError> {
         .map_err(|e| e.into())
 }
 
-// To discuss here https://github.com/aurae-runtime/auraed/issues/24:
-//      The "syslog" logger requires unix sockets.
-//      Syslog assumes that either /dev/log or /var/run/syslog are available [1].
-// TODO: We need to discuss if there is a use case to log via unix sockets,
-//      other than fullfill the requirement of syslog crate.
-//      [1] https://docs.rs/syslog/latest/src/syslog/lib.rs.html#232-243
 fn init_pid1_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing pid1 logging");
     tracing_subscriber::fmt()
