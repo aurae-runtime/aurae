@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -27,26 +28,26 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+import * as helpers from "../auraescript/gen/helpers.ts";
+import * as grpc_health from "../auraescript/gen/grpc_health.ts";
 
-//! Generated Protobuf definitions for the Aurae Standard Library
+let healthClient = new grpc_health.HealthClient;
 
-#![allow(clippy::derive_partial_eq_without_eq)]
-#![allow(clippy::match_single_binding)]
+// [ Grpc health ]
+helpers.print("Checking overall status")
+let overall = await healthClient.check(<grpc_health.HealthCheckRequest>{
+    service: ""
+});
+helpers.print(overall)
 
-pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
-}
+helpers.print("Checking CellService status")
+let single_service = await healthClient.check(<grpc_health.HealthCheckRequest>{
+    service: "aurae.runtime.v0.CellService"
+});
+helpers.print(single_service)
 
-pub mod grpc {
-    pub mod health {
-        include!("gen/grpc.health.v1.rs");
-    }
-}
-
-pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
-}
-
-pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
-}
+helpers.print("Checking status of unregistered service")
+let unknown_service = await healthClient.check(<grpc_health.HealthCheckRequest>{
+    service: "aurae.runtime.v0.UnknownService"
+});
+helpers.print(unknown_service)

@@ -237,18 +237,24 @@ impl AuraedRuntime {
         // Initialize the bundler
 
         // Build gRPC Services
+        let (mut health_reporter, health_service) =
+            tonic_health::server::health_reporter();
+
         let cell_service = CellService::new();
         let cell_service_server = CellServiceServer::new(cell_service.clone());
+        health_reporter.set_serving::<CellServiceServer<CellService>>().await;
 
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
             DiscoveryServiceServer::new(discovery_service.clone());
+        health_reporter.set_serving::<DiscoveryServiceServer<DiscoveryService>>().await;
 
         let pod_service = PodService::new(self.runtime_dir.clone());
         let pod_service_server = PodServiceServer::new(pod_service.clone());
+        health_reporter.set_serving::<PodServiceServer<PodService>>().await;
 
         let graceful_shutdown =
-            graceful_shutdown::GracefulShutdown::new(cell_service);
+            graceful_shutdown::GracefulShutdown::new(health_reporter, cell_service);
         let graceful_shutdown_signal = graceful_shutdown.subscribe();
 
         // Run the server concurrently
@@ -256,6 +262,7 @@ impl AuraedRuntime {
         let server_handle = tokio::spawn(async move {
             Server::builder()
                 .tls_config(tls)?
+                .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
                 .add_service(pod_service_server)

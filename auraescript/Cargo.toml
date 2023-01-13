@@ -47,3 +47,4 @@ deno_ast = { version = "0.21.0", features = ["transpiling"] }
 deno_core = "0.160.0"
 macros = { package = "auraescript_macros", path = "./macros" }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
+tonic-health = { workspace = true }
