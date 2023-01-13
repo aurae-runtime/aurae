@@ -299,6 +299,9 @@ message CpuController {
   // In one period (1_000_000), how much can the tasks run.
   //
   // * Minimum: 0
+  //
+  // By default a cgroup has no limit, represented as the literal string "max".
+  // Not settings this field retains the default of no limit.
   optional int64 max = 2;
 }
 
