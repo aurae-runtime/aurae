@@ -65,6 +65,7 @@ use std::rc::Rc;
 
 mod builtin;
 mod discovery;
+mod health;
 mod runtime;
 
 pub fn init() -> JsRuntime {
@@ -81,6 +82,7 @@ fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
     ops.extend(runtime::op_decls());
     ops.extend(discovery::op_decls());
+    ops.extend(health::op_decls());
     ops
 }
 

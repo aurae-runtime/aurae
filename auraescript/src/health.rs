@@ -28,25 +28,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Generated Protobuf definitions for the Aurae Standard Library
-
-#![allow(clippy::derive_partial_eq_without_eq)]
-#![allow(clippy::match_single_binding)]
-
-pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
-}
-
-pub mod grpc {
-    pub mod health {
-        include!("gen/grpc.health.v1.rs");
+// TODO: macro doesn't support streaming. Does deno?
+macros::ops_generator!(
+    grpc::health,
+    {
+        Health,
+        check(HealthCheckRequest) -> HealthCheckResponse
     }
-}
-
-pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
-}
-
-pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
-}
+);

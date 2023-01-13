@@ -7,7 +7,7 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{braced, parenthesized, parse_macro_input, Token, Type};
+use syn::{braced, parenthesized, parse_macro_input, Path, Token, Type};
 
 #[allow(clippy::format_push_string)]
 
@@ -29,7 +29,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
                 Ident::new(
                     &format!(
                         "ae__{}__{}__{}",
-                        module.to_string().to_snake_case(),
+                        path_to_snake_case(&module),
                         name_in_snake_case,
                         fn_name.to_string().to_snake_case(),
                     ),
@@ -86,7 +86,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
 }
 
 struct OpsGeneratorInput {
-    module: Ident,
+    module: Path,
     services: Punctuated<ServiceInput, Token![,]>,
 }
 
@@ -161,9 +161,22 @@ fn typescript_generator(input: &OpsGeneratorInput) {
     };
 
     let ts_path = {
-        let mut out_dir = gen_dir.clone();
-        out_dir.push(format!("v0/{module}/{module}.ts"));
-        out_dir
+        // HACK: carve out for health
+        if module
+            .segments
+            .iter()
+            .map(|x| x.ident.to_string())
+            .eq(["grpc", "health"])
+        {
+            let mut out_dir = gen_dir.clone();
+            out_dir.push("grpc/health/v1/health.ts");
+            out_dir
+        } else {
+            let module = path_to_snake_case(module);
+            let mut out_dir = gen_dir.clone();
+            out_dir.push(format!("v0/{module}/{module}.ts"));
+            out_dir
+        }
     };
 
     let mut ts =
@@ -185,7 +198,7 @@ fn typescript_generator(input: &OpsGeneratorInput) {
 
     let ts_path = {
         let mut out_dir = gen_dir;
-        out_dir.push(format!("{module}.ts"));
+        out_dir.push(format!("{}.ts", path_to_snake_case(module)));
         out_dir
     };
 
@@ -203,7 +216,7 @@ fn typescript_generator(input: &OpsGeneratorInput) {
 }
 
 fn typescript_service_generator(
-    module: &Ident,
+    module: &Path,
     ServiceInput { name, functions }: &ServiceInput,
 ) -> String {
     let mut ts_funcs: String =
@@ -212,7 +225,7 @@ fn typescript_service_generator(
     for FunctionInput { name: fn_name, arg, returns } in functions.iter() {
         let op_name = format!(
             "ae__{}__{}__{}",
-            module.to_string().to_snake_case(),
+            path_to_snake_case(module),
             name.to_string().to_snake_case(),
             fn_name.to_string().to_snake_case()
         );
@@ -232,4 +245,12 @@ fn typescript_service_generator(
 
     ts_funcs.push('}');
     ts_funcs
+}
+
+fn path_to_snake_case(path: &Path) -> String {
+    path.segments
+        .iter()
+        .map(|x| x.ident.to_string().to_snake_case())
+        .collect::<Vec<String>>()
+        .join("_")
 }

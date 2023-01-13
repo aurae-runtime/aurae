@@ -28,25 +28,67 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Generated Protobuf definitions for the Aurae Standard Library
+// TODO: The macro does not support streaming, see below for what we want the macro to output
+// macros::service!(
+//     grpc::health,
+//     Health,
+//     check(HealthCheckRequest) -> HealthCheckResponse,
+//     watch(HealthCheckRequest) -> HealthCheckResponse
+// );
 
-#![allow(clippy::derive_partial_eq_without_eq)]
-#![allow(clippy::match_single_binding)]
-
-pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
+#[::tonic::async_trait]
+pub trait HealthClient {
+    async fn check(
+        &self,
+        req: ::aurae_proto::grpc::health::HealthCheckRequest,
+    ) -> Result<
+        ::tonic::Response<::aurae_proto::grpc::health::HealthCheckResponse>,
+        ::tonic::Status,
+    >;
+    async fn watch(
+        &self,
+        req: ::aurae_proto::grpc::health::HealthCheckRequest,
+    ) -> Result<
+        ::tonic::Response<
+            ::tonic::Streaming<
+                ::aurae_proto::grpc::health::HealthCheckResponse,
+            >,
+        >,
+        ::tonic::Status,
+    >;
 }
+#[::tonic::async_trait]
+impl HealthClient for crate::client::AuraeClient {
+    async fn check(
+        &self,
+        req: ::aurae_proto::grpc::health::HealthCheckRequest,
+    ) -> Result<
+        ::tonic::Response<::aurae_proto::grpc::health::HealthCheckResponse>,
+        ::tonic::Status,
+    > {
+        let mut client =
+            ::aurae_proto::grpc::health::health_client::HealthClient::new(
+                self.channel.clone(),
+            );
+        client.check(req).await
+    }
 
-pub mod grpc {
-    pub mod health {
-        include!("gen/grpc.health.v1.rs");
+    async fn watch(
+        &self,
+        req: ::aurae_proto::grpc::health::HealthCheckRequest,
+    ) -> Result<
+        ::tonic::Response<
+            ::tonic::Streaming<
+                ::aurae_proto::grpc::health::HealthCheckResponse,
+            >,
+        >,
+        ::tonic::Status,
+    > {
+        let mut client =
+            ::aurae_proto::grpc::health::health_client::HealthClient::new(
+                self.channel.clone(),
+            );
+        client.watch(req).await
     }
 }
 
-pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
-}
-
-pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
-}

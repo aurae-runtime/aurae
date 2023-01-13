@@ -28,20 +28,38 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::CellService;
-use tokio::signal::unix::SignalKind;
-use tokio::sync::watch::{channel, Receiver, Sender};
+use crate::{
+    discovery::DiscoveryService,
+    runtime::{CellService, PodService},
+};
+use aurae_proto::{
+    discovery::discovery_service_server::DiscoveryServiceServer,
+    runtime::{
+        cell_service_server::CellServiceServer,
+        pod_service_server::PodServiceServer,
+    },
+};
+use std::borrow::BorrowMut;
+use tokio::{
+    signal::unix::SignalKind,
+    sync::watch::{channel, Receiver, Sender},
+};
+use tonic_health::server::HealthReporter;
 use tracing::error;
 
 pub(crate) struct GracefulShutdown {
-    pub cell_service: CellService,
+    health_reporter: HealthReporter,
+    cell_service: CellService,
     shutdown_broadcaster: Sender<()>,
 }
 
 impl GracefulShutdown {
-    pub fn new(cell_service: CellService) -> Self {
+    pub fn new(
+        health_reporter: HealthReporter,
+        cell_service: CellService,
+    ) -> Self {
         let (tx, _) = channel(());
-        Self { cell_service, shutdown_broadcaster: tx }
+        Self { health_reporter, cell_service, shutdown_broadcaster: tx }
     }
 
     /// Subscribe to the shutdown broadcast channel
@@ -59,11 +77,21 @@ impl GracefulShutdown {
     /// * [SIGINT]
     /// ---
     /// Returns after processing the first received signal.
-    pub async fn wait(self) {
+    pub async fn wait(mut self) {
         tokio::select! {
             _ = wait_for_sigterm() => {},
             _ = wait_for_sigint() => {},
         }
+
+        // update health reporter
+        let health_reporter = self.health_reporter.borrow_mut();
+        health_reporter
+            .set_not_serving::<CellServiceServer<CellService>>()
+            .await;
+        health_reporter
+            .set_not_serving::<DiscoveryServiceServer<DiscoveryService>>()
+            .await;
+        health_reporter.set_not_serving::<PodServiceServer<PodService>>().await;
 
         self.shutdown_broadcaster.send_replace(());
         // wait for all subscribers to drop
