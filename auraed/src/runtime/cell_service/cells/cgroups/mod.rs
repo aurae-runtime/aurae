@@ -29,21 +29,19 @@
 \* -------------------------------------------------------------------------- */
 
 pub use cgroup::Cgroup;
-pub use cpu_cpus::CpuCpus;
-pub use cpu_quota::CpuQuota;
-pub use cpu_weight::CpuWeight;
-pub use cpuset_mems::CpusetMems;
+use cpu::CpuController;
+use cpuset::CpusetController;
+pub use limit::Limit;
+pub use weight::Weight;
 
 mod cgroup;
-mod cpu_cpus;
-mod cpu_quota;
-mod cpu_weight;
-mod cpuset_mems;
+pub mod cpu;
+pub mod cpuset;
+mod limit;
+mod weight;
 
 #[derive(Debug, Clone)]
 pub struct CgroupSpec {
-    pub cpu_cpus: CpuCpus,
-    pub cpu_quota: CpuQuota,
-    pub cpu_weight: CpuWeight,
-    pub cpuset_mems: CpusetMems,
+    pub cpu: Option<CpuController>,
+    pub cpuset: Option<CpusetController>,
 }

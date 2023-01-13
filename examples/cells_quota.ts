@@ -37,8 +37,10 @@ let cellName = "ae-sleeper-cell";
 // [ Allocate ]
 let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
-        cpuQuota: 300000, // 30% of the CPU
-        cpuShares: 2, // Percentage of CPUs
+        cpu: runtime.CpuController.fromPartial({
+            weight: 2, // Percentage of CPUs
+            max: 300000, // 30% of the CPU
+        }),
         name: cellName,
     })
 });
