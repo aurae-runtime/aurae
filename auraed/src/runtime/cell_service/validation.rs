@@ -124,15 +124,15 @@ pub struct ValidatedCpuController {
 
     #[field_type(Option<i64>)]
     #[validate(opt)]
-    pub limit: Option<Limit>,
+    pub max: Option<Limit>,
 }
 
 impl CpuControllerTypeValidator for CpuControllerValidator {}
 
 impl From<ValidatedCpuController> for cgroups::cpu::CpuController {
     fn from(value: ValidatedCpuController) -> Self {
-        let ValidatedCpuController { weight, limit } = value;
-        Self { weight, limit }
+        let ValidatedCpuController { weight, max } = value;
+        Self { weight, max }
     }
 }
 

@@ -33,5 +33,5 @@ use super::{Limit, Weight};
 #[derive(Debug, Clone)]
 pub struct CpuController {
     pub weight: Option<Weight>,
-    pub limit: Option<Limit>,
+    pub max: Option<Limit>,
 }

@@ -39,7 +39,7 @@ let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
         cpu: runtime.CpuController.fromPartial({
             weight: 2, // Percentage of CPUs
-            limit: 400 * (10 ** 3), // 0.4 seconds in microseconds
+            max: 400 * (10 ** 3), // 0.4 seconds in microseconds
         }),
         name: cellName,
     })

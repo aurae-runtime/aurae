@@ -59,7 +59,7 @@ impl Cgroup {
         let builder = CgroupBuilder::new(&name);
 
         // cpu controller
-        let builder = if let Some(CpuController { weight, limit }) = cpu {
+        let builder = if let Some(CpuController { weight, max }) = cpu {
             let builder = builder.cpu();
 
             let builder = if let Some(weight) = weight {
@@ -68,8 +68,8 @@ impl Cgroup {
                 builder
             };
 
-            let builder = if let Some(limit) = limit {
-                builder.quota(limit.into_inner()).period(MICROSECONDS_PER_SECOND) // microseconds in a second
+            let builder = if let Some(max) = max {
+                builder.quota(max.into_inner()).period(MICROSECONDS_PER_SECOND) // microseconds in a second
             } else {
                 builder
             };
