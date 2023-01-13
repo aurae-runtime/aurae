@@ -196,99 +196,101 @@ impl Cells {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     #[ignore]
-//     #[test]
-//     fn test_allocate() {
-//         let mut cells = Cells::default();
-//         assert!(cells.cache.is_empty());
-//
-//         let cell_name = CellName::random_for_tests();
-//         let cell = CellSpec::new_for_tests();
-//
-//         let _ = cells.allocate(cell_name.clone(), cell).expect("allocate");
-//         assert!(cells.cache.contains_key(&cell_name));
-//     }
-//
-//     #[ignore]
-//     #[test]
-//     fn test_duplicate_allocate_is_error() {
-//         let mut cells = Cells::default();
-//         assert!(cells.cache.is_empty());
-//
-//         let cell_name_in = CellName::random_for_tests();
-//
-//         let cell_a = CellSpec::new_for_tests();
-//         let _ = cells
-//             .allocate(cell_name_in.clone(), cell_a)
-//             .expect("failed on first allocate");
-//
-//         let cell_b = CellSpec::new_for_tests();
-//         assert!(matches!(
-//             cells.allocate(cell_name_in.clone(), cell_b),
-//             Err(CellsError::CellExists { cell_name }) if cell_name == cell_name_in
-//         ));
-//     }
-//
-//     #[ignore]
-//     #[test]
-//     fn test_get() {
-//         let mut cells = Cells::default();
-//         assert!(cells.cache.is_empty());
-//
-//         let cell_name = CellName::random_for_tests();
-//         let cell = CellSpec::new_for_tests();
-//         let _ = cells
-//             .allocate(cell_name.clone(), cell)
-//             .expect("failed to allocate");
-//
-//         cells.get(&cell_name, |_cell| Ok(())).expect("failed to get");
-//     }
-//
-//     #[ignore]
-//     #[test]
-//     fn test_get_missing_errors() {
-//         let mut cells = Cells::default();
-//         assert!(cells.cache.is_empty());
-//
-//         let cell_name_in = CellName::random_for_tests();
-//
-//         assert!(matches!(
-//             cells.get(&cell_name_in, |_cell| Ok(())),
-//             Err(CellsError::CellNotFound { cell_name }) if cell_name == cell_name_in
-//         ));
-//     }
-//
-//     #[ignore]
-//     #[test]
-//     fn test_free() {
-//         let mut cells = Cells::default();
-//         assert!(cells.cache.is_empty());
-//
-//         let cell_name = CellName::random_for_tests();
-//         let cell = CellSpec::new_for_tests();
-//         let _ = cells
-//             .allocate(cell_name.clone(), cell)
-//             .expect("failed to allocate");
-//
-//         cells.free(&cell_name).expect("failed to free");
-//         assert!(cells.cache.is_empty());
-//     }
-//
-//     #[ignore]
-//     #[test]
-//     fn test_free_missing_is_error() {
-//         let mut cells = Cells::default();
-//         assert!(cells.cache.is_empty());
-//
-//         let cell_name_in = CellName::random_for_tests();
-//
-//         assert!(matches!(
-//             cells.free(&cell_name_in),
-//             Err(CellsError::CellNotFound { cell_name }) if cell_name == cell_name_in
-//         ));
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Ignored: requires sudo, which we don't have in CI
+    #[ignore]
+    #[test]
+    fn test_allocate() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name = CellName::random_for_tests();
+        let cell = CellSpec::new_for_tests();
+
+        let _ = cells.allocate(cell_name.clone(), cell).expect("allocate");
+        assert!(cells.cache.contains_key(&cell_name));
+    }
+
+    // Ignored: requires sudo, which we don't have in CI
+    #[ignore]
+    #[test]
+    fn test_duplicate_allocate_is_error() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name_in = CellName::random_for_tests();
+
+        let cell_a = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(cell_name_in.clone(), cell_a)
+            .expect("failed on first allocate");
+
+        let cell_b = CellSpec::new_for_tests();
+        assert!(matches!(
+            cells.allocate(cell_name_in.clone(), cell_b),
+            Err(CellsError::CellExists { cell_name }) if cell_name == cell_name_in
+        ));
+    }
+
+    // Ignored: requires sudo, which we don't have in CI
+    #[ignore]
+    #[test]
+    fn test_get() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name = CellName::random_for_tests();
+        let cell = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(cell_name.clone(), cell)
+            .expect("failed to allocate");
+
+        cells.get(&cell_name, |_cell| Ok(())).expect("failed to get");
+    }
+
+    #[test]
+    fn test_get_missing_errors() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name_in = CellName::random_for_tests();
+
+        assert!(matches!(
+            cells.get(&cell_name_in, |_cell| Ok(())),
+            Err(CellsError::CellNotFound { cell_name }) if cell_name == cell_name_in
+        ));
+    }
+
+    // Ignored: requires sudo, which we don't have in CI
+    #[ignore]
+    #[test]
+    fn test_free() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name = CellName::random_for_tests();
+        let cell = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(cell_name.clone(), cell)
+            .expect("failed to allocate");
+
+        cells.free(&cell_name).expect("failed to free");
+        assert!(cells.cache.is_empty());
+    }
+
+    #[test]
+    fn test_free_missing_is_error() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        let cell_name_in = CellName::random_for_tests();
+
+        assert!(matches!(
+            cells.free(&cell_name_in),
+            Err(CellsError::CellNotFound { cell_name }) if cell_name == cell_name_in
+        ));
+    }
+}

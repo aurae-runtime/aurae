@@ -29,8 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 use anyhow::anyhow;
-use tracing::{info, trace};
 use std::{fs::OpenOptions, io::Read, mem, path::Path, slice};
+use tracing::{info, trace};
 
 use ::libc;
 

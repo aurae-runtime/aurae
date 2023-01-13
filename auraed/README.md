@@ -28,9 +28,10 @@ OPTIONS:
         --ca-crt <CA_CRT>            [default: /etc/aurae/pki/ca.crt]
     -h, --help                       Print help information
     -s, --socket <SOCKET>            [default: /var/run/aurae/aurae.sock]
+    -r, --runtime_dir <RUNTIME_DIR>  [default: /var/run/aurae]
         --server-crt <SERVER_CRT>    [default: /etc/aurae/pki/_signed.server.crt]
         --server-key <SERVER_KEY>    [default: /etc/aurae/pki/server.key]
-    -v, --verbose                    
+    -v, --verbose
     -V, --version                    Print version information
 
 ```
