@@ -36,9 +36,9 @@
 use crate::config::AuraeConfig;
 use anyhow::{anyhow, Context};
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use tokio::net::UnixStream;
-use tonic::transport::Uri;
-use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
+use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};
 use tower::service_fn;
 use x509_certificate::X509Certificate;
 
@@ -110,18 +110,21 @@ impl AuraeClient {
 
         // If the system socket looks like a URI, bind to it directly.  Otherwise, connect as a
         // UNIX socket (assume it's a file path).
-        let socket = system.socket.clone();
-        let channel = if let Ok(uri) = Uri::try_from(&socket) {
+        let channel = if let Ok(uri) = url::Url::parse(&system.socket) {
+            let uri = Uri::from_str(uri.as_str()).expect("valid uri");
             Channel::builder(uri).tls_config(tls_config)?.connect().await
         } else {
+            let socket = system.socket.clone();
             Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
                 .tls_config(tls_config)?
                 .connect_with_connector(service_fn(move |_: Uri| {
-                    UnixStream::connect(system.socket.clone())
+                    UnixStream::connect(socket.clone())
                 }))
                 .await
         }
-        .with_context(|| format!("unable to connect to socket {socket:?}"))?;
+        .with_context(|| {
+            format!("unable to connect to socket {:?}", system.socket)
+        })?;
 
         Ok(Self { channel, x509_details })
     }

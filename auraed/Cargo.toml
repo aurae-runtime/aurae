@@ -43,6 +43,7 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
+cgroups-rs = "0.3.0"
 clap = { version = "3.1.20", features = ["derive"] }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
@@ -70,11 +71,10 @@ tracing-log = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
 tracing-rfc-5424 = { version = "0.1.0" }  # syslog tracing
 uuid = { version = "1.2.2", features = ["v4"] }
-validation = { path = "../crates/validation", features = ["regex", "tonic"] }
+validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
 multi_log = "0.1.2"
-cgroups-rs = "0.3.0"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"

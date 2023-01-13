@@ -28,20 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use cgroup::Cgroup;
-use cpu::CpuController;
-use cpuset::CpusetController;
-pub use max::Max;
-pub use weight::Weight;
-
-mod cgroup;
-pub mod cpu;
-pub mod cpuset;
-mod max;
-mod weight;
+use super::{Max, Weight};
 
 #[derive(Debug, Clone)]
-pub struct CgroupSpec {
-    pub cpu: Option<CpuController>,
-    pub cpuset: Option<CpusetController>,
+pub struct CpuController {
+    pub weight: Option<Weight>,
+    pub max: Option<Max>,
 }
