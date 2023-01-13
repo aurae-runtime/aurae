@@ -33,12 +33,12 @@ use std::ops::Deref;
 use validation::{ValidatedField, ValidationError};
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub struct Max(i64);
+pub struct Limit(i64);
 
-impl Max {
+impl Limit {
     #[cfg(test)]
-    pub fn new(max: i64) -> Self {
-        Self(max)
+    pub fn new(limit: i64) -> Self {
+        Self(limit)
     }
 
     pub fn into_inner(self) -> i64 {
@@ -46,7 +46,7 @@ impl Max {
     }
 }
 
-impl ValidatedField<i64> for Max {
+impl ValidatedField<i64> for Limit {
     fn validate(
         input: Option<i64>,
         field_name: &str,
@@ -60,7 +60,7 @@ impl ValidatedField<i64> for Max {
     }
 }
 
-impl Deref for Max {
+impl Deref for Limit {
     type Target = i64;
 
     fn deref(&self) -> &Self::Target {
@@ -68,7 +68,7 @@ impl Deref for Max {
     }
 }
 
-impl Display for Max {
+impl Display for Limit {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }

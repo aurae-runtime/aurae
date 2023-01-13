@@ -299,7 +299,7 @@ message CpuController {
   // In one period (1_000_000), how much can the tasks run.
   //
   // * Minimum: 0
-  optional int64 max = 2;
+  optional int64 limit = 2;
 }
 
 // Docs: https://docs.kernel.org/admin-guide/cgroup-v2.html#cpuset

@@ -28,10 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{Max, Weight};
+use super::{Limit, Weight};
 
 #[derive(Debug, Clone)]
 pub struct CpuController {
     pub weight: Option<Weight>,
-    pub max: Option<Max>,
+    pub limit: Option<Limit>,
 }

@@ -2,7 +2,7 @@ use super::cells::{
     cgroups::{
         self,
         cpuset::{Cpus, Mems},
-        CgroupSpec, Max, Weight,
+        CgroupSpec, Limit, Weight,
     },
     CellName,
 };
@@ -124,15 +124,15 @@ pub struct ValidatedCpuController {
 
     #[field_type(Option<i64>)]
     #[validate(opt)]
-    pub max: Option<Max>,
+    pub limit: Option<Limit>,
 }
 
 impl CpuControllerTypeValidator for CpuControllerValidator {}
 
 impl From<ValidatedCpuController> for cgroups::cpu::CpuController {
     fn from(value: ValidatedCpuController) -> Self {
-        let ValidatedCpuController { weight, max } = value;
-        Self { weight, max }
+        let ValidatedCpuController { weight, limit } = value;
+        Self { weight, limit }
     }
 }
 
