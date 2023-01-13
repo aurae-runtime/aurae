@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{CellName, CellSpec, CellsError, Cgroup, Result};
+use super::{cgroups::Cgroup, CellName, CellSpec, CellsError, Result};
 use crate::runtime::cell_service::executables::auraed::NestedAuraed;
 use aurae_client::AuraeConfig;
 use std::io;

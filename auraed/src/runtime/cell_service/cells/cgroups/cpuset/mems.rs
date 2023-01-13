@@ -8,9 +8,9 @@ use std::{
 use validation::{ValidatedField, ValidationError};
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub struct CpusetMems(String);
+pub struct Mems(String);
 
-impl CpusetMems {
+impl Mems {
     #[cfg(test)]
     pub fn new(cpu_cpus: String) -> Self {
         Self(cpu_cpus)
@@ -21,7 +21,7 @@ impl CpusetMems {
     }
 }
 
-impl ValidatedField<String> for CpusetMems {
+impl ValidatedField<String> for Mems {
     fn validate(
         input: Option<String>,
         field_name: &str,
@@ -49,7 +49,7 @@ impl ValidatedField<String> for CpusetMems {
     }
 }
 
-impl Deref for CpusetMems {
+impl Deref for Mems {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -57,7 +57,7 @@ impl Deref for CpusetMems {
     }
 }
 
-impl Display for CpusetMems {
+impl Display for Mems {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
@@ -75,8 +75,8 @@ mod tests {
     #[test_case("1,2-5,6"; "combo")]
     #[test]
     fn test_validation_success(input: &str) {
-        let input: CpusetMems = CpusetMems::new(input.into());
-        assert!(CpusetMems::validate_for_creation(
+        let input: Mems = Mems::new(input.into());
+        assert!(Mems::validate_for_creation(
             Some(input.into_inner()),
             "cpu_cpus",
             None
@@ -90,8 +90,8 @@ mod tests {
     #[test_case("1,foo;5"; "bad combo")]
     #[test]
     fn test_validation_failure(input: &str) {
-        let input: CpusetMems = CpusetMems::new(input.into());
-        assert!(CpusetMems::validate_for_creation(
+        let input: Mems = Mems::new(input.into());
+        assert!(Mems::validate_for_creation(
             Some(input.into_inner()),
             "cpu_cpus",
             None
