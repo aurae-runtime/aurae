@@ -1,13 +1,18 @@
-use super::{
-    cells::{CellName, CgroupSpec, CpuCpus, CpuQuota, CpuWeight, CpusetMems},
-    executables::{auraed::IsolationControls, ExecutableName},
+use super::cells::{
+    cgroups::{
+        self,
+        cpuset::{Cpus, Mems},
+        CgroupSpec, Max, Weight,
+    },
+    CellName,
 };
+use super::executables::{auraed::IsolationControls, ExecutableName};
 use aurae_proto::runtime::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
-    CellServiceStartRequest, CellServiceStopRequest, Executable,
+    CellServiceStartRequest, CellServiceStopRequest, CpuController,
+    CpusetController, Executable,
 };
-use std::collections::VecDeque;
-use std::ffi::OsString;
+use std::{collections::VecDeque, ffi::OsString};
 use tokio::process::Command;
 use validation::{ValidatedField, ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
@@ -37,6 +42,117 @@ impl CellServiceAllocateRequestTypeValidator
             cell,
             Some(&validation::field_name(field_name, parent_name)),
         )
+    }
+}
+
+#[derive(ValidatedType, Debug, Clone)]
+pub struct ValidatedCell {
+    #[field_type(String)]
+    #[validate(create)]
+    pub name: CellName,
+
+    #[field_type(Option<CpuController>)]
+    pub cpu: Option<ValidatedCpuController>,
+
+    #[field_type(Option<CpusetController>)]
+    pub cpuset: Option<ValidatedCpusetController>,
+
+    #[validate(none)]
+    pub isolate_process: bool,
+
+    #[validate(none)]
+    pub isolate_network: bool,
+}
+
+impl CellTypeValidator for CellValidator {
+    fn validate_cpu(
+        cpu: Option<CpuController>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Option<ValidatedCpuController>, ValidationError> {
+        let Some(cpu) = cpu else {
+            return Ok(None);
+        };
+
+        Ok(Some(ValidatedCpuController::validate(
+            cpu,
+            Some(&*validation::field_name(field_name, parent_name)),
+        )?))
+    }
+
+    fn validate_cpuset(
+        cpuset: Option<CpusetController>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Option<ValidatedCpusetController>, ValidationError> {
+        let Some(cpuset) = cpuset else {
+            return Ok(None);
+        };
+
+        Ok(Some(ValidatedCpusetController::validate(
+            cpuset,
+            Some(&*validation::field_name(field_name, parent_name)),
+        )?))
+    }
+}
+
+impl From<ValidatedCell> for super::cells::CellSpec {
+    fn from(x: ValidatedCell) -> Self {
+        let ValidatedCell {
+            name: _,
+            cpu,
+            cpuset,
+            isolate_process,
+            isolate_network,
+        } = x;
+
+        Self {
+            cgroup_spec: CgroupSpec {
+                cpu: cpu.map(|x| x.into()),
+                cpuset: cpuset.map(|x| x.into()),
+            },
+            iso_ctl: IsolationControls { isolate_process, isolate_network },
+        }
+    }
+}
+
+#[derive(ValidatedType, Debug, Clone)]
+pub struct ValidatedCpuController {
+    #[field_type(Option<u64>)]
+    #[validate(opt)]
+    pub weight: Option<Weight>,
+
+    #[field_type(Option<i64>)]
+    #[validate(opt)]
+    pub max: Option<Max>,
+}
+
+impl CpuControllerTypeValidator for CpuControllerValidator {}
+
+impl From<ValidatedCpuController> for cgroups::cpu::CpuController {
+    fn from(value: ValidatedCpuController) -> Self {
+        let ValidatedCpuController { weight, max } = value;
+        Self { weight, max }
+    }
+}
+
+#[derive(ValidatedType, Debug, Clone)]
+pub struct ValidatedCpusetController {
+    #[field_type(Option<String>)]
+    #[validate(opt)]
+    pub cpus: Option<Cpus>,
+
+    #[field_type(Option<String>)]
+    #[validate(opt)]
+    pub mems: Option<Mems>,
+}
+
+impl CpusetControllerTypeValidator for CpusetControllerValidator {}
+
+impl From<ValidatedCpusetController> for cgroups::cpuset::CpusetController {
+    fn from(value: ValidatedCpusetController) -> Self {
+        let ValidatedCpusetController { cpus, mems } = value;
+        Self { cpus, mems }
     }
 }
 
@@ -125,60 +241,6 @@ impl CellServiceStopRequestTypeValidator for CellServiceStopRequestValidator {
             .collect();
 
         Ok(cell_name)
-    }
-}
-
-#[derive(ValidatedType, Debug, Clone)]
-pub struct ValidatedCell {
-    #[field_type(String)]
-    #[validate(create)]
-    pub name: CellName,
-
-    #[field_type(String)]
-    #[validate(create)]
-    pub cpu_cpus: CpuCpus,
-
-    #[field_type(u64)]
-    #[validate(create)]
-    pub cpu_shares: CpuWeight,
-
-    #[field_type(String)]
-    #[validate(create)]
-    pub cpu_mems: CpusetMems,
-
-    #[field_type(i64)]
-    #[validate(create)]
-    pub cpu_quota: CpuQuota,
-
-    #[validate(none)]
-    pub isolate_process: bool,
-    #[validate(none)]
-    pub isolate_network: bool,
-}
-
-impl CellTypeValidator for CellValidator {}
-
-impl From<ValidatedCell> for super::cells::CellSpec {
-    fn from(x: ValidatedCell) -> Self {
-        let ValidatedCell {
-            name: _,
-            cpu_cpus,
-            cpu_shares,
-            cpu_mems,
-            cpu_quota,
-            isolate_process,
-            isolate_network,
-        } = x;
-
-        Self {
-            cgroup_spec: CgroupSpec {
-                cpu_cpus,
-                cpu_quota,
-                cpu_weight: cpu_shares,
-                cpuset_mems: cpu_mems,
-            },
-            iso_ctl: IsolationControls { isolate_process, isolate_network },
-        }
     }
 }
 

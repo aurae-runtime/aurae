@@ -147,7 +147,7 @@ headers-write: ## Fix any problematic files blindly.
 
 .PHONY: start
 start:
-	sudo $(HOME)/.cargo/bin/auraed
+	sudo -E $(HOME)/.cargo/bin/auraed
 
 .PHONY: help
 help:  ## Show help messages for make targets
