@@ -34,6 +34,10 @@ use cgroups_rs::{hierarchies, Hierarchy};
 use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
 
+/// This is used as the denominator for the CPU quota/period configuration.  This allows users to
+/// set the quota as if it was in the unit "µs/s" without worrying about also setting the period.
+const MICROSECONDS_PER_SECOND: u64 = 1000000;
+
 #[derive(Debug)]
 pub struct Cgroup {
     cell_name: CellName,
@@ -54,7 +58,7 @@ impl Cgroup {
             .cpu()
             .shares(cpu_weight.into_inner())
             .mems(cpuset_mems.into_inner())
-            .period(1000000) // microseconds in a second
+            .period(MICROSECONDS_PER_SECOND)
             .quota(cpu_quota.into_inner())
             .cpus(cpu_cpus.into_inner())
             .done()
