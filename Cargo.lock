@@ -205,7 +205,6 @@ dependencies = [
  "deno_ast",
  "deno_core",
  "tokio",
- "tonic-health",
 ]
 
 [[package]]
