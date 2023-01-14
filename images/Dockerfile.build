@@ -102,15 +102,13 @@ ENTRYPOINT ["make"]
 
 FROM main as cargo-udeps
 ### libssdl-dev is required to install cargo-udeps
-### this stage should not be used to build auraed - use the `builder` stage below instead
+### this docker stage should not be used to build auraed - use the `builder` stage below instead
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl \
-    make \
-    musl-tools \
     protobuf-compiler \
     libssl-dev \
-    openssl
+    openssl \
+    pkg-config
 
 ## Setup cargo-udeps
 RUN cargo install cargo-udeps
