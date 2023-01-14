@@ -41,9 +41,9 @@ env:
  CARGO_TERM_COLOR: always
 jobs:
  build-container:
-   uses: ./.github/workflows/031-ubuntu-aurae-builder-image-ubuntu-aurae-builder-docker-cargo-udeps-build.yml
- build-docs-with-container:
-   name: Build Docs
+   uses: ./.github/workflows/031-ubuntu-aurae-builder-image-ubuntu-docker-cargo-udeps-build.yml
+ check-udeps:
+   name: Check udeps
    runs-on: ubuntu-latest
    needs: build-container
    container:

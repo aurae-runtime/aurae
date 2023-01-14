@@ -41,7 +41,7 @@ jobs:
    name: Build container image
    runs-on: ubuntu-latest
    concurrency:
-     group: ${{ format('{0}-{1}', github.ref, github.job) }}
+     group: ${{ format('{0}-{1}-030', github.ref, github.job) }}
    outputs:
        tag: ${{ steps.image-tag.outputs.tag}}
    steps:

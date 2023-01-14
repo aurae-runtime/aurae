@@ -52,7 +52,7 @@ env:
 jobs:
  build-container:
    uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build.yml
- build-docs-with-container:
+ docs:
    name: Build Docs
    runs-on: ubuntu-latest
    needs: build-container
