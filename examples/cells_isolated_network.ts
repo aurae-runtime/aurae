@@ -37,7 +37,9 @@ const cellName = "ae-net-1";
 // [ Allocate Shared NS ]
 let net_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
-        cpuShares: 2,
+        cpu: runtime.CpuController.fromPartial({
+            weight: 2
+        }),
         name: cellName,
         isolateNetwork: true,
         isolateProcess: false,

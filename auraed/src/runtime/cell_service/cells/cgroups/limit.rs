@@ -1,4 +1,3 @@
-#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
@@ -28,58 +27,49 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/runtime.ts";
 
-let cells = new runtime.CellServiceClient();
-const cellName = "ae-net-proc-isolated-1";
+use std::fmt::{Display, Formatter};
+use std::ops::Deref;
+use validation::{ValidatedField, ValidationError};
 
-// [ Allocate Shared NS ]
-let net_proc_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
-    cell: runtime.Cell.fromPartial({
-        cpu: runtime.CpuController.fromPartial({
-            weight: 2
-        }),
-        name: cellName,
-        isolateNetwork: true,
-        isolateProcess: true,
-    })
-});
-helpers.print(net_proc_allocated)
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct Limit(i64);
 
-// [ Start ]
-let net_proc_started1 = await cells.start(<runtime.CellServiceStartRequest>{
-    cellName: cellName,
-    executable: runtime.Executable.fromPartial({
-        command: "ls /proc",
-        description: "List processes",
-        name: "ps-aux"
-    })
-})
-helpers.print(net_proc_started1)
+impl Limit {
+    #[cfg(test)]
+    pub fn new(limit: i64) -> Self {
+        Self(limit)
+    }
 
-// [ Start ]
-let net_proc_started2 = await cells.start(<runtime.CellServiceStartRequest>{
-    cellName: cellName,
-    executable: runtime.Executable.fromPartial({
-        command: "ifconfig && ip a && route",
-        description: "Show network info",
-        name: "net-info"
-    })
-})
-helpers.print(net_proc_started2)
+    pub fn into_inner(self) -> i64 {
+        self.0
+    }
+}
 
-let host_started = await cells.start(<runtime.CellServiceStartRequest>{
-    cellName: cellName,
-    executable: runtime.Executable.fromPartial({
-        command: "hostname",
-        description: "Show hostname",
-        name: "show-hostname"
-    })
-})
-helpers.print(host_started)
+impl ValidatedField<i64> for Limit {
+    fn validate(
+        input: Option<i64>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Self, ValidationError> {
+        let input = validation::required(input, field_name, parent_name)?;
 
-// [ Free ]
-await cells.free(<runtime.CellServiceFreeRequest>{
-    cellName: cellName
-});
+        validation::minimum_value(input, 0, "units", field_name, parent_name)?;
+
+        Ok(Self(input))
+    }
+}
+
+impl Deref for Limit {
+    type Target = i64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Display for Limit {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}

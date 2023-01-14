@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{CellName, CellSpec, CellsError, Cgroup, Result};
+use super::{cgroups::Cgroup, CellName, CellSpec, CellsError, Result};
 use crate::runtime::cell_service::executables::auraed::NestedAuraed;
 use aurae_client::AuraeConfig;
 use std::io;
@@ -67,20 +67,22 @@ impl Cell {
             return Ok(());
         };
 
-        let cgroup: Cgroup =
-            Cgroup::new(self.name.clone(), self.spec.cgroup_spec.clone());
-
-        let auraed = NestedAuraed::new(&self.name, self.spec.iso_ctl.clone())
-            .map_err(|e| CellsError::FailedToAllocateCell {
-            cell_name: self.name.clone(),
-            source: e,
-        })?;
+        let mut auraed =
+            NestedAuraed::new(&self.name, self.spec.iso_ctl.clone()).map_err(
+                |e| CellsError::FailedToAllocateCell {
+                    cell_name: self.name.clone(),
+                    source: e,
+                },
+            )?;
 
         let pid = auraed.pid();
 
-        if let Err(e) = cgroup.add_task((pid.as_raw() as u64).into()) {
-            // TODO: what if free also fails?
-            let _ = self.free();
+        let cgroup: Cgroup =
+            Cgroup::new(self.name.clone(), self.spec.cgroup_spec.clone());
+
+        if let Err(e) = cgroup.add_task_by_tgid((pid.as_raw() as u64).into()) {
+            let _best_effort = auraed.kill();
+            let _best_effort = cgroup.delete();
 
             return Err(CellsError::AbortedAllocateCell {
                 cell_name: self.name.clone(),
