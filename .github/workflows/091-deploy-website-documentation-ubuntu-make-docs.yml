@@ -55,7 +55,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
-      - name: Install dependencies
+      - name: Install protoc-gen-doc in [ubuntu:latest]
         run: |
           sudo apt-get update
           sudo apt-get install -y protobuf-compiler
