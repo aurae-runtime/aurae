@@ -62,13 +62,14 @@
 #![warn(missing_docs)]
 #![allow(dead_code)]
 
+use crate::spawn::spawn_auraed_oci_to;
 use anyhow::Context;
 use aurae_proto::{
     discovery::discovery_service_server::DiscoveryServiceServer,
     runtime::cell_service_server::CellServiceServer,
     runtime::pod_service_server::PodServiceServer,
 };
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use discovery::DiscoveryService;
 use init::SocketStream;
 use runtime::CellService;
@@ -86,6 +87,7 @@ pub mod init;
 pub mod logging;
 mod observe;
 mod runtime;
+mod spawn;
 
 /// Default Unix domain socket path for `auraed`.
 ///
@@ -138,11 +140,31 @@ struct AuraedOptions {
     /// Run auraed as a nested instance of itself in an Aurae cell.
     #[clap(long)]
     nested: bool,
+    // Subcommands for the project
+    #[clap(subcommand)]
+    subcmd: Option<SubCommands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum SubCommands {
+    Spawn {
+        #[clap(short, long, value_parser, default_value = ".")]
+        output: String,
+    },
 }
 
 #[allow(missing_docs)] // TODO
 pub async fn daemon() -> i32 {
     let options = AuraedOptions::parse();
+
+    match &options.subcmd {
+        Some(SubCommands::Spawn { output }) => {
+            info!("Spawning Auraed OCI bundle: {}", output);
+            spawn_auraed_oci_to(output).expect("spawning");
+            return EXIT_OKAY;
+        }
+        None => {}
+    }
 
     info!("Starting Aurae Daemon Runtime");
     info!("Aurae Daemon is pid {}", std::process::id());
@@ -247,14 +269,18 @@ impl AuraedRuntime {
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
             DiscoveryServiceServer::new(discovery_service.clone());
-        health_reporter.set_serving::<DiscoveryServiceServer<DiscoveryService>>().await;
+        health_reporter
+            .set_serving::<DiscoveryServiceServer<DiscoveryService>>()
+            .await;
 
         let pod_service = PodService::new(self.runtime_dir.clone());
         let pod_service_server = PodServiceServer::new(pod_service.clone());
         health_reporter.set_serving::<PodServiceServer<PodService>>().await;
 
-        let graceful_shutdown =
-            graceful_shutdown::GracefulShutdown::new(health_reporter, cell_service);
+        let graceful_shutdown = graceful_shutdown::GracefulShutdown::new(
+            health_reporter,
+            cell_service,
+        );
         let graceful_shutdown_signal = graceful_shutdown.subscribe();
 
         // Run the server concurrently
