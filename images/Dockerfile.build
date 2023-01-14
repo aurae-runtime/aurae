@@ -67,7 +67,9 @@ RUN  apt-get update && \
     curl \
     make \
     musl-tools \
-    protobuf-compiler 
+    protobuf-compiler \
+    git \
+    python3-pip
 RUN rm -rf /var/lib/apt/lists/*
 
 ## Setup Rust
@@ -105,7 +107,6 @@ FROM main as cargo-udeps
 ### this docker stage should not be used to build auraed - use the `builder` stage below instead
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    protobuf-compiler \
     libssl-dev \
     openssl \
     pkg-config

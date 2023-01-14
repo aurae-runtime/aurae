@@ -59,8 +59,6 @@ jobs:
             python-version: 3.x
         - name: Install mkdocs-material [aurae-builder:latest]
           run: |
-            apt-get update 
-            apt-get install -y python3-pip
             pip install mkdocs-material
         - name: Build Documentation [make docs]
           run: make docs
