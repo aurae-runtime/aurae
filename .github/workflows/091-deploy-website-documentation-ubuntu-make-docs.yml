@@ -49,20 +49,20 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-   container:
-     image: ghcr.io/${{ github.repository }}/aurae-builder:latest
-     credentials:
-       username:  ${{ github.actor }}
-       password:  ${{ secrets.GITHUB_TOKEN }}
-   steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
-      - name: Install mkdocs-material [aurae-builder:latest]
-        run: |
-          pip install mkdocs-material
-      - name: Build Documentation [make docs]
-        run: make docs
-      # - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
-      #   run: mkdocs gh-deploy --force
+    container:
+      image: ghcr.io/${{ github.repository }}/aurae-builder:latest
+      credentials:
+        username:  ${{ github.actor }}
+        password:  ${{ secrets.GITHUB_TOKEN }}
+    steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-python@v2
+          with:
+            python-version: 3.x
+        - name: Install mkdocs-material [aurae-builder:latest]
+          run: |
+            pip install mkdocs-material
+        - name: Build Documentation [make docs]
+          run: make docs
+        # - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
+        #   run: mkdocs gh-deploy --force
