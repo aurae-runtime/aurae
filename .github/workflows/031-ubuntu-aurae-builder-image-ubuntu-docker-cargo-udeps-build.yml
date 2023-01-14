@@ -27,46 +27,73 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-name: "Cargo Udeps (007) [aurae-builder:latest]"
-on:
- push:
-   branches: main
- pull_request:
-   branches: main
-
+#
+name: "Aurae Builder Image (030) [ubuntu:latest]"
+on: [workflow_call]
 permissions:
  contents: read
  packages: write
 env:
  CARGO_TERM_COLOR: always
+ CACHE_VERSION: v0
 jobs:
  build-container:
-   uses: ./.github/workflows/031-ubuntu-aurae-builder-image-ubuntu-aurae-builder-docker-cargo-udeps-build.yml
- build-docs-with-container:
-   name: Build Docs
+   name: Build container image
    runs-on: ubuntu-latest
-   needs: build-container
-   container:
-     image: ghcr.io/${{ github.repository }}/aurae-builder:cargo-udeps-latest
-     credentials:
-       username:  ${{ github.actor }}
-       password:  ${{ secrets.GITHUB_TOKEN }}
+   concurrency:
+     group: ${{ format('{0}-{1}', github.ref, github.job) }}
+   outputs:
+       tag: ${{ steps.image-tag.outputs.tag}}
    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        id: cargo-cache
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: check-deps-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-      - name: Build [make build]
-        run: make build
-      - name: Cargo udeps [make check-deps]
-        run: make check-deps
+     - uses: actions/checkout@v3
+       with:
+         fetch-depth: 0
+     - id: image-tag
+       run: |
+         echo "tag=${{ hashFiles('**images/Dockerfile.build') }}" >> $GITHUB_OUTPUT
+
+     - name: Check if container build needs to run
+       uses: actions/cache@v3
+       id: check-change
+       with:
+         path: |
+           images/Dockerfile.build
+         key: build-image-marker-${{ runner.os }}-${{ hashFiles('**images/Dockerfile.build') }}-${{env.CACHE_VERSION}}
+
+     - name: Set up container buildx
+       if: steps.check-change.outputs.cache-hit != 'true'
+       uses: docker/setup-buildx-action@v2
+       with:
+         install: true
+
+     - name: Login to Github Container Registry
+       if: steps.check-change.outputs.cache-hit != 'true'
+       uses: docker/login-action@v2
+       with:
+         registry: ghcr.io
+         username:  ${{ github.actor }}
+         password:  ${{ secrets.GITHUB_TOKEN }}
+
+     - name: Create Docker Build Image
+       id: build-and-push
+       if: steps.check-change.outputs.cache-hit != 'true' && github.event.pull_request.head.repo.full_name == github.repository
+       uses: docker/build-push-action@v2
+       timeout-minutes: 15
+       with:
+         context: .
+         file: images/Dockerfile.build
+         push: true
+         build-args: CACHE_VERSION=${{env.CACHE_VERSION}}
+         tags: ghcr.io/${{ github.repository }}/aurae-builder:cargo-udeps-latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
+         cache-from: type=gha
+         cache-to: type=gha,mode=max
+         target: cargo-udeps
+
+     - name: Fail if fork is changing Dockerfile
+       id: build
+       if: github.event.pull_request.head.repo.full_name != github.repository
+       run: |
+         ## If the fork has changed the Dockerfile, we need to fail the pipeline.
+         ## This is to prevent a case where a forked repo could expect changes in the Dockerfile
+         ## to be used in the build process.
+         git diff --quiet HEAD origin/main -- images/Dockerfile.build || exit 1

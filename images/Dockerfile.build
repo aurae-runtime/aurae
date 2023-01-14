@@ -67,7 +67,7 @@ RUN  apt-get update && \
     curl \
     make \
     musl-tools \
-    protobuf-compiler
+    protobuf-compiler 
 RUN rm -rf /var/lib/apt/lists/*
 
 ## Setup Rust
@@ -94,14 +94,28 @@ RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE
     mv bin/vale /usr/local/bin/vale && \
     rm vale.tar.gz
 
-## Setup cargo-udeps
-RUN cargo install cargo-udeps
-
 WORKDIR /app
 
 FROM main as local
 WORKDIR /app
 ENTRYPOINT ["make"]
+
+FROM main as cargo-udeps
+### libssdl-dev is required to install cargo-udeps
+### this stage should not be used to build auraed - use the `builder` stage below instead
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    make \
+    musl-tools \
+    protobuf-compiler \
+    libssl-dev \
+    openssl
+
+## Setup cargo-udeps
+RUN cargo install cargo-udeps
+WORKDIR /app
+
 
 FROM main as builder
 WORKDIR /app
