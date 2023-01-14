@@ -28,9 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cell_service::executables::auraed::isolation_controls::{
-    Isolation, IsolationControls,
-};
+use super::isolation_controls::{Isolation, IsolationControls};
 use aurae_client::AuraeConfig;
 use clone3::Flags;
 use nix::{
