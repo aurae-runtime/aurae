@@ -39,31 +39,30 @@
 # When this build passes we should have confidence that our documentation is
 # updated on the website complete with best practices.
 #
-name: "Deploy Website Documentation (090) [ubuntu:latest]"
+name: "Deploy Website Documentation (091) [aurae:builder]"
 on:
-  push:
-    branches:
-      - main
+ push:
+   branches: main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/aurae-builder:latest
+      credentials:
+        username:  ${{ github.actor }}
+        password:  ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: bufbuild/buf-setup-action@v1
-        with:
-          github_token: ${{ github.token }}
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
-      - name: Install protoc-gen-doc in [ubuntu:latest]
-        run: |
-          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
-          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
-          chmod +x protoc-gen-doc
-          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
-          sudo apt-get update
-          sudo apt-get install -y protobuf-compiler
-      - name: Build Documentation [make docs]
-        run: make docs
-      - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
-        run: mkdocs gh-deploy --force
+        - uses: actions/checkout@v3
+        - uses: actions/setup-python@v2
+          with:
+            python-version: 3.x
+        - name: Install mkdocs-material [aurae-builder:latest]
+          run: |
+            apt-get update 
+            apt-get install -y python3-pip
+            pip install mkdocs-material
+        - name: Build Documentation [make docs]
+          run: make docs
+        - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
+          run: mkdocs gh-deploy --force
