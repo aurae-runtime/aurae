@@ -34,7 +34,6 @@ pub use executable_name::ExecutableName;
 pub use executables::Executables;
 use tokio::process::Command;
 
-pub mod auraed;
 mod error;
 mod executable;
 mod executable_name;

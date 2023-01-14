@@ -4,9 +4,9 @@ use super::cells::{
         cpuset::{Cpus, Mems},
         CgroupSpec, Limit, Weight,
     },
-    CellNamePath,
+    CellNamePath, IsolationControls,
 };
-use super::executables::{auraed::IsolationControls, ExecutableName};
+use super::executables::ExecutableName;
 use aurae_proto::runtime::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
     CellServiceStartRequest, CellServiceStopRequest, CpuController,
