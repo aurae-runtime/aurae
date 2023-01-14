@@ -39,6 +39,7 @@
 # When this build passes we should have a safe and tested codebase
 # with best linting practices.
 #
+# REMOVE IN FAVOR OF TEST 035
 name: "Cargo Test Lint (005) [ubuntu:latest]"
 on:
   push:

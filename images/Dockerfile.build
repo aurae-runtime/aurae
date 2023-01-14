@@ -67,7 +67,9 @@ RUN  apt-get update && \
     curl \
     make \
     musl-tools \
-    protobuf-compiler
+    protobuf-compiler \
+    git \
+    python3-pip
 RUN rm -rf /var/lib/apt/lists/*
 
 ## Setup Rust
@@ -99,6 +101,20 @@ WORKDIR /app
 FROM main as local
 WORKDIR /app
 ENTRYPOINT ["make"]
+
+FROM main as cargo-udeps
+### libssdl-dev is required to install cargo-udeps
+### this docker stage should not be used to build auraed - use the `builder` stage below instead
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libssl-dev \
+    openssl \
+    pkg-config
+
+## Setup cargo-udeps
+RUN cargo install cargo-udeps
+WORKDIR /app
+
 
 FROM main as builder
 WORKDIR /app
