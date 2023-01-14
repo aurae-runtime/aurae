@@ -43,8 +43,6 @@ name: "Deploy Website Documentation (091) [aurae:builder]"
 on:
  push:
    branches: main
- pull_request:
-   branches: main
 
 jobs:
   deploy:
@@ -66,5 +64,5 @@ jobs:
             pip install mkdocs-material
         - name: Build Documentation [make docs]
           run: make docs
-        # - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
-        #   run: mkdocs gh-deploy --force
+        - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
+          run: mkdocs gh-deploy --force
