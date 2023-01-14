@@ -27,18 +27,31 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-name: "Cargo Udeps (007) [ubuntu:latest]"
+name: "Cargo Udeps (007) [aurae-builder:latest]"
 on:
-  push:
-    branches: main
-  pull_request:
-    branches: main
+ push:
+   branches: main
+ pull_request:
+   branches: main
+
+permissions:
+ contents: read
+ packages: write
 env:
-  CARGO_TERM_COLOR: always
+ CARGO_TERM_COLOR: always
 jobs:
-  check-deps:
-    runs-on: ubuntu-latest
-    steps:
+ build-container:
+   uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build.yml
+ build-docs-with-container:
+   name: Build Docs
+   runs-on: ubuntu-latest
+   needs: build-container
+   container:
+     image: ghcr.io/${{ github.repository }}/aurae-builder:latest
+     credentials:
+       username:  ${{ github.actor }}
+       password:  ${{ secrets.GITHUB_TOKEN }}
+   steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         id: cargo-cache
@@ -50,38 +63,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: check-deps-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install protoc-gen-doc in [ubuntu:latest]
-        run: |
-          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
-          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
-          chmod +x protoc-gen-doc
-          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
-          sudo apt-get update
-          sudo apt-get install -y protobuf-compiler
-      - name: Install buf in [ubuntu:latest]
-        run: |
-          curl -sSL "https://github.com/bufbuild/buf/releases/download/v1.11.0/buf-$(uname -s)-$(uname -m)" -o "/usr/local/bin/buf" 
-          chmod +x "/usr/local/bin/buf"
-      - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
-        # Please (seriously please) be careful about adding commands here.
-        # This is our core way of validating that our binary is "healthy"
-        # If we need to install anything with the word "lib" in it to get
-        # the build to pass, we likely should be having other discussions
-        # instead of adding commands here.
-        #
-        # For example we should NOT be adding libraries such as "libseccomp"
-        # or "libdbus".
-        #
-        # If in doubt, please ask in Discord in the build channel.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-      - name: Install cargo-udeps
-        if: steps.cargo-cache.outputs.cache-hit != 'true'
-        run: cargo install cargo-udeps --locked
       - name: Build [make build]
         run: make build
       - name: Cargo udeps [make check-deps]
