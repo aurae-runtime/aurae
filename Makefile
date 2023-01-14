@@ -145,6 +145,18 @@ headers-check: ## Only check for problematic files.
 headers-write: ## Fix any problematic files blindly.
 	./hack/headers-write
 
+.PHONY: spawn
+spawn: ## Spawn the current auraed binary and start it in a container
+	./hack/spawn
+
+.PHONY: busybox
+busybox: ## Creat a "busybox" OCI bundle in target
+	./hack/oci-busybox
+
+.PHONY: alpine
+alpine: ## Creat an "alpine" OCI bundle in target
+	./hack/oci-alpine
+
 .PHONY: start
 start:
 	sudo -E $(HOME)/.cargo/bin/auraed
@@ -177,12 +189,10 @@ oci-image-build-raw: ## Plain Jane oci build
 container: ## Build the container defined in hack/container
 	./hack/container
 
-
-.PHONY: test-workflow
-test-workflow: ## Tests a github actions workflow locally using `act`
-	@act -W ./.github/workflows/$(file)
-
 .PHONY: check-deps
 check-deps: ## Check if there are any unused dependencies in Cargo.toml
 	cargo +nightly udeps --all-targets
 
+.PHONY: test-workflow
+test-workflow: ## Tests a github actions workflow locally using `act`
+	@act -W ./.github/workflows/$(file)
