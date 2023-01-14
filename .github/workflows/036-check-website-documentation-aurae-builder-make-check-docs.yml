@@ -28,6 +28,15 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
+# This will check the documentation (only).
+#
+# This build check will introduce confidence for the following:
+#
+# - That the documentation is updated and passes our spelling checks.
+#
+# When this build passes we should have confidence that our documentation is
+# ready to be pushed to the website.
+#
 name: "Cargo Docs (036) [aurae-builder:latest]"
 on:
  push:
