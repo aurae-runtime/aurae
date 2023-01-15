@@ -28,11 +28,11 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# The primary Aurae builder container, used to cache and support the GitHub
+# The primary Aurae test container, used to cache and support the GitHub
 # builds.
 #
 # This container image is NOT intended to run Aurae in production.
-# This container image is only intended for internal builds.
+# This container image is only intended for internal builds and tests
 #
 # syntax = docker/dockerfile:1.4
 FROM rust:1-slim-bullseye as main
@@ -41,31 +41,21 @@ LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
 ## Define ARGs
 ARG CACHE_VERSION=v0
 ARG BUF_VERSION=1.11.0
+ARG VALE_VERSION=2.21.3
 ARG PROTOC_VERSION=1.5.1
 
 ## Install packages
-#
-# Do not at GNU libraries here! Do not add GNU libraries here!
-#
-# Please (seriously please) be careful about adding commands here.
-# This is our core way of validating that our binary is "healthy"
-# If we need to install anything with the word "lib" in it to get
-# the build to pass, we likely should be having other discussions
-# instead of adding commands here.
-#
-# Do not add GNU libraries here! Do not add GNU libraries here!
-#
-# For example we should NOT be adding libraries such as "libseccomp"
-# or "libdbus".
-#
-# If in doubt, please ask in Discord in the build channel.
-#
-# Do not at GNU libraries here! Do not add GNU libraries here!
 RUN  apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
+    make \
     musl-tools \
-    protobuf-compiler 
+    protobuf-compiler \
+    git \
+    python3-pip \
+    libssl-dev \
+    openssl \
+    pkg-config
 RUN rm -rf /var/lib/apt/lists/*
 
 ## Setup Rust
@@ -84,5 +74,16 @@ RUN curl -sSL \
     "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(uname -s)-$(uname -m)" \
     -o "/usr/local/bin/buf" && \
     chmod +x "/usr/local/bin/buf"
+
+## Setup Vale
+RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+    -o vale.tar.gz && \
+    tar -xvzf vale.tar.gz -C bin && \
+    mv bin/vale /usr/local/bin/vale && \
+    rm vale.tar.gz
+
+
+## Setup cargo-udeps
+RUN cargo install cargo-udeps
 
 WORKDIR /aurae

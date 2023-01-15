@@ -50,15 +50,15 @@ jobs:
          fetch-depth: 0
      - id: image-tag
        run: |
-         echo "tag=${{ hashFiles('**images/Dockerfile.build') }}" >> $GITHUB_OUTPUT
+         echo "tag=${{ hashFiles('**images/Dockerfile.test') }}" >> $GITHUB_OUTPUT
 
      - name: Check if container build needs to run
        uses: actions/cache@v3
        id: check-change
        with:
          path: |
-           images/Dockerfile.build
-         key: build-image-marker-${{ runner.os }}-${{ hashFiles('**images/Dockerfile.build') }}-${{env.CACHE_VERSION}}
+           images/Dockerfile.test
+         key: build-image-marker-${{ runner.os }}-${{ hashFiles('**images/Dockerfile.test') }}-${{env.CACHE_VERSION}}
 
      - name: Set up container buildx
        if: steps.check-change.outputs.cache-hit != 'true'
@@ -81,13 +81,12 @@ jobs:
        timeout-minutes: 15
        with:
          context: .
-         file: images/Dockerfile.build
+         file: images/Dockerfile.test
          push: true
          build-args: CACHE_VERSION=${{env.CACHE_VERSION}}
-         tags: ghcr.io/${{ github.repository }}/aurae-builder:cargo-udeps-latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
+         tags: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
          cache-from: type=gha
          cache-to: type=gha,mode=max
-         target: cargo-udeps
 
      - name: Fail if fork is changing Dockerfile
        id: build

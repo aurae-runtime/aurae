@@ -42,7 +42,7 @@ env:
  CARGO_TERM_COLOR: always
 jobs:
  build-container:
-   uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build.yml
+   uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build-builder.yml
  build:
    name: Build (lint, compile, test)
    runs-on: ubuntu-latest
