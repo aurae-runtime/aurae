@@ -29,6 +29,8 @@
     - [CellServiceStopRequest](#aurae-runtime-v0-CellServiceStopRequest)
     - [CellServiceStopResponse](#aurae-runtime-v0-CellServiceStopResponse)
     - [Container](#aurae-runtime-v0-Container)
+    - [CpuController](#aurae-runtime-v0-CpuController)
+    - [CpusetController](#aurae-runtime-v0-CpusetController)
     - [Executable](#aurae-runtime-v0-Executable)
     - [Pod](#aurae-runtime-v0-Pod)
     - [PodServiceAllocateRequest](#aurae-runtime-v0-PodServiceAllocateRequest)
@@ -201,10 +203,8 @@ An isolation resource used to divide a system into smaller resource
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  | Resource parameters for control groups (cgroups) / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) / crate. See / [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs) |
-| cpu_cpus | [string](#string) |  | A comma-separated list of CPU IDs where the task in the control group / can run. Dashes between numbers indicate ranges. |
-| cpu_shares | [uint64](#uint64) |  | Cgroups can be guaranteed a minimum number of &#34;CPU shares&#34; / when a system is busy. This does not limit a cgroup&#39;s CPU / usage if the CPUs are not busy. For further information, / see Documentation/scheduler/sched-design-CFS.rst (or / Documentation/scheduler/sched-design-CFS.txt in Linux 5.2 / and earlier). / / Weight of how much of the total CPU time should this control / group get. Note that this is hierarchical, so this is weighted / against the siblings of this control group. |
-| cpu_mems | [string](#string) |  | Same syntax as the cpus field of this structure, but applies to / memory nodes instead of processors. |
-| cpu_quota | [int64](#int64) |  | In one period, how much can the tasks run in microseconds. |
+| cpu | [CpuController](#aurae-runtime-v0-CpuController) |  |  |
+| cpuset | [CpusetController](#aurae-runtime-v0-CpusetController) |  |  |
 | isolate_process | [bool](#bool) |  | Will isolate the process (and proc filesystem) from the host. / Will unshare the pid, ipc, uts, and mount namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
 | isolate_network | [bool](#bool) |  | Will isolate the network from the host. / Will unshare the net namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
 
@@ -346,6 +346,44 @@ Request to stop an executable at runtime.
 | name | [string](#string) |  | The name of the container. |
 | image | [string](#string) |  | Define a remote container image. / / This should be a fully qualified URI and not a container &#34;shortname&#34;. / The file type that is returned should be an uncompresed OCI compatible container &#34;bundle&#34; / as defined in the [OCI spec](https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle) / / ## Building a container bundle from an existing OCI image / / OCI &#34;images&#34; are effectively just tarballs. You can assemble / a bundle from an existing known image. / / ```bash / cd examples / mkdir -p aurae-busybox/rootfs / docker pull busybox / docker create --name aurae-busybox busybox / docker export aurae-busybox | tar -xfC aurae-busybox/rootfs - / cd aurae-busybox / runc spec / ``` / / Aurae will default pull down am image from a remote location and save to the Aurae socket directory as follows. / / ``` / $AURAE_SOCK_PATH/bundle/$NAME /``` / |
 | registry | [string](#string) |  | Define a public portion of a container registry. / / Such as: / - ghcr.io / - https://registry.hub.docker.com / / Registry strings will be joined at runtime with the image / string such that a working container bundle path can be formed. |
+
+
+
+
+
+
+<a name="aurae-runtime-v0-CpuController"></a>
+
+### CpuController
+Docs: https://docs.kernel.org/admin-guide/cgroup-v2.html#cpu
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| weight | [uint64](#uint64) | optional | Weight of how much of the total CPU time should this control group get. Note that this is hierarchical, so this is weighted against the siblings of this control group.
+
+* Minimum: 1 * Maximum: 10_000 |
+| max | [int64](#int64) | optional | In one period (1_000_000), how much can the tasks run.
+
+* Minimum: 0
+
+By default a cgroup has no limit, represented as the literal string &#34;max&#34;. Not settings this field retains the default of no limit. |
+
+
+
+
+
+
+<a name="aurae-runtime-v0-CpusetController"></a>
+
+### CpusetController
+Docs: https://docs.kernel.org/admin-guide/cgroup-v2.html#cpuset
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cpus | [string](#string) | optional | A comma-separated list of CPU IDs where the task in the control group can run. Dashes between numbers indicate ranges. |
+| mems | [string](#string) | optional | Same syntax as the cpus field of this structure, but applies to memory nodes instead of processors. |
 
 
 
