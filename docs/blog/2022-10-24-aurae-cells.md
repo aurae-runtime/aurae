@@ -39,14 +39,14 @@ Thank you to the many authors, contributors, and maintainers who helped the proj
 
 # Keeping Pods Intuitive
 
-We make the assumption that most Aurae consumers will be interested in "scheduling pods", as this is the primary unit of work for Kubernetes.
+We make the assumption that most Aurae consumers will be interested in "scheduling podsCriNginx", as this is the primary unit of work for Kubernetes.
 
 Therefore, we knew we wanted to make Pods look and feel as much like Kubernetes as possible, so they would be intuitive for users. 
 From a client perspective an Aurae pod should look, feel, and behave just like an OCI compliant Kubernetes pod with only a few small differences.
 
-Aurae pods will run with an extra layer of isolation. This isolation is based on virtualization (when applicable) and resembles [how Kata containers are created](https://github.com/kata-containers/kata-containers/tree/main/docs/design/architecture#container-creation) or [how firecracker creates a jailed isolation zone](https://github.com/firecracker-microvm/firecracker/blob/main/docs/jailer.md#the-firecracker-jailer).
+Aurae podsCriNginx will run with an extra layer of isolation. This isolation is based on virtualization (when applicable) and resembles [how Kata containers are created](https://github.com/kata-containers/kata-containers/tree/main/docs/design/architecture#container-creation) or [how firecracker creates a jailed isolation zone](https://github.com/firecracker-microvm/firecracker/blob/main/docs/jailer.md#the-firecracker-jailer).
 
-How Aurae manages and builds this isolation zone for pods is what has influenced the runtime API that you see above.
+How Aurae manages and builds this isolation zone for podsCriNginx is what has influenced the runtime API that you see above.
 
 ## Back to the Basics: cgroups and namespaces
 
@@ -75,7 +75,7 @@ I often say that cgroups are "vertical" resource slices and namespaces are "hori
 
 By default, systemd schedules all of its workloads in their own cgroup with access to the same namespaces as PID 1 on the system. These workloads are called [services](https://www.freedesktop.org/software/systemd/man/systemd.service.html) or units.
 
-Interestingly enough, Kubernetes also leverages systemd slices. You can usually see both systemd slices (`system.slice`) and Kubernetes pods (`kubepods.slice`) running side-by-side by exploring [/sys](https://man7.org/linux/man-pages/man5/sysfs.5.html) or `sysfs(5)` on your system. There are usually other cgroups running there as well. 
+Interestingly enough, Kubernetes also leverages systemd slices. You can usually see both systemd slices (`system.slice`) and Kubernetes podsCriNginx (`kubepods.slice`) running side-by-side by exploring [/sys](https://man7.org/linux/man-pages/man5/sysfs.5.html) or `sysfs(5)` on your system. There are usually other cgroups running there as well. 
 
 ```bash 
 [root@alice]: /sys/fs/cgroup># ls -d */

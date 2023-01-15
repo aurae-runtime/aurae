@@ -29,35 +29,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/runtime.ts";
+import * as cri from "../auraescript/gen/kubernetes/cri/v1/release-1.26";
 
-let pods = new runtime.PodServiceClient();
-
-// [ Allocate ]
-let pod_allocated = await pods.allocate(<runtime.PodServiceAllocateRequest>{
-    pod: runtime.Pod.fromPartial({
-        name: "ingress",
-    })
-});
-helpers.print(pod_allocated)
-
-// [ Start ]
-let pod_nginx = await pods.start(<runtime.PodServiceStartRequest>{
-    name: "nginx-server",
-    image: "nginx",
-    registry: "",
-})
-helpers.print(pod_nginx)
-
-// [ Stop ]
-let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
-    podName: "ingress",
-    containerName: "nginx-server",
-})
-helpers.print(stopped)
-
-// [ Free ]
-let freed = await cells.free(<runtime.CellServiceFreeRequest>{
-    cellName: "sleeper-cell"
-});
-helpers.print(freed)
+// Start working on pods_service with CRI
