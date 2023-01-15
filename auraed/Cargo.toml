@@ -43,7 +43,7 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
-cgroups-rs = "0.2.12"
+cgroups-rs = "0.3.0"
 clap = { version = "3.1.20", features = ["derive"] }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
@@ -57,24 +57,24 @@ liboci-cli = "0.0.4"
 log = "0.4.17"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { version = "0.26.1", features = ["sched"] }
-ocipkg = "0.2.8"
+#ocipkg = "0.2.8"
 procfs = "0.14.2"
 rtnetlink = "0.11.0"
 simplelog = "0.12.0"
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread", "sync", "signal", "process"] }
+tokio = { workspace = true, features = ["fs", "macros", "net", "process", "rt-multi-thread", "signal", "sync"] }
 tokio-stream = { version = "0.1", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
+tonic-health = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
 tracing-log = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
 tracing-rfc-5424 = { version = "0.1.0" }  # syslog tracing
 uuid = { version = "1.2.2", features = ["v4"] }
-validation = { path = "../crates/validation", features = ["regex", "tonic"] }
+validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
 multi_log = "0.1.2"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
-

@@ -82,7 +82,7 @@ jobs:
         # the build to pass, we likely should be having other discussions
         # instead of adding commands here.
         #
-        # Do not at GNU libraries here! Do not add GNU libraries here!
+        # Do not add GNU libraries here! Do not add GNU libraries here!
         #
         # For example we should NOT be adding libraries such as "libseccomp"
         # or "libdbus".

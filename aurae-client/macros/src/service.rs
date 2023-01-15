@@ -4,7 +4,7 @@ use proc_macro2::Ident;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{parenthesized, parse_macro_input, Token, Type};
+use syn::{parenthesized, parse_macro_input, Path, Token, Type};
 
 #[allow(clippy::format_push_string)]
 
@@ -64,7 +64,7 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
 }
 
 struct ServiceInput {
-    module: Ident,
+    module: Path,
     name: Ident,
     functions: Punctuated<FunctionInput, Token![,]>,
 }

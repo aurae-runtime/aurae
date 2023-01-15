@@ -31,8 +31,8 @@
 //! Systems daemon built for higher order simple, safe, secure multi-tenant
 //! distributed systems.
 //!
-//! Runs as pid 1 (init) and serves standard library functionality over a mTLS
-//! backed gRPC server.
+//! Whether run as pid 1 (init), or a [Container], or a [Pod] it serves standard library
+//! functionality over an mTLS backed gRPC server.
 //!
 //! The Aurae Daemon (auraed) is the main server implementation of the Aurae
 //! Standard Library.
@@ -62,23 +62,22 @@
 #![warn(missing_docs)]
 #![allow(dead_code)]
 
+use crate::spawn::spawn_auraed_oci_to;
 use anyhow::Context;
 use aurae_proto::{
     discovery::discovery_service_server::DiscoveryServiceServer,
     runtime::cell_service_server::CellServiceServer,
     runtime::pod_service_server::PodServiceServer,
 };
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use discovery::DiscoveryService;
+use init::SocketStream;
 use runtime::CellService;
 use runtime::PodService;
-use std::{
-    fs,
-    os::unix::fs::PermissionsExt,
-    path::{Path, PathBuf},
-};
-use tokio::net::UnixListener;
-use tokio_stream::wrappers::UnixListenerStream;
+use std::path::{Path, PathBuf};
+use tokio::io::AsyncRead;
+use tokio::io::AsyncWrite;
+use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
 
@@ -88,6 +87,7 @@ pub mod init;
 pub mod logging;
 mod observe;
 mod runtime;
+mod spawn;
 
 /// Default Unix domain socket path for `auraed`.
 ///
@@ -97,8 +97,8 @@ mod runtime;
 /// processes and commands. Access to the socket must be governed
 /// by an appropriate mTLS Authorization setting in order to maintain
 /// a secure multi tenant system.
-const AURAE_SOCK: &str = "/var/run/aurae/aurae.sock";
-
+const AURAE_RUNTIME_DIR: &str = "/var/run/aurae";
+const AURAE_SOCK: &str = "aurae.sock";
 const AURAE_BUNDLE: &str = "/var/lib/aurae";
 
 const EXIT_OKAY: i32 = 0;
@@ -124,9 +124,13 @@ struct AuraedOptions {
     /// The CA certificate. Defaults to /etc/aurae/pki/ca.crt
     #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
     ca_crt: String,
-    /// Aurae socket path. Defaults to /var/run/aurae/aurae.sock
-    #[clap(short, long, value_parser, default_value = AURAE_SOCK)]
-    socket: String,
+    /// Aurae socket address.  Depending on context, this should be a file or a network address.
+    /// Defaults to ${runtime_dir}/aurae.sock or [::1]:8080 respectively.
+    #[clap(short, long, value_parser)]
+    socket: Option<String>,
+    /// Aurae runtime path.  Defaults to /var/run/aurae.
+    #[clap(short, long, value_parser, default_value = AURAE_RUNTIME_DIR)]
+    runtime_dir: String,
     /// Aurae bundle path. Defaults to /var/lib/aurae
     #[clap(short, long, value_parser, default_value = AURAE_BUNDLE)]
     bundle: String,
@@ -136,14 +140,31 @@ struct AuraedOptions {
     /// Run auraed as a nested instance of itself in an Aurae cell.
     #[clap(long)]
     nested: bool,
+    // Subcommands for the project
+    #[clap(subcommand)]
+    subcmd: Option<SubCommands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum SubCommands {
+    Spawn {
+        #[clap(short, long, value_parser, default_value = ".")]
+        output: String,
+    },
 }
 
 #[allow(missing_docs)] // TODO
 pub async fn daemon() -> i32 {
     let options = AuraedOptions::parse();
 
-    // Initializes Logging and prepares system if auraed is run as pid=1
-    init::init(options.verbose, options.nested).await;
+    match &options.subcmd {
+        Some(SubCommands::Spawn { output }) => {
+            info!("Spawning Auraed OCI bundle: {}", output);
+            spawn_auraed_oci_to(output).expect("spawning");
+            return EXIT_OKAY;
+        }
+        None => {}
+    }
 
     info!("Starting Aurae Daemon Runtime");
     info!("Aurae Daemon is pid {}", std::process::id());
@@ -152,15 +173,18 @@ pub async fn daemon() -> i32 {
         server_crt: PathBuf::from(options.server_crt),
         server_key: PathBuf::from(options.server_key),
         ca_crt: PathBuf::from(options.ca_crt),
-        socket: PathBuf::from(options.socket),
+        runtime_dir: PathBuf::from(options.runtime_dir),
     };
 
-    let e = runtime.run().await;
-    if e.is_err() {
-        error!("{:?}", e);
-    }
+    let e = match init::init(options.verbose, options.nested, options.socket)
+        .await
+    {
+        SocketStream::Tcp(stream) => runtime.run(stream).await,
+        SocketStream::Unix(stream) => runtime.run(stream).await,
+    };
 
     if e.is_err() {
+        error!("{:?}", e);
         EXIT_ERROR
     } else {
         EXIT_OKAY
@@ -181,9 +205,8 @@ struct AuraedRuntime {
     pub server_crt: PathBuf,
     /// The secret key for this unique instance.
     pub server_key: PathBuf,
-    /// Configurable socket path. Defaults to the value of
-    /// `pub const AURAE_SOCK`
-    pub socket: PathBuf,
+    /// Configurable runtime directory. Defaults to /var/run/aurae.
+    pub runtime_dir: PathBuf,
     // /// Provides logging channels to expose auraed logging via grpc
     //pub log_collector: Arc<LogChannel>,
 }
@@ -192,18 +215,15 @@ struct AuraedRuntime {
 /// Aurae.
 impl AuraedRuntime {
     /// Starts the runtime loop for the daemon.
-    pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let _ = fs::remove_file(&self.socket);
-        let sock_path = Path::new(&self.socket)
-            .parent()
-            .ok_or("unable to find socket path")?;
-        // Create socket directory
-        tokio::fs::create_dir_all(sock_path).await.with_context(|| {
-            format!(
-                "Failed to create directory for socket: {}",
-                self.socket.display()
-            )
-        })?;
+    pub async fn run<T, IO, IE>(
+        &self,
+        socket_stream: T,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        T: tokio_stream::Stream<Item = Result<IO, IE>> + Send + 'static,
+        IO: AsyncRead + AsyncWrite + Connected + Unpin + Send + 'static,
+        IE: Into<Box<dyn std::error::Error + Send + Sync>>,
+    {
         trace!("{:#?}", self);
 
         let server_crt =
@@ -225,24 +245,42 @@ impl AuraedRuntime {
             .client_ca_root(ca_crt_pem);
 
         info!("Validating SSL Identity and Root Certificate Authority (CA)");
-        let sock = UnixListener::bind(&self.socket)?;
-        let sock_stream = UnixListenerStream::new(sock);
         //let _log_collector = self.log_collector.clone();
+
+        let runtime_dir = Path::new(&self.runtime_dir);
+        // Create runtime directory
+        tokio::fs::create_dir_all(runtime_dir).await.with_context(|| {
+            format!(
+                "Failed to create runtime directory: {}",
+                self.runtime_dir.display()
+            )
+        })?;
 
         // Initialize the bundler
 
         // Build gRPC Services
+        let (mut health_reporter, health_service) =
+            tonic_health::server::health_reporter();
+
         let cell_service = CellService::new();
         let cell_service_server = CellServiceServer::new(cell_service.clone());
+        health_reporter.set_serving::<CellServiceServer<CellService>>().await;
 
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
             DiscoveryServiceServer::new(discovery_service.clone());
-        let pod_service = PodService::new(PathBuf::from(sock_path));
-        let pod_service_server = PodServiceServer::new(pod_service.clone());
+        health_reporter
+            .set_serving::<DiscoveryServiceServer<DiscoveryService>>()
+            .await;
 
-        let graceful_shutdown =
-            graceful_shutdown::GracefulShutdown::new(cell_service);
+        let pod_service = PodService::new(self.runtime_dir.clone());
+        let pod_service_server = PodServiceServer::new(pod_service.clone());
+        health_reporter.set_serving::<PodServiceServer<PodService>>().await;
+
+        let graceful_shutdown = graceful_shutdown::GracefulShutdown::new(
+            health_reporter,
+            cell_service,
+        );
         let graceful_shutdown_signal = graceful_shutdown.subscribe();
 
         // Run the server concurrently
@@ -250,10 +288,11 @@ impl AuraedRuntime {
         let server_handle = tokio::spawn(async move {
             Server::builder()
                 .tls_config(tls)?
+                .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
                 .add_service(pod_service_server)
-                .serve_with_incoming_shutdown(sock_stream, async {
+                .serve_with_incoming_shutdown(socket_stream, async {
                     let mut graceful_shutdown_signal = graceful_shutdown_signal;
                     let _ = graceful_shutdown_signal.changed().await;
                     info!("gRPC server received shutdown signal...");
@@ -264,14 +303,6 @@ impl AuraedRuntime {
 
             Ok::<_, tonic::transport::Error>(())
         });
-
-        trace!("Setting socket mode {} -> 766", &self.socket.display());
-
-        // We set the mode to 766 for the Unix domain socket.
-        // This is what allows non-root users to dial the socket
-        // and authenticate with mTLS.
-        fs::set_permissions(&self.socket, fs::Permissions::from_mode(0o766))?;
-        info!("User Access Socket Created: {}", self.socket.display());
 
         // Event loop
         let graceful_shutdown_handle =
@@ -294,6 +325,6 @@ mod tests {
 
     #[test]
     fn test_socket_path() {
-        assert_eq!(AURAE_SOCK, "/var/run/aurae/aurae.sock");
+        assert_eq!(AURAE_RUNTIME_DIR, "/var/run/aurae");
     }
 }

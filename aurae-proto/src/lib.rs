@@ -37,6 +37,12 @@ pub mod discovery {
     include!("gen/aurae.discovery.v0.rs");
 }
 
+pub mod grpc {
+    pub mod health {
+        include!("gen/grpc.health.v1.rs");
+    }
+}
+
 pub mod observe {
     include!("gen/aurae.observe.v0.rs");
 }
