@@ -28,20 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use error::{ExecutablesError, Result};
-pub use executable::Executable;
-pub use executable_name::ExecutableName;
-pub use executables::Executables;
-use tokio::process::Command;
+pub use isolation_controls::IsolationControls;
+pub use nested_auraed::NestedAuraed;
 
-mod error;
-mod executable;
-mod executable_name;
+mod isolation_controls;
 #[allow(clippy::module_inception)]
-mod executables;
-
-pub struct ExecutableSpec {
-    pub name: ExecutableName,
-    pub description: String,
-    pub command: Command,
-}
+mod nested_auraed;
