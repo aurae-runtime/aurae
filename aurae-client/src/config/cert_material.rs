@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,75 +28,47 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Configuration used to authenticate with a remote Aurae daemon.
-//!
-//! [`AuraeConfig::try_default()`] follows an ordered priority for searching for
-//! configuration on a client's machine.
-//!
-//! 1. ${HOME}/.aurae/config
-//! 2. /etc/aurae/config
-//! 3. /var/lib/aurae/config
+use crate::config::client_cert_details::ClientCertDetails;
+use crate::config::x509_details::new_x509_details;
+use crate::AuthConfig;
+use anyhow::Context;
 
-pub use self::{
-    auth_config::AuthConfig, cert_material::CertMaterial,
-    client_cert_details::ClientCertDetails, system_config::SystemConfig,
-};
-use anyhow::{anyhow, Context, Result};
-use serde::Deserialize;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use x509_details::X509Details;
-
-mod auth_config;
-mod cert_material;
-mod client_cert_details;
-mod system_config;
-mod x509_details;
-
-/// Configuration for AuraeScript client
-#[derive(Debug, Clone, Deserialize)]
-pub struct AuraeConfig {
-    /// Authentication material
-    pub auth: AuthConfig,
-    /// System configuration
-    pub system: SystemConfig,
+pub struct CertMaterial {
+    pub server_root_ca_cert: Vec<u8>,
+    pub client_cert: Vec<u8>,
+    pub client_key: Vec<u8>,
 }
 
-impl AuraeConfig {
-    /// Attempt to easy-load Aurae configuration from well-known locations.
-    pub fn try_default() -> Result<Self> {
-        let home = std::env::var("HOME")
-            .expect("missing $HOME environmental variable");
+impl CertMaterial {
+    pub async fn from_config(config: &AuthConfig) -> anyhow::Result<Self> {
+        let server_root_ca_cert =
+            tokio::fs::read(&config.ca_crt).await.with_context(|| {
+                format!(
+                    "Failed to read server root CA certificate from path '{}'",
+                    config.ca_crt
+                )
+            })?;
 
-        let search_paths = [
-            &format!("{home}/.aurae/config"),
-            "/etc/aurae/config",
-            "/var/lib/aurae/config",
-        ];
+        let client_cert =
+            tokio::fs::read(&config.client_crt).await.with_context(|| {
+                format!(
+                    "Failed to read client certificate from path '{}'",
+                    config.client_crt
+                )
+            })?;
 
-        for path in search_paths {
-            if let Ok(config) = Self::parse_from_file(path) {
-                return Ok(config);
-            }
-        }
+        let client_key =
+            tokio::fs::read(&config.client_key).await.with_context(|| {
+                format!(
+                    "Failed to read client key from path '{}'",
+                    config.client_key
+                )
+            })?;
 
-        Err(anyhow!("unable to find config file"))
+        Ok(Self { server_root_ca_cert, client_cert, client_key })
     }
 
-    /// Attempt to parse a config file into memory.
-    pub fn parse_from_file<P: AsRef<Path>>(path: P) -> Result<AuraeConfig> {
-        let mut config_toml = String::new();
-        let mut file = File::open(path)?;
-
-        if file
-            .read_to_string(&mut config_toml)
-            .with_context(|| "could not read AuraeConfig toml")?
-            == 0
-        {
-            return Err(anyhow!("empty config"));
-        }
-
-        Ok(toml::from_str(&config_toml)?)
+    pub fn get_client_cert_details(&self) -> anyhow::Result<ClientCertDetails> {
+        Ok(ClientCertDetails(new_x509_details(self.client_cert.clone())?))
     }
 }

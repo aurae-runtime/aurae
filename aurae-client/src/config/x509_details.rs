@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,75 +28,53 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Configuration used to authenticate with a remote Aurae daemon.
-//!
-//! [`AuraeConfig::try_default()`] follows an ordered priority for searching for
-//! configuration on a client's machine.
-//!
-//! 1. ${HOME}/.aurae/config
-//! 2. /etc/aurae/config
-//! 3. /var/lib/aurae/config
+use anyhow::anyhow;
+use serde::{Deserialize, Serialize};
+use std::marker::PhantomData;
+use x509_certificate::X509Certificate;
 
-pub use self::{
-    auth_config::AuthConfig, cert_material::CertMaterial,
-    client_cert_details::ClientCertDetails, system_config::SystemConfig,
-};
-use anyhow::{anyhow, Context, Result};
-use serde::Deserialize;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use x509_details::X509Details;
-
-mod auth_config;
-mod cert_material;
-mod client_cert_details;
-mod system_config;
-mod x509_details;
-
-/// Configuration for AuraeScript client
-#[derive(Debug, Clone, Deserialize)]
-pub struct AuraeConfig {
-    /// Authentication material
-    pub auth: AuthConfig,
-    /// System configuration
-    pub system: SystemConfig,
+/// An in-memory representation of an X509 identity, and its metadata.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct X509Details {
+    /// From the SSL spec, the subject common name.
+    pub subject_common_name: String,
+    /// From the SSL spec, the issuer common name.
+    pub issuer_common_name: String,
+    /// From the SSL spec, the sha256 sum fingerprint of the material.
+    pub sha256_fingerprint: String,
+    /// From the SSL spec, the algorithm used for encryption.
+    pub key_algorithm: String,
+    // Force instantiation through function
+    phantom_data: PhantomData<()>,
 }
 
-impl AuraeConfig {
-    /// Attempt to easy-load Aurae configuration from well-known locations.
-    pub fn try_default() -> Result<Self> {
-        let home = std::env::var("HOME")
-            .expect("missing $HOME environmental variable");
+// This is purposefully not an associated function as instantiation of X509Details
+// is being controlled in the module to limit the chance of misuse
+pub(crate) fn new_x509_details(
+    client_cert: Vec<u8>,
+) -> anyhow::Result<X509Details> {
+    let x509 = X509Certificate::from_pem(client_cert)?;
 
-        let search_paths = [
-            &format!("{home}/.aurae/config"),
-            "/etc/aurae/config",
-            "/var/lib/aurae/config",
-        ];
+    let subject_common_name = x509.subject_common_name().ok_or_else(|| {
+        anyhow!("Client certificated is missing subject_common_name")
+    })?;
 
-        for path in search_paths {
-            if let Ok(config) = Self::parse_from_file(path) {
-                return Ok(config);
-            }
-        }
+    let issuer_common_name = x509.issuer_common_name().ok_or_else(|| {
+        anyhow!("Client certificate is missing issuer_common_name")
+    })?;
 
-        Err(anyhow!("unable to find config file"))
-    }
+    let sha256_fingerprint = x509.sha256_fingerprint()?;
 
-    /// Attempt to parse a config file into memory.
-    pub fn parse_from_file<P: AsRef<Path>>(path: P) -> Result<AuraeConfig> {
-        let mut config_toml = String::new();
-        let mut file = File::open(path)?;
+    let key_algorithm = x509
+        .key_algorithm()
+        .ok_or_else(|| anyhow!("Client certificate is missing key_algorithm"))?
+        .to_string();
 
-        if file
-            .read_to_string(&mut config_toml)
-            .with_context(|| "could not read AuraeConfig toml")?
-            == 0
-        {
-            return Err(anyhow!("empty config"));
-        }
-
-        Ok(toml::from_str(&config_toml)?)
-    }
+    Ok(X509Details {
+        subject_common_name,
+        issuer_common_name,
+        sha256_fingerprint: format!("{:?}", sha256_fingerprint),
+        key_algorithm,
+        phantom_data: PhantomData::default(),
+    })
 }

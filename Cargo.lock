@@ -127,6 +127,7 @@ dependencies = [
  "aurae-client-macros",
  "aurae-proto",
  "serde",
+ "thiserror",
  "tokio",
  "toml",
  "tonic",

@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::config::cert_material::CertMaterial;
 use serde::Deserialize;
 
 /// Authentication material for an AuraeScript client.
@@ -43,4 +44,10 @@ pub struct AuthConfig {
     pub client_crt: String,
     /// The client secret key.
     pub client_key: String,
+}
+
+impl AuthConfig {
+    pub async fn to_cert_material(&self) -> anyhow::Result<CertMaterial> {
+        CertMaterial::from_config(self).await
+    }
 }
