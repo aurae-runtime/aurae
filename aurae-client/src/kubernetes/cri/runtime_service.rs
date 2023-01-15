@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,31 +28,35 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Generated Protobuf definitions for the Aurae Standard Library
-
-#![allow(clippy::derive_partial_eq_without_eq)]
-#![allow(clippy::match_single_binding)]
-
-pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
-}
-
-pub mod grpc {
-    pub mod health {
-        include!("gen/grpc.health.v1.rs");
-    }
-}
-
-pub mod kubernetes {
-    pub mod cri {
-        include!("gen/runtime.v1.rs");
-    }
-}
-
-pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
-}
-
-pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
-}
+macros::service!(
+    kubernetes::cri,
+    RuntimeService,
+    version(VersionRequest) -> VersionResponse,
+    run_pod_sandbox(RunPodSandboxRequest) -> RunPodSandboxResponse,
+    stop_pod_sandbox(StopPodSandboxRequest) -> StopPodSandboxResponse,
+    remove_pod_sandbox(RemovePodSandboxRequest) -> RemovePodSandboxResponse,
+    pod_sandbox_status(PodSandboxStatusRequest) -> PodSandboxStatusResponse,
+    list_pod_sandbox(ListPodSandboxRequest) -> ListPodSandboxResponse,
+    create_container(CreateContainerRequest) -> CreateContainerResponse,
+    start_container(StartContainerRequest) -> StartContainerResponse,
+    stop_container(StopContainerRequest) -> StopContainerResponse,
+    remove_container(RemoveContainerRequest) -> RemoveContainerResponse,
+    list_containers(ListContainersRequest) -> ListContainersResponse,
+    container_status(ContainerStatusRequest) -> ContainerStatusResponse,
+    update_container_resources(UpdateContainerResourcesRequest) -> UpdateContainerResourcesResponse,
+    reopen_container_log(ReopenContainerLogRequest) -> ReopenContainerLogResponse,
+    exec_sync(ExecSyncRequest) -> ExecSyncResponse,
+    exec(ExecRequest) -> ExecResponse,
+    attach(AttachRequest) -> AttachResponse,
+    port_forward(PortForwardRequest) -> PortForwardResponse,
+    container_stats(ContainerStatsRequest) -> ContainerStatsResponse,
+    list_container_stats(ListContainerStatsRequest) -> ListContainerStatsResponse,
+    pod_sandbox_stats(PodSandboxStatsRequest) -> PodSandboxStatsResponse,
+    list_pod_sandbox_stats(ListPodSandboxStatsRequest) -> ListPodSandboxStatsResponse,
+    update_runtime_config(UpdateRuntimeConfigRequest) -> UpdateRuntimeConfigResponse,
+    status(StatusRequest) -> StatusResponse,
+    checkpoint_container(CheckpointContainerRequest) -> CheckpointContainerResponse,
+    get_container_events(GetEventsRequest) -> [ContainerEventResponse],
+    list_metric_descriptors(ListMetricDescriptorsRequest) -> ListMetricDescriptorsResponse,
+    list_pod_sandbox_metrics(ListPodSandboxMetricsRequest) -> ListPodSandboxMetricsResponse,
+);

@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,31 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Generated Protobuf definitions for the Aurae Standard Library
-
-#![allow(clippy::derive_partial_eq_without_eq)]
-#![allow(clippy::match_single_binding)]
-
-pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
-}
-
-pub mod grpc {
-    pub mod health {
-        include!("gen/grpc.health.v1.rs");
-    }
-}
-
-pub mod kubernetes {
-    pub mod cri {
-        include!("gen/runtime.v1.rs");
-    }
-}
-
-pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
-}
-
-pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
-}
+macros::service!(
+    kubernetes::cri,
+    ImageService,
+    list_images(ListImagesRequest) -> ListImagesResponse,
+    image_status(ImageStatusRequest) -> ImageStatusResponse,
+    pull_image(PullImageRequest) -> PullImageResponse,
+    remove_image(RemoveImageRequest) -> RemoveImageResponse,
+    image_fs_info(ImageFsInfoRequest) -> ImageFsInfoResponse,
+);

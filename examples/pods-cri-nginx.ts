@@ -29,6 +29,13 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 import * as helpers from "../auraescript/gen/helpers.ts";
-import * as cri from "../auraescript/gen/kubernetes/cri/v1/release-1.26";
+import * as cri from "../auraescript/gen/kubernetes_cri.ts";
 
 // Start working on pods_service with CRI
+let runtime = new cri.RuntimeServiceClient();
+
+let run = await runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
+    config: undefined,
+    runtimeHandler: "",
+});
+helpers.print(run);

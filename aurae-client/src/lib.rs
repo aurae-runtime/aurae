@@ -5,4 +5,5 @@ mod client;
 mod config;
 pub mod discovery;
 pub mod grpc;
+pub mod kubernetes;
 pub mod runtime;

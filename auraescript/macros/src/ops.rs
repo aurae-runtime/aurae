@@ -161,15 +161,29 @@ fn typescript_generator(input: &OpsGeneratorInput) {
     };
 
     let ts_path = {
-        // HACK: carve out for health
+        // TODO: Native proto files follow a commong dir structure, but 3rd party protos don't.
+        //       We dont want to create a carve out for each, so update the macro to allow
+        //       specifying the path when using the macro
+        // HACK: carve out for grpc::health and kubernetes::cri
         if module
             .segments
             .iter()
             .map(|x| x.ident.to_string())
+            // "grpc::health"
             .eq(["grpc", "health"])
         {
             let mut out_dir = gen_dir.clone();
+            // the ts file location relative to auraescript/gen/
             out_dir.push("grpc/health/v1/health.ts");
+            out_dir
+        } else if module
+            .segments
+            .iter()
+            .map(|x| x.ident.to_string())
+            .eq(["kubernetes", "cri"])
+        {
+            let mut out_dir = gen_dir.clone();
+            out_dir.push("kubernetes/cri/v1/release-1.26.ts");
             out_dir
         } else {
             let module = path_to_snake_case(module);
