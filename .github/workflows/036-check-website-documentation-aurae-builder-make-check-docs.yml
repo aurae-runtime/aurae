@@ -37,7 +37,7 @@
 # When this build passes we should have confidence that our documentation is
 # ready to be pushed to the website.
 #
-name: "Cargo Docs (036) [aurae-builder:latest]"
+name: "Cargo Docs (036) [aurae-builder:builder-latest]"
 on:
  push:
    branches: main

@@ -28,7 +28,7 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-name: "Cargo Test Lint (035) [aurae-builder:latest]"
+name: "Cargo Test Lint (035) [aurae-builder:builder-latest]"
 on:
  push:
    branches: main
@@ -49,7 +49,7 @@ jobs:
    needs: build-container
    timeout-minutes: 20
    container:
-     image: ghcr.io/${{ github.repository }}/aurae-builder:latest
+     image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
      credentials:
        username:  ${{ github.actor }}
        password:  ${{ secrets.GITHUB_TOKEN }}
