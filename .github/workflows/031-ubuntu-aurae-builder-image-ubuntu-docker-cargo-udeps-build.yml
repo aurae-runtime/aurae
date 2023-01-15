@@ -28,22 +28,22 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-name: "Aurae Builder Image (030) [ubuntu:latest]"
+name: "Aurae Udeps Builder Image (031) [ubuntu:latest]"
 on: [workflow_call]
 permissions:
  contents: read
  packages: write
 env:
  CARGO_TERM_COLOR: always
- CACHE_VERSION: v0
+ CACHE_VERSION: v1
 jobs:
  build-container:
    name: Build container image
    runs-on: ubuntu-latest
    concurrency:
-     group: ${{ format('{0}-{1}', github.ref, github.job) }}
+     group: ${{ format('{0}-{1}-031', github.ref, github.job) }}
    outputs:
-       tag: ${{ steps.image-tag.outputs.tag}}
+       tag: ${{ steps.image-tag.outputs.tag}}-udeps
    steps:
      - uses: actions/checkout@v3
        with:
