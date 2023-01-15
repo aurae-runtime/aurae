@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
+ *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,75 +28,17 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Configuration used to authenticate with a remote Aurae daemon.
-//!
-//! [`AuraeConfig::try_default()`] follows an ordered priority for searching for
-//! configuration on a client's machine.
-//!
-//! 1. ${HOME}/.aurae/config
-//! 2. /etc/aurae/config
-//! 3. /var/lib/aurae/config
+use super::X509Details;
+use serde::{Deserialize, Serialize};
+use std::ops::Deref;
 
-pub use self::{
-    auth_config::AuthConfig, cert_material::CertMaterial,
-    client_cert_details::ClientCertDetails, system_config::SystemConfig,
-};
-use anyhow::{anyhow, Context, Result};
-use serde::Deserialize;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use x509_details::X509Details;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientCertDetails(pub(crate) X509Details);
 
-mod auth_config;
-mod cert_material;
-mod client_cert_details;
-mod system_config;
-mod x509_details;
+impl Deref for ClientCertDetails {
+    type Target = X509Details;
 
-/// Configuration for AuraeScript client
-#[derive(Debug, Clone, Deserialize)]
-pub struct AuraeConfig {
-    /// Authentication material
-    pub auth: AuthConfig,
-    /// System configuration
-    pub system: SystemConfig,
-}
-
-impl AuraeConfig {
-    /// Attempt to easy-load Aurae configuration from well-known locations.
-    pub fn try_default() -> Result<Self> {
-        let home = std::env::var("HOME")
-            .expect("missing $HOME environmental variable");
-
-        let search_paths = [
-            &format!("{home}/.aurae/config"),
-            "/etc/aurae/config",
-            "/var/lib/aurae/config",
-        ];
-
-        for path in search_paths {
-            if let Ok(config) = Self::parse_from_file(path) {
-                return Ok(config);
-            }
-        }
-
-        Err(anyhow!("unable to find config file"))
-    }
-
-    /// Attempt to parse a config file into memory.
-    pub fn parse_from_file<P: AsRef<Path>>(path: P) -> Result<AuraeConfig> {
-        let mut config_toml = String::new();
-        let mut file = File::open(path)?;
-
-        if file
-            .read_to_string(&mut config_toml)
-            .with_context(|| "could not read AuraeConfig toml")?
-            == 0
-        {
-            return Err(anyhow!("empty config"));
-        }
-
-        Ok(toml::from_str(&config_toml)?)
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

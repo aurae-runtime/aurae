@@ -8,6 +8,7 @@ anyhow = { workspace = true }
 aurae-proto = { workspace = true }
 macros = { package = "aurae-client-macros", path = "macros" }
 serde = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
 toml = "0.5.9"
 tonic = { workspace = true, features = ["tls"] }
