@@ -48,7 +48,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository }}/aurae-builder:latest
+      image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
       credentials:
         username:  ${{ github.actor }}
         password:  ${{ secrets.GITHUB_TOKEN }}
