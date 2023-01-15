@@ -28,8 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{cgroups::Cgroup, CellName, CellSpec, CellsError, Result};
-use crate::runtime::cell_service::executables::auraed::NestedAuraed;
+use super::{
+    cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec,
+    CellsError, Result,
+};
 use aurae_client::AuraeConfig;
 use std::io;
 use std::process::ExitStatus;

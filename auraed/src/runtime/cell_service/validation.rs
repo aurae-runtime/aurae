@@ -4,15 +4,15 @@ use super::cells::{
         cpuset::{Cpus, Mems},
         CgroupSpec, Limit, Weight,
     },
-    CellName,
+    CellNamePath, IsolationControls,
 };
-use super::executables::{auraed::IsolationControls, ExecutableName};
+use super::executables::ExecutableName;
 use aurae_proto::runtime::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
     CellServiceStartRequest, CellServiceStopRequest, CpuController,
     CpusetController, Executable,
 };
-use std::{collections::VecDeque, ffi::OsString};
+use std::ffi::OsString;
 use tokio::process::Command;
 use validation::{ValidatedField, ValidatedType, ValidationError};
 use validation_macros::ValidatedType;
@@ -48,8 +48,7 @@ impl CellServiceAllocateRequestTypeValidator
 #[derive(ValidatedType, Debug, Clone)]
 pub struct ValidatedCell {
     #[field_type(String)]
-    #[validate(create)]
-    pub name: CellName,
+    pub name: CellNamePath,
 
     #[field_type(Option<CpuController>)]
     pub cpu: Option<ValidatedCpuController>,
@@ -65,6 +64,22 @@ pub struct ValidatedCell {
 }
 
 impl CellTypeValidator for CellValidator {
+    fn validate_name(
+        name: String,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<CellNamePath, ValidationError> {
+        let name = CellNamePath::validate(Some(name), field_name, parent_name)?;
+
+        if matches!(name, CellNamePath::Empty) {
+            return Err(ValidationError::Required {
+                field: validation::field_name(field_name, parent_name),
+            });
+        }
+
+        Ok(name)
+    }
+
     fn validate_cpu(
         cpu: Option<CpuController>,
         field_name: &str,
@@ -159,43 +174,38 @@ impl From<ValidatedCpusetController> for cgroups::cpuset::CpusetController {
 #[derive(Debug, ValidatedType)]
 pub struct ValidatedCellServiceFreeRequest {
     #[field_type(String)]
-    #[validate]
-    pub cell_name: CellName,
+    pub cell_name: CellNamePath,
 }
 
-impl CellServiceFreeRequestTypeValidator for CellServiceFreeRequestValidator {}
+impl CellServiceFreeRequestTypeValidator for CellServiceFreeRequestValidator {
+    fn validate_cell_name(
+        cell_name: String,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<CellNamePath, ValidationError> {
+        let cell_name =
+            CellNamePath::validate(Some(cell_name), field_name, parent_name)?;
+
+        if matches!(cell_name, CellNamePath::Empty) {
+            return Err(ValidationError::Required {
+                field: validation::field_name(field_name, parent_name),
+            });
+        }
+
+        Ok(cell_name)
+    }
+}
 
 #[derive(Debug, ValidatedType)]
 pub struct ValidatedCellServiceStartRequest {
     #[field_type(String)]
-    pub cell_name: VecDeque<CellName>,
+    #[validate]
+    pub cell_name: CellNamePath,
     #[field_type(Option<Executable>)]
     pub executable: ValidatedExecutable,
 }
 
 impl CellServiceStartRequestTypeValidator for CellServiceStartRequestValidator {
-    fn validate_cell_name(
-        cell_name: String,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<VecDeque<CellName>, ValidationError> {
-        let cell_name =
-            validation::required(Some(cell_name), field_name, parent_name)?;
-
-        let cell_name = cell_name
-            .split('/')
-            .flat_map(|cell_name| {
-                CellName::validate_for_creation(
-                    Some(cell_name.into()),
-                    field_name,
-                    parent_name,
-                )
-            })
-            .collect();
-
-        Ok(cell_name)
-    }
-
     fn validate_executable(
         executable: Option<Executable>,
         field_name: &str,
@@ -213,36 +223,14 @@ impl CellServiceStartRequestTypeValidator for CellServiceStartRequestValidator {
 #[derive(Debug, ValidatedType)]
 pub struct ValidatedCellServiceStopRequest {
     #[field_type(String)]
-    pub cell_name: VecDeque<CellName>,
+    #[validate]
+    pub cell_name: CellNamePath,
     #[field_type(String)]
     #[validate]
     pub executable_name: ExecutableName,
 }
 
-impl CellServiceStopRequestTypeValidator for CellServiceStopRequestValidator {
-    fn validate_cell_name(
-        cell_name: String,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<VecDeque<CellName>, ValidationError> {
-        // TODO: refactor to a CellNamePath maybe
-        let cell_name =
-            validation::required(Some(cell_name), field_name, parent_name)?;
-
-        let cell_name = cell_name
-            .split('/')
-            .flat_map(|cell_name| {
-                CellName::validate_for_creation(
-                    Some(cell_name.into()),
-                    field_name,
-                    parent_name,
-                )
-            })
-            .collect();
-
-        Ok(cell_name)
-    }
-}
+impl CellServiceStopRequestTypeValidator for CellServiceStopRequestValidator {}
 
 #[derive(ValidatedType, Debug)]
 pub struct ValidatedExecutable {
