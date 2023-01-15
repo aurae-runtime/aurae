@@ -48,7 +48,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository }}/aurae-builder:latest
+      image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
       credentials:
         username:  ${{ github.actor }}
         password:  ${{ secrets.GITHUB_TOKEN }}
@@ -57,7 +57,7 @@ jobs:
         - uses: actions/setup-python@v2
           with:
             python-version: 3.x
-        - name: Install mkdocs-material [aurae-builder:latest]
+        - name: Install mkdocs-material [aurae-builder:builder-latest]
           run: |
             pip install mkdocs-material
         - name: Build Documentation [make docs]

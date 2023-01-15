@@ -74,7 +74,7 @@ jobs:
           sudo apt-get install -y protobuf-compiler
       - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
         #
-        # Do not at GNU libraries here! Do not add GNU libraries here!
+        # Do not add GNU libraries here! Do not add GNU libraries here!
         #
         # Please (seriously please) be careful about adding commands here.
         # This is our core way of validating that our binary is "healthy"

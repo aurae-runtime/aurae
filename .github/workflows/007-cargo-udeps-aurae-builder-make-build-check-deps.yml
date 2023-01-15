@@ -27,7 +27,7 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-name: "Cargo Udeps (007) [aurae-builder:latest]"
+name: "Cargo Udeps (007) [aurae-builder:builder-latest]"
 on:
  push:
    branches: main
@@ -41,13 +41,13 @@ env:
  CARGO_TERM_COLOR: always
 jobs:
  build-container:
-   uses: ./.github/workflows/031-ubuntu-aurae-builder-image-ubuntu-docker-cargo-udeps-build.yml
+   uses: ./.github/workflows/031-ubuntu-aurae-builder-image-ubuntu-docker-build-tester.yml
  check-udeps:
    name: Check udeps
    runs-on: ubuntu-latest
    needs: build-container
    container:
-     image: ghcr.io/${{ github.repository }}/aurae-builder:cargo-udeps-latest
+     image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
      credentials:
        username:  ${{ github.actor }}
        password:  ${{ secrets.GITHUB_TOKEN }}
