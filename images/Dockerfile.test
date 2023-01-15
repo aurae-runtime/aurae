@@ -32,7 +32,7 @@
 # builds.
 #
 # This container image is NOT intended to run Aurae in production.
-# This container image is only intended for internal builds and tests
+# For internal builds of auraed use Dockerfile.build
 #
 # syntax = docker/dockerfile:1.4
 FROM rust:1-slim-bullseye as main
