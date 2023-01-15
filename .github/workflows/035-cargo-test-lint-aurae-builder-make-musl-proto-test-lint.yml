@@ -28,7 +28,7 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-name: "Cargo Test Lint (035) [aurae-builder:latest]"
+name: "Cargo Test Lint (035) [aurae-builder:builder-latest]"
 on:
  push:
    branches: main
@@ -42,14 +42,14 @@ env:
  CARGO_TERM_COLOR: always
 jobs:
  build-container:
-   uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build.yml
+   uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build-builder.yml
  build:
    name: Build (lint, compile, test)
    runs-on: ubuntu-latest
    needs: build-container
    timeout-minutes: 20
    container:
-     image: ghcr.io/${{ github.repository }}/aurae-builder:latest
+     image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
      credentials:
        username:  ${{ github.actor }}
        password:  ${{ secrets.GITHUB_TOKEN }}

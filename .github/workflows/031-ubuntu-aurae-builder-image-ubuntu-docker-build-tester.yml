@@ -28,37 +28,37 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-name: "Aurae Builder Image (030) [ubuntu:latest]"
+name: "Aurae Udeps Builder Image (031) [ubuntu:latest]"
 on: [workflow_call]
 permissions:
  contents: read
  packages: write
 env:
  CARGO_TERM_COLOR: always
- CACHE_VERSION: v0
+ CACHE_VERSION: v1
 jobs:
  build-container:
    name: Build container image
    runs-on: ubuntu-latest
    concurrency:
-     group: ${{ format('{0}-{1}-030', github.ref, github.job) }}
+     group: ${{ format('{0}-{1}-031', github.ref, github.job) }}
    outputs:
-       tag: ${{ steps.image-tag.outputs.tag}}
+       tag: ${{ steps.image-tag.outputs.tag}}-udeps
    steps:
      - uses: actions/checkout@v3
        with:
          fetch-depth: 0
      - id: image-tag
        run: |
-         echo "tag=${{ hashFiles('**images/Dockerfile.build') }}" >> $GITHUB_OUTPUT
+         echo "tag=${{ hashFiles('**images/Dockerfile.test') }}" >> $GITHUB_OUTPUT
 
      - name: Check if container build needs to run
        uses: actions/cache@v3
        id: check-change
        with:
          path: |
-           images/Dockerfile.build
-         key: build-image-marker-${{ runner.os }}-${{ hashFiles('**images/Dockerfile.build') }}-${{env.CACHE_VERSION}}
+           images/Dockerfile.test
+         key: build-image-marker-${{ runner.os }}-${{ hashFiles('**images/Dockerfile.test') }}-${{env.CACHE_VERSION}}
 
      - name: Set up container buildx
        if: steps.check-change.outputs.cache-hit != 'true'
@@ -81,10 +81,10 @@ jobs:
        timeout-minutes: 15
        with:
          context: .
-         file: images/Dockerfile.build
+         file: images/Dockerfile.test
          push: true
          build-args: CACHE_VERSION=${{env.CACHE_VERSION}}
-         tags: ghcr.io/${{ github.repository }}/aurae-builder:latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
+         tags: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
          cache-from: type=gha
          cache-to: type=gha,mode=max
 

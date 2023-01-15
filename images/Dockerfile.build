@@ -41,7 +41,6 @@ LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
 ## Define ARGs
 ARG CACHE_VERSION=v0
 ARG BUF_VERSION=1.11.0
-ARG VALE_VERSION=2.21.3
 ARG PROTOC_VERSION=1.5.1
 
 ## Install packages
@@ -67,9 +66,7 @@ RUN  apt-get update && \
     curl \
     make \
     musl-tools \
-    protobuf-compiler \
-    git \
-    python3-pip
+    protobuf-compiler 
 RUN rm -rf /var/lib/apt/lists/*
 
 ## Setup Rust
@@ -89,32 +86,4 @@ RUN curl -sSL \
     -o "/usr/local/bin/buf" && \
     chmod +x "/usr/local/bin/buf"
 
-## Setup Vale
-RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
-    -o vale.tar.gz && \
-    tar -xvzf vale.tar.gz -C bin && \
-    mv bin/vale /usr/local/bin/vale && \
-    rm vale.tar.gz
-
-WORKDIR /app
-
-FROM main as local
-WORKDIR /app
-ENTRYPOINT ["make"]
-
-FROM main as cargo-udeps
-### libssdl-dev is required to install cargo-udeps
-### this docker stage should not be used to build auraed - use the `builder` stage below instead
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libssl-dev \
-    openssl \
-    pkg-config
-
-## Setup cargo-udeps
-RUN cargo install cargo-udeps
-WORKDIR /app
-
-
-FROM main as builder
-WORKDIR /app
+WORKDIR /aurae
