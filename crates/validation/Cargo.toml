@@ -19,7 +19,7 @@ thiserror = { workspace = true }
 validator = "0.16.0"
 secrecy = { version = "0.8.0", optional = true }
 serde = { workspace = true, optional = true }
-serde_json = { version = "1.0.87", optional = true }
+serde_json = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
 url = { workspace = true, optional = true }
 

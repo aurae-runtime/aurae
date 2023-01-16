@@ -28,47 +28,47 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::config::client_cert_details::ClientCertDetails;
-use crate::config::x509_details::new_x509_details;
-use crate::AuthConfig;
-use anyhow::Context;
+use aer::{
+    discovery::DiscoveryServiceCommands, grpc::HealthServiceCommands,
+    runtime::CellServiceCommands,
+};
+use clap::{Parser, Subcommand};
 
-pub struct CertMaterial {
-    pub server_root_ca_cert: Vec<u8>,
-    pub client_cert: Vec<u8>,
-    pub client_key: Vec<u8>,
+#[derive(Debug, Parser)]
+#[command(name = "aer")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
 }
 
-impl CertMaterial {
-    pub async fn from_config(config: &AuthConfig) -> anyhow::Result<Self> {
-        let server_root_ca_cert =
-            tokio::fs::read(&config.ca_crt).await.with_context(|| {
-                format!(
-                    "Failed to read server root CA certificate from path '{}'",
-                    config.ca_crt
-                )
-            })?;
+#[derive(Debug, Subcommand)]
+enum Commands {
+    #[command(arg_required_else_help = true)]
+    Cell {
+        #[command(subcommand)]
+        command: CellServiceCommands,
+    },
+    #[command(arg_required_else_help = true)]
+    Discovery {
+        #[command(subcommand)]
+        command: DiscoveryServiceCommands,
+    },
+    #[command(arg_required_else_help = true)]
+    Health {
+        #[command(subcommand)]
+        command: HealthServiceCommands,
+    },
+}
 
-        let client_cert =
-            tokio::fs::read(&config.client_crt).await.with_context(|| {
-                format!(
-                    "Failed to read client certificate from path '{}'",
-                    config.client_crt
-                )
-            })?;
+#[tokio::main]
+async fn main() {
+    let args = Cli::parse();
 
-        let client_key =
-            tokio::fs::read(&config.client_key).await.with_context(|| {
-                format!(
-                    "Failed to read client key from path '{}'",
-                    config.client_key
-                )
-            })?;
-
-        Ok(Self { server_root_ca_cert, client_cert, client_key })
-    }
-
-    pub fn get_client_cert_details(&self) -> anyhow::Result<ClientCertDetails> {
-        Ok(ClientCertDetails(new_x509_details(self.client_cert.clone())?))
+    if let Err(e) = match args.command {
+        Commands::Cell { command } => command.execute().await,
+        Commands::Discovery { command } => command.execute().await,
+        Commands::Health { command } => command.execute().await,
+    } {
+        eprintln!("{e:#?}");
     }
 }

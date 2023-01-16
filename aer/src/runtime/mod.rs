@@ -28,47 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::config::client_cert_details::ClientCertDetails;
-use crate::config::x509_details::new_x509_details;
-use crate::AuthConfig;
-use anyhow::Context;
+pub use cell_service::CellServiceCommands;
 
-pub struct CertMaterial {
-    pub server_root_ca_cert: Vec<u8>,
-    pub client_cert: Vec<u8>,
-    pub client_key: Vec<u8>,
-}
-
-impl CertMaterial {
-    pub async fn from_config(config: &AuthConfig) -> anyhow::Result<Self> {
-        let server_root_ca_cert =
-            tokio::fs::read(&config.ca_crt).await.with_context(|| {
-                format!(
-                    "Failed to read server root CA certificate from path '{}'",
-                    config.ca_crt
-                )
-            })?;
-
-        let client_cert =
-            tokio::fs::read(&config.client_crt).await.with_context(|| {
-                format!(
-                    "Failed to read client certificate from path '{}'",
-                    config.client_crt
-                )
-            })?;
-
-        let client_key =
-            tokio::fs::read(&config.client_key).await.with_context(|| {
-                format!(
-                    "Failed to read client key from path '{}'",
-                    config.client_key
-                )
-            })?;
-
-        Ok(Self { server_root_ca_cert, client_cert, client_key })
-    }
-
-    pub fn get_client_cert_details(&self) -> anyhow::Result<ClientCertDetails> {
-        Ok(ClientCertDetails(new_x509_details(self.client_cert.clone())?))
-    }
-}
+mod cell_service;

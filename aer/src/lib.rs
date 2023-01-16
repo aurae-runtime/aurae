@@ -28,47 +28,61 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::config::client_cert_details::ClientCertDetails;
-use crate::config::x509_details::new_x509_details;
-use crate::AuthConfig;
-use anyhow::Context;
+//! A command line tool named "aer" built on the Rust client ("aurae-client") that has an
+//! identical scope of a single auraed node.
+//!
+//! This tool is for "power-users" and exists as a way of quickly developing and debugging
+//! the APIs as we change them. For example an auraed developer might make a change to
+//! an API and need a quick way to test the API locally against a single daemon.
 
-pub struct CertMaterial {
-    pub server_root_ca_cert: Vec<u8>,
-    pub client_cert: Vec<u8>,
-    pub client_key: Vec<u8>,
+// Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
+#![warn(future_incompatible, nonstandard_style, unused)]
+#![warn(
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    unconditional_recursion,
+    unused_comparisons,
+    while_true
+)]
+#![warn(missing_debug_implementations,
+// TODO: missing_docs,
+trivial_casts,
+trivial_numeric_casts,
+unused_extern_crates,
+unused_import_braces,
+unused_results
+)]
+#![warn(clippy::unwrap_used)]
+// #![warn(missing_docs)] // TODO: We want the docs from the proto
+#![allow(dead_code)]
+
+pub mod discovery;
+pub mod grpc;
+pub mod runtime;
+
+/// Executes an rpc call with the default `AuraeClient` and prints the results.
+#[macro_export]
+macro_rules! execute {
+    ($call:path, $req:ident) => {{
+        let client = ::aurae_client::AuraeClient::default().await?;
+        let res = $call(&client, $req).await?;
+        println!("{res:#?}");
+        res
+    }};
 }
 
-impl CertMaterial {
-    pub async fn from_config(config: &AuthConfig) -> anyhow::Result<Self> {
-        let server_root_ca_cert =
-            tokio::fs::read(&config.ca_crt).await.with_context(|| {
-                format!(
-                    "Failed to read server root CA certificate from path '{}'",
-                    config.ca_crt
-                )
-            })?;
-
-        let client_cert =
-            tokio::fs::read(&config.client_crt).await.with_context(|| {
-                format!(
-                    "Failed to read client certificate from path '{}'",
-                    config.client_crt
-                )
-            })?;
-
-        let client_key =
-            tokio::fs::read(&config.client_key).await.with_context(|| {
-                format!(
-                    "Failed to read client key from path '{}'",
-                    config.client_key
-                )
-            })?;
-
-        Ok(Self { server_root_ca_cert, client_cert, client_key })
-    }
-
-    pub fn get_client_cert_details(&self) -> anyhow::Result<ClientCertDetails> {
-        Ok(ClientCertDetails(new_x509_details(self.client_cert.clone())?))
-    }
+/// Executes an rpc call with the default `AuraeClient` and prints the results.
+/// For use with server streaming requests.
+/// The initial response will be printed, followed by printing the stream of messages.
+#[macro_export]
+macro_rules! execute_server_streaming {
+    ($call:path, $req:ident) => {{
+        let res = execute!($call, $req);
+        let mut res = res.into_inner();
+        while let Some(res) = res.next().await {
+            let res = res?;
+            println!("{res:#?}");
+        }
+    }};
 }

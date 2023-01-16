@@ -100,16 +100,15 @@ enum Context {
 impl Context {
     fn get(nested: bool) -> Self {
         // TODO: Manage nested bool without passing --nested
-        let in_c = in_new_cgroup_namespace();
-        if in_c && !nested {
+        let in_cgroup = in_new_cgroup_namespace();
+        if in_cgroup && !nested {
             // If we are in a container, we should always run this setup no matter pid 1 or not
-            return Self::Container;
-        }
-        if std::process::id() == 1 {
-            return Self::Pid1;
-        }
-        if nested {
+            Self::Container
+        } else if nested {
+            // If we are nested, we should always run this setup no matter pid 1 or not
             Self::Cell
+        } else if std::process::id() == 1 {
+            Self::Pid1
         } else {
             Self::Daemon
         }

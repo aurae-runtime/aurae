@@ -1,0 +1,20 @@
+[package]
+name = "aer"
+version = "0.1.0"
+edition = "2021"
+authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
+license = "Apache-2.0"
+
+[[bin]]
+name = "aer"
+path = "src/bin/main.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+aurae-client = { workspace = true }
+aurae-proto = { workspace = true }
+# TODO: Consolidate versions of clap?
+clap = { version = "4.1.1", features = ["derive"] }
+futures-util = "0.3.25"
+serde = { workspace = true }
+tokio = { workspace = true }

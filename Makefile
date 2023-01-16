@@ -54,9 +54,14 @@ release: ## Build (static+musl) and install (release) 🎉
 	$(cargo) install --path ./auraescript
 
 .PHONY: auraescript
-auraescript: proto ## Initialize and compile aurae
+auraescript: proto ## Initialize and compile auraescript
 	@$(cargo) clippy -p auraescript
 	@$(cargo) install --path ./auraescript --debug --force
+
+.PHONY: aer
+aer: proto ## Initialize and compile aer
+	@$(cargo) clippy -p aer
+	@$(cargo) install --path ./aer --debug --force
 
 musl: ## Add target for musl
 	rustup target add $(uname_m)-unknown-linux-musl
