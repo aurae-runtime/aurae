@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------- #
-#             Apache 2.0 License Copyright © 2022 The Aurae Authors            #
+#        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors            #
 #                                                                              #
 #                +--------------------------------------------+                #
 #                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
@@ -35,7 +35,7 @@ permissions:
  packages: write
 env:
  CARGO_TERM_COLOR: always
- CACHE_VERSION: v1
+ CACHE_VERSION: v2
 jobs:
  build-container:
    name: Build container image
