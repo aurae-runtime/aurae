@@ -35,6 +35,7 @@ cargo         =  cargo
 oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
 uname_m       =  $(shell uname -m)
+cri_version   =  release-1.26
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -128,6 +129,10 @@ fmt: headers ## Format the entire code base(s)
 proto: ## Generate code from protobuf schemas
 	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
 	buf generate -v api
+
+.PHONY: cri
+cri: ## Copy the CRI interface from upstream
+	curl https://raw.githubusercontent.com/kubernetes/cri-api/$(cri_version)/pkg/apis/runtime/v1/api.proto -o api/kubernetes/cri/v1/$(cri_version).proto
 
 .PHONY: proto-lint
 proto-lint: ## Lint protobuf schemas

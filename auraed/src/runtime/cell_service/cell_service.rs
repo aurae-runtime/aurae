@@ -29,6 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
+    cells::{cell_name_path, CellName, CellNamePath, Cells},
     error::CellsServiceError,
     executables::Executables,
     validation::{
@@ -37,11 +38,10 @@ use super::{
     },
     Result,
 };
-use crate::runtime::cell_service::cells::{
-    cell_name_path, CellName, CellNamePath, Cells,
-};
 use ::validation::ValidatedType;
-use aurae_client::{runtime::cell_service::CellServiceClient, AuraeClient};
+use aurae_client::{
+    runtime::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
+};
 use aurae_proto::runtime::{
     cell_service_server, CellServiceAllocateRequest,
     CellServiceAllocateResponse, CellServiceFreeRequest,
@@ -53,7 +53,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
 use tonic::{Code, Request, Response, Status};
-use tracing::info;
+use tracing::{info, trace};
 
 macro_rules! do_in_cell {
     ($self:ident, $cell_name:ident, $function:ident, $request:ident) => {{
@@ -73,20 +73,19 @@ macro_rules! do_in_cell {
 
         let client = loop {
             match AuraeClient::new(client_config.clone()).await {
-                Ok(client) => break client,
-                Err(e) => {
-                    // TODO: we are assuming every error is retryable,
-                    //       but only certain ones are. We need to update AuraeClient::new
-                    //       so that we can differentiate
+                Ok(client) => break Ok(client),
+                e @ Err(AuraeClientError::ConnectionError(_)) => {
+                    trace!("aurae client failed to connect: {e:?}");
                     if let Some(delay) = retry_strategy.next_backoff() {
+                        trace!("retrying in {delay:?}");
                         tokio::time::sleep(delay).await
                     } else {
-                        // TODO: convert AuraeClient error to Status
-                        panic!("failed to create AuraeClient: {e}");
+                        break e
                     }
                 }
+                e => break e
             }
-        };
+        }.map_err(CellsServiceError::from)?;
 
         backoff::future::retry(
             retry_strategy,
@@ -213,7 +212,7 @@ impl CellService {
 
         let pid = executable
             .pid()
-            .map_err(CellsServiceError::IO)?
+            .map_err(CellsServiceError::Io)?
             .expect("pid")
             .as_raw();
 
