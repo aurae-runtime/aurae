@@ -6,23 +6,28 @@
   <img src="https://raw.githubusercontent.com/aurae-runtime/aurae/main/docs/assets/logo-1024x1024.png" width="450">
 </p>
 
-# Introduction
-
-[Aurae] is a memory-safe[^memory-safe] runtime daemon, process manager, and PID-1 initialization
-system designed to remotely schedule processes, containers, and virtual machines
-as well as set node configurations like networking storage.
-
-Through system proportioning and enterprise workload isolation techniques, the Aurae [open-source] project can complement Kubernetes, as Aurae supports the usage of multi-tenant workloads and enterprise identities all the way down to the socket layer. 
-
 # Mission
 
-Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
+Aurae is on a mission to be the most loved and effective way of managing
+workloads on a node. Our hope is that by bringing a better set of controls to a
+node, we can unlock brilliant higher order distributed systems in the future.
+
+# Introduction
+
+[Aurae] is a memory-safe[^memory-safe] runtime daemon, process manager, and
+PID-1 initialization system designed to remotely schedule processes, containers,
+and virtual machines as well as set node configurations like networking storage.
+
+Through system proportioning and enterprise workload isolation techniques, the
+Aurae [open-source] project can complement Kubernetes, as Aurae supports the
+usage of multi-tenant workloads and enterprise identities all the way down to
+the socket layer.
 
 ## Project Status
 
-> **STILL IN EARLY DEVELOPMENT!**<br> 
-> **The Aurae project and API can change without notice.**<br>
-> **Do not run the project in production until further notice!** 
+> **STILL IN EARLY DEVELOPMENT!**<br>
+> **The Aurae project and API can change without notice.**<br> 
+> **Do not run the project in production until further notice!**
 > <br>
 
 - The Aurae project welcomes contributions of all kinds and sizes.
