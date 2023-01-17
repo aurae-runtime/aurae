@@ -68,7 +68,7 @@ service SpawnService {}
 /// properties of the parent
 
 /// A pod is a higher level abstraction than Aurae cells, and to most users
-/// will look at feel like one or more "containers".
+/// will look and feel like one or more "containers".
 ///
 /// Pods will run an OCI compliant container image.
 ///
