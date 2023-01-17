@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 macros::ops_generator!(
-    discovery,
+    discovery("v0/discovery/discovery.ts"),
     {
         DiscoveryService,
         discover(DiscoverRequest) -> DiscoverResponse,

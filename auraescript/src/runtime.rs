@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 macros::ops_generator!(
-    runtime,
+    runtime("v0/runtime/runtime.ts"),
     {
         CellService,
         allocate(CellServiceAllocateRequest) -> CellServiceAllocateResponse,

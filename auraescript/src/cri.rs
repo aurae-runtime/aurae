@@ -30,7 +30,7 @@
 
 // TODO: macro doesn't support streaming. Does deno?
 macros::ops_generator!(
-    kubernetes::cri,
+    kubernetes::cri("kubernetes/cri/v1/release-1.26.ts"),
     {
         RuntimeService,
         version(VersionRequest) -> VersionResponse,
