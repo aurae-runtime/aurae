@@ -8,7 +8,7 @@
 
 # Summary
 
-[Aurae] is a [memory-safe] runtime daemon, process manager, and PID-1 initialization
+[Aurae] is a memory-safe[^memory-safe] runtime daemon, process manager, and PID-1 initialization
 system designed to remotely schedule processes, containers, and virtual machines
 as well as set node configurations like networking storage.
 
