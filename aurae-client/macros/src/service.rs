@@ -4,7 +4,7 @@ use proc_macro2::Ident;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{parenthesized, parse_macro_input, Path, Token, Type};
+use syn::{bracketed, parenthesized, parse_macro_input, Path, Token, Type};
 
 #[allow(clippy::format_push_string)]
 
@@ -26,12 +26,30 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
         });
 
     let rpc_signatures: Vec<_> = functions.iter().zip(fn_name_idents.clone()).map(
-        |(FunctionInput { name: _, arg, returns }, name)| {
-            quote! {
-                async fn #name(
-                    &self,
-                    req: ::aurae_proto::#module::#arg
-                ) -> Result<::tonic::Response<::aurae_proto::#module::#returns>, ::tonic::Status>
+        |(FunctionInput { name: _, client_streaming, arg, server_streaming, returns }, name)| {
+            match (client_streaming, server_streaming) {
+                (true, true) => {
+                    todo!("bidirectional streaming")
+                }
+                (true, false) => {
+                    todo!("client streaming")
+                },
+                (false, true) => {
+                    quote! {
+                        async fn #name(
+                            &self,
+                            req: ::aurae_proto::#module::#arg
+                        ) -> Result<::tonic::Response<::tonic::Streaming<::aurae_proto::#module::#returns>>, ::tonic::Status>
+                    }
+                }
+                _ => {
+                    quote! {
+                        async fn #name(
+                            &self,
+                            req: ::aurae_proto::#module::#arg
+                        ) -> Result<::tonic::Response<::aurae_proto::#module::#returns>, ::tonic::Status>
+                    }
+                }
             }
         },
     ).collect();
@@ -85,7 +103,9 @@ impl Parse for ServiceInput {
 
 struct FunctionInput {
     name: Ident,
+    client_streaming: bool,
     arg: Type,
+    server_streaming: bool,
     returns: Type,
 }
 
@@ -95,12 +115,24 @@ impl Parse for FunctionInput {
 
         let content;
         let _ = parenthesized!(content in input);
-        let arg = content.parse()?;
+        let (client_streaming, arg) = if content.peek(syn::token::Bracket) {
+            let content2;
+            let _ = bracketed!(content2 in content);
+            (true, content2.parse()?)
+        } else {
+            (false, content.parse()?)
+        };
 
         let _: Token![->] = input.parse()?;
 
-        let returns = input.parse()?;
+        let (server_streaming, returns) = if input.peek(syn::token::Bracket) {
+            let content;
+            let _ = bracketed!(content in input);
+            (true, content.parse()?)
+        } else {
+            (false, input.parse()?)
+        };
 
-        Ok(Self { name, arg, returns })
+        Ok(Self { name, client_streaming, arg, server_streaming, returns })
     }
 }

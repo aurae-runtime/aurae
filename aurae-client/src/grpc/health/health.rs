@@ -28,67 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-// TODO: The macro does not support streaming, see below for what we want the macro to output
-// macros::service!(
-//     grpc::health,
-//     Health,
-//     check(HealthCheckRequest) -> HealthCheckResponse,
-//     watch(HealthCheckRequest) -> HealthCheckResponse
-// );
-
-#[::tonic::async_trait]
-pub trait HealthClient {
-    async fn check(
-        &self,
-        req: ::aurae_proto::grpc::health::HealthCheckRequest,
-    ) -> Result<
-        ::tonic::Response<::aurae_proto::grpc::health::HealthCheckResponse>,
-        ::tonic::Status,
-    >;
-    async fn watch(
-        &self,
-        req: ::aurae_proto::grpc::health::HealthCheckRequest,
-    ) -> Result<
-        ::tonic::Response<
-            ::tonic::Streaming<
-                ::aurae_proto::grpc::health::HealthCheckResponse,
-            >,
-        >,
-        ::tonic::Status,
-    >;
-}
-#[::tonic::async_trait]
-impl HealthClient for crate::client::AuraeClient {
-    async fn check(
-        &self,
-        req: ::aurae_proto::grpc::health::HealthCheckRequest,
-    ) -> Result<
-        ::tonic::Response<::aurae_proto::grpc::health::HealthCheckResponse>,
-        ::tonic::Status,
-    > {
-        let mut client =
-            ::aurae_proto::grpc::health::health_client::HealthClient::new(
-                self.channel.clone(),
-            );
-        client.check(req).await
-    }
-
-    async fn watch(
-        &self,
-        req: ::aurae_proto::grpc::health::HealthCheckRequest,
-    ) -> Result<
-        ::tonic::Response<
-            ::tonic::Streaming<
-                ::aurae_proto::grpc::health::HealthCheckResponse,
-            >,
-        >,
-        ::tonic::Status,
-    > {
-        let mut client =
-            ::aurae_proto::grpc::health::health_client::HealthClient::new(
-                self.channel.clone(),
-            );
-        client.watch(req).await
-    }
-}
-
+macros::service!(
+    grpc::health,
+    Health,
+    check(HealthCheckRequest) -> HealthCheckResponse,
+    watch(HealthCheckRequest) -> [HealthCheckResponse]
+);

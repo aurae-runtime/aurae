@@ -67,6 +67,7 @@ mod builtin;
 mod discovery;
 mod health;
 mod runtime;
+mod cri;
 
 pub fn init() -> JsRuntime {
     let extension = Extension::builder().ops(stdlib()).build();

@@ -88,6 +88,7 @@ pub mod logging;
 mod observe;
 mod runtime;
 mod spawn;
+mod kubernetes;
 
 /// Default Unix domain socket path for `auraed`.
 ///

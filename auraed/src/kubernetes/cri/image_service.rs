@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,31 +28,50 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! Generated Protobuf definitions for the Aurae Standard Library
+use aurae_proto::kubernetes::cri::{
+    image_service_server, ImageFsInfoRequest, ImageFsInfoResponse,
+    ImageStatusRequest, ImageStatusResponse, ListImagesRequest,
+    ListImagesResponse, PullImageRequest, PullImageResponse,
+    RemoveImageRequest, RemoveImageResponse,
+};
+use tonic::{Request, Response, Status};
 
-#![allow(clippy::derive_partial_eq_without_eq)]
-#![allow(clippy::match_single_binding)]
+pub struct ImageService {}
 
-pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
-}
-
-pub mod grpc {
-    pub mod health {
-        include!("gen/grpc.health.v1.rs");
+#[tonic::async_trait]
+impl image_service_server::ImageService for ImageService {
+    async fn list_images(
+        &self,
+        _request: Request<ListImagesRequest>,
+    ) -> Result<Response<ListImagesResponse>, Status> {
+        todo!()
     }
-}
 
-pub mod kubernetes {
-    pub mod cri {
-        include!("gen/runtime.v1.rs");
+    async fn image_status(
+        &self,
+        _request: Request<ImageStatusRequest>,
+    ) -> Result<Response<ImageStatusResponse>, Status> {
+        todo!()
     }
-}
 
-pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
-}
+    async fn pull_image(
+        &self,
+        _request: Request<PullImageRequest>,
+    ) -> Result<Response<PullImageResponse>, Status> {
+        todo!()
+    }
 
-pub mod runtime {
-    include!("gen/aurae.runtime.v0.rs");
+    async fn remove_image(
+        &self,
+        _request: Request<RemoveImageRequest>,
+    ) -> Result<Response<RemoveImageResponse>, Status> {
+        todo!()
+    }
+
+    async fn image_fs_info(
+        &self,
+        _request: Request<ImageFsInfoRequest>,
+    ) -> Result<Response<ImageFsInfoResponse>, Status> {
+        todo!()
+    }
 }
