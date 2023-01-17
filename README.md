@@ -6,7 +6,7 @@
   <img src="https://raw.githubusercontent.com/aurae-runtime/aurae/main/docs/assets/logo-1024x1024.png" width="450">
 </p>
 
-# Summary
+# Introduction
 
 [Aurae] is a memory-safe[^memory-safe] runtime daemon, process manager, and PID-1 initialization
 system designed to remotely schedule processes, containers, and virtual machines
@@ -14,7 +14,7 @@ as well as set node configurations like networking storage.
 
 The [open-source] project adapts to the expanding demands of enterprise
 distributed systems and meets the present and future demands of
-higher-order distributed systems by also using the [Rust] systems language.
+higher-order distributed systems.
 
 Aurae supports multi-tenant workloads and enterprise identities all the way down
 to the socket layer and can rationalize workloads and further improve system
