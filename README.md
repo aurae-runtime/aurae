@@ -4,12 +4,14 @@
 
 # Summary
 
-[Aurae] is a free and [open-source] project built with the [Rust] systems
-language.
+[Aurae] is a memory-safe runtime daemon, process manager, and PID-1 initialization
+system designed to remotely schedule processes, containers, and virtual machines
+as well as set node configurations like networking storage.
 
-The project adapts to the expanding demands of enterprise distributed systems
-that meets the present and future demands for brilliant higher-order distributed
-systems.
+
+The [open-source] project adapts to the expanding demands of enterprise
+distributed systems and meets the present and future demands for brilliant
+higher-order distributed systems using the [Rust] systems language.
 
 Aurae supports multi-tenant workloads and enterprise identities all the way down
 to the socket layer and can rationalize workloads and further improve system
@@ -21,15 +23,10 @@ workloads, the project can work exceptionally well with tools like Kubernetes [^
 > **STILL IN EARLY DEVELOPMENT!**<br>
 > **The Aurae project and API can change without notice.**<br> 
 > **Do not run the project in production until further notice!**
-> <br><br>
-> _"Aurae attempts to simplify and improve the stack in_
-> _enterprise distributed systems by carving out a small portion of_
-> _responsibility while offering a few basic guarantees with regard to state,_
-> _synchronicity, awareness, and security."_
-> <br>&mdash; [Kris Nóva] (Founder of the Nivenly Foundation)
+> <br>
 
 _Auraes mission is to become the most loved method of managing workloads on a_
-_single piece of hardware._
+_single node._
 
 - The Aurae project welcomes contributions of all kinds and sizes.
 - Please read the "[getting involved]" documentation before contributing to the
@@ -40,7 +37,7 @@ By joining the project in its early phases, you'll participate in the
 development of a milestone candidate for enterprise distributed systems and
 automation.
 
-# **Aurae**
+# **In more detail**
 
 Aurae enables the control of each internal runtime process on a piece of
 hardware or node as its [PID]-1 instance on a [Linux kernel] and offers
@@ -67,25 +64,11 @@ core definitions in predefined [.proto] files from this repository for their
 automatic generation. While TypeScript files can be leveraged to replace static
 manifests, such as YAML, as well as interact directly with a running system.
 
-<div class="headerless">
-
 |   |   |
 |:--|:--|
 | **Auraed** | To ensure memory safety, Aurae serves the generic system's runtime daemon ([auraed]). |
-| **AuraeScript** | The [AuraeScript] (a Turing-complete scripting language built on TypeScript) library automatically generates itself from the pre-defined [.proto] files defined in the Aurae standard library. |
-| **Authentication** | Aurae extends [SPIFFE]/[SPIRE] (x509 mTLS)-backed identity, authentication (authn), and authorization (authz) in a distributed system down to the Unix domain socket layer. |
-| **Principle of Least Awareness** | A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. |
-| **Runtime Workloads** | The Aurae runtime API can manage [virtual machines], [executables], [cells], [pods], and other [spawned Aurae instances]. |
-| **The Aurae Standard Library** | The Aurae project exposes its functionality as a gRPC API through the [Aurae standard library].<br>The [V0 API reference] contains the current library definition. |
+| **AuraeScript** | The [AuraeScript] (a Turing-complete scripting language built on TypeScript) library automatically generates itself from the pre-defined [.proto] files defined in the Aurae standard library.<br>It also directly embeds [Deno] source code to provide an SDK and the functionality to attach remote clients for the direct remote communication with Aurae.|
 |||
-
-<details>
-  <summary><i>For more details on AuraeScript, click here.</i></summary>
-  <br>
-
-- AuraeScript directly embeds [Deno] source code to provide an SDK and the
-  functionality to attach remote clients for the direct remote communication
-  with Aurae.
 
 ```typescript
 #!/usr/bin/env auraescript
@@ -108,7 +91,13 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 });
 ```
 
-</details>
+|   |   |
+|:--|:--|
+| **Authentication** | Aurae extends [SPIFFE]/[SPIRE] (x509 mTLS)-backed identity, authentication (authn), and authorization (authz) in a distributed system down to the Unix domain socket layer. |
+| **Principle of Least Awareness** | A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. |
+| **Runtime Workloads** | The Aurae runtime API can manage [virtual machines], [executables], [cells], [pods], and other [spawned Aurae instances]. |
+| **The Aurae Standard Library** | The Aurae project exposes its functionality as a gRPC API through the [Aurae standard library].<br>The [V0 API reference] contains the current library definition. |
+|||
 
 <!-- All the links!! -->
 <!-- +Footnotes -->
