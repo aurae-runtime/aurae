@@ -12,14 +12,11 @@
 system designed to remotely schedule processes, containers, and virtual machines
 as well as set node configurations like networking storage.
 
-The [open-source] project adapts to the expanding demands of enterprise
-distributed systems and meets the present and future demands of
-higher-order distributed systems.
+Through system proportioning and enterprise workload isolation techniques, the Aurae [open-source] project can complement Kubernetes, as Aurae supports the usage of multi-tenant workloads and enterprise identities all the way down to the socket layer. 
 
-Aurae supports multi-tenant workloads and enterprise identities all the way down
-to the socket layer and can rationalize workloads and further improve system
-proportions by utilizing a variety of isolation strategies for enterprise
-workloads, the project can work exceptionally well with tools like Kubernetes [^compare].
+# Mission
+
+Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
 
 ## Project Status
 
@@ -27,9 +24,6 @@ workloads, the project can work exceptionally well with tools like Kubernetes [^
 > **The Aurae project and API can change without notice.**<br>
 > **Do not run the project in production until further notice!** 
 > <br>
-
-_Auraes mission is to become the most loved method of managing workloads on a_
-_single node._
 
 - The Aurae project welcomes contributions of all kinds and sizes.
 - Please read the "[getting involved]" documentation before contributing to the
@@ -40,7 +34,7 @@ By joining the project in its early phases, you'll participate in the
 development of a milestone candidate for enterprise distributed systems and
 automation.
 
-# **In more detail**
+## **In more detail**
 
 Aurae enables the control of each internal runtime process on a piece of
 hardware or node as its [PID]-1 instance on a [Linux kernel] and offers
