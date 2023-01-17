@@ -2,6 +2,10 @@
 
 ![Deploy (aurae.io)] ![Documentation] ![Main Build (lint, compile, test)]
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/aurae-runtime/aurae/main/docs/assets/logo-1024x1024.png" width="450">
+</p>
+
 # Summary
 
 [Aurae] is a memory-safe runtime daemon, process manager, and PID-1 initialization
