@@ -100,7 +100,7 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 | **Authentication** | Aurae extends [SPIFFE]/[SPIRE] (x509 mTLS)-backed identity, authentication (authn), and authorization (authz) in a distributed system down to the Unix domain socket layer. |
 | **Principle of Least Awareness** | A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. |
 | **Runtime Workloads** | The Aurae runtime API can manage [virtual machines], [executables], [cells], [pods], and other [spawned Aurae instances]. |
-| **The Aurae Standard Library** | The Aurae project exposes its functionality as a gRPC API through the [Aurae standard library].<br>The [V0 API reference] contains the current library definition. |
+| **The Aurae Standard Library** | The Aurae project exposes its functionality as a gRPC API through the [Aurae standard library]. The [V0 API reference] contains the current library definition. |
 |||
 
 <!-- All the links!! -->
