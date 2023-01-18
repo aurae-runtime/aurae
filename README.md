@@ -14,16 +14,17 @@ node, we can unlock brilliant higher order distributed systems in the future.
 
 # Introduction
 
-[Aurae] is a memory-safe [^memory-safe] runtime daemon, process manager, and
-PID-1 initialization system designed to remotely schedule processes, containers,
-and virtual machines as well as set node configurations like networking storage.
+[Aurae] deploys a memory-safe [^memory-safe] runtime daemon, process manager,
+and PID-1 initialization system to remotely schedule processes, containers, and
+virtual machines as well as set node configurations (e.g., like networking
+storage).
 
 Through system proportioning and enterprise workload isolation techniques, the
 Aurae [open-source] project can complement Kubernetes, as Aurae supports the
 usage of multi-tenant workloads and enterprise identities all the way down to
 the socket layer.
 
-# Project Status
+## Project Status
 
 > **STILL IN EARLY DEVELOPMENT!**<br> 
 > **The Aurae project and API can change without notice.**<br> 
@@ -34,17 +35,17 @@ the socket layer.
   project.
 - You do not have to know [Rust] to join the project.
 
-By joining the project in its early phases, you'll participate in the
-development of a milestone candidate for enterprise distributed systems and
-automation.
+By joining the project in its early stages, you will help to create a milestone
+contender for corporate distributed systems and automation that will remain
+accessible to anyone.
 
 # **Expanded Overview**
 
 By [introducing Aurae cells] on top of a [Linux kernel] the control of each
-internal runtime process on a given node becomes possible because auraed takes
-ownership of every process by becoming the [PID]-1 instance. This enabled the
-creation of extended system and service management capabilities [^compare].
-Allowing for advanced use with Kubernetes and the
+internal runtime process on a given node becomes possible because of [auraed].
+The auraed runtime seizes ownership of every process by becoming the [PID]-1
+instance. This enabled the creation of extended system and service management
+capabilities [^compare], allowing for advanced use with Kubernetes and the
 [realization](#project-status) of a [systemd]-like scope within the distributed
 systems themselves.
 
@@ -55,11 +56,11 @@ desirable feature sets such as those from [Firecracker] and [Containerd] and
 including [mTLS]-encrypted [gRPC] APIs (the Aurae standard library) that become
 exposed to allow management and configuration of internal processes.
 
-Many parts of the Aurae runtime system and the Aurae standard library use core
-definitions from predefined [.proto] files within this repository for their
-build processes. While TypeScript files allow for the replacement of static
-manifests, such as [YAML], and make direct interactions with a running system
-possible.
+Maintainable and predefined [.proto]-files contribute to the core definition of
+the distributed systems runtime and the standard library. During the build
+process, these [.proto]-files can allow for greater customization possibilities.
+The [TypeScript] file format replaces static manifests (like the [YAML] file
+format) for direct interactions with a running system.
 
 ---
 
@@ -97,6 +98,21 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 | **Runtime Workloads**            | The Aurae runtime API can manage [virtual machines], [executables], [cells], [pods], and other [spawned Aurae instances].                                                   |
 | **The Aurae Standard Library**   | The Aurae project exposes its functionality as a gRPC API through the [Aurae standard library]. The [V0 API reference] contains the current library definition.             |
 |||
+
+---
+
+<!-- # **Getting Started**
+## **Building Aurae from Source**
+### **Dependencies**
+### **Prepare the Environment**
+## **Aurae Quick Start**
+### **Running the Daemon**
+### **Running your first Cell**
+## **Developing on an M1**
+### **Environment**
+### **VM Setup**
+### **CLion Setup**
+### **Back to the VM (setting up Aurae)** -->
 
 <!-- All the links!! -->
 <!-- +Footnotes -->
@@ -162,5 +178,6 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 [linux kernel]: https://git.kernel.org/ "Learn about the Linux kernels"
 [medium blog: why fix kubernetes and systemd?]: https://medium.com/@kris-nova/why-fix-kubernetes-and-systemd-782840e50104 "Learn more about the possibilies of Aurae"
 [rust]: https://www.rust-lang.org/ "Read and learn more about the Rust language"
-[systemd]: https://www.freedesktop.org/wiki/Software/systemd/ "Read about Systemd"
+[systemd]: https://www.freedesktop.org/wiki/Software/systemd/ "Read more about Systemd"
+[typescript]: https://www.typescriptlang.org/docs/handbook/ "Read more about TypeScript"
 [yaml]: https://yaml.org/ "Read more about YAML"
