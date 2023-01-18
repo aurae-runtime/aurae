@@ -1,6 +1,6 @@
 #!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+#             Apache 2.0 License Copyright © The Aurae Authors                #
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
