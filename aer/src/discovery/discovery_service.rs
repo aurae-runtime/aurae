@@ -30,21 +30,21 @@
 
 use crate::execute;
 use aurae_client::discovery::discovery_service::DiscoveryServiceClient;
-use aurae_proto::discovery::HealthRequest;
+use aurae_proto::discovery::DiscoverRequest;
 use clap::Subcommand;
 
 #[derive(Debug, Subcommand)]
 pub enum DiscoveryServiceCommands {
     #[command()]
-    Health,
+    Discover,
 }
 
 impl DiscoveryServiceCommands {
     pub async fn execute(self) -> anyhow::Result<()> {
         match self {
-            DiscoveryServiceCommands::Health => {
-                let req = HealthRequest {};
-                let _ = execute!(DiscoveryServiceClient::health, req);
+            DiscoveryServiceCommands::Discover => {
+                let req = DiscoverRequest {};
+                let _ = execute!(DiscoveryServiceClient::discover, req);
             }
         }
 
