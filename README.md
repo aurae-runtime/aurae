@@ -14,7 +14,7 @@ node, we can unlock brilliant higher order distributed systems in the future.
 
 # Introduction
 
-[Aurae] is a memory-safe[^memory-safe] runtime daemon, process manager, and
+[Aurae] is a memory-safe [^memory-safe] runtime daemon, process manager, and
 PID-1 initialization system designed to remotely schedule processes, containers,
 and virtual machines as well as set node configurations like networking storage.
 
@@ -25,7 +25,9 @@ the socket layer.
 
 # Project Status
 
-> **STILL IN EARLY DEVELOPMENT!**<br> > **The Aurae project and API can change without notice.**<br> > **Do not run the project in production until further notice!** > <br>
+> **STILL IN EARLY DEVELOPMENT!**<br> 
+> **The Aurae project and API can change without notice.**<br> 
+> **Do not run the project in production until further notice!**
 
 - The Aurae project welcomes contributions of all kinds and sizes.
 - Please read the "[getting involved]" documentation before contributing to the
@@ -38,30 +40,28 @@ automation.
 
 # **Expanded Overview**
 
-Aurae enables the control of each internal runtime process on a piece of
-hardware or node as its [PID]-1 instance on a [Linux kernel] and offers
-mTLS-encrypted gRPC APIs for managing processes through
-[workload isolation with Aurae cells] [^cells].
+By [introducing Aurae cells] on top of a [Linux kernel] the control of each
+internal runtime process on a given node becomes possible because auraed takes
+ownership of every process by becoming the [PID]-1 instance. This enabled the
+creation of extended system and service management capabilities [^compare].
+Allowing for advanced use with Kubernetes and the
+[realization](#project-status) of a [systemd]-like scope within the distributed
+systems themselves.
 
-Furthermore, enabling the management of [virtual machines] and containers by
-adding additional features comparable to those of [Firecracker] and
-[containerd] and combining effective node management with additional controls
-while offering a scope comparable to that of [systemd].
+[Aurae cells] [^cells] improve maintenance and accessibility on a given node
+within [virtual machines] and containers, as they will serve as a systemd
+substitute that can run below Kubernetes [^medium]. While also adapting
+desirable feature sets such as those from [Firecracker] and [Containerd] and
+including [mTLS]-encrypted [gRPC] APIs (the Aurae standard library) that become
+exposed to allow management and configuration of internal processes.
 
-In doing so, Aurae takes ownership of all runtime processes on a single piece of
-hardware or node, providing [mTLS]-encrypted [gRPC] APIs (the Aurae standard
-library) that allow the management of these processes in [Aurae cells]. Further,
-enabling the construction of distributed systems with enterprise settings and
-security that can run below Kubernetes and [substitute](#project-status) as a
-systemd replacement with accessible and maintainable system and service
-management [^medium].
+Many parts of the Aurae runtime system and the Aurae standard library use core
+definitions from predefined [.proto] files within this repository for their
+build processes. While TypeScript files allow for the replacement of static
+manifests, such as [YAML], and make direct interactions with a running system
+possible.
 
 ---
-
-Many parts of the Aurae runtime system and the Aurae standard library use the
-core definitions in predefined [.proto] files from this repository for their
-automatic generation. While TypeScript files can be leveraged to replace static
-manifests, such as YAML, as well as interact directly with a running system.
 
 |||
 | :--- | :--- |
@@ -108,13 +108,14 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 [^compare]:
     As a low-level building block, the Aurae Project works well with any
     higher-order system by offering a thoughtful set of API calls and controls for
-    managing workloads on a node or single piece of hardware.
+    managing workloads on a single node.
 
 [^medium]:
     Learn more from the [Medium Blog: Why fix Kubernetes and Systemd?] by
     [Kris Nóva]).
 
-[^memory-safe]: The reliability and effectiveness of the Rust systems language make it an excellent choice for the development of the Aurae project. [Learn more about Rust]
+[^memory-safe]: 
+    The reliability and effectiveness of the Rust systems language make it an excellent choice for the development of the Aurae project. [Learn more about Rust]
 
 <!-- +Status Badges -->
 
@@ -134,7 +135,7 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 [spawned aurae instances]: https://aurae.io/stdlib/v0/#instance "Short lived nested virtual instances of Aurae"
 [v0 api reference]: https://aurae.io/stdlib/v0/ "Learn more about the current Aurae library definitions"
 [virtual machines]: https://aurae.io/stdlib/v0/#virtualmachine "Long-lived arbitrary virtual machines"
-[workload isolation with aurae cells]: https://aurae.io/blog/2022-10-24-aurae-cells/#IntroducingAuraeCells "Aurae Blog: 2022-10-24"
+[introducing Aurae cells]: https://aurae.io/blog/2022-10-24-aurae-cells/#IntroducingAuraeCells "Aurae Blog: 2022-10-24"
 
 <!-- +Wiki -->
 
