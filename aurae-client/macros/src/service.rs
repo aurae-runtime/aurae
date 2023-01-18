@@ -2,32 +2,115 @@ use heck::ToSnakeCase;
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
+use std::path::PathBuf;
+use std::str::FromStr;
 use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{bracketed, parenthesized, parse_macro_input, Path, Token, Type};
+use syn::{parse_macro_input, Lit, Path, Token};
 
 #[allow(clippy::format_push_string)]
 
-pub(crate) fn service(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as ServiceInput);
+struct ServiceInput {
+    file_path: Lit,
+    module: Path,
+    service_name: Ident,
+}
 
-    let ServiceInput { module, name, functions } = input;
+impl Parse for ServiceInput {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let file_path: Lit = input.parse()?;
+        let _: Token![,] = input.parse()?;
+        let module = input.parse()?;
+        let _: Token![,] = input.parse()?;
+        let service_name = input.parse()?;
+
+        Ok(Self { file_path, module, service_name })
+    }
+}
+
+pub(crate) fn service(input: TokenStream) -> TokenStream {
+    let ServiceInput { file_path, module, service_name } =
+        parse_macro_input!(input as ServiceInput);
+
+    let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
+        Ok(dir) => PathBuf::from(dir),
+        _ => panic!("env variable 'CARGO_MANIFEST_DIR' was not set. Failed to find crate root"),
+    };
+
+    let parsed_file_path = match &file_path {
+        Lit::Str(file_path) => {
+            let file_path = file_path.value();
+            let file_path = file_path.trim_matches('"');
+
+            let file_path = crate_root.join(file_path);
+
+            file_path.canonicalize().unwrap_or_else(|e| {
+                panic!(
+                    "failed to determine absolute path for {file_path:?}: {e}"
+                )
+            })
+        }
+        _ => panic!(
+            "expected literal string with path to proto file as first argument"
+        ),
+    };
+
+    let mut api_dir = parsed_file_path.clone();
+    let api_dir = loop {
+        match api_dir.parent() {
+            Some(parent) => {
+                if parent.is_dir() && parent.ends_with("api") {
+                    break parent;
+                } else {
+                    api_dir = parent.to_path_buf();
+                }
+            }
+            _ => panic!("proto file not in api directory"),
+        }
+    };
+
+    let content = protobuf_parse::Parser::new()
+        .protoc()
+        .protoc_extra_args(["--experimental_allow_proto3_optional"])
+        .include(api_dir)
+        .input(&parsed_file_path)
+        .parse_and_typecheck()
+        .expect("failed to parse proto file");
+
+    let service = content
+        .file_descriptors
+        .iter()
+        .flat_map(|x| &x.service)
+        .find(|x| matches!(&x.name, Some(y) if service_name == y))
+        .expect("failed to find service");
 
     let client_namespace = Ident::new(
-        &format!("{}_client", name.to_string().to_snake_case()),
-        name.span(),
+        &format!("{}_client", service_name.to_string().to_snake_case()),
+        service_name.span(),
     );
 
-    let client_ident = Ident::new(&format!("{name}Client"), name.span());
+    let client_ident =
+        Ident::new(&format!("{service_name}Client"), service_name.span());
 
-    let fn_name_idents =
-        functions.iter().map(|FunctionInput { name: fn_name, .. }| {
-            Ident::new(&fn_name.to_string().to_snake_case(), fn_name.span())
-        });
+    let fn_name_idents = service.method.iter().map(|m| {
+        let fn_name = m.name.as_ref().expect("rpc is missing name");
+        Ident::new(&fn_name.to_string().to_snake_case(), file_path.span())
+    });
 
-    let rpc_signatures: Vec<_> = functions.iter().zip(fn_name_idents.clone()).map(
-        |(FunctionInput { name: _, client_streaming, arg, server_streaming, returns }, name)| {
-            match (client_streaming, server_streaming) {
+    let rpc_signatures: Vec<_> = service.method.iter().zip(fn_name_idents.clone()).map(
+        |(m, name)| {
+            let input_type = proc_macro2::TokenStream::from_str(m.input_type
+                .as_ref()
+                .map(|x| x.split('.').last().expect("input type"))
+                .expect("rpc function is missing input type")
+            ).expect("rpc input type is not valid");
+
+            let output_type = proc_macro2::TokenStream::from_str(m.output_type
+                .as_ref()
+                .map(|x| x.split('.').last().expect("output type"))
+                .expect("rpc function is missing output type")
+            ).expect("rpc output type is not valid");
+
+            match (m.client_streaming.unwrap_or(false), m.server_streaming.unwrap_or(false)) {
                 (true, true) => {
                     todo!("bidirectional streaming")
                 }
@@ -38,16 +121,16 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
                     quote! {
                         async fn #name(
                             &self,
-                            req: ::aurae_proto::#module::#arg
-                        ) -> Result<::tonic::Response<::tonic::Streaming<::aurae_proto::#module::#returns>>, ::tonic::Status>
+                            req: ::aurae_proto::#module::#input_type
+                        ) -> Result<::tonic::Response<::tonic::Streaming<::aurae_proto::#module::#output_type >>, ::tonic::Status>
                     }
                 }
                 _ => {
                     quote! {
                         async fn #name(
                             &self,
-                            req: ::aurae_proto::#module::#arg
-                        ) -> Result<::tonic::Response<::aurae_proto::#module::#returns>, ::tonic::Status>
+                            req: ::aurae_proto::#module::#input_type
+                        ) -> Result<::tonic::Response<::aurae_proto::#module::#output_type>, ::tonic::Status>
                     }
                 }
             }
@@ -79,60 +162,4 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
     };
 
     expanded.into()
-}
-
-struct ServiceInput {
-    module: Path,
-    name: Ident,
-    functions: Punctuated<FunctionInput, Token![,]>,
-}
-
-impl Parse for ServiceInput {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let module = input.parse()?;
-        let _: Token![,] = input.parse()?;
-
-        let name = input.parse()?;
-        let _: Token![,] = input.parse()?;
-
-        let functions = input.parse_terminated(FunctionInput::parse)?;
-
-        Ok(Self { module, name, functions })
-    }
-}
-
-struct FunctionInput {
-    name: Ident,
-    client_streaming: bool,
-    arg: Type,
-    server_streaming: bool,
-    returns: Type,
-}
-
-impl Parse for FunctionInput {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let name = input.parse()?;
-
-        let content;
-        let _ = parenthesized!(content in input);
-        let (client_streaming, arg) = if content.peek(syn::token::Bracket) {
-            let content2;
-            let _ = bracketed!(content2 in content);
-            (true, content2.parse()?)
-        } else {
-            (false, content.parse()?)
-        };
-
-        let _: Token![->] = input.parse()?;
-
-        let (server_streaming, returns) = if input.peek(syn::token::Bracket) {
-            let content;
-            let _ = bracketed!(content in input);
-            (true, content.parse()?)
-        } else {
-            (false, input.parse()?)
-        };
-
-        Ok(Self { name, client_streaming, arg, server_streaming, returns })
-    }
 }

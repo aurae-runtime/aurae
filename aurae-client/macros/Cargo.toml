@@ -10,5 +10,6 @@ proc-macro = true
 [dependencies]
 heck = "0.4.0"
 proc-macro2 = "1.0.44"
+protobuf-parse = "=3.2.0" # This crate makes no promises of stabilty, so we pin to the exact version
 quote = "1.0.21"
 syn = { version = "1.0.101", features = ['full'] }
