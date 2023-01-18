@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *             Apache 2.0 License Copyright © 2022 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -37,12 +37,12 @@ option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/discovery;dis
 service DiscoveryService {
   /// Used to confirm that the host is running Aurae and to get some
   /// information including the version of Aurae that is running.
-  rpc Health(HealthRequest) returns (HealthResponse) {}
+  rpc Discover(DiscoverRequest) returns (DiscoverResponse) {}
 }
 
-message HealthRequest {}
+message DiscoverRequest {}
 
-message HealthResponse {
+message DiscoverResponse {
   bool healthy = 1;
   string version = 2;
 }

@@ -32,6 +32,6 @@ macros::ops_generator!(
     discovery,
     {
         DiscoveryService,
-        health(HealthRequest) -> HealthResponse,
+        discover(DiscoverRequest) -> DiscoverResponse,
     },
 );
