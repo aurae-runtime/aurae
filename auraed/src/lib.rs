@@ -230,7 +230,9 @@ impl AuraedRuntime {
         let server_crt =
             tokio::fs::read(&self.server_crt).await.with_context(|| {
                 format!(
-                    "Failed to read server certificate: {}",
+                    "Aurae requires a signed TLS certificate to run as a server, but failed to 
+                    load: '{}'. Please see https://aurae.io/certs/ for information on best 
+                    practices to quickly generate one.",
                     self.server_crt.display()
                 )
             })?;
