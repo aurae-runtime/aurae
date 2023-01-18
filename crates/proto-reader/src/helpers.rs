@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *          Apache 2.0 License Copyright © 2022-2023 The Aurae Authors        *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,10 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-// TODO: macro doesn't support streaming. Does deno?
-macros::ops_generator!(
-    "../api/kubernetes/cri/v1/release-1.26.proto",
-    kubernetes::cri,
-    RuntimeService,
-    ImageService,
-);
+pub fn to_unqualified_type(t: &str) -> &str {
+    t.split('.').last().expect("to_unqualified_type")
+}

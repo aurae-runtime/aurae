@@ -42,8 +42,13 @@ anyhow = "1.0.66"
 aurae-client = { path = "./aurae-client" }
 aurae-proto = { path = "./aurae-proto" }
 fancy-regex = "0.10.0"
+heck = "0.4.0"
 lazy_static = "1.4.0"
+proc-macro2 = "1.0"
+protobuf-parse = "=3.2.0" # This crate makes no promises of stabilty, so we pin to the exact version
+quote = "1.0"
 serde = "1.0"
+syn = { version = "1.0", features = ["full"] } # used in macros, so full doesn't affect binary size
 thiserror = "1.0.37"
 tokio = "1.22.0"
 tonic = "0.8.2"
