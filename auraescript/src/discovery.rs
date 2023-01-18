@@ -29,9 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 macros::ops_generator!(
-    discovery("v0/discovery/discovery.ts"),
-    {
-        DiscoveryService,
-        discover(DiscoverRequest) -> DiscoverResponse,
-    },
+    "../api/v0/discovery/discovery.proto",
+    discovery,
+    DiscoveryService,
 );

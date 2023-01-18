@@ -29,19 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 macros::ops_generator!(
-    runtime("v0/runtime/runtime.ts"),
-    {
-        CellService,
-        allocate(CellServiceAllocateRequest) -> CellServiceAllocateResponse,
-        free(CellServiceFreeRequest) -> CellServiceFreeResponse,
-        start(CellServiceStartRequest) -> CellServiceStartResponse,
-        stop(CellServiceStopRequest) -> CellServiceStopResponse,
-    },
-    {
-        PodService,
-        allocate(PodServiceAllocateRequest) -> PodServiceAllocateResponse,
-        free(PodServiceFreeRequest) -> PodServiceFreeResponse,
-        start(PodServiceStartRequest) -> PodServiceStartResponse,
-        stop(PodServiceStopRequest) -> PodServiceStopResponse,
-    },
+    "../api/v0/runtime/runtime.proto",
+    runtime,
+    CellService,
+    PodService,
 );

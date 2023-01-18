@@ -30,10 +30,7 @@
 
 // TODO: macro doesn't support streaming. Does deno?
 macros::ops_generator!(
-    grpc::health("grpc/health/v1/health.ts"),
-    {
-        Health,
-        check(HealthCheckRequest) -> HealthCheckResponse
-        // watch(HealthCheckRequest) -> [HealthCheckResponse]
-    }
+    "../api/grpc/health/v1/health.proto",
+    grpc::health,
+    Health,
 );
