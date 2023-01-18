@@ -28,6 +28,5 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use health_service::HealthCommands;
-
-mod health_service;
+pub mod image_service;
+pub mod pod_service;

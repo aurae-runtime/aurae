@@ -16,5 +16,6 @@ aurae-proto = { workspace = true }
 # TODO: Consolidate versions of clap?
 clap = { version = "4.1.1", features = ["derive"] }
 futures-util = "0.3.25"
+macros = { package = "aer-macros", path = "macros" }
 serde = { workspace = true }
 tokio = { workspace = true }

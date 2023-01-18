@@ -1,13 +1,18 @@
 [package]
-name = "proto-reader"
+name = "aer-macros"
 version = "0.0.0"
 edition = "2021"
 publish = false
 
+[lib]
+proc-macro = true
+
 [dependencies]
-#heck = { workspace = true }
+heck = { workspace = true }
+itertools = "0.10.5"
 proc-macro2 = { workspace = true }
 protobuf = { workspace = true }
 protobuf-parse = { workspace = true }
+proto-reader = { path = "../../crates/proto-reader" } # using workspace isn't working
 quote = { workspace = true }
 syn = { workspace = true }

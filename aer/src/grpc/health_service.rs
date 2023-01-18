@@ -28,46 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::{execute, execute_server_streaming};
-// TODO: eliminate the double health after cri branch is merged
-use aurae_client::grpc::health::health::HealthClient;
-use aurae_proto::grpc::health::HealthCheckRequest;
-use clap::Subcommand;
-use futures_util::StreamExt;
-
-#[derive(Debug, Subcommand)]
-pub enum HealthServiceCommands {
-    #[command()]
-    Check {
-        #[arg(long, short = 's')]
-        service: Option<String>,
-    },
-    #[command()]
-    Watch {
-        #[arg(long, short = 's')]
-        service: Option<String>,
-    },
-}
-
-impl HealthServiceCommands {
-    pub async fn execute(self) -> anyhow::Result<()> {
-        match self {
-            HealthServiceCommands::Check { service } => {
-                let req = HealthCheckRequest {
-                    service: service.unwrap_or_else(|| "".into()),
-                };
-
-                let _ = execute!(HealthClient::check, req);
-            }
-            HealthServiceCommands::Watch { service } => {
-                let req = HealthCheckRequest {
-                    service: service.unwrap_or_else(|| "".into()),
-                };
-
-                execute_server_streaming!(HealthClient::watch, req);
-            }
-        }
-
-        Ok(())
-    }
-}
+macros::subcommand!("../api/grpc/health/v1/health.proto", grpc::health, Health);
