@@ -3,7 +3,7 @@
 ![Deploy (aurae.io)] ![Documentation] ![Main Build (lint, compile, test)]
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/aurae-runtime/aurae/main/docs/assets/logo-1024x1024.png" width="450">
+  <img src="docs/assets/logo-1024x1024.png" width="450">
 </p>
 
 # Mission
@@ -23,12 +23,9 @@ Aurae [open-source] project can complement Kubernetes, as Aurae supports the
 usage of multi-tenant workloads and enterprise identities all the way down to
 the socket layer.
 
-## Project Status
+# Project Status
 
-> **STILL IN EARLY DEVELOPMENT!**<br>
-> **The Aurae project and API can change without notice.**<br> 
-> **Do not run the project in production until further notice!**
-> <br>
+> **STILL IN EARLY DEVELOPMENT!**<br> > **The Aurae project and API can change without notice.**<br> > **Do not run the project in production until further notice!** > <br>
 
 - The Aurae project welcomes contributions of all kinds and sizes.
 - Please read the "[getting involved]" documentation before contributing to the
@@ -39,25 +36,25 @@ By joining the project in its early phases, you'll participate in the
 development of a milestone candidate for enterprise distributed systems and
 automation.
 
-## **In more detail**
+# **Expanded Overview**
 
 Aurae enables the control of each internal runtime process on a piece of
 hardware or node as its [PID]-1 instance on a [Linux kernel] and offers
 mTLS-encrypted gRPC APIs for managing processes through
 [workload isolation with Aurae cells] [^cells].
 
-Furthermore, Aurae also enables the management of [virtual machines] and
-containers by adding additional features comparable to those of [Firecracker]
-and [containerd] and combining effective node management with additional
-controls while offering a scope comparable to that of [systemd]. In doing so,
-Aurae takes ownership of all runtime processes on a single piece of hardware and
-provides [mTLS]-encrypted [gRPC] APIs (the [Aurae standard library]) to manage
-these processes in [Aurae cells].
+Furthermore, enabling the management of [virtual machines] and containers by
+adding additional features comparable to those of [Firecracker] and
+[containerd] and combining effective node management with additional controls
+while offering a scope comparable to that of [systemd].
 
-The inherent compatibility with Kubernetes and the capacity to function as a
-systemd [substitute](#project-status) enable commendable performance in
-enterprise settings to meet the demands of distributed systems both now and in
-the future [^medium].
+In doing so, Aurae takes ownership of all runtime processes on a single piece of
+hardware or node, providing [mTLS]-encrypted [gRPC] APIs (the Aurae standard
+library) that allow the management of these processes in [Aurae cells]. Further,
+enabling the construction of distributed systems with enterprise settings and
+security that can run below Kubernetes and [substitute](#project-status) as a
+systemd replacement with accessible and maintainable system and service
+management [^medium].
 
 ---
 
@@ -117,8 +114,7 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
     Learn more from the [Medium Blog: Why fix Kubernetes and Systemd?] by
     [Kris Nóva]).
 
-[^memory-safe]: 
-    The reliability and effectiveness of the Rust systems language make it an excellent choice for the development of the Aurae project. [Learn more about Rust]
+[^memory-safe]: The reliability and effectiveness of the Rust systems language make it an excellent choice for the development of the Aurae project. [Learn more about Rust]
 
 <!-- +Status Badges -->
 
