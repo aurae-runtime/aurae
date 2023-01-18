@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use aurae_proto::discovery::{
-    discovery_service_server, HealthRequest, HealthResponse,
+    discovery_service_server, DiscoverRequest, DiscoverResponse,
 };
 use thiserror::Error;
 use tonic::{Request, Response, Status};
@@ -64,8 +64,8 @@ impl DiscoveryService {
     }
 
     #[tracing::instrument(skip(self))]
-    fn ping(&self, request: HealthRequest) -> Result<HealthResponse> {
-        Ok(HealthResponse {
+    fn discover(&self, request: DiscoverRequest) -> Result<DiscoverResponse> {
+        Ok(DiscoverResponse {
             healthy: true,
             version: VERSION.unwrap_or("unknown").into(),
         })
@@ -74,11 +74,11 @@ impl DiscoveryService {
 
 #[tonic::async_trait]
 impl discovery_service_server::DiscoveryService for DiscoveryService {
-    async fn health(
+    async fn discover(
         &self,
-        request: Request<HealthRequest>,
-    ) -> std::result::Result<Response<HealthResponse>, Status> {
+        request: Request<DiscoverRequest>,
+    ) -> std::result::Result<Response<DiscoverResponse>, Status> {
         let request = request.into_inner();
-        Ok(Response::new(self.ping(request)?))
+        Ok(Response::new(self.discover(request)?))
     }
 }
