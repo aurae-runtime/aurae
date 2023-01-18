@@ -38,7 +38,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
 
     let file_path_span = file_path.span();
 
-    let (file_path, proto) = proto_reader::parse(file_path);
+    let (file_path, proto) = proto_reader::parse(&file_path);
 
     typescript_generator(&file_path, &module, &proto, &service_names);
 

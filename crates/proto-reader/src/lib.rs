@@ -35,13 +35,13 @@ use std::path::PathBuf;
 use syn::Lit;
 
 /// Returns a tuple of a [PathBuf] to the proto file and the [ParsedAndTypechecked] output.
-pub fn parse(file_path: Lit) -> (PathBuf, ParsedAndTypechecked) {
+pub fn parse(file_path: &Lit) -> (PathBuf, ParsedAndTypechecked) {
     let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(dir) => PathBuf::from(dir),
         _ => panic!("env variable 'CARGO_MANIFEST_DIR' was not set. Failed to find crate root"),
     };
 
-    let parsed_file_path = match &file_path {
+    let parsed_file_path = match file_path {
         Lit::Str(file_path) => {
             let file_path = file_path.value();
             let file_path = file_path.trim_matches('"');

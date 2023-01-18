@@ -142,7 +142,7 @@ version = "0.0.0"
 dependencies = [
  "heck",
  "proc-macro2",
- "protobuf-parse",
+ "proto-reader",
  "quote",
  "syn",
 ]
