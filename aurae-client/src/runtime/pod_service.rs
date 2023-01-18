@@ -28,11 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::service!(
-    runtime,
-    PodService,
-    allocate(PodServiceAllocateRequest) -> PodServiceAllocateResponse,
-    free(PodServiceFreeRequest) -> PodServiceFreeResponse,
-    start(PodServiceStartRequest) -> PodServiceStartResponse,
-    stop(PodServiceStopRequest) -> PodServiceStopResponse,
-);
+macros::service!("../api/v0/runtime/runtime.proto", runtime, PodService);
