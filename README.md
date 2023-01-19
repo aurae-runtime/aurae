@@ -3,7 +3,7 @@
 ![Deploy (aurae.io)] ![Documentation] ![Main Build (lint, compile, test)]
 
 <p align="center">
-  <img src="docs/assets/logo-1024x1024.png" width="450">
+  <img src="docs/assets/logo/aurae.png" width="450">
 </p>
 
 # Mission

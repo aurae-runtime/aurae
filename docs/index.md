@@ -1,67 +1,74 @@
-# Aurae
+<!-- THE DOCUMENT -->
 
-[![Main Build (lint, compile, test)](https://github.com/aurae-runtime/aurae/actions/workflows/001-cargo-install-ubuntu-make-build.yml/badge.svg?branch=main)](https://github.com/aurae-runtime/aurae/actions/workflows/001-cargo-install-ubuntu-make-build.yml) [![Documentation](https://github.com/aurae-runtime/aurae/actions/workflows/036-check-website-documentation-aurae-builder-make-check-docs.yml/badge.svg)](https://github.com/aurae-runtime/aurae/actions/workflows/036-check-website-documentation-aurae-builder-make-check-docs.yml) [![Deploy (aurae.io)](https://github.com/aurae-runtime/aurae/actions/workflows/091-deploy-website-documentation-ubuntu-make-docs.yml/badge.svg?branch=main)](https://github.com/aurae-runtime/aurae/actions/workflows/091-deploy-website-documentation-ubuntu-make-docs.yml)
+![Deploy (aurae.io)] ![Documentation] ![Main Build (lint, compile, test)]
 
-Aurae is a free and open source Rust project which houses a memory-safe systems runtime daemon built specifically for enterprise distributed systems called `auraed`.
+<p align="center">
+  <img src="docs/assets/logo/aurae.png" width="450">
+</p>
 
-The `auraed` daemon can be run as a PID 1 on a Linux kernel and manages containers, virtual machines, and spawning short-lived nested virtual instances of itself for an additional layer of isolation.
+# Mission
 
-### Mission
+Aurae is on a mission to be the most loved and effective way of managing
+workloads on a node. Our hope is that by bringing a better set of controls to a
+node, we can unlock brilliant higher order distributed systems in the future.
 
-Aurae is on a mission to be the most loved and effective way of managing workloads on a single piece of hardware. Our hope is that by bringing a better set of controls to a node, we can unlock brilliant higher order distributed systems in the future.
+# Introduction
 
-Aurae takes ownership of all runtime processes on a single piece of hardware, and provides mTLS encrypted gRPC APIs ([Aurae Standard Library](https://aurae.io/stdlib/)) to manage the processes. With Aurae [Cells](https://aurae.io/blog/24-10-2022-aurae-cells/) the project offers a way to slice up a system using various isolation strategies for enterprise workloads.
+[Aurae] deploys a memory-safe [^memory-safe] runtime daemon, process manager,
+and PID-1 initialization system to remotely schedule processes, containers, and
+virtual machines as well as set node configurations (e.g., like networking
+storage).
 
-### Project Status
+Through system proportioning and enterprise workload isolation techniques, the
+Aurae [open-source] project can complement higher order schedulers and control planes (such as Kubernetes) as Aurae supports the
+usage of multi-tenant workloads and enterprise identities all the way down to
+the socket layer.
 
-The project is very young and under active development. The APIs are subject to change without notice until further notice.
-As we continue to develop the project the APIs will stabilize and eventually a long term stable release will be offered.
+## Project Status
 
-At this time the project should not be run in production.
+> **STILL IN EARLY DEVELOPMENT!**<br> 
+> **The Aurae project and API can change without notice.**<br> 
+> **Do not run the project in production until further notice!**
 
-Please read [getting involved](https://aurae.io/community/#getting-involved) if you are interested in joining the project in its early phases. Contribution types of all types and ranges are welcome. You do not have to know Rust to join the project.
+- The Aurae project welcomes contributions of all kinds and sizes.
+- Please read the "[getting involved]" documentation before contributing to the
+  project.
+- You do not have to know [Rust] to join the project.
 
-### Runtime Workloads
+By joining the project in its early stages, you will help to create a milestone
+contender for corporate distributed systems and automation that will remain
+accessible to anyone.
 
-Aurae offers a runtime API which is capable of managing:
+# **Expanded Overview**
 
-- [Executables](https://aurae.io/stdlib/v0/#executable) (Basic runtime processes)
-- [Cells](https://aurae.io/stdlib/v0/#cell) (Processes running in a shared cgroup namespace)
-- [Spawned Aurae Instances](https://aurae.io/stdlib/v0/#instance) (Short lived nested virtual instances of Aurae)
-- [Pods](https://aurae.io/stdlib/v0/#pod) (Cells running in spawned instances)
-- [Virtual Machines](https://aurae.io/stdlib/v0/#virtualmachine) (Long-lived arbitrary virtual machines)
+By [introducing Aurae cells] on top of a [Linux kernel] the control of each
+internal runtime process on a given node becomes possible because of [auraed].
+The auraed runtime seizes ownership of every process by becoming the [PID]-1
+instance. This enabled the creation of extended system and service management
+capabilities [^compare], allowing for advanced use with Kubernetes and the
+[realization](#project-status) of a [systemd]-like scope within the distributed
+systems themselves.
 
-### auraed
+[Aurae cells] [^cells] improve maintenance and accessibility on a given node
+within [virtual machines] and containers, as they will serve as a systemd
+substitute that can run below Kubernetes [^medium]. While also adapting
+desirable feature sets such as those from [Firecracker] and [Containerd] and
+including [mTLS]-encrypted [gRPC] APIs (the Aurae standard library) that become
+exposed to allow management and configuration of internal processes.
 
-Think of [auraed](https://github.com/aurae-runtime/aurae/tree/main/auraed) as a PID 1 init machine daemon with a scope similar to [systemd](https://www.freedesktop.org/wiki/Software/systemd/) and functionality similar to [containerd](https://github.com/containerd/containerd) and [firecracker](https://github.com/firecracker-microvm/firecracker).
+Maintainable and predefined [.proto]-files contribute to the core definition of
+the distributed systems runtime and the standard library. During the build
+process, these [.proto]-files can allow for greater customization possibilities.
+The [TypeScript] file format replaces static manifests (like the [YAML] file
+format) for direct interactions with a running system.
 
-### Authentication
+---
 
-Aurae brings [SPIFFE](https://github.com/spiffe)/[SPIRE](https://github.com/spiffe/spire) (x509 mTLS) backed identity, authentication (authn) and authorization (authz) as low as the Unix domain socket layer in a distributed system.
-
-### Standard Library
-
-Aurae exposes its functionality over a gRPC API which is referred to as the [Aurae Standard Library](https://aurae.io/stdlib/).
-
-### Principle of Least Awareness
-
-A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane. Aurae is designed to take ownership of a single node, and expose the standard library as a generic and meaningful way for higher order consumers.
-
-Aurae is a low level building block and is designed to work well with any higher order system by offering a thoughtful set of APIs and controls for managing workloads on a node.
-
-### Motivation
-
-Read [Why fix Kubernetes and Systemd](https://medium.com/@kris-nova/why-fix-kubernetes-and-systemd-782840e50104) by [Kris Nóva](https://github.com/krisnova).
-
-Aurae attempts to simplify and improve the stack in enterprise distributed systems by carving out a small portion of responsibility while offering a few basic guarantees with regard to state, synchronicity, awareness, and security.
-
-Aurae brings enterprise identity as low as the socket layer in a system, which unlocks multi tenant workloads that run below tools like Kubernetes.
-
-## AuraeScript
-
-Aurae offers a Turing complete scripting language built on top of TypeScript called [AuraeScript](https://github.com/aurae-runtime/aurae/tree/main/auraescript). AuraeScript embeds the [Deno](https://deno.land) source code directly, and offers a remote client and SDK to interface directly with Aurae remotely. The AuraeScript library is automatically generated from the `.proto` files defined in the [Aurae Standard Library](https://aurae.io/stdlib/).
-
-Valid TypeScript files can be leveraged to replace static manifests, such as YAML, as well as interact directly with a running system.
+|||
+| :--- | :--- |
+| **Auraed**      | To ensure memory safety, Aurae serves the generic system's runtime daemon ([auraed]).|
+| **AuraeScript** | The [AuraeScript] (a Turing-complete scripting language built on TypeScript) library automatically generates itself from the pre-defined [.proto] files defined in the Aurae standard library.<br>It also directly embeds [Deno] source code to provide an SDK and the functionality to attach remote clients for the direct remote communication with Aurae. |
+|||
 
 ```typescript
 #!/usr/bin/env auraescript
@@ -84,9 +91,93 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 });
 ```
 
-## The Aurae Standard Library
+|||
+| :--- | :--- |
+| **Authentication**               | Aurae extends [SPIFFE]/[SPIRE] (x509 mTLS)-backed identity, authentication (authn), and authorization (authz) in a distributed system down to the Unix domain socket layer. |
+| **Principle of Least Awareness** | A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane.                                                        |
+| **Runtime Workloads**            | The Aurae runtime API can manage [virtual machines], [executables], [cells], [pods], and other [spawned Aurae instances].                                                   |
+| **The Aurae Standard Library**   | The Aurae project exposes its functionality as a gRPC API through the [Aurae standard library]. The [V0 API reference] contains the current library definition.             |
+|||
 
-The Aurae Standard Library is expressed in `.proto` files and stored in this repository.
-Many components of the Aurae runtime system are automatically generated from these core definitions.
+---
 
-See the [V0 API Reference](https://aurae.io/stdlib/v0/) for the current library definition.
+<!-- # **Getting Started**
+## **Building Aurae from Source**
+### **Dependencies**
+### **Prepare the Environment**
+## **Aurae Quick Start**
+### **Running the Daemon**
+### **Running your first Cell**
+## **Developing on an M1**
+### **Environment**
+### **VM Setup**
+### **CLion Setup**
+### **Back to the VM (setting up Aurae)** -->
+
+<!-- All the links!! -->
+<!-- +Footnotes -->
+
+[^cells]:
+    Additionally, with Aurae cells, the project provides various ways to partition
+    and slice up systems allowing for isolation strategies in enterprise workloads.
+
+[^compare]:
+    As a low-level building block, the Aurae Project works well with any
+    higher-order system by offering a thoughtful set of API calls and controls for
+    managing workloads on a single node.
+
+[^medium]:
+    Learn more from the [Medium Blog: Why fix Kubernetes and Systemd?] by
+    [Kris Nóva]).
+
+[^memory-safe]: 
+    The reliability and effectiveness of the Rust systems language make it an excellent choice for the development of the Aurae project. [Learn more about Rust]
+
+<!-- +Status Badges -->
+
+[deploy (aurae.io)]: https://github.com/aurae-runtime/aurae/actions/workflows/091-deploy-website-documentation-ubuntu-make-docs.yml/badge.svg?branch=main "https://github.com/aurae-runtime/aurae/actions/workflows/091-deploy-website-documentation-ubuntu-make-docs.yml"
+[documentation]: https://github.com/aurae-runtime/aurae/actions/workflows/036-check-website-documentation-aurae-builder-make-check-docs.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/036-check-website-documentation-aurae-builder-make-check-docs.yml"
+[main build (lint, compile, test)]: https://github.com/aurae-runtime/aurae/actions/workflows/001-cargo-install-ubuntu-make-build.yml/badge.svg?branch=main "https://github.com/aurae-runtime/aurae/actions/workflows/001-cargo-install-ubuntu-make-build.yml"
+
+<!-- +aurae.io/ -->
+
+[aurae cells]: https://aurae.io/blog/24-10-2022-aurae-cells/ "Learn more about Aurae cells"
+[aurae standard library]: https://aurae.io/stdlib/ "Learn more about Auraes standard library"
+[aurae]: https://aurae.io/ "Visit aurae.io"
+[cells]: https://aurae.io/stdlib/v0/#cell "Processes running in a shared cgroup namespace"
+[executables]: https://aurae.io/stdlib/v0/#executable "Basic runtime processes"
+[getting involved]: https://aurae.io/community/#getting-involved "Participate and contribute!"
+[pods]: https://aurae.io/stdlib/v0/#pod "Cells running in spawned instances"
+[spawned aurae instances]: https://aurae.io/stdlib/v0/#instance "Short lived nested virtual instances of Aurae"
+[v0 api reference]: https://aurae.io/stdlib/v0/ "Learn more about the current Aurae library definitions"
+[virtual machines]: https://aurae.io/stdlib/v0/#virtualmachine "Long-lived arbitrary virtual machines"
+[introducing Aurae cells]: https://aurae.io/blog/2022-10-24-aurae-cells/#IntroducingAuraeCells "Aurae Blog: 2022-10-24"
+
+<!-- +Wiki -->
+
+[grpc]: https://en.wikipedia.org/wiki/GRPC "Read about gRPC"
+[mtls]: https://en.wikipedia.org/wiki/Mutual_authentication#mTLS "Read about mTLS"
+[pid]: https://en.wikipedia.org/wiki/Process_identifier "Read about PID"
+
+<!-- +Github -->
+
+[auraed]: https://github.com/aurae-runtime/auraed "Check out the Aurae runtime deamon on Github 🌟"
+[auraescript]: https://github.com/aurae-runtime/aurae/tree/main/auraescript "Check out the Auraescript on Github 🌟"
+[containerd]: https://github.com/containerd/containerd "Read about containerd on GH"
+[firecracker]: https://github.com/firecracker-microvm/firecracker "Read about firecracker on Github"
+[kris nóva]: https://github.com/krisnova "Check out Kris Nóva on Github 🌟"
+[open-source]: https://github.com/aurae-runtime/aurae/blob/main/LICENSE "Apache License 2.0"
+[spiffe]: https://github.com/spiffe "Read about SPIFFE"
+[spire]: https://github.com/spiffe/spire "Read about SPIRE"
+
+<!-- +External links -->
+
+[.proto]: https://protobuf.dev/ "Read more about Protocol Buffers"
+[deno]: https://deno.land "Read more about Deno"
+[learn more about rust]: https://doc.rust-lang.org/book/ "The book about the Rust programming language"
+[linux kernel]: https://git.kernel.org/ "Learn about the Linux kernels"
+[medium blog: why fix kubernetes and systemd?]: https://medium.com/@kris-nova/why-fix-kubernetes-and-systemd-782840e50104 "Learn more about the possibilies of Aurae"
+[rust]: https://www.rust-lang.org/ "Read and learn more about the Rust language"
+[systemd]: https://www.freedesktop.org/wiki/Software/systemd/ "Read more about Systemd"
+[typescript]: https://www.typescriptlang.org/docs/handbook/ "Read more about TypeScript"
+[yaml]: https://yaml.org/ "Read more about YAML"

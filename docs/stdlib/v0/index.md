@@ -4,8 +4,8 @@
 ## Table of Contents
 
 - [discovery.proto](#discovery-proto)
-    - [HealthRequest](#aurae-discovery-v0-HealthRequest)
-    - [HealthResponse](#aurae-discovery-v0-HealthResponse)
+    - [DiscoverRequest](#aurae-discovery-v0-DiscoverRequest)
+    - [DiscoverResponse](#aurae-discovery-v0-DiscoverResponse)
   
     - [DiscoveryService](#aurae-discovery-v0-DiscoveryService)
   
@@ -58,19 +58,19 @@
 
 
 
-<a name="aurae-discovery-v0-HealthRequest"></a>
+<a name="aurae-discovery-v0-DiscoverRequest"></a>
 
-### HealthRequest
-
-
+### DiscoverRequest
 
 
 
 
 
-<a name="aurae-discovery-v0-HealthResponse"></a>
 
-### HealthResponse
+
+<a name="aurae-discovery-v0-DiscoverResponse"></a>
+
+### DiscoverResponse
 
 
 
@@ -97,7 +97,7 @@
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Health | [HealthRequest](#aurae-discovery-v0-HealthRequest) | [HealthResponse](#aurae-discovery-v0-HealthResponse) | Used to confirm that the host is running Aurae and to get some / information including the version of Aurae that is running. |
+| Discover | [DiscoverRequest](#aurae-discovery-v0-DiscoverRequest) | [DiscoverResponse](#aurae-discovery-v0-DiscoverResponse) | Used to confirm that the host is running Aurae and to get some / information including the version of Aurae that is running. |
 
  
 
@@ -557,7 +557,7 @@ TODO Instance Service
 
 ### PodService
 A pod is a higher level abstraction than Aurae cells, and to most users
-/ will look at feel like one or more &#34;containers&#34;.
+/ will look and feel like one or more &#34;containers&#34;.
 /
 / Pods will run an OCI compliant container image.
 /
