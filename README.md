@@ -20,7 +20,7 @@ virtual machines as well as set node configurations (e.g., like networking
 storage).
 
 Through system proportioning and enterprise workload isolation techniques, the
-Aurae [open-source] project can complement Kubernetes, as Aurae supports the
+Aurae [open-source] project can complement higher order schedulers and control planes (such as Kubernetes) as Aurae supports the
 usage of multi-tenant workloads and enterprise identities all the way down to
 the socket layer.
 
