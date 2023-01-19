@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 macros::service!(
+    "../api/v0/discovery/discovery.proto",
     discovery,
-    DiscoveryService,
-    health(HealthRequest) -> HealthResponse,
+    DiscoveryService
 );

@@ -8,7 +8,7 @@ publish = false
 proc-macro = true
 
 [dependencies]
-heck = "0.4.0"
-proc-macro2 = "1.0.36"
-quote = "1.0.15"
-syn = { version = "1.0.86", features = ['full'] }
+heck = { workspace = true }
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true }

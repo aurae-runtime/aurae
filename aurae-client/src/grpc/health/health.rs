@@ -29,8 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 macros::service!(
+    "../api/grpc/health/v1/health.proto",
     grpc::health,
-    Health,
-    check(HealthCheckRequest) -> HealthCheckResponse,
-    watch(HealthCheckRequest) -> [HealthCheckResponse]
+    Health
 );

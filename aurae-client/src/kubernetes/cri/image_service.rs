@@ -29,11 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 macros::service!(
+    "../api/kubernetes/cri/v1/release-1.26.proto",
     kubernetes::cri,
-    ImageService,
-    list_images(ListImagesRequest) -> ListImagesResponse,
-    image_status(ImageStatusRequest) -> ImageStatusResponse,
-    pull_image(PullImageRequest) -> PullImageResponse,
-    remove_image(RemoveImageRequest) -> RemoveImageResponse,
-    image_fs_info(ImageFsInfoRequest) -> ImageFsInfoResponse,
+    ImageService
 );

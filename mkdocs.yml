@@ -38,14 +38,14 @@ nav:
 theme:
   name: material
   language: en
-  logo: assets/logo-540x540.png
-  favicon: assets/logo-540x540.png
+  logo: assets/logo/aurae-white.png
+  favicon: assets/logo/aurae.png
   font:
-    text: Gotham
+    text: Terminus
   palette:
     scheme: slate
-    primary: deep purple
-    accent: yellow
+    primary: indigo
+    accent: white
 
 extra_css:
   - assets/aurae.css
@@ -56,6 +56,7 @@ markdown_extensions:
   - def_list
   - pymdownx.highlight
   - pymdownx.snippets
+  - footnotes
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
