@@ -56,6 +56,7 @@ markdown_extensions:
   - def_list
   - pymdownx.highlight
   - pymdownx.snippets
+  - footnotes
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
