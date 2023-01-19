@@ -81,7 +81,7 @@ pub fn spawn_auraed_oci_to(output: &str) -> Result<(), anyhow::Error> {
     fs::create_dir_all(oci_bundle_path.join(Path::new("rootfs/mnt")))?;
     fs::create_dir_all(oci_bundle_path.join(Path::new("rootfs/proc")))?;
     //fs::create_dir_all(oci_bundle_path.join(Path::new("rootfs/run")))?;
-    //fs::create_dir_all(oci_bundle_path.join(Path::new("rootfs/srv")))?;
+    //fs::create_dir_all(oci_bundle_ath.join(Path::new("rootfs/srv")))?;
     //fs::create_dir_all(oci_bundle_path.join(Path::new("rootfs/tmp")))?;
     //fs::create_dir_all(oci_bundle_path.join(Path::new("rootfs/var")))?;
 
