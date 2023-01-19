@@ -62,7 +62,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: check-deps-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: check-deps-${{ runner.os }}-cargo-nightly-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
