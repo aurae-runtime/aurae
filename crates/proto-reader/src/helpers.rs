@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *          Apache 2.0 License Copyright © 2022-2023 The Aurae Authors        *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,8 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::service!(
-    "../api/v0/discovery/discovery.proto",
-    discovery,
-    DiscoveryService
-);
+pub fn to_unqualified_type(t: &str) -> &str {
+    t.split('.').last().expect("to_unqualified_type")
+}

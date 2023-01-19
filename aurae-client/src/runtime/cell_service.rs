@@ -28,11 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::service!(
-    runtime,
-    CellService,
-    allocate(CellServiceAllocateRequest) -> CellServiceAllocateResponse,
-    free(CellServiceFreeRequest) -> CellServiceFreeResponse,
-    start(CellServiceStartRequest) -> CellServiceStartResponse,
-    stop(CellServiceStopRequest) -> CellServiceStopResponse,
-);
+macros::service!("../api/v0/runtime/runtime.proto", runtime, CellService);

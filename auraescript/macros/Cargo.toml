@@ -1,13 +1,17 @@
 [package]
 name = "auraescript_macros"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
+publish = false
 
 [lib]
 proc-macro = true
 
 [dependencies]
-heck = "0.4.0"
-proc-macro2 = "1.0.44"
-quote = "1.0.21"
-syn = { version = "1.0.101", features = ['full'] }
+heck = { workspace = true }
+proc-macro2 = { workspace = true }
+protobuf = "3.2.0"
+protobuf-parse = { workspace = true }
+proto-reader = { path = "../../crates/proto-reader" } # using workspace isn't working
+quote = { workspace = true }
+syn = { workspace = true }

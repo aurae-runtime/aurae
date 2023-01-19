@@ -3,31 +3,64 @@ use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{bracketed, parenthesized, parse_macro_input, Path, Token, Type};
+use syn::{parse_macro_input, Lit, Path, Token};
 
 #[allow(clippy::format_push_string)]
 
-pub(crate) fn service(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as ServiceInput);
+struct ServiceInput {
+    file_path: Lit,
+    module: Path,
+    service_name: Ident,
+}
 
-    let ServiceInput { module, name, functions } = input;
+impl Parse for ServiceInput {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let file_path: Lit = input.parse()?;
+        let _: Token![,] = input.parse()?;
+        let module = input.parse()?;
+        let _: Token![,] = input.parse()?;
+        let service_name = input.parse()?;
+
+        Ok(Self { file_path, module, service_name })
+    }
+}
+
+pub(crate) fn service(input: TokenStream) -> TokenStream {
+    let ServiceInput { file_path, module, service_name } =
+        parse_macro_input!(input as ServiceInput);
+
+    let (_, proto) = proto_reader::parse(&file_path);
+
+    let service = proto
+        .file_descriptors
+        .iter()
+        .flat_map(|x| &x.service)
+        .find(|x| matches!(x.name(), n if service_name == n))
+        .expect("failed to find service");
 
     let client_namespace = Ident::new(
-        &format!("{}_client", name.to_string().to_snake_case()),
-        name.span(),
+        &format!("{}_client", service_name.to_string().to_snake_case()),
+        service_name.span(),
     );
 
-    let client_ident = Ident::new(&format!("{name}Client"), name.span());
+    let client_ident =
+        Ident::new(&format!("{service_name}Client"), service_name.span());
 
-    let fn_name_idents =
-        functions.iter().map(|FunctionInput { name: fn_name, .. }| {
-            Ident::new(&fn_name.to_string().to_snake_case(), fn_name.span())
-        });
+    let fn_name_idents = service.method.iter().map(|m| {
+        let fn_name = m.name.as_ref().expect("rpc is missing name");
+        Ident::new(&fn_name.to_string().to_snake_case(), file_path.span())
+    });
 
-    let rpc_signatures: Vec<_> = functions.iter().zip(fn_name_idents.clone()).map(
-        |(FunctionInput { name: _, client_streaming, arg, server_streaming, returns }, name)| {
-            match (client_streaming, server_streaming) {
+    let rpc_signatures: Vec<_> = service.method
+        .iter()
+        .zip(fn_name_idents.clone())
+        .map(|(m, name)| {
+            let input_type = proto_reader::helpers::to_unqualified_type(m.input_type());
+            let input_type = Ident::new(input_type, file_path.span());
+            let output_type = proto_reader::helpers::to_unqualified_type(m.output_type());
+            let output_type = Ident::new(output_type, file_path.span());
+
+            match (m.client_streaming.unwrap_or(false), m.server_streaming.unwrap_or(false)) {
                 (true, true) => {
                     todo!("bidirectional streaming")
                 }
@@ -38,16 +71,24 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
                     quote! {
                         async fn #name(
                             &self,
-                            req: ::aurae_proto::#module::#arg
-                        ) -> Result<::tonic::Response<::tonic::Streaming<::aurae_proto::#module::#returns>>, ::tonic::Status>
+                            req: ::aurae_proto::#module::#input_type
+                        ) -> Result<
+                            ::tonic::Response<
+                                ::tonic::Streaming<::aurae_proto::#module::#output_type>
+                            >,
+                            ::tonic::Status
+                        >
                     }
                 }
                 _ => {
                     quote! {
                         async fn #name(
                             &self,
-                            req: ::aurae_proto::#module::#arg
-                        ) -> Result<::tonic::Response<::aurae_proto::#module::#returns>, ::tonic::Status>
+                            req: ::aurae_proto::#module::#input_type
+                        ) -> Result<
+                            ::tonic::Response<::aurae_proto::#module::#output_type>,
+                            ::tonic::Status
+                        >
                     }
                 }
             }
@@ -79,60 +120,4 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
     };
 
     expanded.into()
-}
-
-struct ServiceInput {
-    module: Path,
-    name: Ident,
-    functions: Punctuated<FunctionInput, Token![,]>,
-}
-
-impl Parse for ServiceInput {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let module = input.parse()?;
-        let _: Token![,] = input.parse()?;
-
-        let name = input.parse()?;
-        let _: Token![,] = input.parse()?;
-
-        let functions = input.parse_terminated(FunctionInput::parse)?;
-
-        Ok(Self { module, name, functions })
-    }
-}
-
-struct FunctionInput {
-    name: Ident,
-    client_streaming: bool,
-    arg: Type,
-    server_streaming: bool,
-    returns: Type,
-}
-
-impl Parse for FunctionInput {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let name = input.parse()?;
-
-        let content;
-        let _ = parenthesized!(content in input);
-        let (client_streaming, arg) = if content.peek(syn::token::Bracket) {
-            let content2;
-            let _ = bracketed!(content2 in content);
-            (true, content2.parse()?)
-        } else {
-            (false, content.parse()?)
-        };
-
-        let _: Token![->] = input.parse()?;
-
-        let (server_streaming, returns) = if input.peek(syn::token::Bracket) {
-            let content;
-            let _ = bracketed!(content in input);
-            (true, content.parse()?)
-        } else {
-            (false, input.parse()?)
-        };
-
-        Ok(Self { name, client_streaming, arg, server_streaming, returns })
-    }
 }

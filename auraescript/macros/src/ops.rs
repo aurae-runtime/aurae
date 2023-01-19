@@ -1,74 +1,112 @@
 use heck::{ToLowerCamelCase, ToSnakeCase};
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
-use quote::{quote, ToTokens};
+use protobuf::descriptor::ServiceDescriptorProto;
+use protobuf_parse::ParsedAndTypechecked;
+use quote::quote;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{braced, parenthesized, parse_macro_input, Path, Token, Type};
+use syn::spanned::Spanned;
+use syn::{parse_macro_input, Lit, Path, Token};
 
 #[allow(clippy::format_push_string)]
 
+struct OpsGeneratorInput {
+    file_path: Lit,
+    module: Path,
+    service_names: Punctuated<Ident, Token![,]>,
+}
+
+impl Parse for OpsGeneratorInput {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let file_path: Lit = input.parse()?;
+        let _: Token![,] = input.parse()?;
+        let module = input.parse()?;
+        let _: Token![,] = input.parse()?;
+        let service_names = input.parse_terminated(Ident::parse)?;
+
+        Ok(Self { file_path, module, service_names })
+    }
+}
+
 pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as OpsGeneratorInput);
+    let OpsGeneratorInput { file_path, module, service_names } =
+        parse_macro_input!(input as OpsGeneratorInput);
 
-    typescript_generator(&input);
+    let file_path_span = file_path.span();
 
-    let OpsGeneratorInput { module, services } = input;
+    let (file_path, proto) = proto_reader::parse(&file_path);
 
-    let output: Vec<(Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>)> = services.iter().map(|ServiceInput { name, functions }| {
-        let name_in_snake_case = name.to_string().to_snake_case();
-        let name_in_snake_case_ident = Ident::new(&name_in_snake_case, name.span());
+    typescript_generator(&file_path, &module, &proto, &service_names);
 
-        let client_ident = Ident::new(&format!("{}Client", name), name.span());
+    let output: Vec<(
+        Vec<proc_macro2::TokenStream>,
+        Vec<proc_macro2::TokenStream>,
+    )> = proto
+        .file_descriptors
+        .iter()
+        .flat_map(|f| &f.service)
+        .filter(
+            |s| matches!(s.name(), n if service_names.iter().any(|sn| sn == n)),
+        )
+        .map(|s| {
+            let service_name_in_snake_case = Ident::new(&s.name().to_snake_case(), service_names.span());
+            let client_ident =
+                Ident::new(&format!("{}Client", s.name()), file_path_span);
 
-        let op_idents =
-            functions.iter().map(|FunctionInput { name: fn_name, .. }| {
-                Ident::new(
-                    &format!(
-                        "ae__{}__{}__{}",
-                        path_to_snake_case(&module),
-                        name_in_snake_case,
-                        fn_name.to_string().to_snake_case(),
-                    ),
-                    name.span(),
-                )
-            });
+            // TODO: support streaming
+            let methods = s.method.iter().filter(|m| !m.client_streaming() && !m.server_streaming());
 
-        let op_functions: Vec<proc_macro2::TokenStream> = functions
-            .iter()
-            .zip(op_idents.clone())
-            .map(|(FunctionInput { name, arg, returns }, op_ident)| {
-                quote! {
-                    #[::deno_core::op]
-                    pub(crate) async fn #op_ident(
-                        req: ::aurae_proto::#module::#arg
-                    ) -> std::result::Result<
-                        ::aurae_proto::#module::#returns,
-                        ::anyhow::Error
-                    > {
-                        let client = ::aurae_client::AuraeClient::default().await?;
-                        let res = ::aurae_client::#module::#name_in_snake_case_ident::#client_ident::#name(
-                            &client,
-                            req
-                        ).await?;
+            let op_idents = methods.clone()
+                .map(|m| {
+                    Ident::new(
+                        &op_name(&module, s.name(), m.name()),
+                        file_path_span,
+                    )
+                });
 
-                        Ok(res.into_inner())
+            // generate a fn for each deno op
+            let op_functions: Vec<proc_macro2::TokenStream> = methods
+                .zip(op_idents.clone())
+                .map(|(m, op_ident)| {
+                    let input_type = proto_reader::helpers::to_unqualified_type(m.input_type());
+                    let input_type = Ident::new(input_type, file_path_span);
+                    let output_type = proto_reader::helpers::to_unqualified_type(m.output_type());
+                    let output_type = Ident::new(output_type, file_path_span);
+                    let name = Ident::new(&m.name().to_snake_case(), file_path_span);
+
+                    quote! {
+                        #[::deno_core::op]
+                        pub(crate) async fn #op_ident(
+                            req: ::aurae_proto::#module::#input_type
+                        ) -> std::result::Result<
+                            ::aurae_proto::#module::#output_type,
+                            ::anyhow::Error
+                        > {
+                            let client = ::aurae_client::AuraeClient::default().await?;
+                            let res = ::aurae_client::#module::#service_name_in_snake_case::#client_ident::#name(
+                                &client,
+                                req
+                            ).await?;
+
+                            Ok(res.into_inner())
+                        }
                     }
+                })
+                .collect();
+
+            // generate a OpDecl for each function for conveniently adding to the deno runtime
+            let op_decls: Vec<proc_macro2::TokenStream> = op_idents.map(|op_ident| {
+                quote! {
+                    #op_ident::decl()
                 }
-            })
-            .collect();
+            }).collect();
 
-        let op_decls: Vec<proc_macro2::TokenStream> = op_idents.map(|op_ident| {
-            quote! {
-                #op_ident::decl()
-            }
-        }).collect();
-
-        (op_functions, op_decls)
-    })
+            (op_functions, op_decls)
+        })
         .collect();
 
     let op_functions = output.iter().map(|x| &x.0);
@@ -85,68 +123,23 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
     expanded.into()
 }
 
-struct OpsGeneratorInput {
-    module: Path,
-    services: Punctuated<ServiceInput, Token![,]>,
-}
-
-impl Parse for OpsGeneratorInput {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let module = input.parse()?;
-        let _: Token![,] = input.parse()?;
-
-        let services = input.parse_terminated(ServiceInput::parse)?;
-
-        Ok(Self { module, services })
-    }
-}
-
-struct ServiceInput {
-    name: Ident,
-    functions: Punctuated<FunctionInput, Token![,]>,
-}
-
-impl Parse for ServiceInput {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let content;
-        let _ = braced!(content in input);
-
-        let name = content.parse()?;
-        let _: Token![,] = content.parse()?;
-
-        let functions = content.parse_terminated(FunctionInput::parse)?;
-
-        Ok(Self { name, functions })
-    }
-}
-
-struct FunctionInput {
-    name: Ident,
-    arg: Type,
-    returns: Type,
-}
-
-impl Parse for FunctionInput {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let name = input.parse()?;
-
-        let content;
-        let _ = parenthesized!(content in input);
-        let arg = content.parse()?;
-
-        let _: Token![->] = input.parse()?;
-
-        let returns = input.parse()?;
-
-        Ok(Self { name, arg, returns })
-    }
-}
-
-fn typescript_generator(input: &OpsGeneratorInput) {
-    let OpsGeneratorInput { module, services } = input;
-
-    let services: String = services
+/// Generates typescript implementations for multiple services by relying on
+/// [typescript_service_generator] for each. Then outputs a concatenated file of the protoc
+/// generated typescript with the service implementations to the gen directory.
+fn typescript_generator(
+    file_path: &std::path::Path,
+    module: &Path,
+    proto: &ParsedAndTypechecked,
+    service_names: &Punctuated<Ident, Token![,]>,
+) {
+    // for each service, generate the service implementation and join them to a single string
+    let services = proto
+        .file_descriptors
         .iter()
+        .flat_map(|f| &f.service)
+        .filter(
+            |s| matches!(s.name(), n if service_names.iter().any(|sn| sn == n)),
+        )
         .map(|s| typescript_service_generator(module, s))
         .collect::<Vec<String>>()
         .join("\n\n");
@@ -157,47 +150,25 @@ fn typescript_generator(input: &OpsGeneratorInput) {
             out_dir.push("gen");
             out_dir
         }
-        _ => PathBuf::from("gen"),
+        _ => panic!("Environment variable 'CARGO_MANIFEST_DIR' was not set. Unable to locate crate root"),
     };
 
-    let ts_path = {
-        // TODO: Native proto files follow a commong dir structure, but 3rd party protos don't.
-        //       We dont want to create a carve out for each, so update the macro to allow
-        //       specifying the path when using the macro
-        // HACK: carve out for grpc::health and kubernetes::cri
-        if module
-            .segments
-            .iter()
-            .map(|x| x.ident.to_string())
-            // "grpc::health"
-            .eq(["grpc", "health"])
-        {
-            let mut out_dir = gen_dir.clone();
-            // the ts file location relative to auraescript/gen/
-            out_dir.push("grpc/health/v1/health.ts");
-            out_dir
-        } else if module
-            .segments
-            .iter()
-            .map(|x| x.ident.to_string())
-            .eq(["kubernetes", "cri"])
-        {
-            let mut out_dir = gen_dir.clone();
-            out_dir.push("kubernetes/cri/v1/release-1.26.ts");
-            out_dir
-        } else {
-            let module = path_to_snake_case(module);
-            let mut out_dir = gen_dir.clone();
-            out_dir.push(format!("v0/{module}/{module}.ts"));
-            out_dir
-        }
-    };
+    let file_path = file_path
+        .to_string_lossy()
+        .splitn(2, "/api/")
+        .last()
+        .expect("path relative to gen directory")
+        .replace(".proto", ".ts");
 
+    let ts_path = gen_dir.join(file_path);
+
+    // Open the generated ts file
     let mut ts =
         OpenOptions::new().read(true).open(ts_path.clone()).unwrap_or_else(
             |_| panic!("protoc output should generate {ts_path:?}"),
         );
 
+    // read its contents
     let mut ts_contents = {
         let mut contents = String::new();
         match ts.read_to_string(&mut contents) {
@@ -208,8 +179,10 @@ fn typescript_generator(input: &OpsGeneratorInput) {
         contents
     };
 
+    // concatenate the generated service implementations
     ts_contents.push_str(&services);
 
+    // output a new file to the gen directory (overwrite if necessary)
     let ts_path = {
         let mut out_dir = gen_dir;
         out_dir.push(format!("{}.ts", path_to_snake_case(module)));
@@ -229,42 +202,54 @@ fn typescript_generator(input: &OpsGeneratorInput) {
         .unwrap_or_else(|_| panic!("Could not write to {ts_path:?}"));
 }
 
+/// Returns typescript that implements a service by calling Deno ops.
 fn typescript_service_generator(
     module: &Path,
-    ServiceInput { name, functions }: &ServiceInput,
+    service: &ServiceDescriptorProto,
 ) -> String {
-    let mut ts_funcs: String =
-        format!("export class {name}Client implements {name} {{");
+    let service_name = service.name();
+    let mut ts_funcs: String = format!(
+        "export class {service_name}Client implements {service_name} {{"
+    );
 
-    for FunctionInput { name: fn_name, arg, returns } in functions.iter() {
-        let op_name = format!(
-            "ae__{}__{}__{}",
-            path_to_snake_case(module),
-            name.to_string().to_snake_case(),
-            fn_name.to_string().to_snake_case()
-        );
+    service.method.iter().for_each(|m| {
+        let method_name = m.name();
+        let op_name = op_name(module, service.name(), method_name);
+        let fn_name = method_name.to_lower_camel_case();
+        let input_type =
+            proto_reader::helpers::to_unqualified_type(m.input_type());
+        let output_type =
+            proto_reader::helpers::to_unqualified_type(m.output_type());
 
-        let fn_name = fn_name.to_string().to_lower_camel_case();
-        let arg = arg.to_token_stream().to_string();
-        let returns = returns.to_token_stream().to_string();
         ts_funcs.push_str(&format!(
             r#"
-{fn_name}(request: {arg}): Promise<{returns}> {{
+{fn_name}(request: {input_type}): Promise<{output_type}> {{
     // @ts-ignore
     return Deno.core.ops.{op_name}(request);
 }}      
         "#
         ));
-    }
+    });
 
     ts_funcs.push('}');
     ts_funcs
 }
 
+/// Converts a path to snake case (e.g., grpc::health -> "grpc_health")
 fn path_to_snake_case(path: &Path) -> String {
     path.segments
         .iter()
         .map(|x| x.ident.to_string().to_snake_case())
         .collect::<Vec<String>>()
         .join("_")
+}
+
+/// Example `ae__runtime__cell_service__allocate`
+fn op_name(module: &Path, service_name: &str, method_name: &str) -> String {
+    format!(
+        "ae__{}__{}__{}",
+        path_to_snake_case(module),
+        service_name.to_snake_case(),
+        method_name.to_snake_case()
+    )
 }
