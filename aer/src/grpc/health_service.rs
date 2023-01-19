@@ -28,47 +28,46 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::config::client_cert_details::ClientCertDetails;
-use crate::config::x509_details::new_x509_details;
-use crate::AuthConfig;
-use anyhow::Context;
+use crate::{execute, execute_server_streaming};
+// TODO: eliminate the double health after cri branch is merged
+use aurae_client::grpc::health::health::HealthClient;
+use aurae_proto::grpc::health::HealthCheckRequest;
+use clap::Subcommand;
+use futures_util::StreamExt;
 
-pub struct CertMaterial {
-    pub server_root_ca_cert: Vec<u8>,
-    pub client_cert: Vec<u8>,
-    pub client_key: Vec<u8>,
+#[derive(Debug, Subcommand)]
+pub enum HealthServiceCommands {
+    #[command()]
+    Check {
+        #[arg(long, short = 's')]
+        service: Option<String>,
+    },
+    #[command()]
+    Watch {
+        #[arg(long, short = 's')]
+        service: Option<String>,
+    },
 }
 
-impl CertMaterial {
-    pub async fn from_config(config: &AuthConfig) -> anyhow::Result<Self> {
-        let server_root_ca_cert =
-            tokio::fs::read(&config.ca_crt).await.with_context(|| {
-                format!(
-                    "Failed to read server root CA certificate from path '{}'",
-                    config.ca_crt
-                )
-            })?;
+impl HealthServiceCommands {
+    pub async fn execute(self) -> anyhow::Result<()> {
+        match self {
+            HealthServiceCommands::Check { service } => {
+                let req = HealthCheckRequest {
+                    service: service.unwrap_or_else(|| "".into()),
+                };
 
-        let client_cert =
-            tokio::fs::read(&config.client_crt).await.with_context(|| {
-                format!(
-                    "Failed to read client certificate from path '{}'",
-                    config.client_crt
-                )
-            })?;
+                let _ = execute!(HealthClient::check, req);
+            }
+            HealthServiceCommands::Watch { service } => {
+                let req = HealthCheckRequest {
+                    service: service.unwrap_or_else(|| "".into()),
+                };
 
-        let client_key =
-            tokio::fs::read(&config.client_key).await.with_context(|| {
-                format!(
-                    "Failed to read client key from path '{}'",
-                    config.client_key
-                )
-            })?;
+                execute_server_streaming!(HealthClient::watch, req);
+            }
+        }
 
-        Ok(Self { server_root_ca_cert, client_cert, client_key })
-    }
-
-    pub fn get_client_cert_details(&self) -> anyhow::Result<ClientCertDetails> {
-        Ok(ClientCertDetails(new_x509_details(self.client_cert.clone())?))
+        Ok(())
     }
 }
