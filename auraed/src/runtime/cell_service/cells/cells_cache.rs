@@ -28,83 +28,39 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cell_service::cells::CellName;
-use iter_tools::Itertools;
-use std::collections::VecDeque;
-use validation::{ValidatedField, ValidationError};
+use super::{Cell, CellName, CellSpec, Result};
 
-pub const SEPARATOR: &str = "/";
+pub trait CellsCache {
+    /// Calls [Cell::allocate] on a new [Cell] and adds it to it's cache with key [CellName].
+    ///
+    /// # Errors
+    /// * If cell exists -> [CellsError::CellExists]
+    /// * If a cell is not in cache but cgroup exists on fs -> [CellsError::CgroupIsNotACell]
+    /// * If cell fails to allocate (see [Cell::allocate])
+    fn allocate(
+        &mut self,
+        cell_name: CellName,
+        cell_spec: CellSpec,
+    ) -> Result<&Cell>;
 
-#[derive(Debug, Clone)]
-pub enum CellNamePath {
-    Empty,
-    CellName(CellName),
-    Path(VecDeque<CellName>),
-}
+    /// Calls [Cell::free] on a [Cell] and removes it from the cache.
+    ///
+    /// # Errors
+    /// * If cell is not cached and cgroup does not exist -> [CellsError::CellNotFound]
+    /// * If cell is cached and cgroup does not exist -> [CellsError::CgroupNotFound]
+    ///     - note: cell will be removed from cache
+    /// * If cell is not cached and cgroup exists on fs -> [CellsError::CgroupIsNotACell]
+    /// * If cell fails to free (see [Cell::free])
+    fn free(&mut self, cell_name: &CellName) -> Result<()>;
 
-impl CellNamePath {
-    /// Returns [None] if current variant is [CellNamePath::Empty]
-    pub fn into_child(self) -> Option<(CellName, Self)> {
-        match self {
-            CellNamePath::Empty => None,
-            CellNamePath::CellName(cell_name) => Some((cell_name, Self::Empty)),
-            CellNamePath::Path(mut parts) => {
-                let cell_name = parts.pop_front().expect("parent CellName");
-                Some(match parts.len() {
-                    0 => unreachable!(
-                        "Path variant should only be constructed when length is > 1"
-                    ),
-                    1 => (cell_name, Self::CellName(parts.pop_front().expect("length is 1"))),
-                    _ => (cell_name, Self::Path(parts)),
-                })
-            }
-        }
-    }
+    fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    where
+        F: Fn(&Cell) -> Result<R>;
 
-    pub fn into_string(self) -> String {
-        match self {
-            CellNamePath::Empty => "".into(),
-            CellNamePath::CellName(cell_name) => cell_name.into_inner(),
-            CellNamePath::Path(parts) => parts.into_iter().join(SEPARATOR),
-        }
-    }
-}
+    /// Calls [Cell::Free] on all cells in the cache, ignoring any errors.
+    /// Successfully freed cells will be removed from the cache.
+    fn broadcast_free(&mut self);
 
-impl ValidatedField<String> for CellNamePath {
-    fn validate(
-        input: Option<String>,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<Self, ValidationError> {
-        let input = validation::required(input, field_name, parent_name)?;
-
-        if input.is_empty() {
-            return Ok(Self::Empty);
-        }
-
-        let parts: Vec<_> = input.split(SEPARATOR).collect();
-
-        if parts.len() == 1 {
-            let cell_name = CellName::validate_for_creation(
-                Some(input),
-                field_name,
-                parent_name,
-            )?;
-
-            Ok(Self::CellName(cell_name))
-        } else {
-            let parts = parts
-                .into_iter()
-                .flat_map(|cell_name| {
-                    CellName::validate_for_creation(
-                        Some(cell_name.into()),
-                        field_name,
-                        parent_name,
-                    )
-                })
-                .collect();
-
-            Ok(Self::Path(parts))
-        }
-    }
+    /// Sends a [SIGKILL] to all Cells, ignoring any errors.
+    fn broadcast_kill(&mut self);
 }

@@ -30,17 +30,17 @@
 
 use cell::Cell;
 pub use cell_name::CellName;
-pub use cell_name_path::CellNamePath;
 pub use cells::Cells;
+pub use cells_cache::CellsCache;
 use cgroups::CgroupSpec;
 pub use error::{CellsError, Result};
 pub use nested_auraed::IsolationControls;
 
 mod cell;
 mod cell_name;
-pub mod cell_name_path;
 #[allow(clippy::module_inception)]
 mod cells;
+mod cells_cache;
 pub mod cgroups;
 mod error;
 mod nested_auraed;

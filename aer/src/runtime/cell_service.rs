@@ -129,7 +129,7 @@ impl CellServiceCommands {
                 executable_description,
             } => {
                 let req = CellServiceStartRequest {
-                    cell_name,
+                    cell_name: Some(cell_name),
                     executable: Some(Executable {
                         name: executable_name,
                         command: executable_command,
@@ -141,7 +141,10 @@ impl CellServiceCommands {
                 let _ = execute!(CellServiceClient::start, req);
             }
             CellServiceCommands::Stop { cell_name, executable_name } => {
-                let req = CellServiceStopRequest { cell_name, executable_name };
+                let req = CellServiceStopRequest {
+                    cell_name: Some(cell_name),
+                    executable_name,
+                };
                 let _ = execute!(CellServiceClient::stop, req);
             }
         }

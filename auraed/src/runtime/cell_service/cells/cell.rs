@@ -29,13 +29,48 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec,
-    CellsError, Result,
+    cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec, Cells,
+    CellsCache, CellsError, Result,
 };
 use aurae_client::AuraeConfig;
-use std::io;
-use std::process::ExitStatus;
 use tracing::info;
+
+// TODO https://github.com/aurae-runtime/aurae/issues/199 &&
+//      aurae.io/signals, which is more accurate
+// TODO nested auraed should proxy (bus) POSIX signals to child executables
+
+macro_rules! do_free {
+    (
+        $self:ident,
+        $nested_auraed_call:ident($($nested_auraed_call_arg:ident),*),
+        $($children_call:ident($($children_call_arg:ident),*)),*
+    ) => {{
+        if let CellState::Allocated { cgroup, nested_auraed, children } =
+            &mut $self.state
+        {
+            $(children.$children_call($($children_call_arg),*));*;
+
+            let _exit_status = nested_auraed
+                .$nested_auraed_call($($nested_auraed_call_arg),*)
+                .map_err(|e| {
+                    CellsError::FailedToKillCellChildren {
+                        cell_name: $self.cell_name.clone(),
+                        source: e,
+                    }
+                })?;
+
+            cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
+                cell_name: $self.cell_name.clone(),
+                source: e,
+            })?;
+        }
+
+        // set cell state to freed, independent of the current state
+        $self.state = CellState::Freed;
+
+        Ok(())
+    }};
+}
 
 // We should not be able to change a cell after it has been created.
 // You must free the cell and create a new one if you want to change anything about the cell.
@@ -43,7 +78,7 @@ use tracing::info;
 // NEVER MAKE THE FIELDS PUB (OF ANY KIND)
 #[derive(Debug)]
 pub struct Cell {
-    name: CellName,
+    cell_name: CellName,
     spec: CellSpec,
     state: CellState,
 }
@@ -52,13 +87,13 @@ pub struct Cell {
 #[derive(Debug)]
 enum CellState {
     Unallocated,
-    Allocated { cgroup: Cgroup, nested_auraed: NestedAuraed },
+    Allocated { cgroup: Cgroup, nested_auraed: NestedAuraed, children: Cells },
     Freed,
 }
 
 impl Cell {
-    pub fn new(name: CellName, cell_spec: CellSpec) -> Self {
-        Self { name, spec: cell_spec, state: CellState::Unallocated }
+    pub fn new(cell_name: CellName, cell_spec: CellSpec) -> Self {
+        Self { cell_name, spec: cell_spec, state: CellState::Unallocated }
     }
 
     /// Creates the underlying cgroup.
@@ -69,80 +104,55 @@ impl Cell {
             return Ok(());
         };
 
-        let mut auraed =
-            NestedAuraed::new(&self.name, self.spec.iso_ctl.clone()).map_err(
-                |e| CellsError::FailedToAllocateCell {
-                    cell_name: self.name.clone(),
-                    source: e,
-                },
-            )?;
+        let name = self.cell_name.leaf().to_string();
+
+        let mut auraed = NestedAuraed::new(name, self.spec.iso_ctl.clone())
+            .map_err(|e| CellsError::FailedToAllocateCell {
+                cell_name: self.cell_name.clone(),
+                source: e,
+            })?;
 
         let pid = auraed.pid();
 
         let cgroup: Cgroup =
-            Cgroup::new(self.name.clone(), self.spec.cgroup_spec.clone());
+            Cgroup::new(self.cell_name.clone(), self.spec.cgroup_spec.clone());
 
-        if let Err(e) = cgroup.add_task_by_tgid((pid.as_raw() as u64).into()) {
+        if let Err(e) = cgroup.add_task(pid) {
             let _best_effort = auraed.kill();
             let _best_effort = cgroup.delete();
 
             return Err(CellsError::AbortedAllocateCell {
-                cell_name: self.name.clone(),
+                cell_name: self.cell_name.clone(),
                 source: e,
             });
         }
 
-        info!(
-            "Attach nested Auraed pid {} to cgroup {}",
-            pid.clone(),
-            self.name.clone()
-        );
+        info!("Attach nested Auraed pid {} to cgroup {}", pid, self.cell_name);
 
-        self.state = CellState::Allocated { cgroup, nested_auraed: auraed };
+        self.state = CellState::Allocated {
+            cgroup,
+            nested_auraed: auraed,
+            children: Cells::new(self.cell_name.clone()),
+        };
 
         Ok(())
     }
 
-    /// Signals the [NestedAuraed] to gracefully shut down, and deletes the underlying cgroup.
+    /// Broadcasts a graceful shutdown signal to all [NestedAuraed] and
+    /// deletes the underlying cgroup and all descendants.
+    ///
     /// The [Cell::state] will be set to [CellState::Freed] regardless of it's state prior to this call.
+    ///
     /// A [Cell] should never be reused once in the [CellState::Freed] state.
     pub fn free(&mut self) -> Result<()> {
-        // TODO https://github.com/aurae-runtime/aurae/issues/199 &&
-        //      aurae.io/signals, which is more accurate
-        // TODO nested auraed should proxy (bus) POSIX signals to child executables
-        self.do_free(|nested_auraed| nested_auraed.shutdown())
+        do_free!(self, shutdown(), broadcast_free())
     }
 
     /// Sends a [SIGKILL] to the [NestedAuraed], and deletes the underlying cgroup.
     /// The [Cell::state] will be set to [CellState::Freed] regardless of it's state prior to this call.
     /// A [Cell] should never be reused once in the [CellState::Freed] state.
     pub fn kill(&mut self) -> Result<()> {
-        self.do_free(|nested_auraed| nested_auraed.kill())
-    }
-
-    fn do_free<F>(&mut self, f: F) -> Result<()>
-    where
-        F: Fn(&mut NestedAuraed) -> io::Result<ExitStatus>,
-    {
-        if let CellState::Allocated { cgroup, nested_auraed } = &mut self.state
-        {
-            let _exit_status = f(nested_auraed).map_err(|e| {
-                CellsError::FailedToKillCellChildren {
-                    cell_name: self.name.clone(),
-                    source: e,
-                }
-            })?;
-
-            cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
-                cell_name: self.name.clone(),
-                source: e,
-            })?;
-        }
-
-        // set cell state to freed, independent of the current state
-        self.state = CellState::Freed;
-
-        Ok(())
+        do_free!(self, kill(), broadcast_kill())
     }
 
     // NOTE: Having this function return the AuraeClient means we need to make it async,
@@ -150,7 +160,7 @@ impl Cell {
     pub fn client_config(&self) -> Result<AuraeConfig> {
         let CellState::Allocated { nested_auraed, .. } = &self.state else {
             return Err(CellsError::CellNotAllocated {
-                cell_name: self.name.clone(),
+                cell_name: self.cell_name.clone(),
             })
         };
 
@@ -159,7 +169,7 @@ impl Cell {
 
     /// Returns the [CellName] of the [Cell]
     pub fn name(&self) -> &CellName {
-        &self.name
+        &self.cell_name
     }
 
     /// Returns [None] if the [Cell] is not allocated.
@@ -169,6 +179,55 @@ impl Cell {
             CellState::Allocated { cgroup, .. } => Some(cgroup.v2()),
             _ => None,
         }
+    }
+}
+
+impl CellsCache for Cell {
+    fn allocate(
+        &mut self,
+        cell_name: CellName,
+        cell_spec: CellSpec,
+    ) -> Result<&Cell> {
+        let CellState::Allocated { children, .. } = &mut self.state else {
+            return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
+        };
+
+        children.allocate(cell_name, cell_spec)
+    }
+
+    fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        let CellState::Allocated { children, .. } = &mut self.state else {
+            return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
+        };
+
+        children.free(cell_name)
+    }
+
+    fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    where
+        F: Fn(&Cell) -> Result<R>,
+    {
+        let CellState::Allocated { children, .. } = &mut self.state else {
+            return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
+        };
+
+        children.get(cell_name, f)
+    }
+
+    fn broadcast_free(&mut self) {
+        let CellState::Allocated { children, .. } = &mut self.state else {
+            return;
+        };
+
+        children.broadcast_free()
+    }
+
+    fn broadcast_kill(&mut self) {
+        let CellState::Allocated { children, .. } = &mut self.state else {
+            return;
+        };
+
+        children.broadcast_kill()
     }
 }
 
