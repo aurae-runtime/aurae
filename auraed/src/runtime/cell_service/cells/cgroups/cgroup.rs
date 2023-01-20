@@ -33,10 +33,8 @@ use crate::runtime::cell_service::cells::{
     CellName, CgroupSpec,
 };
 use cgroups_rs::{cgroup_builder::CgroupBuilder, hierarchies, Hierarchy};
-use std::{
-    ops::{Deref, DerefMut},
-    path::PathBuf,
-};
+use nix::unistd::Pid;
+use std::path::PathBuf;
 
 /// This is used as the denominator for the CPU quota/period configuration.  This allows users to
 /// set the quota as if it was in the unit "µs/s" without worrying about also setting the period.
@@ -45,17 +43,21 @@ const MICROSECONDS_PER_SECOND: u64 = 1000000;
 #[derive(Debug)]
 pub struct Cgroup {
     cell_name: CellName,
-    inner: cgroups_rs::Cgroup,
+    non_leaf: cgroups_rs::Cgroup,
+    leaf: cgroups_rs::Cgroup,
 }
 
 impl Cgroup {
     pub fn new(cell_name: CellName, spec: CgroupSpec) -> Self {
         let CgroupSpec { cpu, cpuset } = spec;
 
-        // NOTE: v2 cgroups can either have nested cgroups or processes, not both (leaf workaround)
-        // NOTE: '_' is a disallowed character in cell name, so won't collide
-        let name = format!("{cell_name}/_");
+        // Note: Cgroups v2 "no internal processes" rule.
+        // Docs: https://man7.org/linux/man-pages/man7/cgroups.7.html
+        // TLDR: "...with the exception of the root cgroup, processes may reside only
+        //        in leaf nodes (cgroups that do not themselves contain child cgroups)."
 
+        // First we create the non-leaf cgroup using the spec
+        let mut name = cell_name.to_string();
         let builder = CgroupBuilder::new(&name);
 
         // cpu controller
@@ -100,44 +102,40 @@ impl Cgroup {
             builder
         };
 
-        let inner = builder.build(hierarchy()).expect("valid cgroup");
+        let non_leaf = builder.build(hierarchy()).expect("valid cgroup");
 
-        Self { cell_name, inner }
+        // Now, create the leaf cgroup where we can run processes.
+        // NOTE: '_' is a disallowed character in CellName, so won't collide
+        name.push_str("/_");
+        let leaf =
+            CgroupBuilder::new(&name).build(hierarchy()).expect("valid cgroup");
+
+        Self { cell_name, non_leaf, leaf }
+    }
+
+    pub fn add_task(&self, pid: Pid) -> cgroups_rs::error::Result<()> {
+        self.leaf.add_task_by_tgid((pid.as_raw() as u64).into())
     }
 
     pub fn delete(&self) -> cgroups_rs::error::Result<()> {
-        self.inner.delete()?;
+        self.leaf.delete()?;
+        self.non_leaf.delete()
+    }
 
-        // The cgroup was made as {CellName}/_ to work around the limitations of v2 cgroups.
-        //       But when we are deleting the cgroup, we are leaving behind a cgroup
-        //       at {CellName}. We need to clean that up.
-        cgroups_rs::Cgroup::load(hierarchy(), &*self.cell_name).delete()
+    pub fn v2(&self) -> bool {
+        self.non_leaf.v2()
     }
 
     pub fn exists(cell_name: &CellName) -> bool {
         let mut path = PathBuf::from("/sys/fs/cgroup");
-        path.push(cell_name.deref());
+        path.push(cell_name.as_inner());
         path.exists()
-    }
-}
-
-impl Deref for Cgroup {
-    type Target = cgroups_rs::Cgroup;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl DerefMut for Cgroup {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
     }
 }
 
 fn hierarchy() -> Box<dyn Hierarchy> {
     // Auraed will assume the V2 cgroup hierarchy by default.
-    // For now we do not change this, albeit in theory we could
+    // For now, we do not change this, albeit in theory we could
     // likely create backwards compatability for V1 hierarchy.
     //
     // For now, we simply... don't.
