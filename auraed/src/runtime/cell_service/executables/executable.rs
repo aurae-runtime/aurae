@@ -50,6 +50,7 @@ impl Executable {
         };
 
         let mut child = command
+            .kill_on_drop(true)
             .current_dir("/")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

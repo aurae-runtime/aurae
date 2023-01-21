@@ -230,6 +230,13 @@ impl CellService {
     ) -> std::result::Result<Response<CellServiceStopResponse>, Status> {
         do_in_cell!(self, cell_name, stop, request)
     }
+
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn stop_all(&self) -> Result<()> {
+        let mut executables = self.executables.lock().await;
+        executables.broadcast_stop().await;
+        Ok(())
+    }
 }
 
 /// ### Mapping cgroup options to the Cell API

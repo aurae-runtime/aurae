@@ -108,4 +108,17 @@ impl Executables {
 
         Ok(exit_status)
     }
+
+    /// Stops all executables concurrently
+    pub async fn broadcast_stop(&mut self) {
+        let mut names = vec![];
+        for exe in self.cache.values_mut() {
+            let _ = exe.kill().await;
+            names.push(exe.name.clone())
+        }
+
+        for name in names {
+            let _ = self.cache.remove(&name);
+        }
+    }
 }
