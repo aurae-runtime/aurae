@@ -206,3 +206,14 @@ check-deps: ## Check if there are any unused dependencies in Cargo.toml
 .PHONY: test-workflow
 test-workflow: ## Tests a github actions workflow locally using `act`
 	@act -W ./.github/workflows/$(file)
+
+.PHONY: stage-release-artifacts
+stage-release-artifacts: ## Stage release artifacts
+	@mkdir -p /tmp/release
+	@cp ~/.cargo/bin/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
+	@cp ~/.cargo/bin/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-musl
+
+.PHONY: upload-release-artifacts
+upload-release-artifacts: ## Upload release artifacts to github
+	gh release upload $(tag) /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
+	gh release upload $(tag) /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-musl
