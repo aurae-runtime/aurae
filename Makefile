@@ -48,7 +48,10 @@ build: musl auraed auraescript ## Build and install (debug) (+musl) 🎉
 prcheck: build lint test-all ## Meant to mimic the GHA checks (includes ignored tests)
 
 lint: ## Lint the code
-	@$(cargo) clippy --all-features --workspace -- -D clippy::all -D warnings
+	@$(cargo) clippy -p auraed --target $(uname_m)-unknown-linux-musl --all-features -- -D clippy::all -D warnings
+	@$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
+	@$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
+	@$(cargo) clippy -p aurae-client --all-features -- -D clippy::all -D warnings
 
 release: ## Build (static+musl) and install (release) 🎉
 	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed
