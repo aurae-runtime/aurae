@@ -43,10 +43,8 @@ pub mod grpc {
     }
 }
 
-pub mod kubernetes {
-    pub mod cri {
-        include!("gen/runtime.v1.rs");
-    }
+pub mod cri {
+    include!("gen/runtime.v1.rs");
 }
 
 pub mod observe {

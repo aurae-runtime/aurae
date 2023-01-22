@@ -286,7 +286,7 @@ A request for starting an executable inside of a Cell.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| cell_name | [string](#string) |  |  |
+| cell_name | [string](#string) | optional |  |
 | executable | [Executable](#aurae-runtime-v0-Executable) |  |  |
 
 
@@ -317,7 +317,7 @@ Request to stop an executable at runtime.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| cell_name | [string](#string) |  |  |
+| cell_name | [string](#string) | optional |  |
 | executable_name | [string](#string) |  |  |
 
 

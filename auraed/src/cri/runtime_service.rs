@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::kubernetes::cri::{
+use aurae_proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
     ContainerEventResponse, ContainerStatsRequest, ContainerStatsResponse,
