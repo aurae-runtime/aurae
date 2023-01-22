@@ -45,8 +45,8 @@ pub(crate) struct Isolation {
 }
 
 impl Isolation {
-    pub fn new(name: &str) -> Isolation {
-        Isolation { name: name.to_string() }
+    pub fn new(name: String) -> Isolation {
+        Isolation { name }
     }
     pub fn setup(&mut self, iso_ctl: &IsolationControls) -> io::Result<()> {
         // The only setup we will need to do is for isolate_process at this time.

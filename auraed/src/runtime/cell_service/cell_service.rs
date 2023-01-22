@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cells::{cell_name_path, CellName, CellNamePath, Cells},
+    cells::{CellName, Cells, CellsCache},
     error::CellsServiceError,
     executables::Executables,
     validation::{
@@ -125,32 +125,17 @@ impl CellService {
     ) -> Result<CellServiceAllocateResponse> {
         // Initialize the cell
         let ValidatedCellServiceAllocateRequest { cell } = request;
-        let (cell_name, empty) =
-            cell.name.clone().into_child().expect("not empty");
 
-        // There should have been a single cell name in the path.
-        // Otherwise, we should have called allocate_in_cell
-        assert!(matches!(empty, CellNamePath::Empty));
-
+        let cell_name = cell.name.clone();
         let cell_spec = cell.into();
 
         let mut cells = self.cells.lock().await;
         let cell = cells.allocate(cell_name, cell_spec)?;
 
         Ok(CellServiceAllocateResponse {
-            cell_name: cell.name().clone().into_inner(),
+            cell_name: cell.name().clone().to_string(),
             cgroup_v2: cell.v2().expect("allocated cell returns `Some`"),
         })
-    }
-
-    #[tracing::instrument(skip(self))]
-    async fn allocate_in_cell(
-        &self,
-        cell_name: &CellName,
-        request: CellServiceAllocateRequest,
-    ) -> std::result::Result<Response<CellServiceAllocateResponse>, Status>
-    {
-        do_in_cell!(self, cell_name, allocate, request)
     }
 
     #[tracing::instrument(skip(self))]
@@ -160,26 +145,12 @@ impl CellService {
     ) -> Result<CellServiceFreeResponse> {
         let ValidatedCellServiceFreeRequest { cell_name } = request;
 
-        let (cell_name, empty) = cell_name.into_child().expect("not empty");
+        info!("CellService: free() cell_name={cell_name:?}");
 
-        // There should have been a single cell name in the path.
-        // Otherwise, we should have called free_in_cell
-        assert!(matches!(empty, CellNamePath::Empty));
-
-        info!("CellService: free() cell_name={:?}", cell_name);
         let mut cells = self.cells.lock().await;
         cells.free(&cell_name)?;
 
         Ok(CellServiceFreeResponse::default())
-    }
-
-    #[tracing::instrument(skip(self))]
-    async fn free_in_cell(
-        &self,
-        cell_name: &CellName,
-        request: CellServiceFreeRequest,
-    ) -> std::result::Result<Response<CellServiceFreeResponse>, Status> {
-        do_in_cell!(self, cell_name, free, request)
     }
 
     #[tracing::instrument(skip(self))]
@@ -202,7 +173,7 @@ impl CellService {
         let ValidatedCellServiceStartRequest { cell_name, executable } =
             request;
 
-        assert!(matches!(cell_name, CellNamePath::Empty));
+        assert!(matches!(cell_name, None));
         info!("CellService: start() executable={:?}", executable);
 
         let mut executables = self.executables.lock().await;
@@ -239,7 +210,7 @@ impl CellService {
         let ValidatedCellServiceStopRequest { cell_name, executable_name } =
             request;
 
-        assert!(matches!(cell_name, CellNamePath::Empty));
+        assert!(matches!(cell_name, None));
         info!("CellService: stop() executable_name={:?}", executable_name,);
 
         let mut executables = self.executables.lock().await;
@@ -258,6 +229,13 @@ impl CellService {
         request: CellServiceStopRequest,
     ) -> std::result::Result<Response<CellServiceStopResponse>, Status> {
         do_in_cell!(self, cell_name, stop, request)
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn stop_all(&self) -> Result<()> {
+        let mut executables = self.executables.lock().await;
+        executables.broadcast_stop().await;
+        Ok(())
     }
 }
 
@@ -278,38 +256,12 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<CellServiceAllocateResponse>, Status>
     {
         let request = request.into_inner();
+        let request = ValidatedCellServiceAllocateRequest::validate(
+            request.clone(),
+            None,
+        )?;
 
-        // We execute allocate if cell_name is a direct child
-        if matches!(&request.cell, Some(cell) if !cell.name.contains(cell_name_path::SEPARATOR))
-        {
-            let request = ValidatedCellServiceAllocateRequest::validate(
-                request.clone(),
-                None,
-            )?;
-
-            Ok(Response::new(self.allocate(request).await?))
-        } else {
-            let validated = ValidatedCellServiceAllocateRequest::validate(
-                request.clone(),
-                None,
-            )?;
-
-            // validation has succeed, so we can make assumptions about the request and use expect
-            let (parent, cell_name) = validated
-                .cell
-                .name
-                .into_child()
-                .expect("CellNamePath was not empty");
-
-            let mut request = request;
-            if let Some(cell) = &mut request.cell {
-                cell.name = cell_name.into_string();
-            } else {
-                unreachable!("validation should have failed")
-            }
-
-            self.allocate_in_cell(&parent, request).await
-        }
+        Ok(Response::new(self.allocate(request).await?))
     }
 
     async fn free(
@@ -317,31 +269,10 @@ impl cell_service_server::CellService for CellService {
         request: Request<CellServiceFreeRequest>,
     ) -> std::result::Result<Response<CellServiceFreeResponse>, Status> {
         let request = request.into_inner();
+        let request =
+            ValidatedCellServiceFreeRequest::validate(request.clone(), None)?;
 
-        // We execute free if cell_name is a direct child
-        if !request.cell_name.contains(cell_name_path::SEPARATOR) {
-            let request = ValidatedCellServiceFreeRequest::validate(
-                request.clone(),
-                None,
-            )?;
-            Ok(Response::new(self.free(request).await?))
-        } else {
-            let validated = ValidatedCellServiceFreeRequest::validate(
-                request.clone(),
-                None,
-            )?;
-
-            // validation has succeeded, so we can make assumptions about the request and use expect
-            let mut request = request;
-            let (parent, cell_name) = validated
-                .cell_name
-                .into_child()
-                .expect("CellNamePath was not empty");
-
-            request.cell_name = cell_name.into_string();
-
-            self.free_in_cell(&parent, request).await
-        }
+        Ok(Response::new(self.free(request).await?))
     }
 
     async fn start(
@@ -350,8 +281,8 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<CellServiceStartResponse>, Status> {
         let request = request.into_inner();
 
-        // We execute start if cell_name is empty
-        if request.cell_name.is_empty() {
+        // We execute start if cell_name is none
+        if request.cell_name.is_none() {
             let request =
                 ValidatedCellServiceStartRequest::validate(request, None)?;
             Ok(self.start(request).await?)
@@ -362,16 +293,11 @@ impl cell_service_server::CellService for CellService {
                 None,
             )?;
 
-            // validation has succeed, so we can make assumptions about the request and use expect
+            // validation has succeeded, so we can make assumptions about the request and use expect
+            let cell_name = validated.cell_name.expect("cell name");
             let mut request = request;
-            let (parent, cell_name) = validated
-                .cell_name
-                .into_child()
-                .expect("CellNamePath was not empty");
-
-            request.cell_name = cell_name.into_string();
-
-            self.start_in_cell(&parent, request).await
+            request.cell_name = None;
+            self.start_in_cell(&cell_name, request).await
         }
     }
 
@@ -381,9 +307,8 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<CellServiceStopResponse>, Status> {
         let request = request.into_inner();
 
-        // We execute stop if cell_name is empty.
-        // Otherwise, we execute in a child
-        if request.cell_name.is_empty() {
+        // We execute stop if cell_name is none
+        if request.cell_name.is_none() {
             let request =
                 ValidatedCellServiceStopRequest::validate(request, None)?;
             Ok(self.stop(request).await?)
@@ -394,16 +319,11 @@ impl cell_service_server::CellService for CellService {
                 None,
             )?;
 
-            // validation has succeed, so we can make assumptions about the request and use expect
+            // validation has succeeded, so we can make assumptions about the request and use expect
+            let cell_name = validated.cell_name.expect("cell name");
             let mut request = request;
-            let (parent, cell_name) = validated
-                .cell_name
-                .into_child()
-                .expect("CellNamePath was not empty");
-
-            request.cell_name = cell_name.into_string();
-
-            self.stop_in_cell(&parent, request).await
+            request.cell_name = None;
+            self.stop_in_cell(&cell_name, request).await
         }
     }
 }

@@ -53,7 +53,7 @@ pub struct NestedAuraed {
 }
 
 impl NestedAuraed {
-    pub fn new(name: &str, iso_ctl: IsolationControls) -> io::Result<Self> {
+    pub fn new(name: String, iso_ctl: IsolationControls) -> io::Result<Self> {
         // Here we launch a nested auraed with the --nested flag
         // which is used our way of "hooking" into the newly created
         // aurae isolation zone.

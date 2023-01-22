@@ -259,7 +259,7 @@ message CellServiceFreeResponse {}
 /// Here you can define shell commands, and meta information about the command.
 /// An executable is started synchronously.
 message CellServiceStartRequest {
-  string cell_name = 1;
+  optional string cell_name = 1;
   Executable executable = 2;
 }
 
@@ -278,7 +278,7 @@ message CellServiceStartResponse {
 
 /// Request to stop an executable at runtime.
 message CellServiceStopRequest {
-  string cell_name = 1;
+  optional string cell_name = 1;
   string executable_name = 2;
 }
 
