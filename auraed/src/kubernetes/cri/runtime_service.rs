@@ -51,6 +51,8 @@ use aurae_proto::kubernetes::cri::{
     UpdateContainerResourcesResponse, UpdateRuntimeConfigRequest,
     UpdateRuntimeConfigResponse, VersionRequest, VersionResponse,
 };
+#[allow(unused_imports)]
+use libcontainer;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 

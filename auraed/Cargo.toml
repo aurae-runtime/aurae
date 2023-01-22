@@ -53,12 +53,12 @@ ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
 libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
-#libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-build-6.1.1-kernel" }
+libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-libcontainer", features = ["v2"], default-features = false }
 liboci-cli = "0.0.4"
 log = "0.4.17"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { version = "0.26.1", features = ["sched"] }
-#ocipkg = "0.2.8"
+ocipkg = "0.2.8"
 procfs = "0.14.2"
 rtnetlink = "0.11.0"
 simplelog = "0.12.0"

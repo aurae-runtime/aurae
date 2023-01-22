@@ -47,7 +47,10 @@ build: musl auraed auraescript ## Build and install (debug) (+musl) 🎉
 prcheck: build lint test-all ## Meant to mimic the GHA checks (includes ignored tests)
 
 lint: ## Lint the code
-	@$(cargo) clippy --all-features --workspace -- -D clippy::all -D warnings
+	@$(cargo) clippy -p auraed --target $(uname_m)-unknown-linux-musl --all-features -- -D clippy::all -D warnings
+	@$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
+	@$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
+	@$(cargo) clippy -p aurae-client --all-features -- -D clippy::all -D warnings
 
 release: ## Build (static+musl) and install (release) 🎉
 	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed
@@ -68,7 +71,7 @@ musl: ## Add target for musl
 
 .PHONY: auraed
 auraed: proto ## Initialize and static-compile auraed with musl
-	@$(cargo) clippy -p auraed
+	@$(cargo) clippy --target $(uname_m)-unknown-linux-musl -p auraed
 	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
 
 .PHONY: check-docs
@@ -90,7 +93,10 @@ stdlibdocs:
 endif
 
 crate: ## Build the crate (documentation)
-	$(cargo) doc --no-deps
+	$(cargo) doc --target $(uname_m)-unknown-linux-musl --no-deps --package auraed
+	$(cargo) doc --no-deps --package auraescript
+	$(cargo) doc --no-deps --package aurae-client
+	$(cargo) doc --no-deps --package aer
 	cp -rv target/doc/* docs/crate
 
 serve: docs ## Run the aurae.io static website locally
@@ -201,7 +207,11 @@ container: ## Build the container defined in hack/container
 
 .PHONY: check-deps
 check-deps: ## Check if there are any unused dependencies in Cargo.toml
-	cargo +nightly udeps --all-targets
+#	cargo +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
+#	cargo +nightly udeps --package auraescript
+#	cargo +nightly udeps --package aurae-client
+#	cargo +nightly udeps --package aer
+
 
 .PHONY: test-workflow
 test-workflow: ## Tests a github actions workflow locally using `act`
