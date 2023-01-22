@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 macros::service!(
-    "../api/kubernetes/cri/v1/release-1.26.proto",
+    "../api/cri/v1/release-1.26.proto",
     kubernetes::cri,
     ImageService
 );

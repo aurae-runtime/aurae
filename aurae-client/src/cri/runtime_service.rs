@@ -28,4 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub mod cri;
+macros::service!(
+    "../api/cri/v1/release-1.26.proto",
+    kubernetes::cri,
+    RuntimeService
+);
