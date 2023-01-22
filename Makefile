@@ -36,6 +36,7 @@ oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
+target        =  $(uname_m)-unknown-linux-musl
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -90,7 +91,10 @@ stdlibdocs:
 endif
 
 crate: ## Build the crate (documentation)
-	$(cargo) doc --no-deps
+	$(cargo) doc --target $(uname_m)-unknown-linux-musl --no-deps --package auraed
+	$(cargo) doc --no-deps --package auraescript
+	$(cargo) doc --no-deps --package aurae-client
+	$(cargo) doc --no-deps --package aer
 	cp -rv target/doc/* docs/crate
 
 serve: docs ## Run the aurae.io static website locally
