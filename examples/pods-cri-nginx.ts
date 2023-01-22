@@ -28,14 +28,11 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as cri from "../auraescript/gen/kubernetes_cri.ts";
+import * as helpers from "../auraescript/helpers.ts";
+import * as cri from "../auraescript/gen/cri.ts";
 
 // Start working on pods_service with CRI
 let runtime = new cri.RuntimeServiceClient();
 
-let run = await runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
-    config: undefined,
-    runtimeHandler: "",
-});
-helpers.print(run);
+let response = runtime.runPodSandbox(<cri.RunPodSandboxRequest>{})
+helpers.print(response)
