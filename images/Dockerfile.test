@@ -60,6 +60,7 @@ RUN rm -rf /var/lib/apt/lists/*
 
 ## Setup Rust
 RUN rustup component add clippy
+RUN rustup +nightly target add x86_64-unknown-linux-musl
 RUN rustup target add x86_64-unknown-linux-musl
 
 ## Setup protoc-gen-doc

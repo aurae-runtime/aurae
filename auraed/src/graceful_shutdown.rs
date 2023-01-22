@@ -102,6 +102,12 @@ impl GracefulShutdown {
                 "Attempt to free all cells on terminate resulted in error: {e}"
             )
         }
+
+        if let Err(e) = self.cell_service.stop_all().await {
+            error!(
+                "Attempt to stop all executables on terminate resulted in error: {e}"
+            )
+        }
     }
 }
 

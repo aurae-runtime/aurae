@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *          Apache 2.0 License Copyright © 2022-2023 The Aurae Authors        *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,4 +28,39 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub mod cri;
+use super::{Cell, CellName, CellSpec, Result};
+
+pub trait CellsCache {
+    /// Calls [Cell::allocate] on a new [Cell] and adds it to it's cache with key [CellName].
+    ///
+    /// # Errors
+    /// * If cell exists -> [CellsError::CellExists]
+    /// * If a cell is not in cache but cgroup exists on fs -> [CellsError::CgroupIsNotACell]
+    /// * If cell fails to allocate (see [Cell::allocate])
+    fn allocate(
+        &mut self,
+        cell_name: CellName,
+        cell_spec: CellSpec,
+    ) -> Result<&Cell>;
+
+    /// Calls [Cell::free] on a [Cell] and removes it from the cache.
+    ///
+    /// # Errors
+    /// * If cell is not cached and cgroup does not exist -> [CellsError::CellNotFound]
+    /// * If cell is cached and cgroup does not exist -> [CellsError::CgroupNotFound]
+    ///     - note: cell will be removed from cache
+    /// * If cell is not cached and cgroup exists on fs -> [CellsError::CgroupIsNotACell]
+    /// * If cell fails to free (see [Cell::free])
+    fn free(&mut self, cell_name: &CellName) -> Result<()>;
+
+    fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    where
+        F: Fn(&Cell) -> Result<R>;
+
+    /// Calls [Cell::Free] on all cells in the cache, ignoring any errors.
+    /// Successfully freed cells will be removed from the cache.
+    fn broadcast_free(&mut self);
+
+    /// Sends a [SIGKILL] to all Cells, ignoring any errors.
+    fn broadcast_kill(&mut self);
+}

@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::kubernetes::cri::{
+use aurae_proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
     ContainerEventResponse, ContainerStatsRequest, ContainerStatsResponse,
@@ -51,6 +51,8 @@ use aurae_proto::kubernetes::cri::{
     UpdateContainerResourcesResponse, UpdateRuntimeConfigRequest,
     UpdateRuntimeConfigResponse, VersionRequest, VersionResponse,
 };
+#[allow(unused_imports)]
+use libcontainer;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 

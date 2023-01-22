@@ -29,14 +29,39 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
+use crate::runtime::cell_service::cells::cells_cache::CellsCache;
 use std::collections::HashMap;
 use tracing::warn;
+
+macro_rules! proxy_if_needed {
+    ($self:ident, $cell_name:ident, $call:ident($($arg:ident),*), $expr:expr) => {
+        if !$cell_name.is_child($self.parent.as_ref()) {
+            // we are not in the direct parent
+            let child_cell_name = match &$self.parent {
+                None => $cell_name.to_root(),
+                Some(parent) => parent.to_child(&$cell_name),
+            };
+
+            // we require that all ancestor cells exist
+            let Some(child) = $self.cache.get_mut(&child_cell_name) else {
+                                        return Err(CellsError::CellNotFound {
+                                            cell_name: child_cell_name,
+                                        })
+                                    };
+
+            CellsCache::$call(child, $($arg),*)
+        } else {
+            $expr
+        }
+    };
+}
 
 type Cache = HashMap<CellName, Cell>;
 
 /// The in-memory cache of cells ([Cell]) created with Aurae.
 #[derive(Debug, Default)]
 pub struct Cells {
+    parent: Option<CellName>,
     cache: Cache,
 }
 
@@ -47,76 +72,74 @@ pub struct Cells {
 // [ ] Get Cgroup and pids from executable_name
 
 impl Cells {
-    /// Calls [Cell::allocate] on a new [Cell] and adds it to it's cache with key [CellName].
-    ///
-    /// # Errors
-    /// * If cell exists -> [CellsError::CellExists]
-    /// * If a cell is not in cache but cgroup exists on fs -> [CellsError::CgroupIsNotACell]
-    /// * If cell fails to allocate (see [Cell::allocate])
-    pub fn allocate(
+    pub fn new(parent: CellName) -> Self {
+        Self { parent: Some(parent), ..Self::default() }
+    }
+
+    fn allocate(
         &mut self,
         cell_name: CellName,
         cell_spec: CellSpec,
     ) -> Result<&Cell> {
-        if Cgroup::exists(&cell_name) {
-            return if self.cache.contains_key(&cell_name) {
-                Err(CellsError::CellExists { cell_name })
-            } else {
-                Err(CellsError::CgroupIsNotACell {
-                    cell_name: cell_name.clone(),
-                })
-            };
-        }
+        proxy_if_needed!(self, cell_name, allocate(cell_name, cell_spec), {
+            if Cgroup::exists(&cell_name) {
+                return if self.cache.contains_key(&cell_name) {
+                    Err(CellsError::CellExists { cell_name })
+                } else {
+                    Err(CellsError::CgroupIsNotACell {
+                        cell_name: cell_name.clone(),
+                    })
+                };
+            }
 
-        // From here, we know the cgroup doesn't exist, so remove from cache if it does
-        if let Some(_removed) = self.cache.remove(&cell_name) {
-            // TODO: Should we not remove the cell (that has no cgroup) from the cache and
-            //       force the user to call Free? Free will also return an error, but we may be
-            //       calling other logic in free that we want to run.
-            warn!("Found cached cell ('{cell_name}') without cgroup. Did you forget to call free on the cell?");
-        }
+            // From here, we know the cgroup doesn't exist, so remove from cache if it does
+            if let Some(_removed) = self.cache.remove(&cell_name) {
+                // TODO: Should we not remove the cell (that has no cgroup) from the cache and
+                //       force the user to call Free? Free will also return an error, but we may be
+                //       calling other logic in free that we want to run.
+                warn!("Found cached cell ('{cell_name}') without cgroup. Did you forget to call free on the cell?");
+            }
 
-        let cell = self
-            .cache
-            .entry(cell_name.clone())
-            .or_insert_with(|| Cell::new(cell_name, cell_spec));
+            let cell = self
+                .cache
+                .entry(cell_name.clone())
+                .or_insert_with(|| Cell::new(cell_name, cell_spec));
 
-        cell.allocate()?;
-        Ok(cell)
+            cell.allocate()?;
+
+            let cell = cell;
+            Ok(cell)
+        })
     }
 
-    /// Calls [Cell::free] on a [Cell] and removes it from the cache.
-    ///
-    /// # Errors
-    /// * If cell is not cached and cgroup does not exist -> [CellsError::CellNotFound]
-    /// * If cell is cached and cgroup does not exist -> [CellsError::CgroupNotFound]
-    ///     - note: cell will be removed from cache
-    /// * If cell is not cached and cgroup exists on fs -> [CellsError::CgroupIsNotACell]
-    /// * If cell fails to free (see [Cell::free])
-    pub fn free(&mut self, cell_name: &CellName) -> Result<()> {
-        self.handle_cgroup_does_not_exist(cell_name)?;
-        self.get_mut(cell_name, |cell| cell.free())?;
-        let _ = self.cache.remove(cell_name);
-        Ok(())
+    fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        proxy_if_needed!(self, cell_name, free(cell_name), {
+            self.handle_cgroup_does_not_exist(cell_name)?;
+            self.get_mut(cell_name, |cell| cell.free())?;
+            let _ = self.cache.remove(cell_name);
+            Ok(())
+        })
     }
 
-    pub fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: Fn(&Cell) -> Result<R>,
     {
-        self.handle_cgroup_does_not_exist(cell_name)?;
+        proxy_if_needed!(self, cell_name, get(cell_name, f), {
+            self.handle_cgroup_does_not_exist(cell_name)?;
 
-        let Some(cell) = self.cache.get(cell_name) else {
-            return Err(CellsError::CgroupIsNotACell { cell_name: cell_name.clone() });
-        };
+            let Some(cell) = self.cache.get(cell_name) else {
+                return Err(CellsError::CgroupIsNotACell { cell_name: cell_name.clone() });
+            };
 
-        let res = f(cell);
+            let res = f(cell);
 
-        if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
-            let _ = self.cache.remove(cell_name);
-        }
+            if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
+                let _ = self.cache.remove(cell_name);
+            }
 
-        res
+            res
+        })
     }
 
     fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
@@ -157,9 +180,7 @@ impl Cells {
         Err(CellsError::CgroupNotFound { cell_name: cell_name.clone() })
     }
 
-    /// Calls [Cell::Free] on all cells in the cache, ignoring any errors.
-    /// Successfully freed cells will be removed from the cache.
-    pub fn broadcast_free(&mut self) {
+    fn broadcast_free(&mut self) {
         let freed_cells = self.do_broadcast(|cell| cell.free());
 
         for cell_name in freed_cells {
@@ -167,8 +188,7 @@ impl Cells {
         }
     }
 
-    /// Sends a [SIGKILL] to all Cells, ignoring any errors.
-    pub fn broadcast_kill(&mut self) {
+    fn broadcast_kill(&mut self) {
         let killed_cells = self.do_broadcast(|cell| cell.kill());
 
         for cell_name in killed_cells {
@@ -193,6 +213,35 @@ impl Cells {
                 Ok::<_, CellsError>(cell.name().clone())
             })
             .collect()
+    }
+}
+
+impl CellsCache for Cells {
+    fn allocate(
+        &mut self,
+        cell_name: CellName,
+        cell_spec: CellSpec,
+    ) -> Result<&Cell> {
+        self.allocate(cell_name, cell_spec)
+    }
+
+    fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        self.free(cell_name)
+    }
+
+    fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    where
+        F: Fn(&Cell) -> Result<R>,
+    {
+        self.get(cell_name, f)
+    }
+
+    fn broadcast_free(&mut self) {
+        self.broadcast_free()
+    }
+
+    fn broadcast_kill(&mut self) {
+        self.broadcast_kill()
     }
 }
 

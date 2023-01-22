@@ -31,7 +31,7 @@
 //! Systems daemon built for higher order simple, safe, secure multi-tenant
 //! distributed systems.
 //!
-//! Whether run as pid 1 (init), or a [Container], or a [Pod] it serves standard library
+//! Whether run as pid 1 (init), or a Container, or a Pod it serves standard library
 //! functionality over an mTLS backed gRPC server.
 //!
 //! The Aurae Daemon (auraed) is the main server implementation of the Aurae
@@ -81,6 +81,7 @@ use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
 
+mod cri;
 mod discovery;
 mod graceful_shutdown;
 pub mod init;
@@ -88,7 +89,6 @@ pub mod logging;
 mod observe;
 mod runtime;
 mod spawn;
-mod kubernetes;
 
 /// Default Unix domain socket path for `auraed`.
 ///

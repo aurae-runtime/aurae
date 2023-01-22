@@ -3,7 +3,7 @@
 ![Deploy (aurae.io)] ![Documentation] ![Main Build (lint, compile, test)]
 
 <p align="center">
-  <img src="docs/assets/logo/aurae.png" width="450">
+  <img src="https://raw.githubusercontent.com/aurae-runtime/aurae/main/docs/assets/logo/aurae.png" width="450">
 </p>
 
 # Mission
@@ -42,19 +42,9 @@ accessible to anyone.
 # **Expanded Overview**
 
 By [introducing Aurae cells] on top of a [Linux kernel] the control of each
-internal runtime process on a given node becomes possible because of [auraed].
-The auraed runtime seizes ownership of every process by becoming the [PID]-1
-instance. This enabled the creation of extended system and service management
-capabilities [^compare], allowing for advanced use with Kubernetes and the
-[realization](#project-status) of a [systemd]-like scope within the distributed
-systems themselves.
-
-[Aurae cells] [^cells] improve maintenance and accessibility on a given node
-within [virtual machines] and containers, as they will serve as a systemd
-substitute that can run below Kubernetes [^medium]. While also adapting
-desirable feature sets such as those from [Firecracker] and [Containerd] and
-including [mTLS]-encrypted [gRPC] APIs (the Aurae standard library) that become
-exposed to allow management and configuration of internal processes.
+internal runtime process on a given node becomes possible.
+The auraed runtime maintains ownership of every process by managing everything from [PID]-1
+to nested processes.
 
 Maintainable and predefined [.proto]-files contribute to the core definition of
 the distributed systems runtime and the standard library. During the build
@@ -161,7 +151,6 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 
 <!-- +Github -->
 
-[auraed]: https://github.com/aurae-runtime/auraed "Check out the Aurae runtime deamon on Github 🌟"
 [auraescript]: https://github.com/aurae-runtime/aurae/tree/main/auraescript "Check out the Auraescript on Github 🌟"
 [containerd]: https://github.com/containerd/containerd "Read about containerd on GH"
 [firecracker]: https://github.com/firecracker-microvm/firecracker "Read about firecracker on Github"
