@@ -39,6 +39,7 @@ jobs:
         name: Create release artifacts
         runs-on: ubuntu-latest
         timeout-minutes: 15
+        needs: build-container
         container:
           image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
           credentials:
