@@ -63,6 +63,9 @@ jobs:
                     target/
                 key: release-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+            - name: Make release artifacts
+              run: make release
+              
             - name: Stage release artifacts
               run: make stage-release-artifacts tag=$GITHUB_REF_NAME
               
