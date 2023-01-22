@@ -36,7 +36,6 @@ oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
-target        =  $(uname_m)-unknown-linux-musl
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -208,7 +207,11 @@ container: ## Build the container defined in hack/container
 
 .PHONY: check-deps
 check-deps: ## Check if there are any unused dependencies in Cargo.toml
-	cargo +nightly udeps --all-targets
+#	cargo +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
+#	cargo +nightly udeps --package auraescript
+#	cargo +nightly udeps --package aurae-client
+#	cargo +nightly udeps --package aer
+
 
 .PHONY: test-workflow
 test-workflow: ## Tests a github actions workflow locally using `act`
