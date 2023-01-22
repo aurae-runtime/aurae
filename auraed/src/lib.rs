@@ -81,10 +81,10 @@ use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
 
+mod cri;
 mod discovery;
 mod graceful_shutdown;
 pub mod init;
-mod kubernetes;
 pub mod logging;
 mod observe;
 mod runtime;

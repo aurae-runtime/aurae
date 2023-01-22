@@ -30,8 +30,8 @@
 
 // TODO: macro doesn't support streaming. Does deno?
 macros::ops_generator!(
-    "../api/kubernetes/cri/v1/release-1.26.proto",
-    kubernetes::cri,
+    "../api/cri/v1/release-1.26.proto",
+    cri,
     RuntimeService,
     ImageService,
 );
