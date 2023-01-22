@@ -68,7 +68,7 @@ musl: ## Add target for musl
 
 .PHONY: auraed
 auraed: proto ## Initialize and static-compile auraed with musl
-	@$(cargo) clippy -p auraed
+	@$(cargo) clippy --target $(uname_m)-unknown-linux-musl -p auraed
 	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
 
 .PHONY: check-docs
