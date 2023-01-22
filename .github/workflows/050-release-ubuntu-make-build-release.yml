@@ -27,72 +27,49 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-#
-# The primary Aurae builder container, used to cache and support the GitHub
-# builds.
-#
-# This container image is NOT intended to run Aurae in production.
-# This container image is only intended for internal builds.
-#
-# syntax = docker/dockerfile:1.4
-FROM rust:1-slim-bullseye as main
-LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
+name: "Make Release Artifacts (050) [aurae-builder:builder-latest]"
 
-## Define ARGs
-ARG CACHE_VERSION=v0
-ARG BUF_VERSION=1.11.0
-ARG PROTOC_VERSION=1.5.1
-ARG GH_CLI_VERSION=2.21.2
+on:
+  release:
+    types: [prereleased]
+jobs:
+    build-container:
+        uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build-builder.yml
+    create-pre-release-artifacts:
+        name: Create release artifacts
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        container:
+          image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
+          credentials:
+            username:  ${{ github.actor }}
+            password:  ${{ secrets.GITHUB_TOKEN }}
+        permissions:
+          contents: write
+          packages: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
 
-## Install packages
-#
-# Do not at GNU libraries here! Do not add GNU libraries here!
-#
-# Please (seriously please) be careful about adding commands here.
-# This is our core way of validating that our binary is "healthy"
-# If we need to install anything with the word "lib" in it to get
-# the build to pass, we likely should be having other discussions
-# instead of adding commands here.
-#
-# Do not add GNU libraries here! Do not add GNU libraries here!
-#
-# For example we should NOT be adding libraries such as "libseccomp"
-# or "libdbus".
-#
-# If in doubt, please ask in Discord in the build channel.
-#
-# Do not at GNU libraries here! Do not add GNU libraries here!
-RUN  apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    git \
-    make \
-    musl-tools \
-    protobuf-compiler 
-RUN rm -rf /var/lib/apt/lists/*
+            - name: GH Login
+              run: gh auth login
 
-## Setup Rust
-RUN rustup component add clippy
-RUN rustup target add x86_64-unknown-linux-musl
+            - uses: actions/cache@v3
+              with:
+                path: |
+                    ~/.cargo/registry/index/
+                    ~/.cargo/registry/cache/
+                    ~/.cargo/git/db/
+                    target/
+                key: release-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-## Setup protoc-gen-doc
-RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
-    tar -xzf protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
-    chmod +x protoc-gen-doc && \
-    mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
-    rm protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz
-
-## Setup Buf
-RUN curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(uname -s)-$(uname -m)" \
-    -o "/usr/local/bin/buf" && \
-    chmod +x "/usr/local/bin/buf"
-
-## Install GH CLI
-RUN curl -sSL \
-    "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.deb" \
-    -o "/tmp/gh_${GH_CLI_VERSION}_linux_amd64.deb" && \
-    dpkg -i "/tmp/gh_${GH_CLI_VERSION}_linux_amd64.deb" && \
-    rm "/tmp/gh_${GH_CLI_VERSION}_linux_amd64.deb"
-
-WORKDIR /aurae
+            - name: Make release artifacts
+              run: make release
+              
+            - name: Stage release artifacts
+              run: make stage-release-artifacts tag=$GITHUB_REF_NAME
+              
+            - name: Upload release artifacts
+              run: make upload-release-artifacts tag=$GITHUB_REF_NAME
+              env:
+                GH_TOKEN: ${{ github.token }}
