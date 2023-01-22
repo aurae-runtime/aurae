@@ -36,7 +36,7 @@ jobs:
     build-container:
         uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build-builder.yml
     create-pre-release-artifacts:
-        name: Create project p
+        name: Create release artifacts
         runs-on: ubuntu-latest
         timeout-minutes: 15
         container:
