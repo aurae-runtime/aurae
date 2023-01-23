@@ -57,6 +57,7 @@ unused_results
 // #![warn(missing_docs)] // TODO: We want the docs from the proto
 #![allow(dead_code)]
 
+pub mod cri;
 pub mod discovery;
 pub mod grpc;
 pub mod runtime;
@@ -78,9 +79,9 @@ macro_rules! execute {
 #[macro_export]
 macro_rules! execute_server_streaming {
     ($call:path, $req:ident) => {{
-        let res = execute!($call, $req);
+        let res = $crate::execute!($call, $req);
         let mut res = res.into_inner();
-        while let Some(res) = res.next().await {
+        while let Some(res) = futures_util::StreamExt::next(&mut res).await {
             let res = res?;
             println!("{res:#?}");
         }

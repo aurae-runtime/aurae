@@ -28,6 +28,13 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use health_service::HealthCommands;
+// TODO: The macro `macros::subcommand` is unable to produce valid code.
+//
+// Using `macros::subcommand_for_dev_only` should create invalid code,
+// without panicking, expanding the results and copy/pasting saves time
 
-mod health_service;
+// macros::subcommand_for_dev_only!(
+//     "../api/kubernetes/cri/v1/release-1.26.proto",
+//     kubernetes::cri,
+//     ImageService,
+// );
