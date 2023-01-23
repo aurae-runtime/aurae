@@ -220,8 +220,8 @@ test-workflow: ## Tests a github actions workflow locally using `act`
 .PHONY: stage-release-artifacts
 stage-release-artifacts: ## Stage release artifacts
 	@mkdir -p /tmp/release
-	@cp $(HOME)/.cargo/bin/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
-	@cp $(HOME)/.cargo/bin/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
+	@cp /usr/local/cargo/bin/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
+	@cp /usr/local/cargo/bin/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
 
 .PHONY: upload-release-artifacts
 upload-release-artifacts: ## Upload release artifacts to github
