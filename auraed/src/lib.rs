@@ -62,18 +62,16 @@
 #![warn(missing_docs)]
 #![allow(dead_code)]
 
-use crate::spawn::spawn_auraed_oci_to;
+use crate::{
+    cells::CellService, discovery::DiscoveryService, init::SocketStream,
+    spawn::spawn_auraed_oci_to,
+};
 use anyhow::Context;
 use aurae_proto::{
+    cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
-    runtime::cell_service_server::CellServiceServer,
-    runtime::pod_service_server::PodServiceServer,
 };
 use clap::{Parser, Subcommand};
-use discovery::DiscoveryService;
-use init::SocketStream;
-use runtime::CellService;
-use runtime::PodService;
 use std::path::{Path, PathBuf};
 use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
@@ -81,13 +79,13 @@ use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
 
+mod cells;
 mod cri;
 mod discovery;
 mod graceful_shutdown;
 pub mod init;
 pub mod logging;
 mod observe;
-mod runtime;
 mod spawn;
 
 /// Default Unix domain socket path for `auraed`.
@@ -276,10 +274,6 @@ impl AuraedRuntime {
             .set_serving::<DiscoveryServiceServer<DiscoveryService>>()
             .await;
 
-        let pod_service = PodService::new(self.runtime_dir.clone());
-        let pod_service_server = PodServiceServer::new(pod_service.clone());
-        health_reporter.set_serving::<PodServiceServer<PodService>>().await;
-
         let graceful_shutdown = graceful_shutdown::GracefulShutdown::new(
             health_reporter,
             cell_service,
@@ -294,7 +288,6 @@ impl AuraedRuntime {
                 .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
-                .add_service(pod_service_server)
                 .serve_with_incoming_shutdown(socket_stream, async {
                     let mut graceful_shutdown_signal = graceful_shutdown_signal;
                     let _ = graceful_shutdown_signal.changed().await;

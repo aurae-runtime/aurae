@@ -28,4 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::service!("../api/v0/runtime/runtime.proto", runtime, PodService);
+pub(crate) use cell_service::CellService;
+
+mod cell_service;

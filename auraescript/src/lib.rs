@@ -64,10 +64,10 @@ use std::pin::Pin;
 use std::rc::Rc;
 
 mod builtin;
+mod cells;
+mod cri;
 mod discovery;
 mod health;
-mod runtime;
-mod cri;
 
 pub fn init() -> JsRuntime {
     let extension = Extension::builder().ops(stdlib()).build();
@@ -81,7 +81,7 @@ pub fn init() -> JsRuntime {
 
 fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
-    ops.extend(runtime::op_decls());
+    ops.extend(cells::op_decls());
     ops.extend(discovery::op_decls());
     ops.extend(health::op_decls());
     ops

@@ -40,9 +40,9 @@ use super::{
 };
 use ::validation::ValidatedType;
 use aurae_client::{
-    runtime::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
+    cells::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
 };
-use aurae_proto::runtime::{
+use aurae_proto::cells::{
     cell_service_server, CellServiceAllocateRequest,
     CellServiceAllocateResponse, CellServiceFreeRequest,
     CellServiceFreeResponse, CellServiceStartRequest, CellServiceStartResponse,
