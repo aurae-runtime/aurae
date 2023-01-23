@@ -52,9 +52,6 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v3
 
-            - name: GH Login
-              run: gh auth login
-
             - uses: actions/cache@v3
               with:
                 path: |
@@ -65,7 +62,7 @@ jobs:
                 key: release-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
             - name: Make release artifacts
-              run: make release
+              run: make musl build release
               
             - name: Stage release artifacts
               run: make stage-release-artifacts tag=$GITHUB_REF_NAME
