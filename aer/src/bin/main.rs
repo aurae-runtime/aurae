@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use aer::{
-    discovery::DiscoveryServiceCommands, grpc::HealthServiceCommands,
+    discovery::DiscoveryServiceCommands, grpc::HealthCommands,
     runtime::CellServiceCommands,
 };
 use clap::{Parser, Subcommand};
@@ -56,7 +56,7 @@ enum Commands {
     #[command(arg_required_else_help = true)]
     Health {
         #[command(subcommand)]
-        command: HealthServiceCommands,
+        command: HealthCommands,
     },
 }
 

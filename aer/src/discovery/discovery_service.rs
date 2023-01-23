@@ -28,26 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::execute;
-use aurae_client::discovery::discovery_service::DiscoveryServiceClient;
-use aurae_proto::discovery::DiscoverRequest;
-use clap::Subcommand;
-
-#[derive(Debug, Subcommand)]
-pub enum DiscoveryServiceCommands {
-    #[command()]
-    Discover,
-}
-
-impl DiscoveryServiceCommands {
-    pub async fn execute(self) -> anyhow::Result<()> {
-        match self {
-            DiscoveryServiceCommands::Discover => {
-                let req = DiscoverRequest {};
-                let _ = execute!(DiscoveryServiceClient::discover, req);
-            }
-        }
-
-        Ok(())
-    }
-}
+macros::subcommand!(
+    "../api/v0/discovery/discovery.proto",
+    discovery,
+    DiscoveryService
+);
