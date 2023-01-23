@@ -62,11 +62,17 @@
 #![warn(missing_docs)]
 #![allow(dead_code)]
 
+<<<<<<< HEAD
 use crate::{
     cells::CellService, discovery::DiscoveryService, init::SocketStream,
     spawn::spawn_auraed_oci_to,
 };
+=======
+use crate::cri::runtime_service::RuntimeService;
+use crate::spawn::spawn_auraed_oci_to;
+>>>>>>> 0ac4826 (Plumb CRI through to auraed)
 use anyhow::Context;
+use aurae_proto::cri::runtime_service_server::RuntimeServiceServer;
 use aurae_proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
@@ -284,10 +290,19 @@ impl AuraedRuntime {
             .await;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
         // let pod_service = PodService::new(self.runtime_dir.clone());
         // let pod_service_server = PodServiceServer::new(pod_service.clone());
         // health_reporter.set_serving::<PodServiceServer<PodService>>().await;
+=======
+        let runtime_service = RuntimeService::new();
+        let runtime_service_server =
+            RuntimeServiceServer::new(runtime_service.clone());
+        health_reporter
+            .set_serving::<RuntimeServiceServer<RuntimeService>>()
+            .await;
+>>>>>>> 0ac4826 (Plumb CRI through to auraed)
 
 >>>>>>> b60ccc1 (Remove runtime.pod_service)
         let graceful_shutdown = graceful_shutdown::GracefulShutdown::new(
@@ -305,9 +320,13 @@ impl AuraedRuntime {
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
                 // .add_service(pod_service_server)
 >>>>>>> b60ccc1 (Remove runtime.pod_service)
+=======
+                .add_service(runtime_service_server)
+>>>>>>> 0ac4826 (Plumb CRI through to auraed)
                 .serve_with_incoming_shutdown(socket_stream, async {
                     let mut graceful_shutdown_signal = graceful_shutdown_signal;
                     let _ = graceful_shutdown_signal.changed().await;

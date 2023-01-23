@@ -56,7 +56,14 @@ use libcontainer;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 
+#[derive(Debug, Clone)]
 pub struct RuntimeService {}
+
+impl RuntimeService {
+    pub fn new() -> Self {
+        RuntimeService {}
+    }
+}
 
 #[tonic::async_trait]
 impl runtime_service_server::RuntimeService for RuntimeService {
