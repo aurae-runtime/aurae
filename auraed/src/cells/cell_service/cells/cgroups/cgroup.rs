@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::runtime::cell_service::cells::{
+use crate::cells::cell_service::cells::{
     cgroups::{CpuController, CpusetController},
     CellName, CgroupSpec,
 };

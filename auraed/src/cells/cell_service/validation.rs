@@ -7,8 +7,8 @@ use super::cells::{
     IsolationControls,
 };
 use super::executables::ExecutableName;
-use crate::runtime::cell_service::cells::CellName;
-use aurae_proto::runtime::{
+use crate::cells::cell_service::cells::CellName;
+use aurae_proto::cells::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
     CellServiceStartRequest, CellServiceStopRequest, CpuController,
     CpusetController, Executable,

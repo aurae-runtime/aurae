@@ -28,8 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub(crate) use cell_service::CellService;
-pub(crate) use pod_service::PodService;
-
-mod cell_service;
-mod pod_service;
+macros::service!("../api/v0/cells/cells.proto", cells, CellService);

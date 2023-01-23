@@ -28,9 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::ops_generator!(
-    "../api/v0/runtime/runtime.proto",
-    runtime,
-    CellService,
-    PodService,
-);
+macros::ops_generator!("../api/v0/cells/cells.proto", cells, CellService,);

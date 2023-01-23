@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
-use crate::runtime::cell_service::cells::cells_cache::CellsCache;
+use crate::cells::cell_service::cells::cells_cache::CellsCache;
 use std::collections::HashMap;
 use tracing::warn;
 

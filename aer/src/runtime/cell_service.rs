@@ -29,8 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 macros::subcommand!(
-    "../api/v0/runtime/runtime.proto",
-    runtime,
+    "../api/v0/cells/cells.proto",
+    cells,
     CellService,
     Allocate {
         cell_name[required = true],
