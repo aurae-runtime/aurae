@@ -52,7 +52,7 @@ lint: ## Lint the code
 	@$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
 	@$(cargo) clippy -p aurae-client --all-features -- -D clippy::all -D warnings
 
-release: ## Build (static+musl) and install (release) 🎉
+release: proto## Build (static+musl) and install (release) 🎉
 	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed
 	$(cargo) install --path ./auraescript
 
