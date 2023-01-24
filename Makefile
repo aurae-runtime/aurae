@@ -134,9 +134,16 @@ proto: proto-lint ## Lint and Generate code from protobuf schemas
 proto-lint: ## Lint protobuf schemas
 	buf lint api
 
+.PHONY: proto-vendor
+proto-vendor: proto-vendor-cri proto-vendor-grpc-health ## Copy the upstream protobuf interfaces
+
 .PHONY: proto-vendor-cri
 proto-vendor-cri: ## Copy the CRI interface from upstream
-	curl https://raw.githubusercontent.com/kubernetes/cri-api/$(cri_version)/pkg/apis/runtime/v1/api.proto -o api/kubernetes/cri/v1/$(cri_version).proto
+	curl https://raw.githubusercontent.com/kubernetes/cri-api/$(cri_version)/pkg/apis/runtime/v1/api.proto -o api/cri/v1/$(cri_version).proto
+
+.PHONY: proto-vendor-grpc-health
+proto-vendor-grpc-health: ## Copy the gRPC Health interface from upstream
+	curl https://raw.githubusercontent.com/grpc/grpc/master/src/proto/grpc/health/v1/health.proto -o api/grpc/health/v1/health.proto
 
 #------------------------------------------------------------------------------#
 
