@@ -40,18 +40,27 @@ cri_version   =  release-1.26
 # Configuration Options
 export GIT_PAGER = cat
 
-default: all ## Build and install (debug) 🎉
+
+.PHONY: all
 all: install ## Build and install (debug) 🎉
+
+.PHONY: install
 install: build ## Build and install (debug) 🎉
+
+.PHONY: build
 build: musl auraed auraescript ## Build and install (debug) (+musl) 🎉
+
+.PHONY: prcheck
 prcheck: build lint test-all ## Meant to mimic the GHA checks (includes ignored tests)
 
+.PHONY: lint
 lint: ## Lint the code
 	@$(cargo) clippy -p auraed --target $(uname_m)-unknown-linux-musl --all-features -- -D clippy::all -D warnings
 	@$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
 	@$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
 	@$(cargo) clippy -p aurae-client --all-features -- -D clippy::all -D warnings
 
+.PHONY: release
 release: proto## Build (static+musl) and install (release) 🎉
 	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed
 	$(cargo) install --path ./auraescript
@@ -137,8 +146,7 @@ fmt: headers ## Format the entire code base(s)
 	@./hack/code-format
 
 .PHONY: proto
-	# TODO: depend on proto-lint when we're proto-lint clean
-proto: ## Generate code from protobuf schemas
+proto: proto-lint ## Generate code from protobuf schemas
 	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
 	buf generate -v api
 
@@ -152,6 +160,7 @@ proto-lint: ## Lint protobuf schemas
 
 .PHONY: clean
 clean: clean-certs
+	@rm -rf aurae-proto/src/gen/*
 	@cargo clean
 
 headers: headers-write ## Fix headers. Run this if you want to clobber things.
