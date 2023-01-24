@@ -61,16 +61,16 @@ clean: clean-certs clean-gens clean-crates ## Clean the repo
 lint: musl proto proto-lint libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
 
 .PHONY: test
-test: lint libs-test auraed-test auraescript-test aer-test ## Run lints and tests (does not include ignored tests)
+test: musl lint libs-test auraed-test auraescript-test aer-test ## Run lints and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
+test-all: musl lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: install
-install: lint auraed-debug auraescript-debug aer-debug ## Build and install (debug) 🎉
+install: musl lint auraed-debug auraescript-debug aer-debug ## Build and install (debug) 🎉
 
 .PHONY: release
-release: lint test auraed-release auraescript-release aer-release ## Build and install (release) 🎉
+release: musl lint test auraed-release auraescript-release aer-release ## Build and install (release) 🎉
 
 .PHONY: docs
 docs: proto docs-crates docs-stdlib docs-other docs-lint ## Assemble all the /docs for the website locally.
@@ -150,30 +150,30 @@ proto-vendor-grpc-health: ## Copy the gRPC Health interface from upstream
 # Auraed Commands
 
 .PHONY: auraed
-auraed: proto auraed-lint auraed-debug ## Lint and install auraed (for use during development)
+auraed: musl proto proto-lint auraed-lint auraed-debug ## Lint and install auraed (for use during development)
 
 .PHONY: auraed-lint
-auraed-lint:
+auraed-lint: musl proto
 	@$(cargo) clippy --target $(uname_m)-unknown-linux-musl -p auraed --all-features -- -D clippy::all -D warnings
 
 .PHONY: auraed-test
-auraed-test:
+auraed-test: musl proto
 	@$(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed
 
 .PHONY: auraed-test-all
-auraed-test-all:
+auraed-test-all: musl proto
 	@sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed -- --include-ignored
 
 .PHONY: auraed-debug
-auraed-debug:
+auraed-debug: musl proto auraed-lint
 	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
 
 .PHONY: auraed-release
-auraed-release:
+auraed-release: musl proto proto-lint auraed-lint auraed-test ## Lint, test, and install auraed
 	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --force
 
 .PHONY: start
-auraed-start:
+auraed-start: ## Starts the installed auraed executable (requires sudo)
 	sudo -E $(HOME)/.cargo/bin/auraed
 
 #------------------------------------------------------------------------------#
@@ -181,26 +181,26 @@ auraed-start:
 # AuraeScript Commands
 
 .PHONY: auraescript
-auraescript: proto auraescript-lint auraescript-debug ## Lint and install auraescript (for use during development)
+auraescript: proto proto-lint auraescript-lint auraescript-debug ## Lint and install auraescript (for use during development)
 
 .PHONY: auraescript-lint
-auraescript-lint:
+auraescript-lint: proto
 	@$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
 
 .PHONY: auraescript-test
-auraescript-test:
+auraescript-test: proto
 	@$(cargo) test -p auraescript
 
 .PHONY: auraescript-test-all
-auraescript-test-all:
+auraescript-test-all: proto
 	@$(cargo) test -p auraescript -- --include-ignored
 
 .PHONY: auraescript-debug
-auraescript-debug:
+auraescript-debug: proto proto-lint auraescript-lint
 	@$(cargo) install --path ./auraescript --debug --force
 
 .PHONY: auraescript-release
-auraescript-release:
+auraescript-release: proto proto-lint auraescript-lint auraescript-test ## Lint, test, and install auraescript
 	@$(cargo) install --path ./auraescript --force
 
 #------------------------------------------------------------------------------#
@@ -208,26 +208,26 @@ auraescript-release:
 # aer Commands
 
 .PHONY: aer
-aer: proto aer-lint aer-debug ## Lint and install aer (for use during development)
+aer: proto proto-lint aer-lint aer-debug ## Lint and install aer (for use during development)
 
 .PHONY: aer-lint
-aer-lint:
+aer-lint: proto
 	@$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
 
 .PHONY: aer-test
-aer-test:
+aer-test: proto
 	@$(cargo) test -p aer
 
 .PHONY: aer-test-all
-aer-test-all:
+aer-test-all: proto
 	@$(cargo) test -p aer -- --include-ignored
 
 .PHONY: aer-debug
-aer-debug:
+aer-debug: proto proto-lint aer-lint
 	@$(cargo) install --path ./aer --debug --force
 
 .PHONY: aer-release
-aer-release:
+aer-release: proto proto-lint aer-lint aer-test ## Lint, test, and install aer
 	@$(cargo) install --path ./aer --force
 
 #------------------------------------------------------------------------------#
@@ -235,15 +235,15 @@ aer-release:
 # Commands for other crates
 
 .PHONY: libs-lint
-libs-lint:
+libs-lint: proto proto-lint
 	@$(cargo) clippy --all-features --workspace --exclude auraed --exclude auraescript --exclude aer  -- -D clippy::all -D warnings
 
 .PHONY: libs-test
-libs-test:
+libs-test: proto
 	@$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer
 
 .PHONY: libs-test-all
-libs-test-all:
+libs-test-all: proto
 	@$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer -- --include-ignored
 
 #------------------------------------------------------------------------------#
