@@ -40,18 +40,27 @@ cri_version   =  release-1.26
 # Configuration Options
 export GIT_PAGER = cat
 
-default: all ## Build and install (debug) 🎉
+
+.PHONY: all
 all: install ## Build and install (debug) 🎉
+
+.PHONY: install
 install: build ## Build and install (debug) 🎉
+
+.PHONY: build
 build: musl auraed auraescript ## Build and install (debug) (+musl) 🎉
+
+.PHONY: prcheck
 prcheck: build lint test-all ## Meant to mimic the GHA checks (includes ignored tests)
 
+.PHONY: lint
 lint: ## Lint the code
 	@$(cargo) clippy -p auraed --target $(uname_m)-unknown-linux-musl --all-features -- -D clippy::all -D warnings
 	@$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
 	@$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
 	@$(cargo) clippy -p aurae-client --all-features -- -D clippy::all -D warnings
 
+.PHONY: release
 release: proto## Build (static+musl) and install (release) 🎉
 	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed
 	$(cargo) install --path ./auraescript
