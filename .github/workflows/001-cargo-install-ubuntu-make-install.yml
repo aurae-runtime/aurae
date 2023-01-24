@@ -84,7 +84,7 @@ jobs:
         #
         # Do not add GNU libraries here! Do not add GNU libraries here!
         #
-        # For example we should NOT be adding libraries such as "libseccomp"
+        # For example, we should NOT be adding libraries such as "libseccomp"
         # or "libdbus".
         #
         # If in doubt, please ask in Discord in the build channel.
@@ -93,9 +93,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-      - name: Cargo Install [make build]
+      - name: Cargo Install [make install]
         # This should remain the only command we execute as this matches the title of the file.
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file
         # named with a good name.
-        run: make build
+        run: make install

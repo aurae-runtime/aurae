@@ -42,13 +42,10 @@ export GIT_PAGER = cat
 
 #------------------------------------------------------------------------------#
 
-# Convenience commands
+# Aliases
 
 .PHONY: all
-all: install ## Build and install (debug) 🎉
-
-.PHONY: build
-build: install ## Build and install (debug) (+musl) 🎉
+all: install ## alias for install
 
 #------------------------------------------------------------------------------#
 
@@ -66,11 +63,14 @@ test: musl lint libs-test auraed-test auraescript-test aer-test ## Run lints and
 .PHONY: test-all
 test-all: musl lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
 
+.PHONY: build
+build: musl lint auraed-debug auraescript-debug aer-debug ## Lint and install (debug, DOES NOT TEST) 🎉
+
 .PHONY: install
-install: musl lint auraed-debug auraescript-debug aer-debug ## Build and install (debug) 🎉
+install: musl lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
 
 .PHONY: release
-release: musl lint test auraed-release auraescript-release aer-release ## Build and install (release) 🎉
+release: musl lint test auraed-release auraescript-release aer-release ## Lint, test, and install (release) 🎉
 
 .PHONY: docs
 docs: proto docs-crates docs-stdlib docs-other docs-lint ## Assemble all the /docs for the website locally.
