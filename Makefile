@@ -70,7 +70,7 @@ musl: ## Add target for musl
 	rustup target add $(uname_m)-unknown-linux-musl
 
 .PHONY: auraed
-auraed: proto ## Initialize and static-compile auraed with musl
+auraed: musl proto ## Initialize and static-compile auraed with musl
 	@$(cargo) clippy --target $(uname_m)-unknown-linux-musl -p auraed
 	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
 
@@ -92,7 +92,7 @@ stdlibdocs:
 	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0/discovery -I api/v0/observe -I api/v0/cells --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*/*.proto --experimental_allow_proto3_optional
 endif
 
-crate: ## Build the crate (documentation)
+crate: musl ## Build the crate (documentation)
 	$(cargo) doc --target $(uname_m)-unknown-linux-musl --no-deps --package auraed
 	$(cargo) doc --no-deps --package auraescript
 	$(cargo) doc --no-deps --package aurae-client
@@ -102,11 +102,11 @@ crate: ## Build the crate (documentation)
 serve: docs ## Run the aurae.io static website locally
 	sudo -E ./hack/serve.sh
 
-test: ## Run the tests
+test: musl proto ## Run the tests
 	@$(cargo) test --target $(uname_m)-unknown-linux-musl --workspace --exclude auraescript
 	@$(cargo) test -p auraescript
 
-test-all: ## Run the tests (including ignored)
+test-all: musl proto ## Run the tests (including ignored)
 	@sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl --workspace --exclude auraescript -- --include-ignored
 	@$(cargo) test -p auraescript -- --include-ignored
 
@@ -137,6 +137,7 @@ fmt: headers ## Format the entire code base(s)
 	@./hack/code-format
 
 .PHONY: proto
+	# TODO: depend on proto-lint when we're proto-lint clean
 proto: ## Generate code from protobuf schemas
 	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
 	buf generate -v api
@@ -206,7 +207,7 @@ container: ## Build the container defined in hack/container
 	./hack/container
 
 .PHONY: check-deps
-check-deps: ## Check if there are any unused dependencies in Cargo.toml
+check-deps: musl ## Check if there are any unused dependencies in Cargo.toml
 #	cargo +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
 #	cargo +nightly udeps --package auraescript
 #	cargo +nightly udeps --package aurae-client
@@ -218,12 +219,12 @@ test-workflow: ## Tests a github actions workflow locally using `act`
 	@act -W ./.github/workflows/$(file)
 
 .PHONY: stage-release-artifacts
-stage-release-artifacts: ## Stage release artifacts
+stage-release-artifacts: install ## Stage release artifacts
 	@mkdir -p /tmp/release
 	@cp /usr/local/cargo/bin/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
 	@cp /usr/local/cargo/bin/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
 
 .PHONY: upload-release-artifacts
-upload-release-artifacts: ## Upload release artifacts to github
+upload-release-artifacts: install ## Upload release artifacts to github
 	gh release upload $(tag) /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
 	gh release upload $(tag) /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
