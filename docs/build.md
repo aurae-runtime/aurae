@@ -21,9 +21,16 @@ commands provided below.
 ##### Ubuntu
 
 ```bash
-sudo apt-get update;
 sudo apt-get install -y protobuf-compiler; # Protocol Buffer Compiler
 sudo apt-get install -y musl-tools; # musl libc
+```
+
+##### Arch
+
+```bash
+yay -S protobuf # Protocol Buffer Compiler
+yay -S buf # buf
+yay -S musl # musl libc 
 ```
 
 ### Prepare the Environment
@@ -46,3 +53,5 @@ You can optionally compile each directly:
 make auraed      # compile and install auraed with cargo
 make auraescript # compile and install auraescript with cargo
 ```
+
+*For more commands, and the dependencies between them, please see the Makefile at the root of the repository.*
