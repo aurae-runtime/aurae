@@ -58,7 +58,7 @@ build: install ## Build and install (debug) (+musl) 🎉
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
 .PHONY: lint
-lint: proto proto-lint libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
+lint: musl proto proto-lint libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
 
 .PHONY: test
 test: lint libs-test auraed-test auraescript-test aer-test ## Run lints and tests (does not include ignored tests)
@@ -67,7 +67,7 @@ test: lint libs-test auraed-test auraescript-test aer-test ## Run lints and test
 test-all: lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: install
-install: proto auraed-debug auraescript-debug aer-debug ## Build and install (debug) 🎉
+install: musl proto auraed-debug auraescript-debug aer-debug ## Build and install (debug) 🎉
 
 .PHONY: release
 release: lint test auraed-release auraescript-release aer-release ## Build and install (release) 🎉
