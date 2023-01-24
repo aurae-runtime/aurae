@@ -25,24 +25,34 @@ option java_multiple_files = true;
 option java_outer_classname = "HealthProto";
 option java_package = "io.grpc.health.v1";
 
-message HealthCheckRequest {
+enum ServingStatus {
+  SERVING_STATUS_UNSPECIFIED = 0;
+  SERVING_STATUS_SERVING = 1;
+  SERVING_STATUS_NOT_SERVING = 2;
+  SERVING_STATUS_SERVICE_UNKNOWN = 3;  // Used only by the Watch method.
+}
+
+message CheckRequest {
   string service = 1;
 }
 
-message HealthCheckResponse {
-  enum ServingStatus {
-    UNKNOWN = 0;
-    SERVING = 1;
-    NOT_SERVING = 2;
-    SERVICE_UNKNOWN = 3;  // Used only by the Watch method.
-  }
+message CheckResponse {
   ServingStatus status = 1;
 }
 
-service Health {
+message WatchRequest {
+  string service = 1;
+}
+
+message WatchResponse {
+  ServingStatus status = 1;
+}
+
+
+service HealthService {
   // If the requested service is unknown, the call will fail with status
   // NOT_FOUND.
-  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc Check(CheckRequest) returns (CheckResponse);
 
   // Performs a watch for the serving status of the requested service.
   // The server will immediately send back a message indicating the current
@@ -59,5 +69,5 @@ service Health {
   // should assume this method is not supported and should not retry the
   // call.  If the call terminates with any other status (including OK),
   // clients should retry the call with appropriate exponential backoff.
-  rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);
+  rpc Watch(WatchRequest) returns (stream WatchResponse);
 }

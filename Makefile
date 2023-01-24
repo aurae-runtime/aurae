@@ -137,8 +137,7 @@ fmt: headers ## Format the entire code base(s)
 	@./hack/code-format
 
 .PHONY: proto
-	# TODO: depend on proto-lint when we're proto-lint clean
-proto: ## Generate code from protobuf schemas
+proto: proto-lint ## Generate code from protobuf schemas
 	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
 	buf generate -v api
 
@@ -152,6 +151,7 @@ proto-lint: ## Lint protobuf schemas
 
 .PHONY: clean
 clean: clean-certs
+	@rm -rf aurae-proto/src/gen/*
 	@cargo clean
 
 headers: headers-write ## Fix headers. Run this if you want to clobber things.
