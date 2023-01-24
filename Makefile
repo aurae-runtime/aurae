@@ -61,10 +61,10 @@ clean: clean-certs clean-gens clean-crates ## Clean the repo
 lint: proto proto-lint libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
 
 .PHONY: test
-test: proto libs-test auraed-test auraescript-test aer-test ## Run tests (does not include ignored tests)
+test: lint libs-test auraed-test auraescript-test aer-test ## Run lints and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: proto libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run tests (includes ignored tests)
+test-all: lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: install
 install: proto auraed-debug auraescript-debug aer-debug ## Build and install (debug) 🎉

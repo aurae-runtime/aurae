@@ -28,7 +28,7 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-name: "Cargo Test Lint (035) [aurae-builder:builder-latest]"
+name: "Cargo Test (035) [aurae-builder:builder-latest]"
 on:
   push:
     branches: main
@@ -64,9 +64,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: build-compile-test-container-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cargo Test Lint [make test lint]
+      - name: Cargo Test [make test]
         # This should remain the only command we execute as this matches the title of the file.
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file
         # named with a good name.
-        run: make musl lint test
+        run: make musl test
