@@ -67,7 +67,7 @@ test: lint libs-test auraed-test auraescript-test aer-test ## Run lints and test
 test-all: lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: install
-install: musl proto auraed-debug auraescript-debug aer-debug ## Build and install (debug) 🎉
+install: lint auraed-debug auraescript-debug aer-debug ## Build and install (debug) 🎉
 
 .PHONY: release
 release: lint test auraed-release auraescript-release aer-release ## Build and install (release) 🎉
@@ -171,6 +171,10 @@ auraed-debug:
 .PHONY: auraed-release
 auraed-release:
 	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --force
+
+.PHONY: start
+auraed-start:
+	sudo -E $(HOME)/.cargo/bin/auraed
 
 #------------------------------------------------------------------------------#
 
@@ -362,10 +366,6 @@ headers-check: ## Only check for problematic files.
 .PHONY: headers-write
 headers-write: ## Fix any problematic files blindly.
 	./hack/headers-write
-
-.PHONY: start
-start:
-	sudo -E $(HOME)/.cargo/bin/auraed
 
 .PHONY: help
 help:  ## Show help messages for make targets
