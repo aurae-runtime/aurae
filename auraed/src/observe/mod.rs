@@ -33,7 +33,8 @@
 
 use aurae_proto::observe::{
     observe_service_server::ObserveService, GetAuraeDaemonLogStreamRequest,
-    GetSubProcessStreamRequest, LogItem, GetAuraeDaemonLogStreamResponse,
+    GetAuraeDaemonLogStreamResponse, GetSubProcessStreamRequest, GetSubProcessStreamResponse,
+    LogItem,
 };
 use std::sync::Arc;
 use tokio::sync::broadcast::Receiver;
@@ -98,7 +99,7 @@ impl ObserveService for ObserveServiceServer {
         Ok(Response::new(ReceiverStream::new(rx)))
     }
 
-    type GetSubProcessStreamStream = ReceiverStream<Result<LogItem, Status>>;
+    type GetSubProcessStreamStream = ReceiverStream<Result<GetSubProcessStreamResponse, Status>>;
 
     async fn get_sub_process_stream(
         &self,
@@ -110,7 +111,7 @@ impl ObserveService for ObserveServiceServer {
         println!("Requested Channel {}", requested_channel);
         println!("Requested Process ID {}", requested_pid);
 
-        let (_tx, rx) = mpsc::channel::<Result<LogItem, Status>>(4);
+        let (_tx, rx) = mpsc::channel::<Result<GetSubProcessStreamResponse, Status>>(4);
 
         Ok(Response::new(ReceiverStream::new(rx)))
     }
