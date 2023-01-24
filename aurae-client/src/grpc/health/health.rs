@@ -28,8 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::service!(
-    "../api/grpc/health/v1/health.proto",
-    grpc::health,
-    HealthService
-);
+macros::service!("../api/grpc/health/v1/health.proto", grpc::health, Health);
