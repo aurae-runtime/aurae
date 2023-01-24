@@ -44,10 +44,10 @@ make pki config # For quick-start only
 Now you can compile and install the toolchain
 
 ```bash 
-make
+make all
 ```
 
-You can optionally compile each directly:
+You can optionally compile and install each binary directly. E.g.,:
 
 ```bash 
 make auraed      # compile and install auraed with cargo
