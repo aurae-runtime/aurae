@@ -98,4 +98,4 @@ jobs:
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file
         # named with a good name.
-        run: make build
+        run: make musl build
