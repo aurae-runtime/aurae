@@ -32,7 +32,7 @@ use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 use validation::{ValidatedField, ValidationError};
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct Limit(i64);
 
 impl Limit {

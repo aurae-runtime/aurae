@@ -57,6 +57,10 @@ let started = await cells.start(<runtime.CellServiceStartRequest>{
 })
 helpers.print(started)
 
+let listed = await cells.list(<runtime.CellServiceListRequest>{})
+
+helpers.print(listed)
+
 // [ Stop ]
 let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
     cellName,

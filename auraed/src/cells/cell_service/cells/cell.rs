@@ -172,6 +172,10 @@ impl Cell {
         &self.cell_name
     }
 
+    pub fn spec(&self) -> &CellSpec {
+        &self.spec
+    }
+
     /// Returns [None] if the [Cell] is not allocated.
     pub fn v2(&self) -> Option<bool> {
         info!("{:?}", self);
@@ -228,6 +232,11 @@ impl CellsCache for Cell {
         };
 
         children.broadcast_kill()
+    }
+
+    fn entries(&self) -> Vec<&Cell> {
+        //self.cache.iter().collect_vec()
+        todo!()
     }
 }
 

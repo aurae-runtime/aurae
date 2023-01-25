@@ -31,6 +31,7 @@
 use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
 use crate::cells::cell_service::cells::cells_cache::CellsCache;
 use std::collections::HashMap;
+use iter_tools::Itertools;
 use tracing::warn;
 
 macro_rules! proxy_if_needed {
@@ -243,6 +244,10 @@ impl CellsCache for Cells {
     fn broadcast_kill(&mut self) {
         self.broadcast_kill()
     }
+
+    fn entries(&self) -> Vec<&Cell> {
+        self.cache.values().by_ref().collect_vec()
+    }
 }
 
 #[cfg(test)]
@@ -343,3 +348,4 @@ mod tests {
         ));
     }
 }
+

@@ -63,4 +63,6 @@ pub trait CellsCache {
 
     /// Sends a [SIGKILL] to all Cells, ignoring any errors.
     fn broadcast_kill(&mut self);
+
+    fn entries(&self) -> Vec<&Cell>;
 }

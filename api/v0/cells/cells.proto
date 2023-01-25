@@ -83,6 +83,8 @@ service CellService {
   /// Stop one or more Executables inside of an existing cell.
   /// Can be called in serial to stop/retry more than one executable.
   rpc Stop(CellServiceStopRequest) returns (CellServiceStopResponse) {}
+
+  rpc List(CellServiceListRequest) returns (CellServiceListResponse) {}
 }
 
 /// An Aurae cell is a name given to Linux control groups (cgroups) that also include
@@ -142,6 +144,17 @@ message CellServiceStopRequest {
 }
 
 message CellServiceStopResponse {}
+
+message CellServiceListRequest {}
+
+message CellServiceListResponse {
+  repeated CellWithChildren cells = 1;
+}
+
+message CellWithChildren {
+  Cell cell = 1;
+  repeated Cell children = 2;
+}
 
 /// An isolation resource used to divide a system into smaller resource
 /// boundaries.
