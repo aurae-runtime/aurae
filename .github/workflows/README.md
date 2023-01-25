@@ -21,4 +21,4 @@ A new linter running in alpine that tests the command `make lint` and **007** ca
 
 Workflows can be testing using the tool [act](https://github.com/nektos/act). You'll need to install that locally, then you can run commands to test each file individually, locally:
 
-`make test-workflow file=001-cargo-install-ubuntu-make-build.yml`
+`make test-workflow file=001-cargo-install-ubuntu-make-install.yml`
