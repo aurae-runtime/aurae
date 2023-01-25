@@ -248,14 +248,6 @@ libs-test-all: proto
 
 #------------------------------------------------------------------------------#
 
-# Commands for testing
-
-.PHONY: test-workflow
-test-workflow: ## Tests a github actions workflow locally using `act`
-	@act -W ./.github/workflows/$(file)
-
-#------------------------------------------------------------------------------#
-
 # Documentation Commands
 
 .PHONY: docs-lint
@@ -334,7 +326,7 @@ alpine: ## Creat an "alpine" OCI bundle in target
 # CI Commands
 
 .PHONY: ci-release
-ci-release: release ci-stage-release-artifacts ci-upload-release-artifacts
+ci-release: release ci-stage-release-artifacts ci-upload-release-artifacts # Stage and upload release artifacts (for CI use)
 
 .PHONY: ci-stage-release-artifacts
 ci-stage-release-artifacts: release ## Stage release artifacts (for CI use)
@@ -346,6 +338,10 @@ ci-stage-release-artifacts: release ## Stage release artifacts (for CI use)
 ci-upload-release-artifacts: release ci-stage-release-artifacts ## Upload release artifacts to github (for CI use)
 	gh release upload $(tag) /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
 	gh release upload $(tag) /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
+
+.PHONY: ci-local
+ci-local: ## Tests a github action's workflow locally using `act` (e.g., `make ci-local file=001-cargo-install-ubuntu-make-install.yml`)
+	@act -W ./.github/workflows/$(file)
 
 #------------------------------------------------------------------------------#
 
