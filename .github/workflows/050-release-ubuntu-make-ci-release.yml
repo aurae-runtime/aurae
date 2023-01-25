@@ -52,22 +52,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v3
 
-            - uses: actions/cache@v3
-              with:
-                path: |
-                    ~/.cargo/registry/index/
-                    ~/.cargo/registry/cache/
-                    ~/.cargo/git/db/
-                    target/
-                key: release-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-            - name: Make release artifacts
-              run: make musl release
-              
-            - name: Stage release artifacts
-              run: make stage-release-artifacts tag=$GITHUB_REF_NAME
-              
-            - name: Upload release artifacts
-              run: make upload-release-artifacts tag=$GITHUB_REF_NAME
+            - name: Make, stage, upload release artifacts
+              run: make ci-release
               env:
                 GH_TOKEN: ${{ github.token }}

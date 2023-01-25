@@ -333,14 +333,17 @@ alpine: ## Creat an "alpine" OCI bundle in target
 
 # CI Commands
 
-.PHONY: stage-release-artifacts
-stage-release-artifacts: install ## Stage release artifacts (for CI use)
+.PHONY: ci-release
+ci-release: release ci-stage-release-artifacts ci-upload-release-artifacts
+
+.PHONY: ci-stage-release-artifacts
+ci-stage-release-artifacts: release ## Stage release artifacts (for CI use)
 	@mkdir -p /tmp/release
 	@cp /usr/local/cargo/bin/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
 	@cp /usr/local/cargo/bin/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
 
-.PHONY: upload-release-artifacts
-upload-release-artifacts: install ## Upload release artifacts to github (for CI use)
+.PHONY: ci-upload-release-artifacts
+ci-upload-release-artifacts: release ci-stage-release-artifacts ## Upload release artifacts to github (for CI use)
 	gh release upload $(tag) /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
 	gh release upload $(tag) /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
 
