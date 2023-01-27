@@ -28,4 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::service!("../api/v0/runtime/runtime.proto", runtime, CellService);
+macros::service!("../api/v0/cells/cells.proto", cells, CellService);

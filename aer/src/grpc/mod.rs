@@ -28,6 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use health_service::HealthServiceCommands;
+pub use health_service::HealthCommands;
 
 mod health_service;

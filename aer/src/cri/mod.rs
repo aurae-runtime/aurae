@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *          Apache 2.0 License Copyright © 2022-2023 The Aurae Authors        *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,8 +28,5 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub(crate) use cell_service::CellService;
-pub(crate) use pod_service::PodService;
-
-mod cell_service;
-mod pod_service;
+pub mod image_service;
+pub mod pod_service;

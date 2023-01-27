@@ -1,4 +1,3 @@
-#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
@@ -28,44 +27,7 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/cells.ts";
 
-let cells = new runtime.CellServiceClient();
-const cellName = "ae-sleeper-cell";
+pub(crate) use cell_service::CellService;
 
-// [ Allocate ]
-let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
-    cell: runtime.Cell.fromPartial({
-        name: cellName,
-        cpu: runtime.CpuController.fromPartial({
-            weight: 2, // Percentage of CPUs
-            max: 400 * (10 ** 3), // 0.4 seconds in microseconds
-        }),
-    })
-});
-helpers.print(allocated)
-
-// [ Start ]
-let started = await cells.start(<runtime.CellServiceStartRequest>{
-    cellName,
-    executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/sleep 42",
-        description: "Sleep for 42 seconds",
-        name: "sleep-42"
-    })
-})
-helpers.print(started)
-
-// [ Stop ]
-let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
-    cellName,
-    executableName: "sleep-42",
-})
-helpers.print(stopped)
-
-// [ Free ]
-let freed = await cells.free(<runtime.CellServiceFreeRequest>{
-    cellName
-});
-helpers.print(freed)
+mod cell_service;

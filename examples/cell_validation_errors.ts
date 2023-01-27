@@ -1,5 +1,5 @@
 // [ Free ]
-import * as runtime from "../auraescript/gen/runtime.ts";
+import * as runtime from "../auraescript/gen/cells.ts";
 
 const cells = new runtime.CellServiceClient();
 

@@ -30,27 +30,21 @@
 
 syntax = "proto3";
 
-package aurae.runtime.v0;
+package aurae.cells.v0;
 
-option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/runtime;runtimev0";
+option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/cells;cellsv0";
 
-/// Runtime
+/// Cells
 /// ===
 ///
-/// The Runtime API is a resource-oriented set of services.
+/// The Cells API is a resource-oriented set of services.
 /// Resource type API modelled after the "Resource-oriented design" shared by
 /// Source: https://google.aip.dev/121
-
-// TODO Instance Service
-service InstanceService {}
-
-// TODO Spawn Service
-service SpawnService {}
-
-/// Runtime Verbs
+///
+/// API Verbs
 /// ===
 ///
-/// We call out a set of common verbs to the runtime subsystem.
+/// We call out a set of common verbs to the cells subsystem.
 /// These verbs should be generic enough to use for each resource
 /// added to the RPCs and services.
 ///
@@ -67,103 +61,6 @@ service SpawnService {}
 /// * Spawn      A special function that creates a child instance with inherited
 /// properties of the parent
 
-/// A pod is a higher level abstraction than Aurae cells, and to most users
-/// will look and feel like one or more "containers".
-///
-/// Pods will run an OCI compliant container image.
-///
-/// A pod is a group of one or more containers with shared network and storage.
-service PodService {
-
-  rpc Allocate(PodServiceAllocateRequest) returns (PodServiceAllocateResponse) {}
-  rpc Start(PodServiceStartRequest) returns (PodServiceStartResponse) {}
-  rpc Stop(PodServiceStopRequest) returns (PodServiceStopResponse) {}
-  rpc Free(PodServiceFreeRequest) returns (PodServiceFreeResponse) {}
-
-}
-
-
-
-message Container{
-
-  /// The name of the container.
-  string name = 1;
-
-  /// Define a remote container image.
-  ///
-  /// This should be a fully qualified URI and not a container "shortname".
-  /// The file type that is returned should be an uncompresed OCI compatible container "bundle"
-  /// as defined in the [OCI spec](https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle)
-  ///
-  /// ## Building a container bundle from an existing OCI image
-  ///
-  /// OCI "images" are effectively just tarballs. You can assemble
-  /// a bundle from an existing known image.
-  ///
-  /// ```bash
-  /// cd examples
-  /// mkdir -p aurae-busybox/rootfs
-  /// docker pull busybox
-  /// docker create --name aurae-busybox busybox
-  /// docker export aurae-busybox | tar -xfC aurae-busybox/rootfs -
-  /// cd aurae-busybox
-  /// runc spec
-  /// ```
-  ///
-  /// Aurae will default pull down am image from a remote location and save to the Aurae socket directory as follows.
-  ///
-  /// ```
-  /// $AURAE_SOCK_PATH/bundle/$NAME
-  ///```
-  ///
-  string image = 2;
-
-  /// Define a public portion of a container registry.
-  ///
-  /// Such as:
-  ///  - ghcr.io
-  ///  - https://registry.hub.docker.com
-  ///
-  /// Registry strings will be joined at runtime with the image
-  /// string such that a working container bundle path can be formed.
-  string registry = 3;
-}
-
-
-/// OCI image represents a filesystem bundle on disk using familiar parlance.
-///
-/// OCI Filesystem Bundle: https://github.com/opencontainers/runtime-spec/blob/main/bundle.md#filesystem-bundle
-message Pod{
-  /// Name is the name of the pod.
-  string name = 1;
-
-  // TODO Pod settings
-
-}
-
-/// The request to allocate a Pod.
-message PodServiceAllocateRequest{
-
-  /// A boring set of containers with shared network and disk.
-  Pod pod = 1;
-
-}
-message PodServiceAllocateResponse{}
-
-message PodServiceFreeRequest{}
-message PodServiceFreeResponse{}
-
-message PodServiceStartRequest{
-  string name = 1;
-}
-message PodServiceStartResponse{}
-
-message PodServiceStopRequest{
-  string pod_name = 1;
-  string container_name = 2;
-}
-message PodServiceStopResponse{}
-
 /// Cells is the most fundamental isolation boundary for Aurae.
 /// A cell is an isolate set of resources of the system which can be
 /// used to run workloads.
@@ -171,7 +68,6 @@ message PodServiceStopResponse{}
 /// A cell is composed of a unique cgroup namespace, and unshared kernel
 /// namespaces.
 service CellService {
-
   /// Reserve requested system resources for a new cell.
   /// For cells specifically this will allocate and reserve cgroup resources
   /// only.
@@ -189,17 +85,67 @@ service CellService {
   rpc Stop(CellServiceStopRequest) returns (CellServiceStopResponse) {}
 }
 
-/// The most primitive workload in Aurae, a standard executable process.
-message Executable {
-  string name = 1;
-  string command = 2;
-  string description = 4;
+/// An Aurae cell is a name given to Linux control groups (cgroups) that also include
+/// a name, and special pre-exec functionality that is executed from within the same context
+/// as any executables scheduled.
+///
+/// A cell must be allocated for every executable scheduled. A cell defines the resource
+/// constraints of the system to allocate for an arbitrary use case.
+message CellServiceAllocateRequest {
+  /// A smaller resource constrained section of the system.
+  Cell cell = 1;
 }
+
+/// The response after a cell has been allocated.
+message CellServiceAllocateResponse {
+  string cell_name = 1;
+
+  /// A bool that will be set to true if the cgroup was created with
+  /// cgroup v2 controller.
+  bool cgroup_v2 = 2;
+}
+
+/// Used to remove or free a cell after it has been allocated.
+message CellServiceFreeRequest {
+  string cell_name = 1;
+}
+
+/// Response after removing or freeing a cell.
+message CellServiceFreeResponse {}
+
+/// A request for starting an executable inside of a Cell.
+///
+/// This is the lowest level of raw executive functionality.
+/// Here you can define shell commands, and meta information about the command.
+/// An executable is started synchronously.
+message CellServiceStartRequest {
+  optional string cell_name = 1;
+  Executable executable = 2;
+}
+
+/// The response after starting an executable within a Cell.
+message CellServiceStartResponse {
+  /// Return a pid as an int32 based on the pid_t type
+  /// in various libc libraries.
+  int32 pid = 1;
+
+  //int32 gid = 2;     // TODO
+  //int32 uid = 3;     // TODO
+  //string user = 4;   // TODO
+  //string group = 5;  // TODO
+}
+
+/// Request to stop an executable at runtime.
+message CellServiceStopRequest {
+  optional string cell_name = 1;
+  string executable_name = 2;
+}
+
+message CellServiceStopResponse {}
 
 /// An isolation resource used to divide a system into smaller resource
 /// boundaries.
 message Cell {
-
   /// Resource parameters for control groups (cgroups)
   /// Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs)
   /// crate. See
@@ -225,64 +171,13 @@ message Cell {
 
 }
 
-/// An Aurae cell is a name given to Linux control groups (cgroups) that also include
-/// a name, and special pre-exec functionality that is executed from within the same context
-/// as any executables scheduled.
-///
-/// A cell must be allocated for every executable scheduled. A cell defines the resource
-/// constraints of the system to allocate for an arbitrary use case.
-message CellServiceAllocateRequest {
-
-  /// A smaller resource constrained section of the system.
-  Cell cell = 1;
-
+/// The most primitive workload in Aurae, a standard executable process.
+message Executable {
+  string name = 1;
+  string command = 2;
+  string description = 4;
 }
 
-/// The response after a cell has been allocated.
-message CellServiceAllocateResponse {
-  string cell_name = 1;
-
-  /// A bool that will be set to true if the cgroup was created with
-  /// cgroup v2 controller.
-  bool cgroup_v2 = 2;
-}
-
-/// Used to remove or free a cell after it has been allocated.
-message CellServiceFreeRequest {string cell_name = 1;}
-
-/// Response after removing or freeing a cell.
-message CellServiceFreeResponse {}
-
-/// A request for starting an executable inside of a Cell.
-///
-/// This is the lowest level of raw executive functionality.
-/// Here you can define shell commands, and meta information about the command.
-/// An executable is started synchronously.
-message CellServiceStartRequest {
-  optional string cell_name = 1;
-  Executable executable = 2;
-}
-
-/// The response after starting an executable within a Cell.
-message CellServiceStartResponse {
-
-  /// Return a pid as an int32 based on the pid_t type
-  /// in various libc libraries.
-  int32 pid = 1;
-
-  //int32 gid = 2;     // TODO
-  //int32 uid = 3;     // TODO
-  //string user = 4;   // TODO
-  //string group = 5;  // TODO
-}
-
-/// Request to stop an executable at runtime.
-message CellServiceStopRequest {
-  optional string cell_name = 1;
-  string executable_name = 2;
-}
-
-message CellServiceStopResponse {}
 
 // cgroup
 
