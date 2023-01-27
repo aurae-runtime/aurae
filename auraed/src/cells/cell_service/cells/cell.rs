@@ -234,7 +234,7 @@ impl CellsCache for Cell {
         children.broadcast_kill()
     }
 
-    fn entries(&self) -> Vec<&Cell> {
+    fn values(&self) -> Vec<&Cell> {
         //self.cache.iter().collect_vec()
         todo!()
     }
