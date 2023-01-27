@@ -30,7 +30,6 @@
 
 use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
 use crate::cells::cell_service::cells::cells_cache::CellsCache;
-use iter_tools::Itertools;
 use std::collections::HashMap;
 use tracing::warn;
 
@@ -246,7 +245,7 @@ impl CellsCache for Cells {
     }
 
     fn values(&self) -> Vec<&Cell> {
-        self.cache.values().by_ref().collect_vec()
+        self.cache.values().collect()
     }
 }
 

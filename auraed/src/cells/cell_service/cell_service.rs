@@ -50,7 +50,6 @@ use aurae_proto::cells::{
     CellServiceStopResponse, CellWithChildren, CpuController, CpusetController,
 };
 use backoff::backoff::Backoff;
-use iter_tools::Itertools;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -248,28 +247,42 @@ impl CellService {
             cells: cells
                 .values()
                 .iter()
-                .map(|cell| Cell {
-                    name: cell.name().to_string(),
-                    cpu: Some(CpuController {
-                        weight: cell.spec().cgroup_spec.cpu.as_ref().and_then(
-                            |cpu| cpu.weight.as_ref().map(|w| w.into_inner()),
-                        ),
-                        max: cell.spec().cgroup_spec.cpu.as_ref().and_then(
-                            |cpu| cpu.max.as_ref().map(|m| m.into_inner()),
-                        ),
-                    }),
-                    cpuset: Some(CpusetController {
-                        cpus: Some(String::from("")),
-                        mems: Some(String::from("")),
-                    }),
-                    isolate_process: cell.spec().iso_ctl.isolate_process,
-                    isolate_network: cell.spec().iso_ctl.isolate_network,
+                .map(|cell| {
+                    let cpu = cell.spec().cgroup_spec.cpu.as_ref();
+                    let cpuset = cell.spec().cgroup_spec.cpuset.as_ref();
+                    Cell {
+                        name: cell.name().to_string(),
+                        cpu: Some(CpuController {
+                            weight: cpu.and_then(|cpu| {
+                                cpu.weight.as_ref().map(|w| w.into_inner())
+                            }),
+                            max: cpu.and_then(|cpu| {
+                                cpu.max.as_ref().map(|m| m.into_inner())
+                            }),
+                        }),
+                        cpuset: Some(CpusetController {
+                            cpus: cpuset.and_then(|cpuset| {
+                                cpuset
+                                    .cpus
+                                    .as_ref()
+                                    .map(|cpus| cpus.clone().into_inner())
+                            }),
+                            mems: cpuset.and_then(|cpuset| {
+                                cpuset
+                                    .mems
+                                    .as_ref()
+                                    .map(|mems| mems.clone().into_inner())
+                            }),
+                        }),
+                        isolate_process: cell.spec().iso_ctl.isolate_process,
+                        isolate_network: cell.spec().iso_ctl.isolate_network,
+                    }
                 })
                 .map(|cell| CellWithChildren {
                     cell: Some(cell),
                     children: vec![],
                 })
-                .collect_vec(),
+                .collect(),
         })
     }
 }
@@ -376,6 +389,7 @@ mod tests {
     use crate::cells::cell_service::validation::{
         ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
     };
+    use iter_tools::Itertools;
 
     // Ignored: requires sudo, which we don't have in CI
     #[ignore]
