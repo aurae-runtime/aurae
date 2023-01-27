@@ -44,10 +44,17 @@ export GIT_PAGER = cat
 
 # Aliases
 
+# Keep all as the first command to have it be the default as per convention
 .PHONY: all
 all: install ## alias for install
 
 #------------------------------------------------------------------------------#
+
+# Notes:
+# - make will not run the same step multiple times
+# - The ideal order for cargo to reuse artifacts is build -> lint -> test
+# - Different cargo target variants (nightly is a variant) do not produce compatible artifacts
+# - Cargo's `install` artifacts are not usable for build, lint, or test (and vice versa)
 
 # Super commands
 
@@ -58,25 +65,22 @@ clean: clean-certs clean-gens clean-crates ## Clean the repo
 lint: musl proto proto-lint libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
 
 .PHONY: test
-test: musl lint libs-test auraed-test auraescript-test aer-test ## Run lints and tests (does not include ignored tests)
+test: build lint libs-test auraed-test auraescript-test aer-test ## Builds, lints, and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: musl lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
+test-all: build lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
-build: musl lint auraed-debug auraescript-debug aer-debug ## Lint and install (debug, DOES NOT TEST) 🎉
+build: musl proto proto-lint auraed-build auraescript-build aer-build lint ## Build and lint
 
 .PHONY: install
-install: musl lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
-
-.PHONY: release
-release: musl lint test auraed-release auraescript-release aer-release ## Lint, test, and install (release) 🎉
+install: musl proto proto-lint lint test auraed-debug auraescript-debug aer-debug  ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
 docs: proto docs-crates docs-stdlib docs-other docs-lint ## Assemble all the /docs for the website locally.
 
 .PHONY: prcheck
-prcheck: install lint test-all docs ## Meant to mimic the GHA checks (includes ignored tests)
+prcheck: build lint test-all docs ## Meant to mimic the GHA checks (includes ignored tests)
 
 #------------------------------------------------------------------------------#
 
@@ -164,6 +168,14 @@ auraed-test: musl proto
 auraed-test-all: musl proto
 	@sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed -- --include-ignored
 
+.PHONY: auraed-build
+auraed-build: musl proto
+	@$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed
+
+.PHONY: auraed-build-release
+auraed-build-release: musl proto
+	@$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed --release
+
 .PHONY: auraed-debug
 auraed-debug: musl proto auraed-lint
 	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
@@ -195,6 +207,14 @@ auraescript-test: proto
 auraescript-test-all: proto
 	@$(cargo) test -p auraescript -- --include-ignored
 
+.PHONY: auraescript-build
+auraescript-build: musl proto
+	@$(cargo) build -p auraescript
+
+.PHONY: auraescript-build-release
+auraescript-build-release: musl proto
+	@$(cargo) build -p auraescript --release
+
 .PHONY: auraescript-debug
 auraescript-debug: proto proto-lint auraescript-lint
 	@$(cargo) install --path ./auraescript --debug --force
@@ -221,6 +241,14 @@ aer-test: proto
 .PHONY: aer-test-all
 aer-test-all: proto
 	@$(cargo) test -p aer -- --include-ignored
+
+.PHONY: aer-build
+aer-build: musl proto
+	@$(cargo) build -p aer
+
+.PHONY: aer-build-release
+aer-build-release: musl proto
+	@$(cargo) build -p aer --release
 
 .PHONY: aer-debug
 aer-debug: proto proto-lint aer-lint
@@ -326,16 +354,16 @@ alpine: ## Creat an "alpine" OCI bundle in target
 # CI Commands
 
 .PHONY: ci-release
-ci-release: release ci-stage-release-artifacts ci-upload-release-artifacts # Stage and upload release artifacts (for CI use)
+ci-release: test auraed-build-release auraescript-build-release aer-build-release # Preps release artifacts (for CI use)
 
 .PHONY: ci-stage-release-artifacts
-ci-stage-release-artifacts: release ## Stage release artifacts (for CI use)
+ci-stage-release-artifacts: ci-release ## Preps and stages release artifacts (for CI use)
 	@mkdir -p /tmp/release
-	@cp /usr/local/cargo/bin/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
-	@cp /usr/local/cargo/bin/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
+	@cp target/$(uname_m)-unknown-linux-musl/release/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
+	@cp target/release/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
 
 .PHONY: ci-upload-release-artifacts
-ci-upload-release-artifacts: release ci-stage-release-artifacts ## Upload release artifacts to github (for CI use)
+ci-upload-release-artifacts: ci-release ci-stage-release-artifacts ## Preps, stages, and uploads release artifacts to github (for CI use)
 	gh release upload $(tag) /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
 	gh release upload $(tag) /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
 
