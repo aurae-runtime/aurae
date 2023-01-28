@@ -40,22 +40,15 @@ let response = runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
         logDirectory: "/var/log",
         portMappings: cri.PortMapping[{}],
         linux: cri.LinuxPodSandboxConfig.fromPartial({
-            cgroupParent: "",
-            overhead: undefined,
-            resources: undefined,
-            securityContext: undefined,
-            sysctls: undefined
+            // cgroupParent: "",
+            // overhead: undefined,
+            // resources: undefined,
+            // securityContext: undefined,
+            // sysctls: undefined
         }),
         metadata: cri.PodSandboxMetadata.fromPartial({
-            name: "",
-            uid: "",
-            namespace: "",
-            attempt: 0,
+            name: "aurae-nginx",
         }),
-        annotations: undefined,
-        labels: undefined,
-        dnsConfig: undefined,
-        windows: undefined, // Unsupported!
     })
 })
 helpers.print(response)
