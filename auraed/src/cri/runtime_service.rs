@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::spawn_auraed_oci_to;
 use aurae_proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
@@ -55,8 +56,15 @@ use aurae_proto::cri::{
 use libcontainer;
 use libcontainer::container::builder::ContainerBuilder;
 use libcontainer::syscall::syscall::create_syscall;
+use std::path::Path;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
+
+// Top level path for all Aurae runtime pod state
+const AURAE_PODS_STATE_PATH: &str = "/var/run/aurae/pods";
+
+// Specific path for the Aurae spawn OCI bundle
+const AURAE_BUNDLE_SPAWN_PATH: &str = "/var/run/aurae/bundles/_self";
 
 #[derive(Debug, Clone)]
 pub struct RuntimeService {}
@@ -82,7 +90,7 @@ impl runtime_service_server::RuntimeService for RuntimeService {
     ) -> Result<Response<RunPodSandboxResponse>, Status> {
         let r = request.into_inner();
         let config = r.config.expect("config from pod sandbox request");
-        let _metadata = config.metadata.expect("metadata from config");
+        let metadata = config.metadata.expect("metadata from config");
         let windows = config.windows;
         if windows.is_some() {
             panic!("Windows architecture is currently unsupported.")
@@ -96,13 +104,31 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         // Create the Pod sandbox using recursive static binary auraed instead of "pause container"
         // Switch on KernelSpec (if exists) and toggle between "VM Mode" and "Container Mode"
 
-        println!("{}", config.hostname);
-
         let syscall = create_syscall();
-        let _builder = ContainerBuilder::new("".to_string(), syscall.as_ref());
-        Ok(Response::new(RunPodSandboxResponse {
-            pod_sandbox_id: "".to_string(),
-        }))
+
+        // Initialize a new container builder with the pod sandbox name as the "init" container running a recursive Auraed
+        let sandbox_id = metadata.name;
+        let builder =
+            ContainerBuilder::new(sandbox_id.clone(), syscall.as_ref());
+
+        // Spawn auraed here
+        // TODO Check if sandbox already exists?
+        spawn_auraed_oci_to(AURAE_BUNDLE_SPAWN_PATH)
+            .expect("spawning auraed sandbox");
+
+        let mut sandbox = builder
+            .with_root_path(
+                Path::new(AURAE_PODS_STATE_PATH).join(sandbox_id.clone()),
+            )
+            .expect("Setting pods directory")
+            .as_init(AURAE_BUNDLE_SPAWN_PATH)
+            .with_systemd(false)
+            .build()
+            .expect("building sandbox");
+
+        sandbox.start().expect("starting pod sandbox");
+
+        Ok(Response::new(RunPodSandboxResponse { pod_sandbox_id: sandbox_id }))
     }
 
     async fn stop_pod_sandbox(
