@@ -37,6 +37,8 @@ use std::path::Path;
 const PROC_SELF_EXE: &str = "/proc/self/exe";
 const SPAWN_CONFIG: &[u8] = include_bytes!("config.json");
 
+// TODO move output to PathBuf
+// TODO accept a OCI config from calling code (CRI has linux config that will need to be mapped to spec)
 pub fn spawn_auraed_oci_to(output: &str) -> Result<(), anyhow::Error> {
     // Here we read /proc/self/exe which will be a symbolic link to our binary.
     let auraed_path = fs::read_link(PROC_SELF_EXE)

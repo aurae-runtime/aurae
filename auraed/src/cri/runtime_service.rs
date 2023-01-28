@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::spawn_auraed_oci_to;
 use aurae_proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
@@ -53,10 +54,29 @@ use aurae_proto::cri::{
 };
 #[allow(unused_imports)]
 use libcontainer;
+use libcontainer::container::builder::ContainerBuilder;
+use libcontainer::syscall::syscall::create_syscall;
+use std::path::Path;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 
+// The string to refer to the nested runtime spaces for recursive Auraed environments.
+const AURAE_SELF_IDENTIFIER: &str = "_aurae";
+
+// Top level path for all Aurae runtime pod state
+const AURAE_PODS_PATH: &str = "/var/run/aurae/pods";
+
+// Specific path for the Aurae spawn OCI bundle
+const AURAE_BUNDLE_PATH: &str = "/var/run/aurae/bundles";
+
+#[derive(Debug, Clone)]
 pub struct RuntimeService {}
+
+impl RuntimeService {
+    pub fn new() -> Self {
+        RuntimeService {}
+    }
+}
 
 #[tonic::async_trait]
 impl runtime_service_server::RuntimeService for RuntimeService {
@@ -69,9 +89,54 @@ impl runtime_service_server::RuntimeService for RuntimeService {
 
     async fn run_pod_sandbox(
         &self,
-        _request: Request<RunPodSandboxRequest>,
+        request: Request<RunPodSandboxRequest>,
     ) -> Result<Response<RunPodSandboxResponse>, Status> {
-        todo!()
+        let r = request.into_inner();
+        let config = r.config.expect("config from pod sandbox request");
+        let metadata = config.metadata.expect("metadata from config");
+        let windows = config.windows;
+        if windows.is_some() {
+            panic!("Windows architecture is currently unsupported.")
+        }
+        let _linux = config.linux.expect("linux from pod sandbox config");
+
+        // TODO render _linux config onto "OCI spec" and pass to spawn_auraed_oci_to()
+        // TODO Switch on "KernelSpec" which is a field that we will add to the RunPodSandboxRequest message
+        // TODO Switch on "WASM" which is a field that we will add to the RunPodSandboxRequest
+        // TODO We made the decision to create a "KernelSpec" *name structure that will be how we distinguish between VMs and Containers
+
+        // Create the Pod sandbox using recursive static binary auraed instead of "pause container"
+        // Switch on KernelSpec (if exists) and toggle between "VM Mode" and "Container Mode"
+
+        let syscall = create_syscall();
+
+        // Initialize a new container builder with the AURAE_SELF_IDENTIFIER name as the "init" container running a recursive Auraed
+        let builder = ContainerBuilder::new(
+            AURAE_SELF_IDENTIFIER.to_string(),
+            syscall.as_ref(),
+        );
+
+        // Spawn auraed here
+        // TODO Check if sandbox already exists?
+        let _spawned = spawn_auraed_oci_to(
+            Path::new(AURAE_BUNDLE_PATH)
+                .join(AURAE_SELF_IDENTIFIER)
+                .to_str()
+                .expect("recursive path"),
+        );
+
+        let sandbox_id = metadata.name;
+        let mut sandbox = builder
+            .with_root_path(Path::new(AURAE_PODS_PATH).join(sandbox_id.clone()))
+            .expect("Setting pods directory")
+            .as_init(Path::new(AURAE_BUNDLE_PATH).join(AURAE_SELF_IDENTIFIER))
+            .with_systemd(false)
+            .build()
+            .expect("building sandbox");
+
+        sandbox.start().expect("starting pod sandbox");
+
+        Ok(Response::new(RunPodSandboxResponse { pod_sandbox_id: sandbox_id }))
     }
 
     async fn stop_pod_sandbox(

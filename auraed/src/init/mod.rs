@@ -101,6 +101,7 @@ impl Context {
     fn get(nested: bool) -> Self {
         // TODO: Manage nested bool without passing --nested
         let in_cgroup = in_new_cgroup_namespace();
+        println!("BRO THE in_cgroup VALUE: {:?}", in_cgroup);
         if in_cgroup && !nested {
             // If we are in a container, we should always run this setup no matter pid 1 or not
             Self::Container
@@ -118,7 +119,9 @@ impl Context {
 // Here we have bespoke "in_container" logic that will check and see if we
 // are executing inside an Aurae pod container.
 //
-// Auraed container: /proc/self/cgroup: 0::/
+// Note: All of the contents of the "cgroup" files in procfs end with a trailing \n newline byte
+//
+// Auraed container: /proc/self/cgroup: 0::/_aurae
 // Auraed cell     : /proc/self/cgroup: 0::/../../../ae-1/_
 // Systemd init    : /proc/self/cgroup: 0::/init.scope
 // User slice      : /proc/self/cgroup: 0::/user.slice/user-1000.slice/session-3.scope
@@ -141,6 +144,8 @@ fn in_new_cgroup_namespace() -> bool {
         .read_to_string(&mut contents)
         .expect("reading /proc/self/cgroup");
 
+    println!("/proc/self/cgroup contents: {:?}", contents.clone());
+
     // Here we examine the last few bytes of /proc/self/cgroup
     // We know if the cgroup string ends with a \n newline
     // as well as a / as in "0::/" we are in a new (and nested)
@@ -154,5 +159,7 @@ fn in_new_cgroup_namespace() -> bool {
     // Therefore we would expect Aurae cells to also match this
     // pattern.
     //
-    contents.to_string().ends_with("/\n")
+    contents.to_string().ends_with("_aurae\n")
+    // TODO Use the AURAE_SELF_IDENTIFIER const as currently defined in runtime_service.rs
+    // TODO Consider moving the const to a better home :)
 }

@@ -86,6 +86,8 @@ impl GracefulShutdown {
             .set_not_serving::<DiscoveryServiceServer<DiscoveryService>>()
             .await;
 
+        // health_reporter.set_not_serving::<PodServiceServer<PodService>>().await;
+
         self.shutdown_broadcaster.send_replace(());
         // wait for all subscribers to drop
         self.shutdown_broadcaster.closed().await;

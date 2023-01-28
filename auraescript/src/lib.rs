@@ -79,11 +79,22 @@ pub fn init() -> JsRuntime {
     })
 }
 
+/// Standard Library Autogeneration Code
+///
+/// To add an auto generated package to AuraeScript it MUST
+/// be defined in this function.
+///
+/// Add a similar line to the function for each newly implemented
+/// service.
+///
+/// ops.extend(my_package::op_decls());
+///
 fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
     ops.extend(cells::op_decls());
     ops.extend(discovery::op_decls());
     ops.extend(health::op_decls());
+    ops.extend(cri::op_decls());
     ops
 }
 
