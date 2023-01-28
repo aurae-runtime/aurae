@@ -34,5 +34,28 @@ import * as cri from "../auraescript/gen/cri.ts";
 // Start working on pods_service with CRI
 let runtime = new cri.RuntimeServiceClient();
 
-let response = runtime.runPodSandbox(<cri.RunPodSandboxRequest>{})
+let response = runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
+    config: cri.PodSandboxConfig.fromPartial({
+        hostname: "nova",
+        logDirectory: "/var/log",
+        portMappings: cri.PortMapping[{}],
+        linux: cri.LinuxPodSandboxConfig.fromPartial({
+            cgroupParent: "",
+            overhead: undefined,
+            resources: undefined,
+            securityContext: undefined,
+            sysctls: undefined
+        }),
+        metadata: cri.PodSandboxMetadata.fromPartial({
+            name: "",
+            uid: "",
+            namespace: "",
+            attempt: 0,
+        }),
+        annotations: undefined,
+        labels: undefined,
+        dnsConfig: undefined,
+        windows: undefined, // Unsupported!
+    })
+})
 helpers.print(response)

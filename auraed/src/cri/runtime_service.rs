@@ -78,12 +78,31 @@ impl runtime_service_server::RuntimeService for RuntimeService {
 
     async fn run_pod_sandbox(
         &self,
-        _request: Request<RunPodSandboxRequest>,
+        request: Request<RunPodSandboxRequest>,
     ) -> Result<Response<RunPodSandboxResponse>, Status> {
-        println!("RUN POD LEFT OFF HERE");
+        let r = request.into_inner();
+        let config = r.config.expect("config from pod sandbox request");
+        let _metadata = config.metadata.expect("metadata from config");
+        let windows = config.windows;
+        if windows.is_some() {
+            panic!("Windows architecture is currently unsupported.")
+        }
+        let _linux = config.linux.expect("linux from pod sandbox config");
+
+        // TODO Switch on "KernelSpec" which is a field that we will add to the RunPodSandboxRequest message
+        // TODO We made the decision to create a "KernelSpec" *name structure that will be how we distinguish between VMs and Containers
+        // TODO Switch on "WASM" which is a field that we will add to the RunPodSandboxRequest
+
+        // Create the Pod sandbox using recursive static binary auraed instead of "pause container"
+        // Switch on KernelSpec (if exists) and toggle between "VM Mode" and "Container Mode"
+
+        println!("{}", config.hostname);
+
         let syscall = create_syscall();
         let _builder = ContainerBuilder::new("".to_string(), syscall.as_ref());
-        todo!()
+        Ok(Response::new(RunPodSandboxResponse {
+            pod_sandbox_id: "".to_string(),
+        }))
     }
 
     async fn stop_pod_sandbox(
