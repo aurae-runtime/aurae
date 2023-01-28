@@ -87,9 +87,8 @@ pub fn init() -> JsRuntime {
 /// Add a similar line to the function for each newly implemented
 /// service.
 ///
-/// ```
 /// ops.extend(my_package::op_decls());
-/// ```
+///
 fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
     ops.extend(cells::op_decls());
