@@ -28,18 +28,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-<<<<<<< HEAD
 use crate::{cells::CellService, discovery::DiscoveryService};
-=======
-use crate::{discovery::DiscoveryService, runtime::CellService};
->>>>>>> b60ccc1 (Remove runtime.pod_service)
 use aurae_proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
-<<<<<<< HEAD
-=======
-    runtime::cell_service_server::CellServiceServer,
->>>>>>> b60ccc1 (Remove runtime.pod_service)
 };
 use std::borrow::BorrowMut;
 use tokio::{
@@ -93,10 +85,8 @@ impl GracefulShutdown {
         health_reporter
             .set_not_serving::<DiscoveryServiceServer<DiscoveryService>>()
             .await;
-<<<<<<< HEAD
-=======
+
         // health_reporter.set_not_serving::<PodServiceServer<PodService>>().await;
->>>>>>> b60ccc1 (Remove runtime.pod_service)
 
         self.shutdown_broadcaster.send_replace(());
         // wait for all subscribers to drop

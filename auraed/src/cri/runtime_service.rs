@@ -81,6 +81,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         _request: Request<RunPodSandboxRequest>,
     ) -> Result<Response<RunPodSandboxResponse>, Status> {
         println!("RUN POD LEFT OFF HERE");
+        let syscall = create_syscall();
+        let _builder = ContainerBuilder::new("".to_string(), syscall.as_ref());
         todo!()
     }
 
