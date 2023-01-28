@@ -100,9 +100,10 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         }
         let _linux = config.linux.expect("linux from pod sandbox config");
 
+        // TODO render _linux config onto "OCI spec" and pass to spawn_auraed_oci_to()
         // TODO Switch on "KernelSpec" which is a field that we will add to the RunPodSandboxRequest message
-        // TODO We made the decision to create a "KernelSpec" *name structure that will be how we distinguish between VMs and Containers
         // TODO Switch on "WASM" which is a field that we will add to the RunPodSandboxRequest
+        // TODO We made the decision to create a "KernelSpec" *name structure that will be how we distinguish between VMs and Containers
 
         // Create the Pod sandbox using recursive static binary auraed instead of "pause container"
         // Switch on KernelSpec (if exists) and toggle between "VM Mode" and "Container Mode"
