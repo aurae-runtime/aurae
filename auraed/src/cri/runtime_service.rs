@@ -117,13 +117,12 @@ impl runtime_service_server::RuntimeService for RuntimeService {
 
         // Spawn auraed here
         // TODO Check if sandbox already exists?
-        spawn_auraed_oci_to(
+        let _spawned = spawn_auraed_oci_to(
             Path::new(AURAE_BUNDLE_PATH)
                 .join(AURAE_SELF_IDENTIFIER)
                 .to_str()
                 .expect("recursive path"),
-        )
-        .expect("spawning auraed sandbox");
+        );
 
         let sandbox_id = metadata.name;
         let mut sandbox = builder

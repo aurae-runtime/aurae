@@ -40,7 +40,7 @@ let response = runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
         logDirectory: "/var/log",
         portMappings: cri.PortMapping[{}],
         linux: cri.LinuxPodSandboxConfig.fromPartial({
-            // cgroupParent: "",
+             cgroupParent: "",
             // overhead: undefined,
             // resources: undefined,
             // securityContext: undefined,
