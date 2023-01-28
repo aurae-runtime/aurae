@@ -101,7 +101,6 @@ impl Context {
     fn get(nested: bool) -> Self {
         // TODO: Manage nested bool without passing --nested
         let in_cgroup = in_new_cgroup_namespace();
-        println!("BRO THE in_cgroup VALUE: {:?}", in_cgroup);
         if in_cgroup && !nested {
             // If we are in a container, we should always run this setup no matter pid 1 or not
             Self::Container
@@ -143,8 +142,6 @@ fn in_new_cgroup_namespace() -> bool {
     let _ = reader
         .read_to_string(&mut contents)
         .expect("reading /proc/self/cgroup");
-
-    println!("/proc/self/cgroup contents: {:?}", contents.clone());
 
     // Here we examine the last few bytes of /proc/self/cgroup
     // We know if the cgroup string ends with a \n newline
