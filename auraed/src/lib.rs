@@ -63,6 +63,7 @@
 #![allow(dead_code)]
 
 use crate::cri::runtime_service::RuntimeService;
+use crate::spawn::default_spawn_oci_spec;
 use crate::{
     cells::CellService, discovery::DiscoveryService, init::SocketStream,
     spawn::spawn_auraed_oci_to,
@@ -161,7 +162,13 @@ pub async fn daemon() -> i32 {
     match &options.subcmd {
         Some(SubCommands::Spawn { output }) => {
             info!("Spawning Auraed OCI bundle: {}", output);
-            spawn_auraed_oci_to(output).expect("spawning");
+            spawn_auraed_oci_to(
+                output,
+                default_spawn_oci_spec()
+                    .build()
+                    .expect("building default oci spec"),
+            )
+            .expect("spawning");
             return EXIT_OKAY;
         }
         None => {}

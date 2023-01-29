@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::spawn_auraed_oci_to;
+use crate::{default_spawn_oci_spec, spawn_auraed_oci_to};
 use aurae_proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
@@ -117,12 +117,17 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         );
 
         // Spawn auraed here
+        let oci_spec = default_spawn_oci_spec();
+
+        // TODO Add fields here
+
         // TODO Check if sandbox already exists?
         let _spawned = spawn_auraed_oci_to(
             Path::new(AURAE_BUNDLE_PATH)
                 .join(AURAE_SELF_IDENTIFIER)
                 .to_str()
                 .expect("recursive path"),
+            oci_spec.build().expect("building pod oci spec"),
         );
 
         let sandbox_id = metadata.name;

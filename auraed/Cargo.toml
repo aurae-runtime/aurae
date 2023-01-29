@@ -76,6 +76,9 @@ validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
 multi_log = "0.1.2"
+oci-spec = "0.6.0"
+serde.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
