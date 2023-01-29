@@ -39,7 +39,7 @@ macro_rules! proxy_if_needed {
             // we are not in the direct parent
             let child_cell_name = match &$self.parent {
                 None => $cell_name.to_root(),
-                Some(parent) => parent.to_child(&$cell_name),
+                Some(parent) => parent.to_child(&$cell_name).expect("child CellName"),
             };
 
             // we require that all ancestor cells exist
