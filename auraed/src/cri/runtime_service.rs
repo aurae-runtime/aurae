@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::{default_spawn_oci_spec, spawn_auraed_oci_to};
+use crate::{aurae_oci_spec_builder, spawn_auraed_oci_to};
 use aurae_proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
@@ -111,13 +111,13 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         let syscall = create_syscall();
 
         // Initialize a new container builder with the AURAE_SELF_IDENTIFIER name as the "init" container running a recursive Auraed
-        let builder = ContainerBuilder::new(
+        let sandbox_builder = ContainerBuilder::new(
             AURAE_SELF_IDENTIFIER.to_string(),
             syscall.as_ref(),
         );
 
         // Spawn auraed here
-        let oci_spec = default_spawn_oci_spec();
+        let oci_spec_builder = aurae_oci_spec_builder();
 
         // TODO Add fields here
 
@@ -127,11 +127,11 @@ impl runtime_service_server::RuntimeService for RuntimeService {
                 .join(AURAE_SELF_IDENTIFIER)
                 .to_str()
                 .expect("recursive path"),
-            oci_spec.build().expect("building pod oci spec"),
+            oci_spec_builder.build().expect("building pod oci spec"),
         );
 
         let sandbox_id = metadata.name;
-        let mut sandbox = builder
+        let mut sandbox = sandbox_builder
             .with_root_path(Path::new(AURAE_PODS_PATH).join(sandbox_id.clone()))
             .expect("Setting pods directory")
             .as_init(Path::new(AURAE_BUNDLE_PATH).join(AURAE_SELF_IDENTIFIER))

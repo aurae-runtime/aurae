@@ -33,6 +33,7 @@ use std::fs;
 use std::fs::Permissions;
 use std::os::unix::prelude::PermissionsExt;
 use std::path::Path;
+use oci_spec::runtime::SpecBuilder;
 
 const PROC_SELF_EXE: &str = "/proc/self/exe";
 //const SPAWN_CONFIG: &[u8] = include_bytes!("config.json");
@@ -112,7 +113,24 @@ pub fn spawn_auraed_oci_to(
     Ok(())
 }
 
-pub fn default_spawn_oci_spec() -> oci_spec::runtime::SpecBuilder {
+//     Spec{
+//         version: "".to_string(),
+//         root: None,
+//         mounts: None,
+//         process: None,
+//         hostname: None,
+//         domainname: None,
+//         hooks: None,
+//         annotations: None,
+//         linux: None,
+//         solaris: None,
+//         windows: None,
+//         vm: None,
+//         uid_mappings: None,
+//         gid_mappings: None
+//     };
+pub fn aurae_oci_spec_builder() -> SpecBuilder {
     // TODO Add default fields
-    oci_spec::runtime::SpecBuilder::default()
+    SpecBuilder::default()
+    .version("1.0.2-dev")
 }

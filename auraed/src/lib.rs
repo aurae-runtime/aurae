@@ -63,7 +63,6 @@
 #![allow(dead_code)]
 
 use crate::cri::runtime_service::RuntimeService;
-use crate::spawn::default_spawn_oci_spec;
 use crate::{
     cells::CellService, discovery::DiscoveryService, init::SocketStream,
     spawn::spawn_auraed_oci_to,
@@ -81,6 +80,7 @@ use tokio::io::AsyncWrite;
 use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace};
+use crate::spawn::aurae_oci_spec_builder;
 
 mod cells;
 mod cri;
@@ -164,7 +164,7 @@ pub async fn daemon() -> i32 {
             info!("Spawning Auraed OCI bundle: {}", output);
             spawn_auraed_oci_to(
                 output,
-                default_spawn_oci_spec()
+                aurae_oci_spec_builder()
                     .build()
                     .expect("building default oci spec"),
             )
