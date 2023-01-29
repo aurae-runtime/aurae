@@ -29,7 +29,11 @@
 \* -------------------------------------------------------------------------- */
 
 use aurae_proto::cri::PodSandboxConfig;
-use oci_spec::runtime::{Capability, LinuxRlimitBuilder, LinuxRlimitType};
+use oci_spec::runtime::{
+    Capability, LinuxBuilder, LinuxDeviceCgroupBuilder, LinuxNamespaceBuilder,
+    LinuxNamespaceType, LinuxResourcesBuilder, LinuxRlimitBuilder,
+    LinuxRlimitType,
+};
 use oci_spec::runtime::{
     LinuxCapabilitiesBuilder, MountBuilder, ProcessBuilder, RootBuilder, Spec,
     SpecBuilder, UserBuilder,
@@ -175,6 +179,48 @@ impl AuraeOCIBuilder {
                 )
                 .hostname("aurae")
                 .annotations(HashMap::default())
+                .linux(LinuxBuilder::default()
+                    .resources(LinuxResourcesBuilder::default()
+                        .devices(vec![LinuxDeviceCgroupBuilder::default()
+                            .allow(false)
+                            .access("rwm".to_string())
+                            .build().expect("default oci: linux.resources.device")])
+                        .build().expect("default oci: linux.resources"))
+                    .namespaces(vec![
+                        LinuxNamespaceBuilder::default()
+                        .typ(LinuxNamespaceType::Pid)
+                        .build().expect("default oci: linux.namespaces"),
+                        LinuxNamespaceBuilder::default()
+                            .typ(LinuxNamespaceType::Network)
+                            .build().expect("default oci: linux.namespaces"),
+                        LinuxNamespaceBuilder::default()
+                            .typ(LinuxNamespaceType::Ipc)
+                            .build().expect("default oci: linux.namespaces"),
+                        LinuxNamespaceBuilder::default()
+                            .typ(LinuxNamespaceType::Uts)
+                            .build().expect("default oci: linux.namespaces"),
+                        LinuxNamespaceBuilder::default()
+                            .typ(LinuxNamespaceType::Mount)
+                            .build().expect("default oci: linux.namespaces"),
+                    ])
+                    .masked_paths(vec![
+                                "/proc/acpi".to_string(),
+                                "/proc/asound".to_string(),
+                                "/proc/kcore".to_string(),
+                                "/proc/keys".to_string(),
+                                "/proc/latency_stats".to_string(),
+                                "/proc/timer_list".to_string(),
+                                "/sys/firmware".to_string(),
+                                "/proc/scsi".to_string(),
+                    ])
+                    .readonly_paths(vec![
+                              "/proc/bus".to_string(),
+                                "/proc/fs".to_string(),
+                                "/proc/irq".to_string(),
+                                "/proc/sys".to_string(),
+                                "/proc/sysrq-trigger".to_string(),
+                    ]       )
+                    .build().expect("default oci: linux"))
         }
     }
     pub fn overload_pod_sandbox_config(
@@ -189,54 +235,3 @@ impl AuraeOCIBuilder {
         self.spec_builder.build()
     }
 }
-
-//   "hostname": "aurae",
-//   "annotations": {},
-//   "linux": {
-//     "resources": {
-//       "devices": [
-//         {
-//           "allow": false,
-//           "type": null,
-//           "major": null,
-//           "minor": null,
-//           "access": "rwm"
-//         }
-//       ]
-//     },
-//     "namespaces": [
-//       {
-//         "type": "pid"
-//       },
-//       {
-//         "type": "network"
-//       },
-//       {
-//         "type": "ipc"
-//       },
-//       {
-//         "type": "uts"
-//       },
-//       {
-//         "type": "mount"
-//       }
-//     ],
-//     "maskedPaths": [
-//       "/proc/acpi",
-//       "/proc/asound",
-//       "/proc/kcore",
-//       "/proc/keys",
-//       "/proc/latency_stats",
-//       "/proc/timer_list",
-//       "/sys/firmware",
-//       "/proc/scsi"
-//     ],
-//     "readonlyPaths": [
-//       "/proc/bus",
-//       "/proc/fs",
-//       "/proc/irq",
-//       "/proc/sys",
-//       "/proc/sysrq-trigger"
-//     ]
-//   }
-// }
