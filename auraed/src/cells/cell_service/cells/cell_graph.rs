@@ -1,15 +1,19 @@
-use super::CellInfo;
+use super::{CellName, CellSpec};
 
 #[derive(Clone)]
 pub struct GraphNode {
-    pub cell_info: Option<CellInfo>,
+    pub cell_info: Option<(CellName, CellSpec)>,
     pub children: Vec<GraphNode>,
 }
 
 impl GraphNode {
-    pub fn with_cell_info(self, cell_info: &CellInfo) -> GraphNode {
+    pub fn with_cell_info(
+        self,
+        cell_name: &CellName,
+        cell_spec: &CellSpec,
+    ) -> GraphNode {
         GraphNode {
-            cell_info: Some(cell_info.clone()),
+            cell_info: Some((cell_name.clone(), cell_spec.clone())),
             children: self.children,
         }
     }

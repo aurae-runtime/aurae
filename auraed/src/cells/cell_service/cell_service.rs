@@ -253,24 +253,26 @@ impl CellService {
 }
 
 fn map_graph_response(node: &GraphNode) -> CellGraphNode {
-    let cell_info = node
+    let (cell_name, cell_spec) = node
         .cell_info
         .as_ref()
         .expect("cell_info should be present for every non-root node");
 
     let response = CellGraphNode {
         cell: Some(Cell {
-            name: cell_info.cell_name.to_string(),
-            cpu: cell_info.cpu.as_ref().map(|cpu| CpuController {
+            name: cell_name.to_string(),
+            cpu: cell_spec.cgroup_spec.cpu.as_ref().map(|cpu| CpuController {
                 weight: cpu.weight.map(Weight::into_inner),
                 max: cpu.max.map(Limit::into_inner),
             }),
-            cpuset: cell_info.cpuset.as_ref().map(|cpuset| CpusetController {
-                cpus: cpuset.cpus.as_ref().map(|c| c.to_string()),
-                mems: cpuset.mems.as_ref().map(|m| m.to_string()),
+            cpuset: cell_spec.cgroup_spec.cpuset.as_ref().map(|cpuset| {
+                CpusetController {
+                    cpus: cpuset.cpus.as_ref().map(|c| c.to_string()),
+                    mems: cpuset.mems.as_ref().map(|m| m.to_string()),
+                }
             }),
-            isolate_network: cell_info.isolate_network,
-            isolate_process: cell_info.isolate_process,
+            isolate_network: cell_spec.iso_ctl.isolate_network,
+            isolate_process: cell_spec.iso_ctl.isolate_process,
         }),
         children: node.children.iter().map(map_graph_response).collect(),
     };

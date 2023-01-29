@@ -29,8 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cgroups::Cgroup, nested_auraed::NestedAuraed, CellInfo, CellName, CellSpec,
-    Cells, CellsCache, CellsError, GraphNode, Result,
+    cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec, Cells,
+    CellsCache, CellsError, GraphNode, Result,
 };
 use aurae_client::AuraeConfig;
 use tracing::info;
@@ -235,25 +235,14 @@ impl CellsCache for Cell {
     }
 
     fn cell_graph(&self, node: GraphNode) -> GraphNode {
-        let cgroup = self.spec().cgroup_spec.clone();
-        let iso_ctl = self.spec().iso_ctl.clone();
-
-        let cell_info = CellInfo {
-            cell_name: self.cell_name.clone(),
-            cpu: cgroup.cpu,
-            cpuset: cgroup.cpuset,
-            isolate_network: iso_ctl.isolate_network,
-            isolate_process: iso_ctl.isolate_process,
-        };
-
         let CellState::Allocated { children, .. } = &self.state else {
             return GraphNode {
-                cell_info: Some(cell_info),
+                cell_info: Some((self.cell_name.clone(), self.spec.clone())),
                 children: vec!(),
             };
         };
 
-        children.cell_graph(node.with_cell_info(&cell_info))
+        children.cell_graph(node.with_cell_info(&self.cell_name, &self.spec))
     }
 }
 
