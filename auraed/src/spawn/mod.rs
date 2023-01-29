@@ -29,11 +29,11 @@
 \* -------------------------------------------------------------------------- */
 
 use anyhow::Context;
+use oci_spec::runtime::SpecBuilder;
 use std::fs;
 use std::fs::Permissions;
 use std::os::unix::prelude::PermissionsExt;
 use std::path::Path;
-use oci_spec::runtime::SpecBuilder;
 
 const PROC_SELF_EXE: &str = "/proc/self/exe";
 //const SPAWN_CONFIG: &[u8] = include_bytes!("config.json");
@@ -131,6 +131,11 @@ pub fn spawn_auraed_oci_to(
 //     };
 pub fn aurae_oci_spec_builder() -> SpecBuilder {
     // TODO Add default fields
-    SpecBuilder::default()
-    .version("1.0.2-dev")
+    SpecBuilder::default().version("1.0.2-dev").root(
+        oci_spec::runtime::RootBuilder::default()
+            .path("rootfs")
+            .readonly(false)
+            .build()
+            .expect("root builder"),
+    )
 }
