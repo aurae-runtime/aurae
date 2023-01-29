@@ -244,7 +244,7 @@ impl CellService {
     async fn list(&self) -> Result<CellServiceListResponse> {
         let cells = self.cells.lock().await;
         let graph =
-            cells.cell_graph(&GraphNode { cell_info: None, children: vec![] });
+            cells.cell_graph(GraphNode { cell_info: None, children: vec![] });
 
         Ok(CellServiceListResponse {
             cells: graph.children.iter().map(map_graph_response).collect(),

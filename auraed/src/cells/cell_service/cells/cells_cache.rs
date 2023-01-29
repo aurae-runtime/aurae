@@ -64,5 +64,5 @@ pub trait CellsCache {
     /// Sends a [SIGKILL] to all Cells, ignoring any errors.
     fn broadcast_kill(&mut self);
 
-    fn cell_graph(&self, node: &GraphNode) -> GraphNode;
+    fn cell_graph(&self, node: GraphNode) -> GraphNode;
 }

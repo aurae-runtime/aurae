@@ -246,9 +246,9 @@ impl CellsCache for Cells {
         self.broadcast_kill()
     }
 
-    fn cell_graph(&self, node: &GraphNode) -> GraphNode {
+    fn cell_graph(&self, node: GraphNode) -> GraphNode {
         let children: Vec<GraphNode> =
-            self.cache.values().map(|c| c.cell_graph(node)).collect();
+            self.cache.values().map(|c| c.cell_graph(node.clone())).collect();
 
         node.with_children(children)
     }

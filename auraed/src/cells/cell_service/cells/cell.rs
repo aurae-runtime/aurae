@@ -234,7 +234,7 @@ impl CellsCache for Cell {
         children.broadcast_kill()
     }
 
-    fn cell_graph(&self, node: &GraphNode) -> GraphNode {
+    fn cell_graph(&self, node: GraphNode) -> GraphNode {
         let cgroup = self.spec().cgroup_spec.clone();
         let iso_ctl = self.spec().iso_ctl.clone();
 
@@ -253,7 +253,7 @@ impl CellsCache for Cell {
             };
         };
 
-        children.cell_graph(&node.with_cell_info(&cell_info))
+        children.cell_graph(node.with_cell_info(&cell_info))
     }
 }
 
