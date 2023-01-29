@@ -28,6 +28,30 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub mod image_service;
-pub mod oci;
-pub mod runtime_service;
+use aurae_proto::cri::PodSandboxConfig;
+use oci_spec::runtime::{Spec, SpecBuilder};
+use oci_spec::OciSpecError;
+
+pub struct AuraeOCIBuilder {
+    spec_builder: SpecBuilder,
+}
+
+impl AuraeOCIBuilder {
+    pub fn new() -> AuraeOCIBuilder {
+        AuraeOCIBuilder {
+            // TODO Port config.json to this builder
+            spec_builder: SpecBuilder::default().version("1.0.2-dev"),
+        }
+    }
+    pub fn overload_pod_sandbox_config(
+        self,
+        _config: PodSandboxConfig,
+    ) -> AuraeOCIBuilder {
+        // TODO Map the Linux security context, mounts, ports, etc to the OCI spec
+        // Appends the current pod config to the SpecBuilder
+        self
+    }
+    pub fn build(self) -> Result<Spec, OciSpecError> {
+        self.spec_builder.build()
+    }
+}

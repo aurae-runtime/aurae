@@ -29,7 +29,6 @@
 \* -------------------------------------------------------------------------- */
 
 use anyhow::Context;
-use oci_spec::runtime::SpecBuilder;
 use std::fs;
 use std::fs::Permissions;
 use std::os::unix::prelude::PermissionsExt;
@@ -111,31 +110,4 @@ pub fn spawn_auraed_oci_to(
     .expect("linking /bin/auraed to /bin/init");
 
     Ok(())
-}
-
-//     Spec{
-//         version: "".to_string(),
-//         root: None,
-//         mounts: None,
-//         process: None,
-//         hostname: None,
-//         domainname: None,
-//         hooks: None,
-//         annotations: None,
-//         linux: None,
-//         solaris: None,
-//         windows: None,
-//         vm: None,
-//         uid_mappings: None,
-//         gid_mappings: None
-//     };
-pub fn aurae_oci_spec_builder() -> SpecBuilder {
-    // TODO Add default fields
-    SpecBuilder::default().version("1.0.2-dev").root(
-        oci_spec::runtime::RootBuilder::default()
-            .path("rootfs")
-            .readonly(false)
-            .build()
-            .expect("root builder"),
-    )
 }

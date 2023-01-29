@@ -28,7 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::{aurae_oci_spec_builder, spawn_auraed_oci_to};
+#[allow(unused_imports)]
+use crate::cri::oci::AuraeOCIBuilder;
+use crate::spawn_auraed_oci_to;
 use aurae_proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
@@ -52,7 +54,6 @@ use aurae_proto::cri::{
     UpdateContainerResourcesResponse, UpdateRuntimeConfigRequest,
     UpdateRuntimeConfigResponse, VersionRequest, VersionResponse,
 };
-#[allow(unused_imports)]
 use libcontainer;
 use libcontainer::container::builder::ContainerBuilder;
 use libcontainer::syscall::syscall::create_syscall;
@@ -87,47 +88,50 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         todo!()
     }
 
+    /// Run a pod with the Aurae runtime daemon.
     async fn run_pod_sandbox(
         &self,
         request: Request<RunPodSandboxRequest>,
     ) -> Result<Response<RunPodSandboxResponse>, Status> {
+        // Handle Request
         let r = request.into_inner();
+        // Handle Config
         let config = r.config.expect("config from pod sandbox request");
-        let metadata = config.metadata.expect("metadata from config");
-        let windows = config.windows;
+        // Check for Windows config (currently unsupported)
+        let windows = config.clone().windows;
         if windows.is_some() {
-            panic!("Windows architecture is currently unsupported.")
+            panic!("Windows architecture is currently unsupported.") // TODO Unsure if we want to panic here?
         }
-        let _linux = config.linux.expect("linux from pod sandbox config");
+        // Extract the metadata (name, uid, etc)
+        let metadata = config.clone().metadata.expect("metadata from config");
+        // Extract the Linux config (OCI and runtime parameters, security context, etc)
+        let _linux =
+            config.clone().linux.expect("linux from pod sandbox config");
+        let oci_builder =
+            AuraeOCIBuilder::new().overload_pod_sandbox_config(config);
 
-        // TODO render _linux config onto "OCI spec" and pass to spawn_auraed_oci_to()
         // TODO Switch on "KernelSpec" which is a field that we will add to the RunPodSandboxRequest message
+        // TODO Switch on KernelSpec (if exists) and toggle between "VM Mode" and "Container Mode"
         // TODO Switch on "WASM" which is a field that we will add to the RunPodSandboxRequest
         // TODO We made the decision to create a "KernelSpec" *name structure that will be how we distinguish between VMs and Containers
 
         // Create the Pod sandbox using recursive static binary auraed instead of "pause container"
-        // Switch on KernelSpec (if exists) and toggle between "VM Mode" and "Container Mode"
-
-        let syscall = create_syscall();
 
         // Initialize a new container builder with the AURAE_SELF_IDENTIFIER name as the "init" container running a recursive Auraed
+        let syscall = create_syscall();
         let sandbox_builder = ContainerBuilder::new(
             AURAE_SELF_IDENTIFIER.to_string(),
             syscall.as_ref(),
         );
 
         // Spawn auraed here
-        let oci_spec_builder = aurae_oci_spec_builder();
-
-        // TODO Add fields here
-
         // TODO Check if sandbox already exists?
         let _spawned = spawn_auraed_oci_to(
             Path::new(AURAE_BUNDLE_PATH)
                 .join(AURAE_SELF_IDENTIFIER)
                 .to_str()
                 .expect("recursive path"),
-            oci_spec_builder.build().expect("building pod oci spec"),
+            oci_builder.build().expect("building pod oci spec"),
         );
 
         let sandbox_id = metadata.name;
