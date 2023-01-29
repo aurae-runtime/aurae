@@ -33,6 +33,7 @@ import * as runtime from "../auraescript/gen/cells.ts";
 
 let cells = new runtime.CellServiceClient();
 const cellName = "ae-sleeper-cell";
+const nestedCellName = "ae-sleeper-cell/nested-sleeper"
 
 // [ Allocate ]
 let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
@@ -57,8 +58,31 @@ let started = await cells.start(<runtime.CellServiceStartRequest>{
 })
 helpers.print(started)
 
-let listed = await cells.list(<runtime.CellServiceListRequest>{})
+// [ Allocate nested ]
+let nested_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
+    cell: runtime.Cell.fromPartial({
+        name: nestedCellName,
+        cpu: runtime.CpuController.fromPartial({
+            weight: 2, // Percentage of CPUs
+            max: 400 * (10 ** 3), // 0.4 seconds in microseconds
+        }),
+    })
+});
+helpers.print(nested_allocated)
 
+// [ Start nested ]
+let nested_started = await cells.start(<runtime.CellServiceStartRequest>{
+    cellName,
+    executable: runtime.Executable.fromPartial({
+        command: "/usr/bin/sleep 42",
+        description: "Sleep for 42 seconds",
+        name: "nested-sleep-42"
+    })
+})
+helpers.print(nested_started)
+
+// [ List cells ]
+let listed = await cells.list(<runtime.CellServiceListRequest>{})
 helpers.print(listed)
 
 // [ Stop ]
