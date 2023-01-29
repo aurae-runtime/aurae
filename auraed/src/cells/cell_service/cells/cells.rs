@@ -28,7 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
+use super::{
+    cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, GraphNode, Result,
+};
 use crate::cells::cell_service::cells::cells_cache::CellsCache;
 use std::collections::HashMap;
 use tracing::warn;
@@ -244,8 +246,11 @@ impl CellsCache for Cells {
         self.broadcast_kill()
     }
 
-    fn values(&self) -> Vec<&Cell> {
-        self.cache.values().collect()
+    fn cell_graph(&self, node: &GraphNode) -> GraphNode {
+        let children: Vec<GraphNode> =
+            self.cache.values().map(|c| c.cell_graph(node)).collect();
+
+        node.with_children(children)
     }
 }
 

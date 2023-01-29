@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cells::{CellName, Cells, CellsCache},
+    cells::{CellName, Cells, CellsCache, GraphNode},
     error::CellsServiceError,
     executables::Executables,
     validation::{
@@ -43,11 +43,11 @@ use aurae_client::{
     cells::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
 };
 use aurae_proto::cells::{
-    cell_service_server, Cell, CellServiceAllocateRequest,
+    cell_service_server, Cell, CellGraphNode, CellServiceAllocateRequest,
     CellServiceAllocateResponse, CellServiceFreeRequest,
     CellServiceFreeResponse, CellServiceListRequest, CellServiceListResponse,
     CellServiceStartRequest, CellServiceStartResponse, CellServiceStopRequest,
-    CellServiceStopResponse, CellWithChildren, CpuController, CpusetController,
+    CellServiceStopResponse,
 };
 use backoff::backoff::Backoff;
 use std::sync::Arc;
@@ -242,49 +242,27 @@ impl CellService {
     #[tracing::instrument(skip(self))]
     async fn list(&self) -> Result<CellServiceListResponse> {
         let cells = self.cells.lock().await;
+        let graph =
+            cells.cell_graph(&GraphNode { cell: None, children: vec![] });
 
         Ok(CellServiceListResponse {
-            cells: cells
-                .values()
-                .iter()
-                .map(|cell| {
-                    let cpu = cell.spec().cgroup_spec.cpu.as_ref();
-                    let cpuset = cell.spec().cgroup_spec.cpuset.as_ref();
-                    Cell {
-                        name: cell.name().to_string(),
-                        cpu: Some(CpuController {
-                            weight: cpu.and_then(|cpu| {
-                                cpu.weight.as_ref().map(|w| w.into_inner())
-                            }),
-                            max: cpu.and_then(|cpu| {
-                                cpu.max.as_ref().map(|m| m.into_inner())
-                            }),
-                        }),
-                        cpuset: Some(CpusetController {
-                            cpus: cpuset.and_then(|cpuset| {
-                                cpuset
-                                    .cpus
-                                    .as_ref()
-                                    .map(|cpus| cpus.clone().into_inner())
-                            }),
-                            mems: cpuset.and_then(|cpuset| {
-                                cpuset
-                                    .mems
-                                    .as_ref()
-                                    .map(|mems| mems.clone().into_inner())
-                            }),
-                        }),
-                        isolate_process: cell.spec().iso_ctl.isolate_process,
-                        isolate_network: cell.spec().iso_ctl.isolate_network,
-                    }
-                })
-                .map(|cell| CellWithChildren {
-                    cell: Some(cell),
-                    children: vec![],
-                })
-                .collect(),
+            cells: graph.children.iter().map(map_graph_response).collect(),
         })
     }
+}
+
+fn map_graph_response(node: &GraphNode) -> CellGraphNode {
+    let response = CellGraphNode {
+        cell: Some(Cell {
+            name: node.cell.as_ref().expect("cell_name").to_string(),
+            cpu: None,
+            cpuset: None,
+            isolate_network: false,
+            isolate_process: false,
+        }),
+        children: node.children.iter().map(map_graph_response).collect(),
+    };
+    response
 }
 
 /// ### Mapping cgroup options to the Cell API
@@ -397,30 +375,25 @@ mod tests {
     async fn test_list() {
         let service = CellService::new();
 
-        let cell = ValidatedCell {
-            name: CellName::random_for_tests(),
-            cpu: Some(ValidatedCpuController { weight: None, max: None }),
-            cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
-            isolate_process: false,
-            isolate_network: false,
-        };
-        let name = cell.name.to_string();
-        let request = ValidatedCellServiceAllocateRequest { cell };
-        let result = service.allocate(request).await;
-        assert!(result.is_ok());
+        let parent_cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());
+        assert!(service
+            .allocate(allocate_request(&parent_cell_name))
+            .await
+            .is_ok());
 
-        let another_cell = ValidatedCell {
-            name: CellName::random_for_tests(),
-            cpu: Some(ValidatedCpuController { weight: None, max: None }),
-            cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
-            isolate_process: false,
-            isolate_network: false,
-        };
-        let another_name = another_cell.name.to_string();
-        let another_request =
-            ValidatedCellServiceAllocateRequest { cell: another_cell };
-        let result = service.allocate(another_request).await;
-        assert!(result.is_ok());
+        let nested_cell_name =
+            format!("{}/ae-test-{}", &parent_cell_name, uuid::Uuid::new_v4());
+        assert!(service
+            .allocate(allocate_request(&nested_cell_name))
+            .await
+            .is_ok());
+
+        let cell_without_children_name =
+            format!("ae-test-{}", uuid::Uuid::new_v4());
+        assert!(service
+            .allocate(allocate_request(&cell_without_children_name))
+            .await
+            .is_ok());
 
         let result = service.list().await;
         assert!(result.is_ok());
@@ -428,14 +401,42 @@ mod tests {
         let list = result.unwrap();
         assert_eq!(list.cells.len(), 2);
 
-        let expected_cell_names = vec![name, another_name].sort();
-        let actual_cell_names = list
+        let expected_root_cell_names =
+            vec![&parent_cell_name, &nested_cell_name].sort();
+        let actual_root_cell_names = list
             .cells
             .iter()
             .map(|c| c.cell.as_ref().unwrap().name.clone())
             .collect_vec()
             .sort();
+        assert_eq!(actual_root_cell_names, expected_root_cell_names);
 
-        assert_eq!(actual_cell_names, expected_cell_names);
+        let parent_cell = list
+            .cells
+            .iter()
+            .find(|p| p.cell.as_ref().unwrap().name.eq(&parent_cell_name));
+        assert!(parent_cell.is_some());
+
+        let expected_nested_cell_names = vec![&nested_cell_name];
+        let actual_nested_cell_names = parent_cell
+            .unwrap()
+            .children
+            .iter()
+            .map(|c| c.cell.as_ref().unwrap().name.as_str())
+            .collect_vec();
+        assert_eq!(actual_nested_cell_names, expected_nested_cell_names);
+    }
+
+    fn allocate_request(
+        cell_name: &str,
+    ) -> ValidatedCellServiceAllocateRequest {
+        let cell = ValidatedCell {
+            name: CellName::from(cell_name),
+            cpu: Some(ValidatedCpuController { weight: None, max: None }),
+            cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
+            isolate_process: false,
+            isolate_network: false,
+        };
+        ValidatedCellServiceAllocateRequest { cell }
     }
 }

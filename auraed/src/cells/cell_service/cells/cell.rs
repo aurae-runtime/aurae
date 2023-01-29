@@ -30,7 +30,7 @@
 
 use super::{
     cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec, Cells,
-    CellsCache, CellsError, Result,
+    CellsCache, CellsError, GraphNode, Result,
 };
 use aurae_client::AuraeConfig;
 use tracing::info;
@@ -234,9 +234,14 @@ impl CellsCache for Cell {
         children.broadcast_kill()
     }
 
-    fn values(&self) -> Vec<&Cell> {
-        //self.cache.iter().collect_vec()
-        todo!()
+    fn cell_graph(&self, node: &GraphNode) -> GraphNode {
+        let CellState::Allocated { children, .. } = &self.state else {
+            return GraphNode {
+                cell: Some(self.cell_name.clone()),
+                children: vec!(),
+            };
+        };
+        children.cell_graph(&node.with_cell_name(&self.cell_name))
     }
 }
 

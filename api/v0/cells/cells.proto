@@ -148,12 +148,12 @@ message CellServiceStopResponse {}
 message CellServiceListRequest {}
 
 message CellServiceListResponse {
-  repeated CellWithChildren cells = 1;
+  repeated CellGraphNode cells = 1;
 }
 
-message CellWithChildren {
+message CellGraphNode {
   Cell cell = 1;
-  repeated Cell children = 2;
+  repeated CellGraphNode children = 2;
 }
 
 /// An isolation resource used to divide a system into smaller resource
