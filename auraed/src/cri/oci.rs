@@ -29,8 +29,13 @@
 \* -------------------------------------------------------------------------- */
 
 use aurae_proto::cri::PodSandboxConfig;
-use oci_spec::runtime::{MountBuilder, RootBuilder, Spec, SpecBuilder};
+use oci_spec::runtime::{Capability, LinuxRlimitBuilder, LinuxRlimitType};
+use oci_spec::runtime::{
+    LinuxCapabilitiesBuilder, MountBuilder, ProcessBuilder, RootBuilder, Spec,
+    SpecBuilder, UserBuilder,
+};
 use oci_spec::OciSpecError;
+use std::collections::{HashMap, HashSet};
 
 pub struct AuraeOCIBuilder {
     spec_builder: SpecBuilder,
@@ -131,7 +136,45 @@ impl AuraeOCIBuilder {
                         ])
                         .build()
                         .expect("default oci: mount /sys/fs/cgroup"),
-                ]),
+                ])
+                .process(
+                    ProcessBuilder::default()
+                        .terminal(false)
+                        .user(
+                            UserBuilder::default()
+                                .uid(0u32)
+                                .gid(0u32)
+                                .build()
+                                .expect("default oci; process.user"),
+                        )
+                        .args(vec!["init".to_string()])
+                        .env(vec![
+                            "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin".to_string(),
+                            "TERM=xterm".to_string(),
+                        ])
+                        .cwd("/")   
+                        .capabilities(LinuxCapabilitiesBuilder::default()
+                            .bounding(HashSet::from([Capability::AuditWrite, Capability::NetBindService, Capability::Kill]))
+                            .effective(HashSet::from([Capability::AuditWrite, Capability::NetBindService, Capability::Kill]))
+                            .inheritable(HashSet::from([Capability::AuditWrite, Capability::NetBindService, Capability::Kill]))
+                            .permitted(HashSet::from([Capability::AuditWrite, Capability::NetBindService, Capability::Kill]))
+                            .ambient(HashSet::from([Capability::AuditWrite, Capability::NetBindService, Capability::Kill]))
+                            .build()
+                            .expect("default oci: process.capabilities"))
+                        .rlimits(vec![
+                            LinuxRlimitBuilder::default()
+                                .typ(LinuxRlimitType::RlimitNofile)
+                                .hard(1024u32)
+                                .soft(1024u32)
+                                .build().expect("default oci: linux rlimit: RLIMIT_NOFILE"),
+                        ])
+                        .no_new_privileges(true)
+                        .build()
+                        .expect("default oci: process"),
+
+                )
+                .hostname("aurae")
+                .annotations(HashMap::default())
         }
     }
     pub fn overload_pod_sandbox_config(
@@ -147,56 +190,6 @@ impl AuraeOCIBuilder {
     }
 }
 
-//   "process": {
-//     "terminal": false,
-//     "user": {
-//       "uid": 0,
-//       "gid": 0
-//     },
-//     "args": [
-//       "init"
-//     ],
-//     "env": [
-//       "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-//       "TERM=xterm"
-//     ],
-//     "cwd": "/",
-//     "capabilities": {
-//       "bounding": [
-//         "CAP_AUDIT_WRITE",
-//         "CAP_NET_BIND_SERVICE",
-//         "CAP_KILL"
-//       ],
-//       "effective": [
-//         "CAP_AUDIT_WRITE",
-//         "CAP_NET_BIND_SERVICE",
-//         "CAP_KILL"
-//       ],
-//       "inheritable": [
-//         "CAP_AUDIT_WRITE",
-//         "CAP_NET_BIND_SERVICE",
-//         "CAP_KILL"
-//       ],
-//       "permitted": [
-//         "CAP_AUDIT_WRITE",
-//         "CAP_NET_BIND_SERVICE",
-//         "CAP_KILL"
-//       ],
-//       "ambient": [
-//         "CAP_AUDIT_WRITE",
-//         "CAP_NET_BIND_SERVICE",
-//         "CAP_KILL"
-//       ]
-//     },
-//     "rlimits": [
-//       {
-//         "type": "RLIMIT_NOFILE",
-//         "hard": 1024,
-//         "soft": 1024
-//       }
-//     ],
-//     "noNewPrivileges": true
-//   },
 //   "hostname": "aurae",
 //   "annotations": {},
 //   "linux": {
