@@ -29,6 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
+    cells::cgroups::{Limit, Weight},
     cells::{CellName, Cells, CellsCache, GraphNode},
     error::CellsServiceError,
     executables::Executables,
@@ -47,7 +48,7 @@ use aurae_proto::cells::{
     CellServiceAllocateResponse, CellServiceFreeRequest,
     CellServiceFreeResponse, CellServiceListRequest, CellServiceListResponse,
     CellServiceStartRequest, CellServiceStartResponse, CellServiceStopRequest,
-    CellServiceStopResponse,
+    CellServiceStopResponse, CpuController, CpusetController,
 };
 use backoff::backoff::Backoff;
 use std::sync::Arc;
@@ -243,7 +244,7 @@ impl CellService {
     async fn list(&self) -> Result<CellServiceListResponse> {
         let cells = self.cells.lock().await;
         let graph =
-            cells.cell_graph(&GraphNode { cell: None, children: vec![] });
+            cells.cell_graph(&GraphNode { cell_info: None, children: vec![] });
 
         Ok(CellServiceListResponse {
             cells: graph.children.iter().map(map_graph_response).collect(),
@@ -252,13 +253,24 @@ impl CellService {
 }
 
 fn map_graph_response(node: &GraphNode) -> CellGraphNode {
+    let cell_info = node
+        .cell_info
+        .as_ref()
+        .expect("cell_info should be present for every non-root node");
+
     let response = CellGraphNode {
         cell: Some(Cell {
-            name: node.cell.as_ref().expect("cell_name").to_string(),
-            cpu: None,
-            cpuset: None,
-            isolate_network: false,
-            isolate_process: false,
+            name: cell_info.cell_name.to_string(),
+            cpu: cell_info.cpu.as_ref().map(|cpu| CpuController {
+                weight: cpu.weight.map(Weight::into_inner),
+                max: cpu.max.map(Limit::into_inner),
+            }),
+            cpuset: cell_info.cpuset.as_ref().map(|cpuset| CpusetController {
+                cpus: cpuset.cpus.as_ref().map(|c| c.to_string()),
+                mems: cpuset.mems.as_ref().map(|m| m.to_string()),
+            }),
+            isolate_network: cell_info.isolate_network,
+            isolate_process: cell_info.isolate_process,
         }),
         children: node.children.iter().map(map_graph_response).collect(),
     };
