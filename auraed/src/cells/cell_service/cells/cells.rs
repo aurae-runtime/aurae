@@ -271,11 +271,14 @@ impl CellsCache for Cells {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_helpers::*;
 
-    // Ignored: requires sudo, which we don't have in CI
-    #[ignore]
     #[test]
     fn test_allocate() {
+        skip_if_not_root!("test_allocate");
+        // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
+        skip_if_seccomp!("test_cant_unfree");
+
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
@@ -286,10 +289,12 @@ mod tests {
         assert!(cells.cache.contains_key(&cell_name));
     }
 
-    // Ignored: requires sudo, which we don't have in CI
-    #[ignore]
     #[test]
     fn test_duplicate_allocate_is_error() {
+        skip_if_not_root!("test_duplicate_allocate_is_error");
+        // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
+        skip_if_seccomp!("test_cant_unfree");
+
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
@@ -307,10 +312,12 @@ mod tests {
         ));
     }
 
-    // Ignored: requires sudo, which we don't have in CI
-    #[ignore]
     #[test]
     fn test_get() {
+        skip_if_not_root!("test_get");
+        // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
+        skip_if_seccomp!("test_get");
+
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
@@ -336,10 +343,12 @@ mod tests {
         ));
     }
 
-    // Ignored: requires sudo, which we don't have in CI
-    #[ignore]
     #[test]
     fn test_free() {
+        skip_if_not_root!("test_free");
+        // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
+        skip_if_seccomp!("test_free");
+
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 

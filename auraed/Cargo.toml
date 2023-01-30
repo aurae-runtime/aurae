@@ -57,7 +57,7 @@ libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-libco
 liboci-cli = "0.0.4"
 log = "0.4.17"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
-nix = { version = "0.26.1", features = ["sched"] }
+nix = { workspace = true, features = ["sched"] }
 ocipkg = "0.2.8"
 procfs = "0.14.2"
 rtnetlink = "0.11.0"
@@ -79,3 +79,4 @@ multi_log = "0.1.2"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
+test-helpers = { workspace = true }
