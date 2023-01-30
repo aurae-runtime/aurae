@@ -24,10 +24,22 @@ impl CellName {
         Self(PathBuf::from(root.as_os_str()))
     }
 
-    pub fn to_child(&self, descendant: &CellName) -> CellName {
-        assert!(descendant.0.starts_with(self.0.as_path()));
-        let path = self.0.join(descendant.to_root().0);
-        Self(path)
+    pub fn to_child(&self, descendant: &CellName) -> Option<CellName> {
+        if descendant.is_child(Some(self)) {
+            return Some(descendant.clone());
+        }
+
+        let mut path = &*descendant.0;
+        while let Some(parent_path) = path.parent() {
+            let descendant = CellName(parent_path.to_path_buf());
+            if descendant.is_child(Some(self)) {
+                return Some(descendant);
+            } else {
+                path = parent_path
+            }
+        }
+
+        None
     }
 
     pub fn is_child(&self, parent: Option<&CellName>) -> bool {
@@ -96,5 +108,102 @@ impl Display for CellName {
 impl From<&str> for CellName {
     fn from(x: &str) -> Self {
         CellName(x.into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_leaf_top_level() {
+        const CELL_NAME: &str = "top-level-cell";
+
+        let cell_name =
+            CellName::validate(Some(CELL_NAME.into()), "test", None)
+                .expect("failed to create valid cell name");
+
+        assert_eq!(cell_name.leaf(), CELL_NAME);
+    }
+
+    #[test]
+    fn test_leaf_nested_level() {
+        let cell_name = CellName::validate(
+            Some("grandparent-cell/parent-cell/child-cell".into()),
+            "test",
+            None,
+        )
+        .expect("failed to create valid cell name");
+
+        assert_eq!(cell_name.leaf(), "child-cell");
+    }
+
+    #[test]
+    fn test_to_root() {
+        let cell_name = CellName::validate(
+            Some("grandparent-cell/parent-cell/child-cell".into()),
+            "test",
+            None,
+        )
+        .expect("failed to create valid cell name");
+
+        assert_eq!(
+            cell_name.to_root(),
+            CellName(PathBuf::from_str("grandparent-cell").unwrap())
+        );
+    }
+
+    #[test]
+    fn test_is_child() {
+        let grandparent_cell_name =
+            CellName(PathBuf::from_str("grandparent-cell").unwrap());
+
+        assert!(grandparent_cell_name.is_child(None));
+
+        let parent_cell_name = CellName(
+            PathBuf::from_str("grandparent-cell/parent-cell").unwrap(),
+        );
+
+        assert!(parent_cell_name.is_child(Some(&grandparent_cell_name)));
+        assert!(!parent_cell_name.is_child(None));
+
+        let child_cell_name = CellName(
+            PathBuf::from_str("grandparent-cell/parent-cell/child-cell")
+                .unwrap(),
+        );
+
+        assert!(child_cell_name.is_child(Some(&parent_cell_name)));
+        assert!(!child_cell_name.is_child(Some(&grandparent_cell_name)));
+        assert!(!child_cell_name.is_child(None));
+    }
+
+    #[test]
+    fn test_to_child() {
+        let grandparent_cell_name =
+            CellName(PathBuf::from_str("grandparent-cell").unwrap());
+
+        let parent_cell_name = CellName(
+            PathBuf::from_str("grandparent-cell/parent-cell").unwrap(),
+        );
+
+        let child_cell_name = CellName(
+            PathBuf::from_str("grandparent-cell/parent-cell/child-cell")
+                .unwrap(),
+        );
+
+        let child_of_grandparent =
+            grandparent_cell_name.to_child(&parent_cell_name).expect(
+                "failed to create child_of_grandparent using `parent_cell_name`",
+            );
+
+        assert_eq!(child_of_grandparent, parent_cell_name);
+
+        let child_of_grandparent =
+            grandparent_cell_name.to_child(&child_cell_name).expect(
+                "failed to create child_of_grandparent using `child_cell_name`",
+            );
+
+        assert_eq!(child_of_grandparent, parent_cell_name);
     }
 }

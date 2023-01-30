@@ -168,6 +168,10 @@ auraed-test: musl proto
 auraed-test-all: musl proto
 	@sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed -- --include-ignored
 
+.PHONY: auraed-test-watch
+auraed-test-watch: musl proto # Use cargo-watch to continuously run a test (e.g. make auared-test-watch name=path::to::test)
+	@sudo -E $(cargo) watch -- $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed $(name) -- --include-ignored
+
 .PHONY: auraed-build
 auraed-build: musl proto
 	@$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed
