@@ -19,6 +19,6 @@ impl GraphNode {
     }
 
     pub fn with_children(self, children: Vec<GraphNode>) -> GraphNode {
-        GraphNode { cell_info: self.cell_info.as_ref().cloned(), children }
+        GraphNode { cell_info: self.cell_info, children }
     }
 }
