@@ -47,7 +47,7 @@ impl SystemRuntime for CellSystemRuntime {
         verbose: bool,
         socket_address: Option<String>,
     ) -> Result<SocketStream, SystemRuntimeError> {
-        println!("{}", BANNER);
+        println!("{BANNER}");
         logging::init(verbose, false)?;
         info!("Running as a cell");
         let mut default_aurae_sock_path = PathBuf::from(AURAE_RUNTIME_DIR);

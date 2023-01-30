@@ -73,7 +73,7 @@ pub(crate) fn new_x509_details(
     Ok(X509Details {
         subject_common_name,
         issuer_common_name,
-        sha256_fingerprint: format!("{:?}", sha256_fingerprint),
+        sha256_fingerprint: format!("{sha256_fingerprint:?}"),
         key_algorithm,
         phantom_data: PhantomData::default(),
     })

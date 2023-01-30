@@ -33,8 +33,8 @@
 
 use aurae_proto::observe::{
     observe_service_server::ObserveService, GetAuraeDaemonLogStreamRequest,
-    GetAuraeDaemonLogStreamResponse, GetSubProcessStreamRequest, GetSubProcessStreamResponse,
-    LogItem,
+    GetAuraeDaemonLogStreamResponse, GetSubProcessStreamRequest,
+    GetSubProcessStreamResponse, LogItem,
 };
 use std::sync::Arc;
 use tokio::sync::broadcast::Receiver;
@@ -75,20 +75,20 @@ impl ObserveService for ObserveServiceServer {
         &self,
         _request: Request<GetAuraeDaemonLogStreamRequest>,
     ) -> Result<Response<Self::GetAuraeDaemonLogStreamStream>, Status> {
-        let (tx, rx) = mpsc::channel::<Result<GetAuraeDaemonLogStreamResponse, Status>>(4);
+        let (tx, rx) =
+            mpsc::channel::<Result<GetAuraeDaemonLogStreamResponse, Status>>(4);
 
         let mut log_consumer = self.aurae_logger.subscribe();
 
         // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
         //  .. thus disabled logging here.
-        let _ = tokio::spawn(async move {
+        let _ignored = tokio::spawn(async move {
             // Log consumer will error if:
             //  the producer is closed (no more logs)
             //  the receiver is lagging
             while let Ok(log_item) = log_consumer.recv().await {
-                let resp = GetAuraeDaemonLogStreamResponse {
-                    item: Some(log_item),
-                };
+                let resp =
+                    GetAuraeDaemonLogStreamResponse { item: Some(log_item) };
                 if tx.send(Ok(resp)).await.is_err() {
                     // receiver is gone
                     break;
@@ -99,7 +99,8 @@ impl ObserveService for ObserveServiceServer {
         Ok(Response::new(ReceiverStream::new(rx)))
     }
 
-    type GetSubProcessStreamStream = ReceiverStream<Result<GetSubProcessStreamResponse, Status>>;
+    type GetSubProcessStreamStream =
+        ReceiverStream<Result<GetSubProcessStreamResponse, Status>>;
 
     async fn get_sub_process_stream(
         &self,
@@ -108,10 +109,11 @@ impl ObserveService for ObserveServiceServer {
         let requested_channel = request.get_ref().channel_type;
         let requested_pid = request.get_ref().process_id;
 
-        println!("Requested Channel {}", requested_channel);
-        println!("Requested Process ID {}", requested_pid);
+        println!("Requested Channel {requested_channel}");
+        println!("Requested Process ID {requested_pid}");
 
-        let (_tx, rx) = mpsc::channel::<Result<GetSubProcessStreamResponse, Status>>(4);
+        let (_tx, rx) =
+            mpsc::channel::<Result<GetSubProcessStreamResponse, Status>>(4);
 
         Ok(Response::new(ReceiverStream::new(rx)))
     }

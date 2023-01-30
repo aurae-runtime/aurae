@@ -64,7 +64,7 @@ pub(crate) fn setup_sriov(iface: &str, limit: u16) -> Result<(), SriovError> {
     let num = cmp::min(limit, sriov_totalvfs);
 
     fs::write(
-        format!("/sys/class/net/{}/device/sriov_numvfs", iface),
+        format!("/sys/class/net/{iface}/device/sriov_numvfs"),
         num.to_string(),
     )
     .expect("Unable to write file");
@@ -72,8 +72,5 @@ pub(crate) fn setup_sriov(iface: &str, limit: u16) -> Result<(), SriovError> {
 }
 
 fn get_sriov_capabilities(iface: &str) -> Result<String, io::Error> {
-    fs::read_to_string(format!(
-        "/sys/class/net/{}/device/sriov_totalvfs",
-        iface
-    ))
+    fs::read_to_string(format!("/sys/class/net/{iface}/device/sriov_totalvfs"))
 }
