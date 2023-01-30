@@ -47,7 +47,7 @@ impl SystemRuntime for ContainerSystemRuntime {
         verbose: bool,
         socket_address: Option<String>,
     ) -> Result<SocketStream, SystemRuntimeError> {
-        println!("{}", BANNER);
+        println!("{BANNER}");
         logging::init(verbose, true)?;
         info!("Running as a container.");
         let mut default_aurae_sock_path = PathBuf::from(AURAE_RUNTIME_DIR);

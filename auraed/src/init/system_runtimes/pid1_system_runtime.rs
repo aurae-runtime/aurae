@@ -53,8 +53,7 @@ impl Pid1SystemRuntime {
             }
             Err(e) => {
                 error!(
-                    "Failed to spawn power button device listener. Error={}",
-                    e
+                    "Failed to spawn power button device listener. Error={e}"
                 );
             }
         }
@@ -71,7 +70,7 @@ impl SystemRuntime for Pid1SystemRuntime {
         verbose: bool,
         socket_address: Option<String>,
     ) -> Result<SocketStream, SystemRuntimeError> {
-        println!("{}", BANNER);
+        println!("{BANNER}");
 
         // Initialize the PID 1 logger
         logging::init(verbose, false)?;

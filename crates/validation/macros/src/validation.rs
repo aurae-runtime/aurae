@@ -57,7 +57,7 @@ impl From<DeriveInput> for ValidateInput {
             .iter()
             .map(|field_ident| {
                 let field_validation_fn_ident = Ident::new(
-                    &format!("validate_{}", field_ident),
+                    &format!("validate_{field_ident}"),
                     field_ident.span(),
                 );
 
@@ -79,7 +79,7 @@ impl From<DeriveInput> for ValidateInput {
             .map(|f| {
                 let field_ident = f.ident.as_ref().expect("Expected named field");
                 let field_validation_fn_ident = Ident::new(
-                    &format!("validate_{}", field_ident),
+                    &format!("validate_{field_ident}"),
                     field_ident.span(),
                 );
 

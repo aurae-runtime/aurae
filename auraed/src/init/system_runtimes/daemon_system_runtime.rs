@@ -55,7 +55,7 @@ impl SystemRuntime for DaemonSystemRuntime {
         verbose: bool,
         socket_address: Option<String>,
     ) -> Result<SocketStream, SystemRuntimeError> {
-        println!("{}", BANNER);
+        println!("{BANNER}");
         logging::init(verbose, false)?;
         info!("Running as a daemon.");
 
