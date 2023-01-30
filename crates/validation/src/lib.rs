@@ -134,7 +134,7 @@ where
 pub fn field_name(field_name: &str, parent_name: Option<&str>) -> String {
     match parent_name {
         None => field_name.to_string(),
-        Some(parent_name) => format!("{}.{}", parent_name, field_name),
+        Some(parent_name) => format!("{parent_name}.{field_name}"),
     }
 }
 
