@@ -78,8 +78,8 @@ Generally follow these rules:
 - `repeated` fields should have pluralized names
 - Enums should be named `UpperCamelCase`
 - Enum variants should be `SCREAMING_SNAKE_CASE`
-- (Suggested) The zero value enum variants should have the suffix `UNSPECIFIED`
-- (Suggested) Enums should NOT be nested, and their variants should be prefixed with the enum's name
+- The zero value enum variants should have the suffix `_UNSPECIFIED`
+- Enums should NOT be nested, and their variants should be prefixed with the enum's name
 
 ```proto
 enum FooBar {
@@ -95,3 +95,5 @@ The traditional convention that is meant to reduce the likelihood of future brea
 
 - RPC methods (e.g., `StartWidget`) should have dedicated request and response messages named `StartWidgetResponse` and `StopWidgetResponse`
 - Objects (e.g., `Widget`) should be embedded directly into their corresponding `StartWidgetRequest`, `StopWidgetRequest`, etc style methods.
+
+When deciding how to represent something in the API where there is an existing lower-level API, for example in the case of [cgroups](https://docs.kernel.org/admin-guide/cgroup-v2.html), prefer to represent the fields as close to the lower-level API as possible.  While it may be more natural to represent a list of CPUs as a repeated int, we prefer to offer familiarity to those users who know the lower-level API.
