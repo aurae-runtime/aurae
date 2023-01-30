@@ -1,33 +1,5 @@
 #!/usr/bin/env bash
-# ---------------------------------------------------------------------------- #
-#        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors            #
-#                                                                              #
-#                +--------------------------------------------+                #
-#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
-#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
-#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
-#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
-#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
-#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
-#                +--------------------------------------------+                #
-#                                                                              #
-#                         Distributed Systems Runtime                          #
-#                                                                              #
-# ---------------------------------------------------------------------------- #
-#                                                                              #
-#   Licensed under the Apache License, Version 2.0 (the "License");            #
-#   you may not use this file except in compliance with the License.           #
-#   You may obtain a copy of the License at                                    #
-#                                                                              #
-#       http://www.apache.org/licenses/LICENSE-2.0                             #
-#                                                                              #
-#   Unless required by applicable law or agreed to in writing, software        #
-#   distributed under the License is distributed on an "AS IS" BASIS,          #
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
-#   See the License for the specific language governing permissions and        #
-#   limitations under the License.                                             #
-#                                                                              #
-# ---------------------------------------------------------------------------- #
+
 
 D=$(pwd)
 if [[ $D == *"hack"* ]]; then
@@ -46,7 +18,6 @@ fi
 . hack/file-definitions
 
 ### Write Scripts
-
 echo ""
 echo " [ Checking Scripts ] "
 echo ""
@@ -57,13 +28,19 @@ for FILE in $SCRIPTS; do
         continue
     fi
 
-    # Replace the actual year with DATE so we can ignore the year when checking for the license header.
-    CONTENT=$(head -n 30 $FILE | sed -E -e 's/Copyright © [0-9]+/Copyright © DATE/')
-    if [ "$CONTENT" != "$EXPECTEDSCRIPT" ]; then
-      # Replace DATE with the current year.
-      EXPECTEDSCRIPT=$(echo "$EXPECTEDSCRIPT" | sed -E -e "s/Copyright © DATE/Copyright © $(date +%Y)/")
+    if [[ $(head -c 2 "$FILE") == "#!" ]]
+    then
+      SHEBANG="$(head -n 1 "$FILE")\n"
+      SRC="$(tail -n +32 "$FILE")"
+      CONTENT=$(tail -n+2 "$FILE" | head -n 30)
+    else
+      SHEBANG=""
       SRC="$(cat $FILE)"
-		  echo -e "$EXPECTEDSCRIPT\n\n$SRC" > $FILE
+      CONTENT=$(head -n 30 $FILE)
+    fi
+
+    if [ "$CONTENT" != "$EXPECTEDSCRIPT" ]; then
+		  echo -e "$SHEBANG$EXPECTEDSCRIPT\n\n$SRC" > "$FILE"
       echo "  -> [MUTATING SOURCE FILE] Writing header: $FILE"
     fi
 
@@ -79,13 +56,19 @@ for FILE in $SOURCES; do
       continue
     fi
 
-    # Replace the actual year with DATE so we can ignore the year when checking for the license header.
-    CONTENT=$(head -n 30 $FILE | sed -E -e 's/Copyright © [0-9]+/Copyright © DATE/')
-    if [ "$CONTENT" != "$EXPECTEDSOURCE" ]; then
-      # Replace DATE with the current year.
-      EXPECTEDSOURCE=$(echo "$EXPECTEDSOURCE" | sed -E -e "s/Copyright © DATE/Copyright © $(date +%Y)/")
+    if [[ $(head -c 2 "$FILE") == "#!" ]]
+    then
+      SHEBANG="$(head -n 1 "$FILE")\n"
+      SRC="$(tail -n +31 "$FILE")"
+      CONTENT=$(tail -n+2 "$FILE" | head -n 30)
+    else
+      SHEBANG=""
       SRC="$(cat $FILE)"
-		  echo -e "$EXPECTEDSOURCE\n\n$SRC" > $FILE
+      CONTENT=$(head -n 30 $FILE)
+    fi
+
+    if [ "$CONTENT" != "$EXPECTEDSOURCE" ]; then
+		  echo -e "$SHEBANG$EXPECTEDSOURCE\n\n$SRC" > "$FILE"
       echo "  -> [MUTATING SOURCE FILE] Writing header: $FILE"
     fi
 

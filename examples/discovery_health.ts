@@ -1,6 +1,6 @@
 #!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *               Apache 2.0 License Copyright The Aurae Authors               *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,6 +28,7 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+
 import * as helpers from "../auraescript/gen/helpers.ts";
 import * as discovery from "../auraescript/gen/discovery.ts";
 

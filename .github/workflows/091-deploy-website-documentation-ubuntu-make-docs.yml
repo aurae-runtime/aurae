@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------- #
-#        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors            #
+#                Apache 2.0 License Copyright The Aurae Authors                #
 #                                                                              #
 #                +--------------------------------------------+                #
 #                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
@@ -27,7 +27,7 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-#
+
 # This will check the documentation, and deploy the https://aurae.io website
 # from the current code base upon merge -> main.
 #

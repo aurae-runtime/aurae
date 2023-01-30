@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *               Apache 2.0 License Copyright The Aurae Authors               *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -27,6 +27,7 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+
 
 use super::{Pod, PodName, PodSpec, PodsError, Result};
 use std::collections::HashMap;
