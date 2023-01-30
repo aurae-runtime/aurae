@@ -34,6 +34,7 @@ message      ?=  Default commit message. Aurae Runtime environment.
 cargo         =  cargo
 oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
+uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
 
@@ -92,8 +93,13 @@ pki: certs ## Alias for certs
 certs: clean-certs ## Generate x509 mTLS certs in /pki directory
 	mkdir -p pki
 	./hack/certgen
+ifeq ($(uid), 0)
+	mkdir -p /etc/aurae/pki
+	cp -v pki/* /etc/aurae/pki
+else
 	sudo -E mkdir -p /etc/aurae/pki
 	sudo -E cp -v pki/* /etc/aurae/pki
+endif
 	@echo "Install PKI Auth Material [/etc/aurae]"
 
 .PHONY: config
@@ -169,7 +175,7 @@ auraed-test-all: musl proto
 	@sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed -- --include-ignored
 
 .PHONY: auraed-test-watch
-auraed-test-watch: musl proto # Use cargo-watch to continuously run a test (e.g. make auared-test-watch name=path::to::test)
+auraed-test-watch: musl proto # Use cargo-watch to continuously run a test (e.g. make auraed-test-watch name=path::to::test)
 	@sudo -E $(cargo) watch -- $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed $(name) -- --include-ignored
 
 .PHONY: auraed-build
@@ -189,7 +195,7 @@ auraed-release: musl proto proto-lint auraed-lint auraed-test ## Lint, test, and
 	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --force
 
 .PHONY: start
-auraed-start: ## Starts the installed auraed executable (requires sudo)
+auraed-start: ## Starts the installed auraed executable
 	sudo -E $(HOME)/.cargo/bin/auraed
 
 #------------------------------------------------------------------------------#

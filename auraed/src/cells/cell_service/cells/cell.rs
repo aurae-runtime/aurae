@@ -258,11 +258,12 @@ impl Drop for Cell {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_helpers::*;
 
-    // Ignored: requires sudo, which we don't have in CI
-    #[ignore]
     #[test]
     fn test_cant_unfree() {
+        skip_if_not_root!("test_cant_unfree");
+
         let cell_name = CellName::random_for_tests();
         let mut cell = Cell::new(cell_name, CellSpec::new_for_tests());
         assert!(matches!(cell.state, CellState::Unallocated));
