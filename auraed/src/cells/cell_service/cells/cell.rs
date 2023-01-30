@@ -234,12 +234,9 @@ impl CellsCache for Cell {
         children.broadcast_kill()
     }
 
-    fn cell_graph(&self, node: GraphNode) -> GraphNode {
-        let CellState::Allocated { children, .. } = &self.state else {
-            return GraphNode {
-                cell_info: Some((self.cell_name.clone(), self.spec.clone())),
-                children: vec!(),
-            };
+    fn cell_graph(&mut self, node: GraphNode) -> Result<GraphNode> {
+        let CellState::Allocated { children, .. } = &mut self.state else {
+            return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
         };
 
         children.cell_graph(node.with_cell_info(&self.cell_name, &self.spec))

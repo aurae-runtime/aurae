@@ -32,6 +32,7 @@ use super::{
     cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, GraphNode, Result,
 };
 use crate::cells::cell_service::cells::cells_cache::CellsCache;
+use iter_tools::{Either, Itertools};
 use std::collections::HashMap;
 use tracing::warn;
 
@@ -107,6 +108,7 @@ impl Cells {
                 .entry(cell_name.clone())
                 .or_insert_with(|| Cell::new(cell_name, cell_spec));
 
+            // TODO: Should we remove the cell from the cache here if the call to allocate fails?
             cell.allocate()?;
 
             let cell = cell;
@@ -246,11 +248,23 @@ impl CellsCache for Cells {
         self.broadcast_kill()
     }
 
-    fn cell_graph(&self, node: GraphNode) -> GraphNode {
-        let children: Vec<GraphNode> =
-            self.cache.values().map(|c| c.cell_graph(node.clone())).collect();
+    fn cell_graph(&mut self, node: GraphNode) -> Result<GraphNode> {
+        let (valid, invalid): (Vec<_>, Vec<_>) = self
+            .cache
+            .values_mut()
+            .map(|c| c.cell_graph(node.clone()))
+            .partition_map(|r| match r {
+                Ok(n) => Either::Left(n),
+                Err(e) => Either::Right(e),
+            });
 
-        node.with_children(children)
+        for node in invalid {
+            if let CellsError::CellNotAllocated { cell_name } = node {
+                _ = self.cache.remove(&cell_name);
+            }
+        }
+
+        Ok(node.with_children(valid))
     }
 }
 
@@ -350,5 +364,79 @@ mod tests {
             cells.free(&cell_name_in),
             Err(CellsError::CellNotFound { cell_name }) if cell_name == cell_name_in
         ));
+    }
+
+    // Ignored: requires sudo, which we don't have in CI
+    #[ignore]
+    #[test]
+    fn test_cell_graph_triple_nested() {
+        let mut cells = Cells::default();
+        assert!(cells.cache.is_empty());
+
+        // Create grandparent cell
+        let grandparent_cell_name = CellName::random_for_tests();
+        let grandparent_cell = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(grandparent_cell_name.clone(), grandparent_cell)
+            .expect("failed to allocate");
+
+        // Create parent cell
+        let parent_cell_name =
+            CellName::random_nested_for_tests(&grandparent_cell_name);
+        let parent_cell = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(parent_cell_name.clone(), parent_cell)
+            .expect("failed to allocate");
+
+        // Create child cell
+        let child_cell_name =
+            CellName::random_nested_for_tests(&parent_cell_name);
+        let child_cell = CellSpec::new_for_tests();
+        let _ = cells
+            .allocate(child_cell_name.clone(), child_cell)
+            .expect("failed to allocate");
+
+        let graph =
+            cells.cell_graph(GraphNode { cell_info: None, children: vec![] });
+
+        // Validate root node
+        let GraphNode { cell_info: root_info, children: root_children } =
+            graph.unwrap();
+        assert!(root_info.is_none());
+        assert_eq!(1, root_children.len());
+
+        // Validate grandparent cell
+        let GraphNode {
+            cell_info: grandparent_cell_info,
+            children: grandparent_children,
+        } = &root_children[0];
+        assert_eq!(
+            grandparent_cell_info.as_ref().expect("should have cell_info").0,
+            grandparent_cell_name
+        );
+        assert_eq!(1, grandparent_children.len());
+
+        // Validate parent cell
+        let GraphNode {
+            cell_info: parent_cell_info,
+            children: parent_children,
+        } = &grandparent_children[0];
+        assert_eq!(
+            parent_cell_info.as_ref().expect("should have cell_info").0,
+            parent_cell_name
+        );
+        assert_eq!(1, parent_children.len());
+
+        // Validate child cell
+        let GraphNode { cell_info: child_cell_info, children: child_children } =
+            &parent_children[0];
+        assert_eq!(
+            child_cell_info.as_ref().expect("should have cell_info").0,
+            child_cell_name
+        );
+        assert_eq!(0, child_children.len());
+
+        cells.free(&grandparent_cell_name).expect("failed to free");
+        assert!(cells.cache.is_empty());
     }
 }

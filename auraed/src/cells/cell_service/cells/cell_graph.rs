@@ -1,6 +1,6 @@
 use super::{CellName, CellSpec};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GraphNode {
     pub cell_info: Option<(CellName, CellSpec)>,
     pub children: Vec<GraphNode>,
