@@ -260,7 +260,7 @@ impl CellsCache for Cells {
 
         for node in invalid {
             if let CellsError::CellNotAllocated { cell_name } = node {
-                _ = self.cache.remove(&cell_name);
+                let _ = self.cache.remove(&cell_name);
             }
         }
 

@@ -415,14 +415,16 @@ mod tests {
         let list = result.unwrap();
         assert_eq!(list.cells.len(), 2);
 
-        let expected_root_cell_names =
-            vec![&parent_cell_name, &nested_cell_name].sort();
-        let actual_root_cell_names = list
+        let mut expected_root_cell_names =
+            vec![&parent_cell_name, &cell_without_children_name];
+        expected_root_cell_names.sort();
+
+        let mut actual_root_cell_names = list
             .cells
             .iter()
-            .map(|c| c.cell.as_ref().unwrap().name.clone())
-            .collect_vec()
-            .sort();
+            .map(|c| c.cell.as_ref().unwrap().name.as_str())
+            .collect_vec();
+        actual_root_cell_names.sort();
         assert_eq!(actual_root_cell_names, expected_root_cell_names);
 
         let parent_cell = list
