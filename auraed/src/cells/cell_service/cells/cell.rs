@@ -239,7 +239,9 @@ impl CellsCache for Cell {
             return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
         };
 
-        children.cell_graph(node.with_cell_info(&self.cell_name, &self.spec))
+        children.cell_graph(
+            node.with_cell_info(self.cell_name.clone(), self.spec.clone()),
+        )
     }
 }
 

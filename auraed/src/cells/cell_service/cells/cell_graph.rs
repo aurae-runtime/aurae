@@ -9,11 +9,11 @@ pub struct GraphNode {
 impl GraphNode {
     pub fn with_cell_info(
         self,
-        cell_name: &CellName,
-        cell_spec: &CellSpec,
+        cell_name: CellName,
+        cell_spec: CellSpec,
     ) -> GraphNode {
         GraphNode {
-            cell_info: Some((cell_name.clone(), cell_spec.clone())),
+            cell_info: Some((cell_name, cell_spec)),
             children: self.children,
         }
     }
