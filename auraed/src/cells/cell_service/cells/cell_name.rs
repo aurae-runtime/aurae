@@ -71,7 +71,7 @@ impl CellName {
     pub fn random_nested_for_tests(parent: &CellName) -> Self {
         Self(PathBuf::from(format!(
             "{}/ae-test-{}",
-            parent.to_string(),
+            parent,
             uuid::Uuid::new_v4()
         )))
     }
