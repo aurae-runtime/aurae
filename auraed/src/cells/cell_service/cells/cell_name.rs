@@ -66,6 +66,15 @@ impl CellName {
     pub fn random_for_tests() -> Self {
         Self(PathBuf::from(format!("ae-test-{}", uuid::Uuid::new_v4())))
     }
+
+    #[cfg(test)]
+    pub fn random_nested_for_tests(parent: &CellName) -> Self {
+        Self(PathBuf::from(format!(
+            "{}/ae-test-{}",
+            parent,
+            uuid::Uuid::new_v4()
+        )))
+    }
 }
 
 impl ValidatedField<String> for CellName {
