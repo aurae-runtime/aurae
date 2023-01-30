@@ -439,6 +439,8 @@ mod tests {
             .map(|c| c.cell.as_ref().unwrap().name.as_str())
             .collect_vec();
         assert_eq!(actual_nested_cell_names, expected_nested_cell_names);
+
+        _ = service.free_all().await;
     }
 
     fn allocate_request(
