@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{Cell, CellName, CellSpec, Result};
+use super::{Cell, CellName, CellSpec, GraphNode, Result};
 
 pub trait CellsCache {
     /// Calls [Cell::allocate] on a new [Cell] and adds it to it's cache with key [CellName].
@@ -63,4 +63,6 @@ pub trait CellsCache {
 
     /// Sends a [SIGKILL] to all Cells, ignoring any errors.
     fn broadcast_kill(&mut self);
+
+    fn cell_graph(&mut self, node: GraphNode) -> Result<GraphNode>;
 }

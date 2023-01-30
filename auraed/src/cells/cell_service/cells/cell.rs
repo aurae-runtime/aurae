@@ -30,7 +30,7 @@
 
 use super::{
     cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec, Cells,
-    CellsCache, CellsError, Result,
+    CellsCache, CellsError, GraphNode, Result,
 };
 use aurae_client::AuraeConfig;
 use tracing::info;
@@ -172,6 +172,10 @@ impl Cell {
         &self.cell_name
     }
 
+    pub fn spec(&self) -> &CellSpec {
+        &self.spec
+    }
+
     /// Returns [None] if the [Cell] is not allocated.
     pub fn v2(&self) -> Option<bool> {
         info!("{:?}", self);
@@ -228,6 +232,16 @@ impl CellsCache for Cell {
         };
 
         children.broadcast_kill()
+    }
+
+    fn cell_graph(&mut self, node: GraphNode) -> Result<GraphNode> {
+        let CellState::Allocated { children, .. } = &mut self.state else {
+            return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
+        };
+
+        children.cell_graph(
+            node.with_cell_info(self.cell_name.clone(), self.spec.clone()),
+        )
     }
 }
 
