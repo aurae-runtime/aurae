@@ -80,7 +80,7 @@ install: musl proto proto-lint lint test auraed-debug auraescript-debug aer-debu
 docs: proto docs-crates docs-stdlib docs-other docs-lint ## Assemble all the /docs for the website locally.
 
 .PHONY: prcheck
-prcheck: build lint test-all docs ## Meant to mimic the GHA checks (includes ignored tests)
+prcheck: build lint test-all docs headers-check ## Meant to mimic the GHA checks (includes ignored tests)
 
 #------------------------------------------------------------------------------#
 
