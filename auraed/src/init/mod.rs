@@ -82,7 +82,7 @@ pub async fn init(
 
     match init_result {
         Ok(x) => x,
-        Err(e) => panic!("Failed to initialize: {:?}", e),
+        Err(e) => panic!("Failed to initialize: {e:?}"),
     }
 }
 
