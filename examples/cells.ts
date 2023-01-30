@@ -70,17 +70,6 @@ let nested_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>
 });
 helpers.print(nested_allocated)
 
-// [ Start nested ]
-let nested_started = await cells.start(<runtime.CellServiceStartRequest>{
-    cellName,
-    executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/sleep 42",
-        description: "Sleep for 42 seconds",
-        name: "nested-sleep-42"
-    })
-})
-helpers.print(nested_started)
-
 // [ List cells ]
 let listed = await cells.list(<runtime.CellServiceListRequest>{})
 helpers.print(listed)
