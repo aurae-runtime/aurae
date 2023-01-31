@@ -34,6 +34,7 @@ message      ?=  Default commit message. Aurae Runtime environment.
 cargo         =  cargo
 oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
+uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
 
@@ -92,17 +93,22 @@ pki: certs ## Alias for certs
 certs: clean-certs ## Generate x509 mTLS certs in /pki directory
 	mkdir -p pki
 	./hack/certgen
+ifeq ($(uid), 0)
+	mkdir -p /etc/aurae/pki
+	cp -v pki/* /etc/aurae/pki
+else
 	sudo -E mkdir -p /etc/aurae/pki
 	sudo -E cp -v pki/* /etc/aurae/pki
+endif
 	@echo "Install PKI Auth Material [/etc/aurae]"
 
 .PHONY: config
 config: ## Set up default config
-	@mkdir -p $(HOME)/.aurae
-	@cp -v auraescript/default.config.toml $(HOME)/.aurae/config
-	@sed -i 's|~|$(HOME)|g' $(HOME)/.aurae/config
-	@mkdir -p $(HOME)/.aurae/pki
-	@cp -v pki/* $(HOME)/.aurae/pki
+	mkdir -p $(HOME)/.aurae
+	cp -v auraescript/default.config.toml $(HOME)/.aurae/config
+	sed -i 's|~|$(HOME)|g' $(HOME)/.aurae/config
+	mkdir -p $(HOME)/.aurae/pki
+	cp -v pki/* $(HOME)/.aurae/pki
 
 .PHONY: musl
 musl: ## Add target for musl
@@ -114,16 +120,16 @@ musl: ## Add target for musl
 
 .PHONY: clean-crates
 clean-crates: ## Clean target directory
-	@cargo clean
+	cargo clean
 
 .PHONY: clean-certs
 clean-certs: ## Clean the cert material
-	@rm -rvf pki/*
+	rm -rvf pki/*
 
 .PHONY: clean-gen
 clean-gens: ## Clean gen directories
-	@rm -rf aurae-proto/src/gen/*
-	@rm -rf auraescript/gen/*
+	rm -rf aurae-proto/src/gen/*
+	rm -rf auraescript/gen/*
 
 #------------------------------------------------------------------------------#
 
@@ -158,38 +164,38 @@ auraed: musl proto proto-lint auraed-lint auraed-debug ## Lint and install aurae
 
 .PHONY: auraed-lint
 auraed-lint: musl proto
-	@$(cargo) clippy --target $(uname_m)-unknown-linux-musl -p auraed --all-features -- -D clippy::all -D warnings
+	$(cargo) clippy --target $(uname_m)-unknown-linux-musl -p auraed --all-features -- -D clippy::all -D warnings
 
 .PHONY: auraed-test
 auraed-test: musl proto
-	@$(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed
+	$(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed
 
 .PHONY: auraed-test-all
 auraed-test-all: musl proto
-	@sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed -- --include-ignored
+	sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed -- --include-ignored
 
 .PHONY: auraed-test-watch
-auraed-test-watch: musl proto # Use cargo-watch to continuously run a test (e.g. make auared-test-watch name=path::to::test)
-	@sudo -E $(cargo) watch -- $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed $(name) -- --include-ignored
+auraed-test-watch: musl proto # Use cargo-watch to continuously run a test (e.g. make auraed-test-watch name=path::to::test)
+	sudo -E $(cargo) watch -- $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed $(name) -- --include-ignored
 
 .PHONY: auraed-build
 auraed-build: musl proto
-	@$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed
+	$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed
 
 .PHONY: auraed-build-release
 auraed-build-release: musl proto
-	@$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed --release
+	$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed --release
 
 .PHONY: auraed-debug
 auraed-debug: musl proto auraed-lint
-	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
+	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
 
 .PHONY: auraed-release
 auraed-release: musl proto proto-lint auraed-lint auraed-test ## Lint, test, and install auraed
-	@$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --force
+	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --force
 
 .PHONY: start
-auraed-start: ## Starts the installed auraed executable (requires sudo)
+auraed-start: ## Starts the installed auraed executable
 	sudo -E $(HOME)/.cargo/bin/auraed
 
 #------------------------------------------------------------------------------#
@@ -201,31 +207,31 @@ auraescript: proto proto-lint auraescript-lint auraescript-debug ## Lint and ins
 
 .PHONY: auraescript-lint
 auraescript-lint: proto
-	@$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
+	$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
 
 .PHONY: auraescript-test
 auraescript-test: proto
-	@$(cargo) test -p auraescript
+	$(cargo) test -p auraescript
 
 .PHONY: auraescript-test-all
 auraescript-test-all: proto
-	@$(cargo) test -p auraescript -- --include-ignored
+	$(cargo) test -p auraescript -- --include-ignored
 
 .PHONY: auraescript-build
 auraescript-build: musl proto
-	@$(cargo) build -p auraescript
+	$(cargo) build -p auraescript
 
 .PHONY: auraescript-build-release
 auraescript-build-release: musl proto
-	@$(cargo) build -p auraescript --release
+	$(cargo) build -p auraescript --release
 
 .PHONY: auraescript-debug
 auraescript-debug: proto proto-lint auraescript-lint
-	@$(cargo) install --path ./auraescript --debug --force
+	$(cargo) install --path ./auraescript --debug --force
 
 .PHONY: auraescript-release
 auraescript-release: proto proto-lint auraescript-lint auraescript-test ## Lint, test, and install auraescript
-	@$(cargo) install --path ./auraescript --force
+	$(cargo) install --path ./auraescript --force
 
 #------------------------------------------------------------------------------#
 
@@ -236,31 +242,31 @@ aer: proto proto-lint aer-lint aer-debug ## Lint and install aer (for use during
 
 .PHONY: aer-lint
 aer-lint: proto
-	@$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
+	$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
 
 .PHONY: aer-test
 aer-test: proto
-	@$(cargo) test -p aer
+	$(cargo) test -p aer
 
 .PHONY: aer-test-all
 aer-test-all: proto
-	@$(cargo) test -p aer -- --include-ignored
+	$(cargo) test -p aer -- --include-ignored
 
 .PHONY: aer-build
 aer-build: musl proto
-	@$(cargo) build -p aer
+	$(cargo) build -p aer
 
 .PHONY: aer-build-release
 aer-build-release: musl proto
-	@$(cargo) build -p aer --release
+	$(cargo) build -p aer --release
 
 .PHONY: aer-debug
 aer-debug: proto proto-lint aer-lint
-	@$(cargo) install --path ./aer --debug --force
+	$(cargo) install --path ./aer --debug --force
 
 .PHONY: aer-release
 aer-release: proto proto-lint aer-lint aer-test ## Lint, test, and install aer
-	@$(cargo) install --path ./aer --force
+	$(cargo) install --path ./aer --force
 
 #------------------------------------------------------------------------------#
 
@@ -268,15 +274,15 @@ aer-release: proto proto-lint aer-lint aer-test ## Lint, test, and install aer
 
 .PHONY: libs-lint
 libs-lint: proto proto-lint
-	@$(cargo) clippy --all-features --workspace --exclude auraed --exclude auraescript --exclude aer  -- -D clippy::all -D warnings
+	$(cargo) clippy --all-features --workspace --exclude auraed --exclude auraescript --exclude aer  -- -D clippy::all -D warnings
 
 .PHONY: libs-test
 libs-test: proto
-	@$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer
+	$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer
 
 .PHONY: libs-test-all
 libs-test-all: proto
-	@$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer -- --include-ignored
+	$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer -- --include-ignored
 
 #------------------------------------------------------------------------------#
 
@@ -284,7 +290,7 @@ libs-test-all: proto
 
 .PHONY: docs-lint
 docs-lint: # Check the docs for typos
-	@vale --no-wrap --glob='!docs/stdlib/v0/*' ./docs
+	vale --no-wrap --glob='!docs/stdlib/v0/*' ./docs
 
 .PHONY: docs-stdlib
 ## Generate the docs for the stdlib from the .proto files
@@ -362,9 +368,9 @@ ci-release: test auraed-build-release auraescript-build-release aer-build-releas
 
 .PHONY: ci-stage-release-artifacts
 ci-stage-release-artifacts: ci-release ## Preps and stages release artifacts (for CI use)
-	@mkdir -p /tmp/release
-	@cp target/$(uname_m)-unknown-linux-musl/release/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
-	@cp target/release/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
+	mkdir -p /tmp/release
+	cp target/$(uname_m)-unknown-linux-musl/release/auraed /tmp/release/auraed-$(tag)-$(uname_m)-unknown-linux-musl
+	cp target/release/auraescript /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
 
 .PHONY: ci-upload-release-artifacts
 ci-upload-release-artifacts: ci-release ci-stage-release-artifacts ## Preps, stages, and uploads release artifacts to github (for CI use)
@@ -373,7 +379,7 @@ ci-upload-release-artifacts: ci-release ci-stage-release-artifacts ## Preps, sta
 
 .PHONY: ci-local
 ci-local: ## Tests a github action's workflow locally using `act` (e.g., `make ci-local file=001-tester-ubuntu-make-test.yml`)
-	@act -W ./.github/workflows/$(file)
+	act -W ./.github/workflows/$(file)
 
 #------------------------------------------------------------------------------#
 
@@ -385,7 +391,7 @@ tlsinfo: ## Show TLS Info for /var/run/aurae*
 
 .PHONY: fmt
 fmt: headers ## Format the entire code base(s)
-	@./hack/code-format
+	./hack/code-format
 
 .PHONY: headers
 headers: headers-write ## Fix headers. Run this if you want to clobber things.

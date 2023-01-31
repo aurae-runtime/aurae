@@ -47,7 +47,7 @@ jobs:
     name: Build (lint, compile, test)
     runs-on: ubuntu-latest
     needs: build-container
-    timeout-minutes: 20
+    timeout-minutes: 30
     container:
       image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
       credentials:
@@ -64,9 +64,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: build-compile-test-container-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cargo Test [make test]
+      - name: Cargo Test [make pki config test]
         # This should remain the only command we execute as this matches the title of the file.
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file
         # named with a good name.
-        run: make test
+        run: make pki config test
