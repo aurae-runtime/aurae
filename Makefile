@@ -372,7 +372,7 @@ ci-upload-release-artifacts: ci-release ci-stage-release-artifacts ## Preps, sta
 	gh release upload $(tag) /tmp/release/auraescript-$(tag)-$(uname_m)-unknown-linux-gnu
 
 .PHONY: ci-local
-ci-local: ## Tests a github action's workflow locally using `act` (e.g., `make ci-local file=001-cargo-install-ubuntu-make-install.yml`)
+ci-local: ## Tests a github action's workflow locally using `act` (e.g., `make ci-local file=001-tester-ubuntu-make-test.yml`)
 	@act -W ./.github/workflows/$(file)
 
 #------------------------------------------------------------------------------#

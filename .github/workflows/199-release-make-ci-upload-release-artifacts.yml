@@ -27,46 +27,32 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-name: "Cargo Udeps (007) [aurae-builder:builder-latest]"
-on:
- push:
-   branches: main
- pull_request:
-   branches: main
+name: "Upload Release Artifacts (199) [aurae-builder:builder-latest]"
 
-permissions:
- contents: read
- packages: write
-env:
- CARGO_TERM_COLOR: always
+on:
+  release:
+    types: [prereleased]
 jobs:
- build-container:
-   uses: ./.github/workflows/031-ubuntu-aurae-builder-image-ubuntu-docker-build-tester.yml
- check-udeps:
-   name: Check udeps
-   runs-on: ubuntu-latest
-   needs: build-container
-   container:
-     image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
-     credentials:
-       username:  ${{ github.actor }}
-       password:  ${{ secrets.GITHUB_TOKEN }}
-   steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        id: cargo-cache
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: check-deps-${{ runner.os }}-cargo-nightly-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-      - name: Make proto [make proto]
-        run: make proto
-      - name: Cargo udeps [make check-deps]
-        run: make check-deps
+    build-container:
+        uses: ./.github/workflows/100-aurae-builder-image-docker-build-builder.yml
+    create-pre-release-artifacts:
+        name: Create release artifacts
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        needs: build-container
+        container:
+          image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
+          credentials:
+            username:  ${{ github.actor }}
+            password:  ${{ secrets.GITHUB_TOKEN }}
+        permissions:
+          contents: write
+          packages: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+
+            - name: Make, stage, upload release artifacts
+              run: make ci-upload-release-artifacts tag=$GITHUB_REF_NAME
+              env:
+                GH_TOKEN: ${{ github.token }}
