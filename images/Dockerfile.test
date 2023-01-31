@@ -53,6 +53,7 @@ RUN  apt-get update && \
     protobuf-compiler \
     git \
     python3-pip \
+    libseccomp-dev \
     libssl-dev \
     openssl \
     pkg-config
