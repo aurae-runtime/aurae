@@ -72,6 +72,6 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: build-compile-test-container-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-     - name: Docs (make docs)
+     - name: Docs (make docs docs-lint)
        run: |
-         make docs
+         make docs docs-lint
