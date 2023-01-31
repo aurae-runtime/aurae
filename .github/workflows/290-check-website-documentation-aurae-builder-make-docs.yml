@@ -27,32 +27,51 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-name: "Make Release Artifacts (050) [aurae-builder:builder-latest]"
-
+#
+# This will check the documentation (only).
+#
+# This build check will introduce confidence for the following:
+#
+# - That the documentation is updated and passes our spelling checks.
+#
+# When this build passes we should have confidence that our documentation is
+# ready to be pushed to the website.
+#
+name: "Check docs (290) [aurae-builder:tester-latest]"
 on:
-  release:
-    types: [prereleased]
-jobs:
-    build-container:
-        uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build-builder.yml
-    create-pre-release-artifacts:
-        name: Create release artifacts
-        runs-on: ubuntu-latest
-        timeout-minutes: 60
-        needs: build-container
-        container:
-          image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
-          credentials:
-            username:  ${{ github.actor }}
-            password:  ${{ secrets.GITHUB_TOKEN }}
-        permissions:
-          contents: write
-          packages: write
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
+ push:
+   branches: main
+ pull_request:
+   branches: main
 
-            - name: Make, stage, upload release artifacts
-              run: make ci-upload-release-artifacts tag=$GITHUB_REF_NAME
-              env:
-                GH_TOKEN: ${{ github.token }}
+permissions:
+ contents: read
+ packages: write
+env:
+ CARGO_TERM_COLOR: always
+jobs:
+ build-container:
+   uses: ./.github/workflows/200-aurae-builder-image-docker-build-tester.yml
+ docs:
+   name: Build Docs
+   runs-on: ubuntu-latest
+   needs: build-container
+   container:
+     image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
+     credentials:
+       username:  ${{ github.actor }}
+       password:  ${{ secrets.GITHUB_TOKEN }}
+   steps:
+     - uses: actions/checkout@v3
+     - uses: actions/cache@v3
+       with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: build-compile-test-container-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+     - name: Docs (make docs)
+       run: |
+         make docs

@@ -6,7 +6,7 @@ Please use the following naming convention such that we can easily map failed bu
 $number-$friendlyname-$environment-$testcommands
 ```
 
-Where **number** is just a unique identifier to easily map failed builds to YAML files.
+Where **number** is just a unique identifier to easily map failed builds to YAML files. See below for more guidance on choosing a number.
 Where **friendlyname** is a good descriptor to describe what is being checked (avoid words like "build" or "main" as they are too generic)
 Where **environment** describes the environment it is running in, such as `alpine:latest` or `armv7`.
 Where **testcommands** are the commands that a user can replicate on their computer! Do NOT test commands that can not be easily replicated!
@@ -16,6 +16,11 @@ Where **testcommands** are the commands that a user can replicate on their compu
 ```
 
 A new linter running in alpine that tests the command `make lint` and **007** can easily be mapped backed to the file.
+
+## Choosing a number
+- 001-099: Reserved for workflows that don't use a container image
+- 101-199: Reserved for workflows using the Dockerfile.build image
+- 201-299: Reserved for workflows using the Dockerfile.test image
 
 ## Testing workflows
 

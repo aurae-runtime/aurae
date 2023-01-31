@@ -28,43 +28,35 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# This will check the documentation (only).
-#
-# This build check will introduce confidence for the following:
-#
-# - That the documentation is updated and passes our spelling checks.
-#
-# When this build passes we should have confidence that our documentation is
-# ready to be pushed to the website.
-#
-name: "Cargo Docs (036) [aurae-builder:builder-latest]"
+name: "Tester (101) [aurae-builder:builder-latest]"
 on:
- push:
-   branches: main
- pull_request:
-   branches: main
+  push:
+    branches: main
+  pull_request:
+    branches: main
 
 permissions:
- contents: read
- packages: write
+  contents: read
+  packages: write
 env:
- CARGO_TERM_COLOR: always
+  CARGO_TERM_COLOR: always
 jobs:
- build-container:
-   uses: ./.github/workflows/031-ubuntu-aurae-builder-image-ubuntu-docker-build-tester.yml
- docs:
-   name: Build Docs
-   runs-on: ubuntu-latest
-   needs: build-container
-   container:
-     image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
-     credentials:
-       username:  ${{ github.actor }}
-       password:  ${{ secrets.GITHUB_TOKEN }}
-   steps:
-     - uses: actions/checkout@v3
-     - uses: actions/cache@v3
-       with:
+  build-container:
+    uses: ./.github/workflows/100-aurae-builder-image-docker-build-builder.yml
+  build:
+    name: Build (lint, compile, test)
+    runs-on: ubuntu-latest
+    needs: build-container
+    timeout-minutes: 20
+    container:
+      image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
           path: |
             ~/.cargo/bin/
             ~/.cargo/registry/index/
@@ -72,6 +64,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: build-compile-test-container-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-     - name: Docs (make docs)
-       run: |
-         make docs
+      - name: Cargo Test [make test]
+        # This should remain the only command we execute as this matches the title of the file.
+        # The goal is for this to be easy to find from the GitHub dashboard.
+        # Instead of adding more commands here, consider another make target or a new YAML file
+        # named with a good name.
+        run: make test
