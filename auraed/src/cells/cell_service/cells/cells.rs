@@ -375,10 +375,11 @@ mod tests {
         ));
     }
 
-    // Ignored: requires sudo, which we don't have in CI
-    #[ignore]
     #[test]
     fn test_cell_graph_triple_nested() {
+        skip_if_not_root!("test_cell_graph_triple_nested");
+        skip_if_seccomp!("test_cell_graph_triple_nested");
+
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 

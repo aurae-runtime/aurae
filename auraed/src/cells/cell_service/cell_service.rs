@@ -382,11 +382,13 @@ mod tests {
         ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
     };
     use iter_tools::Itertools;
+    use test_helpers::*;
 
-    // Ignored: requires sudo, which we don't have in CI
-    #[ignore]
     #[tokio::test]
     async fn test_list() {
+        skip_if_not_root!("test_list");
+        skip_if_seccomp!("test_list");
+
         let service = CellService::new();
 
         let parent_cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());
