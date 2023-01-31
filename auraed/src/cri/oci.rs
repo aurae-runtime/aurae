@@ -67,8 +67,8 @@ impl AuraeOCIBuilder {
                         .expect("default oci: mount /proc"),
                     MountBuilder::default()
                         .destination("/dev")
-                        .typ("devtmpfs")
-                        .source("devtmpfs")
+                        .typ("tmpfs")
+                        .source("tmpfs")
                         .options(vec![
                             "nosuid".to_string(),
                             "strictatime".to_string(),
@@ -140,6 +140,18 @@ impl AuraeOCIBuilder {
                         ])
                         .build()
                         .expect("default oci: mount /sys/fs/cgroup"),
+                    MountBuilder::default()
+                        .destination("/run")
+                        .typ("tmpfs")
+                        .source("tmpfs")
+                        .options(vec![
+                            "nosuid".to_string(),
+                            "strictatime".to_string(),
+                            "mode=755".to_string(),
+                            "size=65536k".to_string(),
+                        ])
+                        .build()
+                        .expect("default oci: mount /sys/fs/cgroup"),
                 ])
                 .process(
                     ProcessBuilder::default()
@@ -156,7 +168,7 @@ impl AuraeOCIBuilder {
                             "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin".to_string(),
                             "TERM=xterm".to_string(),
                         ])
-                        .cwd("/")   
+                        .cwd("/")
                         .capabilities(LinuxCapabilitiesBuilder::default()
                             .bounding(HashSet::from([Capability::AuditWrite, Capability::NetBindService, Capability::Kill]))
                             .effective(HashSet::from([Capability::AuditWrite, Capability::NetBindService, Capability::Kill]))
@@ -188,8 +200,8 @@ impl AuraeOCIBuilder {
                         .build().expect("default oci: linux.resources"))
                     .namespaces(vec![
                         LinuxNamespaceBuilder::default()
-                        .typ(LinuxNamespaceType::Pid)
-                        .build().expect("default oci: linux.namespaces"),
+                            .typ(LinuxNamespaceType::Pid)
+                            .build().expect("default oci: linux.namespaces"),
                         LinuxNamespaceBuilder::default()
                             .typ(LinuxNamespaceType::Network)
                             .build().expect("default oci: linux.namespaces"),
@@ -204,21 +216,21 @@ impl AuraeOCIBuilder {
                             .build().expect("default oci: linux.namespaces"),
                     ])
                     .masked_paths(vec![
-                                "/proc/acpi".to_string(),
-                                "/proc/asound".to_string(),
-                                "/proc/kcore".to_string(),
-                                "/proc/keys".to_string(),
-                                "/proc/latency_stats".to_string(),
-                                "/proc/timer_list".to_string(),
-                                "/sys/firmware".to_string(),
-                                "/proc/scsi".to_string(),
+                        "/proc/acpi".to_string(),
+                        "/proc/asound".to_string(),
+                        "/proc/kcore".to_string(),
+                        "/proc/keys".to_string(),
+                        "/proc/latency_stats".to_string(),
+                        "/proc/timer_list".to_string(),
+                        "/sys/firmware".to_string(),
+                        "/proc/scsi".to_string(),
                     ])
                     .readonly_paths(vec![
-                              "/proc/bus".to_string(),
-                                "/proc/fs".to_string(),
-                                "/proc/irq".to_string(),
-                                "/proc/sys".to_string(),
-                                "/proc/sysrq-trigger".to_string(),
+                        "/proc/bus".to_string(),
+                        "/proc/fs".to_string(),
+                        "/proc/irq".to_string(),
+                        "/proc/sys".to_string(),
+                        "/proc/sysrq-trigger".to_string(),
                     ]       )
                     .build().expect("default oci: linux"))
         }
