@@ -48,8 +48,21 @@ service ObserveService {
   // TODO: request log stream for a sub process
   rpc GetSubProcessStream(GetSubProcessStreamRequest) returns (stream GetSubProcessStreamResponse) {}
 
+  // request POSIX signals stream for the host
+  rpc GetPosixSignalsStream(GetPosixSignalsStreamRequest) returns (stream GetPosixSignalsStreamResponse) {}
 }
 
+message GetPosixSignalsStreamRequest { 
+}
+
+message GetPosixSignalsStreamResponse {
+  Signal signal = 1;
+}
+
+message Signal {
+  int32 signal = 1;
+  int64 process_id = 2;
+}
 
 message GetAuraeDaemonLogStreamRequest {
 }

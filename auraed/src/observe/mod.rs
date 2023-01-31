@@ -32,12 +32,14 @@
 #![allow(dead_code)]
 
 use aurae_proto::observe::{
-    observe_service_server::ObserveService, GetAuraeDaemonLogStreamRequest,
-    GetAuraeDaemonLogStreamResponse, GetSubProcessStreamRequest,
+    observe_service_server, GetAuraeDaemonLogStreamRequest,
+    GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
+    GetPosixSignalsStreamResponse, GetSubProcessStreamRequest,
     GetSubProcessStreamResponse, LogItem,
 };
+use nix::unistd::Pid;
 use std::sync::Arc;
-use tokio::sync::broadcast::Receiver;
+use tokio::sync::broadcast::{channel, Receiver};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
@@ -47,14 +49,16 @@ use crate::logging::log_channel::LogChannel;
 
 /// The server side implementation of the ObserveService subsystem.
 #[derive(Debug)]
-pub(crate) struct ObserveServiceServer {
+pub(crate) struct ObserveServiceServer {}
+
+pub struct ObserveService {
     aurae_logger: Arc<LogChannel>,
     sub_process_consumer_list: Vec<Receiver<LogItem>>,
 }
 
-impl ObserveServiceServer {
-    pub fn new(aurae_logger: Arc<LogChannel>) -> ObserveServiceServer {
-        ObserveServiceServer {
+impl ObserveService {
+    pub fn new(aurae_logger: Arc<LogChannel>) -> Self {
+        Self {
             aurae_logger,
             sub_process_consumer_list: Vec::<Receiver<LogItem>>::new(),
         }
@@ -64,10 +68,18 @@ impl ObserveServiceServer {
         info!("Added new channel");
         self.sub_process_consumer_list.push(consumer);
     }
+
+    fn get_aurae_daemon_log_stream(&self) -> Receiver<LogItem> {
+        self.aurae_logger.subscribe()
+    }
+
+    fn get_posix_signals_stream(&self) -> Receiver<Signal> {
+        todo!()
+    }
 }
 
 #[tonic::async_trait]
-impl ObserveService for ObserveServiceServer {
+impl observe_service_server::ObserveService for ObserveService {
     type GetAuraeDaemonLogStreamStream =
         ReceiverStream<Result<GetAuraeDaemonLogStreamResponse, Status>>;
 
@@ -77,8 +89,7 @@ impl ObserveService for ObserveServiceServer {
     ) -> Result<Response<Self::GetAuraeDaemonLogStreamStream>, Status> {
         let (tx, rx) =
             mpsc::channel::<Result<GetAuraeDaemonLogStreamResponse, Status>>(4);
-
-        let mut log_consumer = self.aurae_logger.subscribe();
+        let mut log_consumer = self.get_aurae_daemon_log_stream();
 
         // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
         //  .. thus disabled logging here.
@@ -116,5 +127,65 @@ impl ObserveService for ObserveServiceServer {
             mpsc::channel::<Result<GetSubProcessStreamResponse, Status>>(4);
 
         Ok(Response::new(ReceiverStream::new(rx)))
+    }
+
+    type GetPosixSignalsStreamStream =
+        ReceiverStream<Result<GetPosixSignalsStreamResponse, Status>>;
+
+    async fn get_posix_signals_stream(
+        &self,
+        _request: Request<GetPosixSignalsStreamRequest>,
+    ) -> Result<Response<Self::GetPosixSignalsStreamStream>, Status> {
+        todo!()
+    }
+}
+
+// TODO (jeroensoeters) move this elsewhere once the eBPF code is in
+#[derive(Clone, Debug, PartialEq)]
+struct Signal {
+    //TODO (jeroensoeters) should we introduce an enum here?
+    signal: i32,
+    pid: Pid,
+}
+
+#[cfg(test)]
+mod test {
+    use tokio::sync::Mutex;
+
+    use super::*;
+    use std::process::Command;
+
+    #[tokio::test]
+    async fn test_intercept_posix_signals() {
+        let service = ObserveService::new(Arc::new(LogChannel::new(
+            String::from("unused"),
+        )));
+        let mut signals = service.get_posix_signals_stream();
+
+        let intercepted = Arc::new(Mutex::new(Vec::new()));
+        let intercepted_in_thread = intercepted.clone();
+        let _ = tokio::spawn(async move {
+            for s in signals.recv().await {
+                let mut guard = intercepted_in_thread.lock().await;
+                guard.push(s);
+            }
+        });
+
+        let mut child = Command::new("sleep")
+            .arg("400")
+            .spawn()
+            .expect("failed to execute child");
+        let pid = child.id();
+        child.kill().expect("failed to kill child");
+
+        let expected_signal = Signal {
+            pid: Pid::from_raw(i32::try_from(pid).expect("pid")),
+            signal: 9,
+        };
+
+        let intercepted_local = intercepted.clone();
+        let guard = intercepted_local.lock().await;
+
+        //assert!(guard.contains(&expected_signal), "signal not found"); <- when this test passes the work is done :)
     }
 }

@@ -277,7 +277,7 @@ impl AuraedRuntime {
 
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
-            DiscoveryServiceServer::new(discovery_service.clone());
+            DiscoveryServiceServer::new(discovery_service);
         health_reporter
             .set_serving::<DiscoveryServiceServer<DiscoveryService>>()
             .await;
