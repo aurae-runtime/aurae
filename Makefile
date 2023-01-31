@@ -78,10 +78,10 @@ build: musl proto proto-lint auraed-build auraescript-build aer-build lint ## Bu
 install: musl proto proto-lint lint test auraed-debug auraescript-debug aer-debug  ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
-docs: proto docs-crates docs-stdlib docs-other docs-lint ## Assemble all the /docs for the website locally.
+docs: proto docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
 
 .PHONY: prcheck
-prcheck: build lint test-all docs ## Meant to mimic the GHA checks (includes ignored tests)
+prcheck: build lint test-all docs docs-lint ## Meant to mimic the GHA checks (includes ignored tests)
 
 #------------------------------------------------------------------------------#
 
