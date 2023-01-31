@@ -38,8 +38,9 @@ use aurae_proto::observe::{
     GetSubProcessStreamResponse, LogItem,
 };
 use nix::unistd::Pid;
+use signal::Signal;
 use std::sync::Arc;
-use tokio::sync::broadcast::{channel, Receiver};
+use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
@@ -142,9 +143,9 @@ impl observe_service_server::ObserveService for ObserveService {
 
 // TODO (jeroensoeters) move this elsewhere once the eBPF code is in
 #[derive(Clone, Debug, PartialEq)]
-struct Signal {
+struct PosixSignal {
     //TODO (jeroensoeters) should we introduce an enum here?
-    signal: i32,
+    signal: Signal,
     pid: Pid,
 }
 
@@ -178,9 +179,9 @@ mod test {
         let pid = child.id();
         child.kill().expect("failed to kill child");
 
-        let expected_signal = Signal {
+        let expected_signal = PosixSignal {
             pid: Pid::from_raw(i32::try_from(pid).expect("pid")),
-            signal: 9,
+            signal: Signal::SIGKILL,
         };
 
         let intercepted_local = intercepted.clone();
