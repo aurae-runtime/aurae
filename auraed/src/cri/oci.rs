@@ -113,7 +113,7 @@ impl AuraeOCIBuilder {
                             "nodev".to_string(),
                         ])
                         .build()
-                        .expect("default oci: mount /dev/shm"),
+                        .expect("default oci: mount /dev/mqueue"),
                     MountBuilder::default()
                         .destination("/sys")
                         .typ("sysfs")
