@@ -57,6 +57,10 @@ jobs:
         password:  ${{ secrets.GITHUB_TOKEN }}
     steps:
         - uses: actions/checkout@v3
+        ## Configure Git
+        # This fixes a current issue with git and dubious ownership of folders
+        # https://github.com/actions/runner-images/issues/6775
+        - run: git config --global --add safe.directory /__w/aurae/aurae
         - uses: actions/setup-python@v2
           with:
             python-version: 3.x
