@@ -410,6 +410,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "buf-buffer"
+version = "0.0.0"
+
+[[package]]
 name = "bumpalo"
 version = "3.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

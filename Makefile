@@ -136,13 +136,16 @@ clean-gens: ## Clean gen directories
 # Protobuf Commands
 
 .PHONY: proto
-proto: proto-lint ## Lint and Generate code from protobuf schemas
-	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
-	buf generate -v api
+proto: proto-buf proto-lint ## Lint and Generate code from protobuf schemas
+	$(cargo) build -p buf-buffer
 
 .PHONY: proto-lint
-proto-lint: ## Lint protobuf schemas
+proto-lint: proto-buf ## Lint protobuf schemas
 	buf lint api
+
+.PHONY: proto-lint
+proto-buf: ## Check that buf cli is installed
+	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
 
 .PHONY: proto-vendor
 proto-vendor: proto-vendor-cri proto-vendor-grpc-health ## Copy the upstream protobuf interfaces

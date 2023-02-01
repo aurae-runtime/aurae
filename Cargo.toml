@@ -36,6 +36,7 @@ members = [
     "auraescript",
     "aurae-client",
     "aurae-proto",
+    "crates/buf-buffer",
 ]
 
 [workspace.dependencies]
