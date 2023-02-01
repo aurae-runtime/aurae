@@ -87,4 +87,10 @@ RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE
 ## Setup cargo-udeps
 RUN cargo install cargo-udeps
 
+
+## Configure Git
+# This fixes a current issue with git and dubious ownership of folders
+# https://github.com/actions/runner-images/issues/6775
+RUN git config --global --add safe.directory /__w/aurae/aurae
+
 WORKDIR /aurae
