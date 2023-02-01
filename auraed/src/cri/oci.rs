@@ -150,7 +150,7 @@ impl AuraeOCIBuilder {
                             "size=65536k".to_string(),
                         ])
                         .build()
-                        .expect("default oci: mount /sys/fs/cgroup"),
+                        .expect("default oci: mount /run"),
                     MountBuilder::default()
                         .destination("/etc/aurae")
                         .typ("bind")
