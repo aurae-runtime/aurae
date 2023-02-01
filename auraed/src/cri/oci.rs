@@ -48,7 +48,6 @@ pub struct AuraeOCIBuilder {
 impl AuraeOCIBuilder {
     pub fn new() -> AuraeOCIBuilder {
         AuraeOCIBuilder {
-            // TODO Port config.json to this builder
             spec_builder: SpecBuilder::default()
                 .version("1.0.2-dev")
                 .root(

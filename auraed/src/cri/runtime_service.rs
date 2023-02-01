@@ -115,8 +115,6 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         // TODO Switch on "WASM" which is a field that we will add to the RunPodSandboxRequest
         // TODO We made the decision to create a "KernelSpec" *name structure that will be how we distinguish between VMs and Containers
 
-        // Create the Pod sandbox using recursive static binary auraed instead of "pause container"
-
         // Initialize a new container builder with the AURAE_SELF_IDENTIFIER name as the "init" container running a recursive Auraed
         let syscall = create_syscall();
         let sandbox_builder = ContainerBuilder::new(
@@ -145,6 +143,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
 
         sandbox.start().expect("starting pod sandbox");
 
+        // TODO: Cache sandbox
+
         Ok(Response::new(RunPodSandboxResponse { pod_sandbox_id: sandbox_id }))
     }
 
@@ -152,6 +152,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         &self,
         _request: Request<StopPodSandboxRequest>,
     ) -> Result<Response<StopPodSandboxResponse>, Status> {
+        // TODO: Pull sandbox from cache
+        // TODO: sandbox.kill()
         todo!()
     }
 
@@ -159,6 +161,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         &self,
         _request: Request<RemovePodSandboxRequest>,
     ) -> Result<Response<RemovePodSandboxResponse>, Status> {
+        // TODO: Delete sandbox from cache
+        // TODO: Ensure /var/run/aurae/pods/$container_name is destroyed
         todo!()
     }
 
@@ -166,6 +170,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         &self,
         _request: Request<PodSandboxStatusRequest>,
     ) -> Result<Response<PodSandboxStatusResponse>, Status> {
+        // TODO: Pull sandbox from cache
+        // TODO: sandbox.status() // TODO consider a status append system where we add our own fields? Maybe enums?
         todo!()
     }
 
@@ -173,13 +179,29 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         &self,
         _request: Request<ListPodSandboxRequest>,
     ) -> Result<Response<ListPodSandboxResponse>, Status> {
+        // TODO: Pull all sandboxes from cache
         todo!()
     }
 
     async fn create_container(
         &self,
-        _request: Request<CreateContainerRequest>,
+        request: Request<CreateContainerRequest>,
     ) -> Result<Response<CreateContainerResponse>, Status> {
+        // Handle Request
+        let r = request.into_inner();
+        // Handle Config
+        let config = r.config.expect("config from create container request");
+        // Metadata
+        let metadata = config.metadata.expect("metadata from config");
+
+        // TODO: Pull sandbox from cache
+
+        let syscall = create_syscall();
+        let _sandbox_builderm =
+            ContainerBuilder::new(metadata.name, syscall.as_ref());
+
+        // TODO schedule as tenant container
+
         todo!()
     }
 
