@@ -45,6 +45,8 @@ on:
    branches: main
 
 jobs:
+  build-container:
+   uses: ./.github/workflows/200-aurae-builder-image-docker-build-tester.yml
   deploy:
     runs-on: ubuntu-latest
     container:
