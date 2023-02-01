@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{Cell, CellName, CellSpec, GraphNode, Result};
+use super::{Cell, CellName, CellSpec, Result};
 
 pub trait CellsCache {
     /// Calls [Cell::allocate] on a new [Cell] and adds it to it's cache with key [CellName].
@@ -57,12 +57,14 @@ pub trait CellsCache {
     where
         F: Fn(&Cell) -> Result<R>;
 
+    fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
+    where
+        F: Fn(&Cell) -> Result<R>;
+
     /// Calls [Cell::Free] on all cells in the cache, ignoring any errors.
     /// Successfully freed cells will be removed from the cache.
     fn broadcast_free(&mut self);
 
     /// Sends a [SIGKILL] to all Cells, ignoring any errors.
     fn broadcast_kill(&mut self);
-
-    fn cell_graph(&mut self, node: GraphNode) -> Result<GraphNode>;
 }
