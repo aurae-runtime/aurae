@@ -28,11 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{
-    cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, GraphNode, Result,
-};
+use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
 use crate::cells::cell_service::cells::cells_cache::CellsCache;
-use iter_tools::{Either, Itertools};
 use std::collections::HashMap;
 use tracing::warn;
 
@@ -146,6 +143,30 @@ impl Cells {
         })
     }
 
+    fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
+    where
+        F: Fn(&Cell) -> Result<R>,
+    {
+        Ok(self
+            .cache
+            .values()
+            .filter_map(|cell| {
+                let cell_name = cell.name();
+                if !Cgroup::exists(cell_name) {
+                    return None;
+                };
+
+                let res = f(cell);
+
+                if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
+                    return None;
+                }
+
+                Some(res)
+            })
+            .collect())
+    }
+
     fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: FnOnce(&mut Cell) -> Result<R>,
@@ -240,31 +261,19 @@ impl CellsCache for Cells {
         self.get(cell_name, f)
     }
 
+    fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
+    where
+        F: Fn(&Cell) -> Result<R>,
+    {
+        self.get_all(f)
+    }
+
     fn broadcast_free(&mut self) {
         self.broadcast_free()
     }
 
     fn broadcast_kill(&mut self) {
         self.broadcast_kill()
-    }
-
-    fn cell_graph(&mut self, node: GraphNode) -> Result<GraphNode> {
-        let (valid, invalid): (Vec<_>, Vec<_>) = self
-            .cache
-            .values_mut()
-            .map(|c| c.cell_graph(node.clone()))
-            .partition_map(|r| match r {
-                Ok(n) => Either::Left(n),
-                Err(e) => Either::Right(e),
-            });
-
-        for node in invalid {
-            if let CellsError::CellNotAllocated { cell_name } = node {
-                let _ = self.cache.remove(&cell_name);
-            }
-        }
-
-        Ok(node.with_children(valid))
     }
 }
 
@@ -375,6 +384,11 @@ mod tests {
         ));
     }
 
+    struct Graph {
+        name: CellName,
+        children: Vec<Self>,
+    }
+
     #[test]
     fn test_cell_graph_triple_nested() {
         skip_if_not_root!("test_cell_graph_triple_nested");
@@ -392,7 +406,7 @@ mod tests {
 
         // Create parent cell
         let parent_cell_name =
-            CellName::random_nested_for_tests(&grandparent_cell_name);
+            CellName::random_child_for_tests(&grandparent_cell_name);
         let parent_cell = CellSpec::new_for_tests();
         let _ = cells
             .allocate(parent_cell_name.clone(), parent_cell)
@@ -400,53 +414,36 @@ mod tests {
 
         // Create child cell
         let child_cell_name =
-            CellName::random_nested_for_tests(&parent_cell_name);
+            CellName::random_child_for_tests(&parent_cell_name);
         let child_cell = CellSpec::new_for_tests();
         let _ = cells
             .allocate(child_cell_name.clone(), child_cell)
             .expect("failed to allocate");
 
-        let graph =
-            cells.cell_graph(GraphNode { cell_info: None, children: vec![] });
+        fn cell_fn(cell: &Cell) -> Result<Graph> {
+            Ok(Graph {
+                name: cell.name().clone(),
+                children: CellsCache::get_all(cell, |c| cell_fn(c))
+                    .expect("get all failed")
+                    .into_iter()
+                    .filter_map(|x| x.ok())
+                    .collect(),
+            })
+        }
 
-        // Validate root node
-        let GraphNode { cell_info: root_info, children: root_children } =
-            graph.unwrap();
-        assert!(root_info.is_none());
-        assert_eq!(1, root_children.len());
+        let cells = cells.get_all(cell_fn).expect("failed to get all cells");
 
-        // Validate grandparent cell
-        let GraphNode {
-            cell_info: grandparent_cell_info,
-            children: grandparent_children,
-        } = &root_children[0];
-        assert_eq!(
-            grandparent_cell_info.as_ref().expect("should have cell_info").0,
-            grandparent_cell_name
-        );
-        assert_eq!(1, grandparent_children.len());
+        assert_eq!(cells.len(), 1);
+        let grandparent_cell = cells[0].as_ref().unwrap();
+        assert_eq!(grandparent_cell.name, grandparent_cell_name);
+        assert_eq!(grandparent_cell.children.len(), 1);
 
-        // Validate parent cell
-        let GraphNode {
-            cell_info: parent_cell_info,
-            children: parent_children,
-        } = &grandparent_children[0];
-        assert_eq!(
-            parent_cell_info.as_ref().expect("should have cell_info").0,
-            parent_cell_name
-        );
-        assert_eq!(1, parent_children.len());
+        let parent_cell = &grandparent_cell.children[0];
+        assert_eq!(parent_cell.name, parent_cell_name);
+        assert_eq!(parent_cell.children.len(), 1);
 
-        // Validate child cell
-        let GraphNode { cell_info: child_cell_info, children: child_children } =
-            &parent_children[0];
-        assert_eq!(
-            child_cell_info.as_ref().expect("should have cell_info").0,
-            child_cell_name
-        );
-        assert_eq!(0, child_children.len());
-
-        cells.free(&grandparent_cell_name).expect("failed to free");
-        assert!(cells.cache.is_empty());
+        let child_cell = &parent_cell.children[0];
+        assert_eq!(child_cell.name, child_cell_name);
+        assert_eq!(child_cell.children.len(), 0);
     }
 }

@@ -28,8 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use cell::Cell;
-pub use cell_graph::GraphNode;
+pub use cell::Cell;
 pub use cell_name::CellName;
 pub use cells::Cells;
 pub use cells_cache::CellsCache;
@@ -38,7 +37,6 @@ pub use error::{CellsError, Result};
 pub use nested_auraed::IsolationControls;
 
 mod cell;
-mod cell_graph;
 mod cell_name;
 #[allow(clippy::module_inception)]
 mod cells;

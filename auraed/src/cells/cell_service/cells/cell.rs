@@ -30,7 +30,7 @@
 
 use super::{
     cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec, Cells,
-    CellsCache, CellsError, GraphNode, Result,
+    CellsCache, CellsError, Result,
 };
 use aurae_client::AuraeConfig;
 use tracing::info;
@@ -178,11 +178,11 @@ impl Cell {
 
     /// Returns [None] if the [Cell] is not allocated.
     pub fn v2(&self) -> Option<bool> {
-        info!("{:?}", self);
-        match &self.state {
-            CellState::Allocated { cgroup, .. } => Some(cgroup.v2()),
-            _ => None,
-        }
+        let CellState::Allocated { cgroup, ..} = &self.state else {
+            return None
+        };
+
+        Some(cgroup.v2())
     }
 }
 
@@ -218,6 +218,17 @@ impl CellsCache for Cell {
         children.get(cell_name, f)
     }
 
+    fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
+    where
+        F: Fn(&Cell) -> Result<R>,
+    {
+        let CellState::Allocated { children, .. } = &self.state else {
+            return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
+        };
+
+        children.get_all(f)
+    }
+
     fn broadcast_free(&mut self) {
         let CellState::Allocated { children, .. } = &mut self.state else {
             return;
@@ -232,16 +243,6 @@ impl CellsCache for Cell {
         };
 
         children.broadcast_kill()
-    }
-
-    fn cell_graph(&mut self, node: GraphNode) -> Result<GraphNode> {
-        let CellState::Allocated { children, .. } = &mut self.state else {
-            return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
-        };
-
-        children.cell_graph(
-            node.with_cell_info(self.cell_name.clone(), self.spec.clone()),
-        )
     }
 }
 

@@ -29,8 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 pub use cgroup::Cgroup;
-use cpu::CpuController;
-use cpuset::CpusetController;
+pub use cpu::CpuController;
+pub use cpuset::CpusetController;
 pub use limit::Limit;
 pub use weight::Weight;
 

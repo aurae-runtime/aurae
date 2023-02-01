@@ -29,8 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cells::cgroups::{Limit, Weight},
-    cells::{CellName, Cells, CellsCache, GraphNode},
+    cells::{CellName, Cells, CellsCache},
     error::CellsServiceError,
     executables::Executables,
     validation::{
@@ -39,6 +38,7 @@ use super::{
     },
     Result,
 };
+use crate::cells::cell_service::cells::CellsError;
 use ::validation::ValidatedType;
 use aurae_client::{
     cells::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
@@ -242,41 +242,72 @@ impl CellService {
 
     #[tracing::instrument(skip(self))]
     async fn list(&self) -> Result<CellServiceListResponse> {
-        let mut cells = self.cells.lock().await;
-        let graph = cells
-            .cell_graph(GraphNode { cell_info: None, children: vec![] })?;
+        let cells = self.cells.lock().await;
 
-        Ok(CellServiceListResponse {
-            cells: graph.children.iter().map(map_graph_response).collect(),
+        let cells = cells
+            .get_all(|x| x.try_into())
+            .expect("cells doesn't error")
+            .into_iter()
+            .filter_map(|x| x.ok())
+            .collect();
+
+        Ok(CellServiceListResponse { cells })
+    }
+}
+
+impl TryFrom<&super::cells::Cell> for CellGraphNode {
+    type Error = CellsError;
+
+    fn try_from(
+        value: &super::cells::Cell,
+    ) -> std::result::Result<Self, Self::Error> {
+        let name = value.name();
+        let spec = value.spec();
+        let children = CellsCache::get_all(value, |x| x.try_into())?
+            .into_iter()
+            .filter_map(|x| x.ok())
+            .collect();
+
+        let super::cells::CellSpec { cgroup_spec, iso_ctl } = spec;
+        let super::cells::cgroups::CgroupSpec { cpu, cpuset } = cgroup_spec;
+
+        Ok(Self {
+            cell: Some(Cell {
+                name: name.to_string(),
+                cpu: cpu.as_ref().map(|x| x.into()),
+                cpuset: cpuset.as_ref().map(|x| x.into()),
+                isolate_process: iso_ctl.isolate_process,
+                isolate_network: iso_ctl.isolate_network,
+            }),
+            children,
         })
     }
 }
 
-fn map_graph_response(node: &GraphNode) -> CellGraphNode {
-    let (cell_name, cell_spec) = node
-        .cell_info
-        .as_ref()
-        .expect("cell_info should be present for every non-root node");
+impl From<&super::cells::cgroups::CpuController> for CpuController {
+    fn from(value: &super::cells::cgroups::CpuController) -> Self {
+        let super::cells::cgroups::CpuController { weight, max } =
+            value.clone();
 
-    let response = CellGraphNode {
-        cell: Some(Cell {
-            name: cell_name.to_string(),
-            cpu: cell_spec.cgroup_spec.cpu.as_ref().map(|cpu| CpuController {
-                weight: cpu.weight.map(Weight::into_inner),
-                max: cpu.max.map(Limit::into_inner),
-            }),
-            cpuset: cell_spec.cgroup_spec.cpuset.as_ref().map(|cpuset| {
-                CpusetController {
-                    cpus: cpuset.cpus.as_ref().map(|c| c.to_string()),
-                    mems: cpuset.mems.as_ref().map(|m| m.to_string()),
-                }
-            }),
-            isolate_network: cell_spec.iso_ctl.isolate_network,
-            isolate_process: cell_spec.iso_ctl.isolate_process,
-        }),
-        children: node.children.iter().map(map_graph_response).collect(),
-    };
-    response
+        Self {
+            weight: weight.map(|x| x.into_inner()),
+            max: max.map(|x| x.into_inner()),
+        }
+    }
+}
+
+impl From<&super::cells::cgroups::cpuset::CpusetController>
+    for CpusetController
+{
+    fn from(value: &super::cells::cgroups::CpusetController) -> Self {
+        let super::cells::cgroups::CpusetController { cpus, mems } =
+            value.clone();
+
+        Self {
+            cpus: cpus.map(|x| x.into_inner()),
+            mems: mems.map(|x| x.into_inner()),
+        }
+    }
 }
 
 /// ### Mapping cgroup options to the Cell API
@@ -443,8 +474,6 @@ mod tests {
             .map(|c| c.cell.as_ref().unwrap().name.as_str())
             .collect_vec();
         assert_eq!(actual_nested_cell_names, expected_nested_cell_names);
-
-        _ = service.free_all().await;
     }
 
     fn allocate_request(
