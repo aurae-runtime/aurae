@@ -141,7 +141,7 @@ impl runtime_service_server::RuntimeService for RuntimeService {
             .as_init(Path::new(AURAE_BUNDLE_PATH).join(AURAE_SELF_IDENTIFIER))
             .with_systemd(false)
             .build()
-            .expect("building sandbox");
+            .expect("failed building pod sandbox: ensure valid OCI spec and proper container starting point");
 
         sandbox.start().expect("starting pod sandbox");
 

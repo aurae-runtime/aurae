@@ -152,6 +152,16 @@ impl AuraeOCIBuilder {
                         ])
                         .build()
                         .expect("default oci: mount /sys/fs/cgroup"),
+                    MountBuilder::default()
+                        .destination("/etc/aurae")
+                        .typ("bind")
+                        .source("/etc/aurae")
+                        .options(vec![
+                            "rbind".to_string(),
+                            "rw".to_string(),
+                        ])
+                        .build()
+                        .expect("default oci: mount /etc/aurae"),
                 ])
                 .process(
                     ProcessBuilder::default()
