@@ -197,7 +197,7 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         // TODO: Pull sandbox from cache
 
         let syscall = create_syscall();
-        let _sandbox_builderm =
+        let _sandbox_builder =
             ContainerBuilder::new(metadata.name, syscall.as_ref());
 
         // TODO schedule as tenant container
