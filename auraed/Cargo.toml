@@ -56,11 +56,15 @@ lazy_static = { workspace = true }
 libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-libcontainer", features = ["v2"], default-features = false }
 liboci-cli = "0.0.4"
 log = "0.4.17"
+multi_log = "0.1.2"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { version = "0.26.1", features = ["sched"] }
 ocipkg = "0.2.8"
+oci-spec = "0.6.0"
 procfs = "0.14.2"
 rtnetlink = "0.11.0"
+serde_json.workspace = true
+serde.workspace = true
 simplelog = "0.12.0"
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "macros", "net", "process", "rt-multi-thread", "signal", "sync"] }
@@ -75,10 +79,6 @@ uuid = { version = "1.2.2", features = ["v4"] }
 validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
-multi_log = "0.1.2"
-oci-spec = "0.6.0"
-serde.workspace = true
-serde_json.workspace = true
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
