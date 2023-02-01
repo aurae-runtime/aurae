@@ -73,7 +73,7 @@ pub(crate) struct Network(Handle);
 impl Network {
     pub(crate) fn connect() -> Result<Network, NetworkError> {
         let (connection, handle, _) = rtnetlink::new_connection()?;
-        let _ = tokio::spawn(connection);
+        let _ignored = tokio::spawn(connection);
         Ok(Self(handle))
     }
 
@@ -94,14 +94,13 @@ impl Network {
                 for (_, iface) in links {
                     if let Err(e) = dump_addresses(&self.0, &iface).await {
                         error!(
-                            "Could not dump addresses for iface {}. Error={:?}",
-                            iface, e
+                            "Could not dump addresses for iface {iface}. Error={e:?}"
                         );
                     };
                 }
             }
             Err(e) => {
-                error!("{:?}", e);
+                error!("{e:?}");
             }
         }
         info!("==========================");
@@ -115,12 +114,12 @@ async fn configure_loopback(handle: &Handle) -> Result<(), NetworkError> {
     const LOOPBACK_IPV4: &str = "127.0.0.1";
     const LOOPBACK_IPV4_SUBNET: &str = "/8";
 
-    trace!("configure {}", LOOPBACK_DEV);
+    trace!("configure {LOOPBACK_DEV}");
 
     add_address(
         handle,
         LOOPBACK_DEV.to_owned(),
-        format!("{}{}", LOOPBACK_IPV6, LOOPBACK_IPV6_SUBNET)
+        format!("{LOOPBACK_IPV6}{LOOPBACK_IPV6_SUBNET}")
             .parse::<Ipv6Network>()
             .expect("valid ipv6 address"),
     )
@@ -129,7 +128,7 @@ async fn configure_loopback(handle: &Handle) -> Result<(), NetworkError> {
     add_address(
         handle,
         LOOPBACK_DEV.to_owned(),
-        format!("{}{}", LOOPBACK_IPV4, LOOPBACK_IPV4_SUBNET)
+        format!("{LOOPBACK_IPV4}{LOOPBACK_IPV4_SUBNET}")
             .parse::<Ipv4Network>()
             .expect("valid ipv4 address"),
     )
@@ -147,12 +146,11 @@ async fn configure_nic(handle: &Handle) -> Result<(), NetworkError> {
     const DEFAULT_NET_DEV_IPV6: &str = "fe80::2";
     const DEFAULT_NET_DEV_IPV6_SUBNET: &str = "/64";
 
-    trace!("configure {}", DEFAULT_NET_DEV);
+    trace!("configure {DEFAULT_NET_DEV}");
 
-    let ipv6 =
-        format!("{}{}", DEFAULT_NET_DEV_IPV6, DEFAULT_NET_DEV_IPV6_SUBNET)
-            .parse::<Ipv6Network>()
-            .expect("valid ipv6 address");
+    let ipv6 = format!("{DEFAULT_NET_DEV_IPV6}{DEFAULT_NET_DEV_IPV6_SUBNET}")
+        .parse::<Ipv6Network>()
+        .expect("valid ipv6 address");
 
     add_address(handle, DEFAULT_NET_DEV.to_owned(), ipv6).await?;
 
@@ -166,7 +164,7 @@ async fn configure_nic(handle: &Handle) -> Result<(), NetworkError> {
     )
     .await?;
 
-    info!("Successfully configured {}", DEFAULT_NET_DEV);
+    info!("Successfully configured {DEFAULT_NET_DEV}");
     Ok(())
 }
 
@@ -184,7 +182,7 @@ async fn add_address(
         .execute()
         .await
         .map(|_| {
-            trace!("Added address to link {}", iface);
+            trace!("Added address to link {iface}");
         })
         .map_err(|e| NetworkError::ErrorAddingAddress {
             iface,
@@ -210,9 +208,9 @@ async fn set_link_up(
         .map(|_| {
             // TODO: replace sleep with an await mechanism that checks if device is up (with a timeout)
             // TODO: https://github.com/aurae-runtime/auraed/issues/40
-            info!("Waiting for link '{}' to become up", iface);
+            info!("Waiting for link '{iface}' to become up");
             thread::sleep(Duration::from_secs(3));
-            info!("Waited 3 seconds, assuming link '{}' is up", iface);
+            info!("Waited 3 seconds, assuming link '{iface}' is up");
         })
         .map_err(|e| NetworkError::ErrorSettingLinkUp { iface, source: e })
 }
@@ -231,7 +229,7 @@ async fn set_link_down(
         .execute()
         .await
         .map(|_| {
-            trace!("Set link {} down", iface);
+            trace!("Set link {iface} down");
         })
         .map_err(|e| NetworkError::ErrorSettingLinkDown { iface, source: e })
 }
@@ -339,7 +337,7 @@ async fn dump_addresses(
         for nla in link_msg.nlas.into_iter() {
             if let Nla::IfName(name) = nla {
                 info!("\tindex: {}", link_msg.header.index);
-                info!("\tname: {}", name);
+                info!("\tname: {name}");
             }
         }
 
@@ -360,17 +358,17 @@ async fn dump_addresses(
                             addr.try_into()
                                 .map(|ip: [u8; 16]| Some(IpAddr::from(ip)))
                                 .unwrap_or_else(|addr| {
-                                    warn!("Could not Convert vec: {:?} to ipv4 or ipv6", addr);
+                                    warn!("Could not Convert vec: {addr:?} to ipv4 or ipv6");
                                     None
                                 })
                         });
 
                     match &ip_addr {
                         Some(IpAddr::V4(ip_addr)) => {
-                            info!("\t ipv4: {}", ip_addr);
+                            info!("\t ipv4: {ip_addr}");
                         }
                         Some(IpAddr::V6(ip_addr)) => {
-                            info!("\t ipv6: {}", ip_addr);
+                            info!("\t ipv6: {ip_addr}");
                         }
                         None => {}
                     }

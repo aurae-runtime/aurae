@@ -126,9 +126,9 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 
 <!-- +Status Badges -->
 
-[workflow in progress: deploy]: https://github.com/aurae-runtime/aurae/actions/workflows/091-deploy-website-documentation-ubuntu-make-docs.yml/badge.svg?branch=main "https://github.com/aurae-runtime/aurae/actions/workflows/091-deploy-website-documentation-ubuntu-make-docs.yml"
-[workflow in progress: documentation]: https://github.com/aurae-runtime/aurae/actions/workflows/036-check-website-documentation-aurae-builder-make-docs.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/036-check-website-documentation-aurae-builder-make-docs.yml"
-[workflow in progress: build]: https://github.com/aurae-runtime/aurae/actions/workflows/001-cargo-test-ubuntu-make-test.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/001-cargo-test-ubuntu-make-test.yml"
+[workflow in progress: deploy]: https://github.com/aurae-runtime/aurae/actions/workflows/291-deploy-website-documentation-aurae-builder-make-docs.yml/badge.svg?branch=main "https://github.com/aurae-runtime/aurae/actions/workflows/291-deploy-website-documentation-aurae-builder-make-docs.yml"
+[workflow in progress: documentation]: https://github.com/aurae-runtime/aurae/actions/workflows/290-check-website-documentation-aurae-builder-make-docs.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/290-check-website-documentation-aurae-builder-make-docs.yml"
+[workflow in progress: build]: https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test.yml"
 
 <!-- +aurae.io/ -->
 

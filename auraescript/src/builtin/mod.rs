@@ -46,7 +46,7 @@ const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 fn about() {
     println!("\n");
     println!("Aurae. Distributed Runtime.");
-    println!("Authors: {}", AUTHORS);
+    println!("Authors: {AUTHORS}");
     version();
     println!("\n");
 }
@@ -54,5 +54,5 @@ fn about() {
 /// Show version information.
 #[allow(dead_code)]
 fn version() {
-    println!("Version: {}", VERSION);
+    println!("Version: {VERSION}");
 }

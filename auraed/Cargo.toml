@@ -58,7 +58,7 @@ liboci-cli = "0.0.4"
 log = "0.4.17"
 multi_log = "0.1.2"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
-nix = { version = "0.26.1", features = ["sched"] }
+nix = { workspace = true, features = ["sched"] }
 ocipkg = "0.2.8"
 oci-spec = "0.6.0"
 procfs = "0.14.2"
@@ -82,3 +82,4 @@ walkdir = "2"
 
 [dev-dependencies]
 simple_test_case = "1.1.0"
+test-helpers = { workspace = true }

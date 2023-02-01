@@ -5,7 +5,7 @@ use std::{
 
 use validation::{ValidatedField, ValidationError};
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct Weight(u64);
 
 impl Weight {

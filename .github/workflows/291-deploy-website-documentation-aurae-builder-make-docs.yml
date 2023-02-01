@@ -28,74 +28,46 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# This is the main compile time check for Aurae.
+# This will check the documentation, and deploy the https://aurae.io website
+# from the current code base upon merge -> main.
 #
 # This build check will introduce confidence for the following:
 #
-# - That the binary does not have unexpected dependencies.
-# - We intentionally build this on a clean ubuntu image, to prove that we can
-#   generate a static binary with minimal dependencies.
-# - That the code does not warn (due to clippy errors/warnings)
+# - That the documentation is updated and passes our spelling checks.
+# - That the website is deployed with a fresh copy of the new docs.
 #
-# When this build passes we should have a "clean cargo" output!
+# When this build passes we should have confidence that our documentation is
+# updated on the website complete with best practices.
 #
-name: "Cargo Install (001) [ubuntu:latest]"
+name: "Deploy Website Documentation (291) [aurae:builder:tester-latest]"
 on:
-  push:
-    branches: main
-  pull_request:
-    branches: main
-env:
-  CARGO_TERM_COLOR: always
+ push:
+   branches: main
+
 jobs:
-  build:
+  build-container:
+    uses: ./.github/workflows/200-aurae-builder-image-docker-build-tester.yml
+  deploy:
     runs-on: ubuntu-latest
+    needs: build-container
+    container:
+      image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
+      credentials:
+        username:  ${{ github.actor }}
+        password:  ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: bufbuild/buf-setup-action@v1
-        with:
-          github_token: ${{ github.token }}
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: build-compile-test-musl-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install protoc-gen-doc in [ubuntu:latest]
-        run: |
-          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
-          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
-          chmod +x protoc-gen-doc
-          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
-          sudo apt-get update
-          sudo apt-get install -y protobuf-compiler
-      - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
-        #
-        # Do not add GNU libraries here! Do not add GNU libraries here!
-        #
-        # Please (seriously please) be careful about adding commands here.
-        # This is our core way of validating that our binary is "healthy"
-        # If we need to install anything with the word "lib" in it to get
-        # the build to pass, we likely should be having other discussions
-        # instead of adding commands here.
-        #
-        # Do not add GNU libraries here! Do not add GNU libraries here!
-        #
-        # For example, we should NOT be adding libraries such as "libseccomp"
-        # or "libdbus".
-        #
-        # If in doubt, please ask in Discord in the build channel.
-        #
-        # Do not at GNU libraries here! Do not add GNU libraries here!
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-      - name: Cargo build, lint, test [make test]
-        # This should remain the only command we execute as this matches the title of the file.
-        # The goal is for this to be easy to find from the GitHub dashboard.
-        # Instead of adding more commands here, consider another make target or a new YAML file
-        # named with a good name.
-        run: make test
+        - uses: actions/checkout@v3
+        ## Configure Git
+        # This fixes a current issue with git and dubious ownership of folders
+        # https://github.com/actions/runner-images/issues/6775
+        - run: git config --global --add safe.directory /__w/aurae/aurae
+        - uses: actions/setup-python@v2
+          with:
+            python-version: 3.x
+        - name: Install mkdocs-material [aurae-builder:builder-latest]
+          run: |
+            pip install mkdocs-material
+        - name: Build Documentation [make docs]
+          run: make docs
+        - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
+          run: mkdocs gh-deploy --force

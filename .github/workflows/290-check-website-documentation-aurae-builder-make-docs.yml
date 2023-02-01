@@ -28,71 +28,50 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-name: "Aurae Udeps Builder Image (031) [ubuntu:latest]"
-on: [workflow_call]
+# This will check the documentation (only).
+#
+# This build check will introduce confidence for the following:
+#
+# - That the documentation is updated and passes our spelling checks.
+#
+# When this build passes we should have confidence that our documentation is
+# ready to be pushed to the website.
+#
+name: "Check docs (290) [aurae-builder:tester-latest]"
+on:
+ push:
+   branches: main
+ pull_request:
+   branches: main
+
 permissions:
  contents: read
  packages: write
 env:
  CARGO_TERM_COLOR: always
- CACHE_VERSION: v2
 jobs:
  build-container:
-   name: Build container image
+   uses: ./.github/workflows/200-aurae-builder-image-docker-build-tester.yml
+ docs:
+   name: Build Docs
    runs-on: ubuntu-latest
-   concurrency:
-     group: ${{ format('{0}-{1}-031', github.ref, github.job) }}
-   outputs:
-       tag: ${{ steps.image-tag.outputs.tag}}-udeps
+   needs: build-container
+   container:
+     image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
+     credentials:
+       username:  ${{ github.actor }}
+       password:  ${{ secrets.GITHUB_TOKEN }}
    steps:
      - uses: actions/checkout@v3
+     - uses: actions/cache@v3
        with:
-         fetch-depth: 0
-     - id: image-tag
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: 200-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+     - name: Docs (make docs docs-lint)
        run: |
-         echo "tag=${{ hashFiles('**images/Dockerfile.test') }}" >> $GITHUB_OUTPUT
-
-     - name: Check if container build needs to run
-       uses: actions/cache@v3
-       id: check-change
-       with:
-         path: |
-           images/Dockerfile.test
-         key: build-image-marker-${{ runner.os }}-${{ hashFiles('**images/Dockerfile.test') }}-${{env.CACHE_VERSION}}
-
-     - name: Set up container buildx
-       if: steps.check-change.outputs.cache-hit != 'true'
-       uses: docker/setup-buildx-action@v2
-       with:
-         install: true
-
-     - name: Login to Github Container Registry
-       if: steps.check-change.outputs.cache-hit != 'true'
-       uses: docker/login-action@v2
-       with:
-         registry: ghcr.io
-         username:  ${{ github.actor }}
-         password:  ${{ secrets.GITHUB_TOKEN }}
-
-     - name: Create Docker Build Image
-       id: build-and-push
-       if: steps.check-change.outputs.cache-hit != 'true' && github.event.pull_request.head.repo.full_name == github.repository
-       uses: docker/build-push-action@v2
-       timeout-minutes: 15
-       with:
-         context: .
-         file: images/Dockerfile.test
-         push: true
-         build-args: CACHE_VERSION=${{env.CACHE_VERSION}}
-         tags: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
-         cache-from: type=gha
-         cache-to: type=gha,mode=max
-
-     - name: Fail if fork is changing Dockerfile
-       id: build
-       if: github.event.pull_request.head.repo.full_name != github.repository
-       run: |
-         ## If the fork has changed the Dockerfile, we need to fail the pipeline.
-         ## This is to prevent a case where a forked repo could expect changes in the Dockerfile
-         ## to be used in the build process.
-         git diff --quiet HEAD origin/main -- images/Dockerfile.build || exit 1
+         make docs docs-lint

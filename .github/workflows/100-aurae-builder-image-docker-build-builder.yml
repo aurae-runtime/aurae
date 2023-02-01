@@ -28,39 +28,71 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# This will check the documentation, and deploy the https://aurae.io website
-# from the current code base upon merge -> main.
-#
-# This build check will introduce confidence for the following:
-#
-# - That the documentation is updated and passes our spelling checks.
-# - That the website is deployed with a fresh copy of the new docs.
-#
-# When this build passes we should have confidence that our documentation is
-# updated on the website complete with best practices.
-#
-name: "Deploy Website Documentation (091) [aurae:builder]"
-on:
- push:
-   branches: main
-
+name: "Aurae Builder Builder Image (100)"
+on: [workflow_call]
+permissions:
+ contents: read
+ packages: write
+env:
+ CARGO_TERM_COLOR: always
+ CACHE_VERSION: v0
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
-      credentials:
-        username:  ${{ github.actor }}
-        password:  ${{ secrets.GITHUB_TOKEN }}
-    steps:
-        - uses: actions/checkout@v3
-        - uses: actions/setup-python@v2
-          with:
-            python-version: 3.x
-        - name: Install mkdocs-material [aurae-builder:builder-latest]
-          run: |
-            pip install mkdocs-material
-        - name: Build Documentation [make docs]
-          run: make docs
-        - name: Deploy 'aurae.io' Website [mkdocs gh-deploy]
-          run: mkdocs gh-deploy --force
+ build-container:
+   name: Build container image
+   runs-on: ubuntu-latest
+   concurrency:
+     group: ${{ format('{0}-{1}-100', github.workflow, github.ref) }}
+   outputs:
+       tag: ${{ steps.image-tag.outputs.tag}}
+   steps:
+     - uses: actions/checkout@v3
+       with:
+         fetch-depth: 0
+     - id: image-tag
+       run: |
+         echo "tag=${{ hashFiles('**images/Dockerfile.build') }}" >> $GITHUB_OUTPUT
+
+     - name: Check if container build needs to run
+       uses: actions/cache@v3
+       id: check-change
+       with:
+         path: |
+           images/Dockerfile.build
+         key: build-image-marker-${{ runner.os }}-${{ hashFiles('**images/Dockerfile.build') }}-${{env.CACHE_VERSION}}
+
+     - name: Set up container buildx
+       if: steps.check-change.outputs.cache-hit != 'true'
+       uses: docker/setup-buildx-action@v2
+       with:
+         install: true
+
+     - name: Login to Github Container Registry
+       if: steps.check-change.outputs.cache-hit != 'true'
+       uses: docker/login-action@v2
+       with:
+         registry: ghcr.io
+         username:  ${{ github.actor }}
+         password:  ${{ secrets.GITHUB_TOKEN }}
+
+     - name: Create Docker Build Image
+       id: build-and-push
+       if: steps.check-change.outputs.cache-hit != 'true' && github.event.pull_request.head.repo.full_name == github.repository
+       uses: docker/build-push-action@v2
+       timeout-minutes: 15
+       with:
+         context: .
+         file: images/Dockerfile.build
+         push: true
+         build-args: CACHE_VERSION=${{env.CACHE_VERSION}}
+         tags: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest,ghcr.io/${{ github.repository }}/aurae-builder:${{ steps.image-tag.outputs.tag}}
+         cache-from: type=gha
+         cache-to: type=gha,mode=max
+
+     - name: Fail if fork is changing Dockerfile
+       id: build
+       if: github.event.pull_request.head.repo.full_name != github.repository
+       run: |
+         ## If the fork has changed the Dockerfile, we need to fail the pipeline.
+         ## This is to prevent a case where a forked repo could expect changes in the Dockerfile
+         ## to be used in the build process.
+         git diff --quiet HEAD origin/main -- images/Dockerfile.build || exit 1

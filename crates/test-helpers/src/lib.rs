@@ -28,35 +28,69 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use std::path::PathBuf;
+// Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
+#![warn(future_incompatible, nonstandard_style, unused)]
+#![warn(
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    unconditional_recursion,
+    unused_comparisons,
+    while_true
+)]
+#![warn(missing_debug_implementations,
+// TODO: missing_docs,
+trivial_casts,
+trivial_numeric_casts,
+unused_extern_crates,
+unused_import_braces,
+unused_qualifications,
+unused_results
+)]
+#![warn(clippy::unwrap_used)]
+#![allow(unused_qualifications)]
 
-use super::{SocketStream, SystemRuntime, SystemRuntimeError};
-use crate::{
-    init::{logging, system_runtimes::create_unix_socket_stream, BANNER},
-    AURAE_RUNTIME_DIR, AURAE_SOCK,
-};
-use tonic::async_trait;
-use tracing::info;
+// Nix has a collection of test helpers that are not exposed publicly by their crate
+// The below skip helpers are here: https://github.com/nix-rust/nix/blob/master/test/common/mod.rs
 
-pub(crate) struct ContainerSystemRuntime;
+#[macro_export]
+macro_rules! skip {
+    ($($reason: expr),+) => {
+        use ::std::io::{self, Write};
 
-#[async_trait]
-impl SystemRuntime for ContainerSystemRuntime {
-    async fn init(
-        self,
-        verbose: bool,
-        socket_address: Option<String>,
-    ) -> Result<SocketStream, SystemRuntimeError> {
-        println!("{BANNER}");
-        logging::init(verbose, true)?;
-        info!("Running as a container.");
-        let mut default_aurae_sock_path = PathBuf::from(AURAE_RUNTIME_DIR);
-        default_aurae_sock_path.push(AURAE_SOCK);
-        create_unix_socket_stream(
-            socket_address
-                .map(PathBuf::from)
-                .unwrap_or_else(|| default_aurae_sock_path),
-        )
-        .await
+        let stderr = io::stderr();
+        let mut handle = stderr.lock();
+        writeln!(handle, $($reason),+).unwrap();
+        return;
     }
+}
+
+#[macro_export]
+macro_rules! skip_if_not_root {
+    ($name:expr) => {
+        use nix::unistd::Uid;
+
+        if !Uid::current().is_root() {
+            skip!("{} requires root privileges. Skipping test.", $name);
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! skip_if_seccomp {
+    ($name:expr) => {
+        if let Ok(s) = std::fs::read_to_string("/proc/self/status") {
+            for l in s.lines() {
+                let mut fields = l.split_whitespace();
+                if fields.next() == Some("Seccomp:")
+                    && fields.next() != Some("0")
+                {
+                    skip!(
+                        "{} cannot be run in Seccomp mode.  Skipping test.",
+                        stringify!($name)
+                    );
+                }
+            }
+        }
+    };
 }

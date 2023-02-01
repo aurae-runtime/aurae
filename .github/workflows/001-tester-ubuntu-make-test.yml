@@ -28,33 +28,33 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-name: "Cargo Test (035) [aurae-builder:builder-latest]"
+# This is the main compile time check for Aurae.
+#
+# This build check will introduce confidence for the following:
+#
+# - That the binary does not have unexpected dependencies.
+# - We intentionally build this on a clean ubuntu image, to prove that we can
+#   generate a static binary with minimal dependencies.
+# - That the code does not warn (due to clippy errors/warnings)
+#
+# When this build passes we should have a "clean cargo" output!
+#
+name: "Tester (001) [ubuntu:latest]"
 on:
   push:
     branches: main
   pull_request:
     branches: main
-
-permissions:
-  contents: read
-  packages: write
 env:
   CARGO_TERM_COLOR: always
 jobs:
-  build-container:
-    uses: ./.github/workflows/030-ubuntu-aurae-builder-image-ubuntu-docker-build-builder.yml
   build:
-    name: Build (lint, compile, test)
     runs-on: ubuntu-latest
-    needs: build-container
-    timeout-minutes: 20
-    container:
-      image: ghcr.io/${{ github.repository }}/aurae-builder:builder-latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
       - uses: actions/cache@v3
         with:
           path: |
@@ -63,8 +63,37 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: build-compile-test-container-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cargo Test [make test]
+          key: 000-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install protoc-gen-doc in [ubuntu:latest]
+        run: |
+          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          chmod +x protoc-gen-doc
+          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+      - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
+        #
+        # Do not add GNU libraries here! Do not add GNU libraries here!
+        #
+        # Please (seriously please) be careful about adding commands here.
+        # This is our core way of validating that our binary is "healthy"
+        # If we need to install anything with the word "lib" in it to get
+        # the build to pass, we likely should be having other discussions
+        # instead of adding commands here.
+        #
+        # Do not add GNU libraries here! Do not add GNU libraries here!
+        #
+        # For example, we should NOT be adding libraries such as "libseccomp"
+        # or "libdbus".
+        #
+        # If in doubt, please ask in Discord in the build channel.
+        #
+        # Do not at GNU libraries here! Do not add GNU libraries here!
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+      - name: Cargo build, lint, test [make test]
         # This should remain the only command we execute as this matches the title of the file.
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file

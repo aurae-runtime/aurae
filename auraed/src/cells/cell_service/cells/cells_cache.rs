@@ -57,6 +57,10 @@ pub trait CellsCache {
     where
         F: Fn(&Cell) -> Result<R>;
 
+    fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
+    where
+        F: Fn(&Cell) -> Result<R>;
+
     /// Calls [Cell::Free] on all cells in the cache, ignoring any errors.
     /// Successfully freed cells will be removed from the cache.
     fn broadcast_free(&mut self);

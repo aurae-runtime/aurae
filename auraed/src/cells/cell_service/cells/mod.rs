@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use cell::Cell;
+pub use cell::Cell;
 pub use cell_name::CellName;
 pub use cells::Cells;
 pub use cells_cache::CellsCache;

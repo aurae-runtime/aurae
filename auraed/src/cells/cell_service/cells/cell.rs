@@ -172,13 +172,17 @@ impl Cell {
         &self.cell_name
     }
 
+    pub fn spec(&self) -> &CellSpec {
+        &self.spec
+    }
+
     /// Returns [None] if the [Cell] is not allocated.
     pub fn v2(&self) -> Option<bool> {
-        info!("{:?}", self);
-        match &self.state {
-            CellState::Allocated { cgroup, .. } => Some(cgroup.v2()),
-            _ => None,
-        }
+        let CellState::Allocated { cgroup, ..} = &self.state else {
+            return None
+        };
+
+        Some(cgroup.v2())
     }
 }
 
@@ -214,6 +218,17 @@ impl CellsCache for Cell {
         children.get(cell_name, f)
     }
 
+    fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
+    where
+        F: Fn(&Cell) -> Result<R>,
+    {
+        let CellState::Allocated { children, .. } = &self.state else {
+            return Err(CellsError::CellNotAllocated { cell_name: self.cell_name.clone() })
+        };
+
+        children.get_all(f)
+    }
+
     fn broadcast_free(&mut self) {
         let CellState::Allocated { children, .. } = &mut self.state else {
             return;
@@ -244,11 +259,14 @@ impl Drop for Cell {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_helpers::*;
 
-    // Ignored: requires sudo, which we don't have in CI
-    #[ignore]
     #[test]
     fn test_cant_unfree() {
+        skip_if_not_root!("test_cant_unfree");
+        // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
+        skip_if_seccomp!("test_cant_unfree");
+
         let cell_name = CellName::random_for_tests();
         let mut cell = Cell::new(cell_name, CellSpec::new_for_tests());
         assert!(matches!(cell.state, CellState::Unallocated));

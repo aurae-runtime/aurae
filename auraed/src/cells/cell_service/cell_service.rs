@@ -38,15 +38,17 @@ use super::{
     },
     Result,
 };
+use crate::cells::cell_service::cells::CellsError;
 use ::validation::ValidatedType;
 use aurae_client::{
     cells::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
 };
 use aurae_proto::cells::{
-    cell_service_server, CellServiceAllocateRequest,
+    cell_service_server, Cell, CellGraphNode, CellServiceAllocateRequest,
     CellServiceAllocateResponse, CellServiceFreeRequest,
-    CellServiceFreeResponse, CellServiceStartRequest, CellServiceStartResponse,
-    CellServiceStopRequest, CellServiceStopResponse,
+    CellServiceFreeResponse, CellServiceListRequest, CellServiceListResponse,
+    CellServiceStartRequest, CellServiceStartResponse, CellServiceStopRequest,
+    CellServiceStopResponse, CpuController, CpusetController,
 };
 use backoff::backoff::Backoff;
 use std::sync::Arc;
@@ -237,6 +239,75 @@ impl CellService {
         executables.broadcast_stop().await;
         Ok(())
     }
+
+    #[tracing::instrument(skip(self))]
+    async fn list(&self) -> Result<CellServiceListResponse> {
+        let cells = self.cells.lock().await;
+
+        let cells = cells
+            .get_all(|x| x.try_into())
+            .expect("cells doesn't error")
+            .into_iter()
+            .filter_map(|x| x.ok())
+            .collect();
+
+        Ok(CellServiceListResponse { cells })
+    }
+}
+
+impl TryFrom<&super::cells::Cell> for CellGraphNode {
+    type Error = CellsError;
+
+    fn try_from(
+        value: &super::cells::Cell,
+    ) -> std::result::Result<Self, Self::Error> {
+        let name = value.name();
+        let spec = value.spec();
+        let children = CellsCache::get_all(value, |x| x.try_into())?
+            .into_iter()
+            .filter_map(|x| x.ok())
+            .collect();
+
+        let super::cells::CellSpec { cgroup_spec, iso_ctl } = spec;
+        let super::cells::cgroups::CgroupSpec { cpu, cpuset } = cgroup_spec;
+
+        Ok(Self {
+            cell: Some(Cell {
+                name: name.to_string(),
+                cpu: cpu.as_ref().map(|x| x.into()),
+                cpuset: cpuset.as_ref().map(|x| x.into()),
+                isolate_process: iso_ctl.isolate_process,
+                isolate_network: iso_ctl.isolate_network,
+            }),
+            children,
+        })
+    }
+}
+
+impl From<&super::cells::cgroups::CpuController> for CpuController {
+    fn from(value: &super::cells::cgroups::CpuController) -> Self {
+        let super::cells::cgroups::CpuController { weight, max } =
+            value.clone();
+
+        Self {
+            weight: weight.map(|x| x.into_inner()),
+            max: max.map(|x| x.into_inner()),
+        }
+    }
+}
+
+impl From<&super::cells::cgroups::cpuset::CpusetController>
+    for CpusetController
+{
+    fn from(value: &super::cells::cgroups::CpusetController) -> Self {
+        let super::cells::cgroups::CpusetController { cpus, mems } =
+            value.clone();
+
+        Self {
+            cpus: cpus.map(|x| x.into_inner()),
+            mems: mems.map(|x| x.into_inner()),
+        }
+    }
 }
 
 /// ### Mapping cgroup options to the Cell API
@@ -325,5 +396,96 @@ impl cell_service_server::CellService for CellService {
             request.cell_name = None;
             self.stop_in_cell(&cell_name, request).await
         }
+    }
+
+    async fn list(
+        &self,
+        _request: Request<CellServiceListRequest>,
+    ) -> std::result::Result<Response<CellServiceListResponse>, Status> {
+        Ok(Response::new(self.list().await?))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cells::cell_service::validation::{
+        ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
+    };
+    use iter_tools::Itertools;
+    use test_helpers::*;
+
+    #[tokio::test]
+    async fn test_list() {
+        skip_if_not_root!("test_list");
+        skip_if_seccomp!("test_list");
+
+        let service = CellService::new();
+
+        let parent_cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());
+        assert!(service
+            .allocate(allocate_request(&parent_cell_name))
+            .await
+            .is_ok());
+
+        let nested_cell_name =
+            format!("{}/ae-test-{}", &parent_cell_name, uuid::Uuid::new_v4());
+        assert!(service
+            .allocate(allocate_request(&nested_cell_name))
+            .await
+            .is_ok());
+
+        let cell_without_children_name =
+            format!("ae-test-{}", uuid::Uuid::new_v4());
+        assert!(service
+            .allocate(allocate_request(&cell_without_children_name))
+            .await
+            .is_ok());
+
+        let result = service.list().await;
+        assert!(result.is_ok());
+
+        let list = result.unwrap();
+        assert_eq!(list.cells.len(), 2);
+
+        let mut expected_root_cell_names =
+            vec![&parent_cell_name, &cell_without_children_name];
+        expected_root_cell_names.sort();
+
+        let mut actual_root_cell_names = list
+            .cells
+            .iter()
+            .map(|c| c.cell.as_ref().unwrap().name.as_str())
+            .collect_vec();
+        actual_root_cell_names.sort();
+        assert_eq!(actual_root_cell_names, expected_root_cell_names);
+
+        let parent_cell = list
+            .cells
+            .iter()
+            .find(|p| p.cell.as_ref().unwrap().name.eq(&parent_cell_name));
+        assert!(parent_cell.is_some());
+
+        let expected_nested_cell_names = vec![&nested_cell_name];
+        let actual_nested_cell_names = parent_cell
+            .unwrap()
+            .children
+            .iter()
+            .map(|c| c.cell.as_ref().unwrap().name.as_str())
+            .collect_vec();
+        assert_eq!(actual_nested_cell_names, expected_nested_cell_names);
+    }
+
+    fn allocate_request(
+        cell_name: &str,
+    ) -> ValidatedCellServiceAllocateRequest {
+        let cell = ValidatedCell {
+            name: CellName::from(cell_name),
+            cpu: Some(ValidatedCpuController { weight: None, max: None }),
+            cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
+            isolate_process: false,
+            isolate_network: false,
+        };
+        ValidatedCellServiceAllocateRequest { cell }
     }
 }
