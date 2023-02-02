@@ -166,116 +166,47 @@ proto-vendor-grpc-health: ## Copy the gRPC Health interface from upstream
 
 #------------------------------------------------------------------------------#
 
-# Auraed Commands
+PROGS = aer auraed auraescript
 
-.PHONY: auraed
-auraed: musl $(GEN_RS) $(GEN_TS) auraed-lint auraed-debug ## Lint and install auraed (for use during development)
+define AURAE_template =
+$(1): musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use during development)
 
-.PHONY: auraed-lint
-auraed-lint: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) clippy --target $(uname_m)-unknown-linux-musl -p auraed --all-features -- -D clippy::all -D warnings
+$(1)-lint: musl $(GEN_RS) $(GEN_TS)
+	$$(cargo) clippy --target $$(uname_m)-unknown-linux-musl -p $(1) --all-features -- -D clippy::all -D warnings
 
-.PHONY: auraed-test
-auraed-test: musl $(GEN_RS) $(GEN_TS)
+$(1)-test: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed
 
-.PHONY: auraed-test-all
-auraed-test-all: musl $(GEN_RS) $(GEN_TS)
-	sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed -- --include-ignored
+$(1)-test-all: musl $(GEN_RS) $(GEN_TS)
+	sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p $(1) -- --include-ignored
 
-.PHONY: auraed-test-watch
-auraed-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make auraed-test-watch name=path::to::test)
-	sudo -E $(cargo) watch -- $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed $(name) -- --include-ignored
+$(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
+	sudo -E $(cargo) watch -- $(cargo) test --target $(uname_m)-unknown-linux-musl -p $(1) $(name) -- --include-ignored
 
-.PHONY: auraed-build
-auraed-build: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed
+$(1)-build: musl $(GEN_RS) $(GEN_TS)
+	$(cargo) build --target $(uname_m)-unknown-linux-musl -p $(1)
 
-.PHONY: auraed-build-release
-auraed-build-release: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed --release
+$(1)-build-release: musl $(GEN_RS) $(GEN_TS)
+	$(cargo) build --target $(uname_m)-unknown-linux-musl -p $(1) --release
 
-.PHONY: auraed-debug
-auraed-debug: musl $(GEN_RS) $(GEN_TS) auraed-lint
-	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
+$(1)-debug: musl $(GEN_RS) $(GEN_TS) $(1)-lint
+	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./$(1) --debug --force
 
-.PHONY: auraed-release
-auraed-release: musl $(GEN_RS) $(GEN_TS) auraed-lint auraed-test ## Lint, test, and install auraed
-	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --force
+$(1)-release: musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and install $(1)
+	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./$(1) --force
 
-.PHONY: start
+.PHONY: $(1) $(1)-lint $(1)-test $(1)-test-all $(1)-test-watch $(1)-build $(1)-build-release $(1)-debug $(1)-release
+endef
+
+$(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p))))
+
+#------------------------------------------------------------------------------#
+
+# auraed Commands
+
+.PHONY: auraed-start
 auraed-start: ## Starts the installed auraed executable
 	sudo -E $(HOME)/.cargo/bin/auraed
-
-#------------------------------------------------------------------------------#
-
-# AuraeScript Commands
-
-.PHONY: auraescript
-auraescript: $(GEN_TS) $(GEN_RS) auraescript-lint auraescript-debug ## Lint and install auraescript (for use during development)
-
-.PHONY: auraescript-lint
-auraescript-lint: $(GEN_TS) $(GEN_RS)
-	$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
-
-.PHONY: auraescript-test
-auraescript-test: $(GEN_TS) $(GEN_RS)
-	$(cargo) test -p auraescript
-
-.PHONY: auraescript-test-all
-auraescript-test-all: $(GEN_TS) $(GEN_RS)
-	$(cargo) test -p auraescript -- --include-ignored
-
-.PHONY: auraescript-build
-auraescript-build: musl $(GEN_TS) $(GEN_RS)
-	$(cargo) build -p auraescript
-
-.PHONY: auraescript-build-release
-auraescript-build-release: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build -p auraescript --release
-
-.PHONY: auraescript-debug
-auraescript-debug: $(GEN_RS) $(GEN_TS) auraescript-lint
-	$(cargo) install --path ./auraescript --debug --force
-
-.PHONY: auraescript-release
-auraescript-release: $(GEN_RS) $(GEN_TS) auraescript-lint auraescript-test ## Lint, test, and install auraescript
-	$(cargo) install --path ./auraescript --force
-
-#------------------------------------------------------------------------------#
-
-# aer Commands
-
-.PHONY: aer
-aer: $(GEN_RS) $(GEN_TS) aer-lint aer-debug ## Lint and install aer (for use during development)
-
-.PHONY: aer-lint
-aer-lint: $(GEN_RS) $(GEN_TS)
-	$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
-
-.PHONY: aer-test
-aer-test: $(GEN_RS) $(GEN_TS)
-	$(cargo) test -p aer
-
-.PHONY: aer-test-all
-aer-test-all: $(GEN_RS) $(GEN_TS)
-	$(cargo) test -p aer -- --include-ignored
-
-.PHONY: aer-build
-aer-build: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build -p aer
-
-.PHONY: aer-build-release
-aer-build-release: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build -p aer --release
-
-.PHONY: aer-debug
-aer-debug: $(GEN_RS) $(GEN_TS) aer-lint
-	$(cargo) install --path ./aer --debug --force
-
-.PHONY: aer-release
-aer-release: $(GEN_RS) $(GEN_TS) aer-lint aer-test ## Lint, test, and install aer
-	$(cargo) install --path ./aer --force
 
 #------------------------------------------------------------------------------#
 
