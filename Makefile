@@ -63,7 +63,7 @@ all: install ## alias for install
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
 .PHONY: lint
-lint: musl proto proto-lint libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
+lint: musl $(GEN_RS) $(GEN_TS) libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
 
 .PHONY: test
 test: build lint libs-test auraed-test auraescript-test aer-test ## Builds, lints, and tests (does not include ignored tests)
@@ -72,13 +72,13 @@ test: build lint libs-test auraed-test auraescript-test aer-test ## Builds, lint
 test-all: build lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
-build: musl proto proto-lint auraed-build auraescript-build aer-build lint ## Build and lint
+build: musl $(GEN_RS) $(GEN_TS) auraed-build auraescript-build aer-build lint ## Build and lint
 
 .PHONY: install
-install: musl proto proto-lint lint test auraed-debug auraescript-debug aer-debug  ## Lint, test, and install (debug) 🎉
+install: musl $(GEN_RS) $(GEN_TS) lint test auraed-debug auraescript-debug aer-debug  ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
-docs: proto docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
+docs: $(GEN_RS) $(GEN_TS) docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
 
 .PHONY: prcheck
 prcheck: build lint test-all docs docs-lint ## Meant to mimic the GHA checks (includes ignored tests)
@@ -135,14 +135,23 @@ clean-gens: ## Clean gen directories
 
 # Protobuf Commands
 
-.PHONY: proto
-proto: proto-lint ## Lint and Generate code from protobuf schemas
-	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
-	buf generate -v api
+GEN_TS_PATTERN = auraescript/gen/v0/%.ts
+GEN_RS_PATTERN = aurae-proto/src/gen/aurae.%.v0.rs
+GEN_SERDE_RS_PATTERN = aurae-proto/src/gen/aurae.%.v0.serde.rs
+GEN_TONIC_RS_PATTERN = aurae-proto/src/gen/aurae.%.v0.tonic.rs
 
-.PHONY: proto-lint
-proto-lint: ## Lint protobuf schemas
+PROTOS = $(wildcard api/v0/*/*.proto)
+PROTO_DIRS = $(filter-out api/v0/README.md, $(wildcard api/v0/*))
+
+GEN_RS = $(patsubst api/v0/%,$(GEN_RS_PATTERN),$(PROTO_DIRS))
+GEN_RS += $(patsubst api/v0/%,$(GEN_SERDE_RS_PATTERN),$(PROTO_DIRS))
+GEN_RS += $(patsubst api/v0/%,$(GEN_TONIC_RS_PATTERN),$(PROTO_DIRS))
+
+GEN_TS = $(patsubst api/v0/%.proto,$(GEN_TS_PATTERN),$(PROTOS))
+
+$(GEN_TS_PATTERN) $(GEN_RS_PATTERN) $(GEN_SERDE_RS_PATTERN) $(GEN_TONIC_RS_PATTERN):
 	buf lint api
+	buf generate -v api
 
 .PHONY: proto-vendor
 proto-vendor: proto-vendor-cri proto-vendor-grpc-health ## Copy the upstream protobuf interfaces
@@ -160,38 +169,38 @@ proto-vendor-grpc-health: ## Copy the gRPC Health interface from upstream
 # Auraed Commands
 
 .PHONY: auraed
-auraed: musl proto proto-lint auraed-lint auraed-debug ## Lint and install auraed (for use during development)
+auraed: musl $(GEN_RS) $(GEN_TS) auraed-lint auraed-debug ## Lint and install auraed (for use during development)
 
 .PHONY: auraed-lint
-auraed-lint: musl proto
+auraed-lint: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) clippy --target $(uname_m)-unknown-linux-musl -p auraed --all-features -- -D clippy::all -D warnings
 
 .PHONY: auraed-test
-auraed-test: musl proto
+auraed-test: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed
 
 .PHONY: auraed-test-all
-auraed-test-all: musl proto
+auraed-test-all: musl $(GEN_RS) $(GEN_TS)
 	sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed -- --include-ignored
 
 .PHONY: auraed-test-watch
-auraed-test-watch: musl proto # Use cargo-watch to continuously run a test (e.g. make auraed-test-watch name=path::to::test)
+auraed-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make auraed-test-watch name=path::to::test)
 	sudo -E $(cargo) watch -- $(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed $(name) -- --include-ignored
 
 .PHONY: auraed-build
-auraed-build: musl proto
+auraed-build: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed
 
 .PHONY: auraed-build-release
-auraed-build-release: musl proto
+auraed-build-release: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build --target $(uname_m)-unknown-linux-musl -p auraed --release
 
 .PHONY: auraed-debug
-auraed-debug: musl proto auraed-lint
+auraed-debug: musl $(GEN_RS) $(GEN_TS) auraed-lint
 	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --debug --force
 
 .PHONY: auraed-release
-auraed-release: musl proto proto-lint auraed-lint auraed-test ## Lint, test, and install auraed
+auraed-release: musl $(GEN_RS) $(GEN_TS) auraed-lint auraed-test ## Lint, test, and install auraed
 	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./auraed --force
 
 .PHONY: start
@@ -203,34 +212,34 @@ auraed-start: ## Starts the installed auraed executable
 # AuraeScript Commands
 
 .PHONY: auraescript
-auraescript: proto proto-lint auraescript-lint auraescript-debug ## Lint and install auraescript (for use during development)
+auraescript: $(GEN_TS) $(GEN_RS) auraescript-lint auraescript-debug ## Lint and install auraescript (for use during development)
 
 .PHONY: auraescript-lint
-auraescript-lint: proto
+auraescript-lint: $(GEN_TS) $(GEN_RS)
 	$(cargo) clippy -p auraescript --all-features -- -D clippy::all -D warnings
 
 .PHONY: auraescript-test
-auraescript-test: proto
+auraescript-test: $(GEN_TS) $(GEN_RS)
 	$(cargo) test -p auraescript
 
 .PHONY: auraescript-test-all
-auraescript-test-all: proto
+auraescript-test-all: $(GEN_TS) $(GEN_RS)
 	$(cargo) test -p auraescript -- --include-ignored
 
 .PHONY: auraescript-build
-auraescript-build: musl proto
+auraescript-build: musl $(GEN_TS) $(GEN_RS)
 	$(cargo) build -p auraescript
 
 .PHONY: auraescript-build-release
-auraescript-build-release: musl proto
+auraescript-build-release: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build -p auraescript --release
 
 .PHONY: auraescript-debug
-auraescript-debug: proto proto-lint auraescript-lint
+auraescript-debug: $(GEN_RS) $(GEN_TS) auraescript-lint
 	$(cargo) install --path ./auraescript --debug --force
 
 .PHONY: auraescript-release
-auraescript-release: proto proto-lint auraescript-lint auraescript-test ## Lint, test, and install auraescript
+auraescript-release: $(GEN_RS) $(GEN_TS) auraescript-lint auraescript-test ## Lint, test, and install auraescript
 	$(cargo) install --path ./auraescript --force
 
 #------------------------------------------------------------------------------#
@@ -238,34 +247,34 @@ auraescript-release: proto proto-lint auraescript-lint auraescript-test ## Lint,
 # aer Commands
 
 .PHONY: aer
-aer: proto proto-lint aer-lint aer-debug ## Lint and install aer (for use during development)
+aer: $(GEN_RS) $(GEN_TS) aer-lint aer-debug ## Lint and install aer (for use during development)
 
 .PHONY: aer-lint
-aer-lint: proto
+aer-lint: $(GEN_RS) $(GEN_TS)
 	$(cargo) clippy -p aer --all-features -- -D clippy::all -D warnings
 
 .PHONY: aer-test
-aer-test: proto
+aer-test: $(GEN_RS) $(GEN_TS)
 	$(cargo) test -p aer
 
 .PHONY: aer-test-all
-aer-test-all: proto
+aer-test-all: $(GEN_RS) $(GEN_TS)
 	$(cargo) test -p aer -- --include-ignored
 
 .PHONY: aer-build
-aer-build: musl proto
+aer-build: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build -p aer
 
 .PHONY: aer-build-release
-aer-build-release: musl proto
+aer-build-release: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build -p aer --release
 
 .PHONY: aer-debug
-aer-debug: proto proto-lint aer-lint
+aer-debug: $(GEN_RS) $(GEN_TS) aer-lint
 	$(cargo) install --path ./aer --debug --force
 
 .PHONY: aer-release
-aer-release: proto proto-lint aer-lint aer-test ## Lint, test, and install aer
+aer-release: $(GEN_RS) $(GEN_TS) aer-lint aer-test ## Lint, test, and install aer
 	$(cargo) install --path ./aer --force
 
 #------------------------------------------------------------------------------#
@@ -273,15 +282,15 @@ aer-release: proto proto-lint aer-lint aer-test ## Lint, test, and install aer
 # Commands for other crates
 
 .PHONY: libs-lint
-libs-lint: proto proto-lint
+libs-lint: $(GEN_RS) $(GEN_TS)
 	$(cargo) clippy --all-features --workspace --exclude auraed --exclude auraescript --exclude aer  -- -D clippy::all -D warnings
 
 .PHONY: libs-test
-libs-test: proto
+libs-test: $(GEN_RS) $(GEN_TS)
 	$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer
 
 .PHONY: libs-test-all
-libs-test-all: proto
+libs-test-all: $(GEN_RS) $(GEN_TS)
 	$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer -- --include-ignored
 
 #------------------------------------------------------------------------------#
@@ -301,6 +310,7 @@ else
 docs-stdlib:
 	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0/discovery -I api/v0/observe -I api/v0/cells --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*/*.proto --experimental_allow_proto3_optional
 endif
+
 
 .PHONY: docs-crates
 docs-crates: musl ## Build the crate (documentation)
