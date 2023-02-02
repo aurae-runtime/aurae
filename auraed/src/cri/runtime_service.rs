@@ -28,6 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+#[allow(unused_imports)]
+use crate::cri::oci::AuraeOCIBuilder;
 use crate::spawn_auraed_oci_to;
 use aurae_proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
@@ -52,7 +54,6 @@ use aurae_proto::cri::{
     UpdateContainerResourcesResponse, UpdateRuntimeConfigRequest,
     UpdateRuntimeConfigResponse, VersionRequest, VersionResponse,
 };
-#[allow(unused_imports)]
 use libcontainer;
 use libcontainer::container::builder::ContainerBuilder;
 use libcontainer::syscall::syscall::create_syscall;
@@ -87,31 +88,36 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         todo!()
     }
 
+    /// Run a pod with the Aurae runtime daemon.
     async fn run_pod_sandbox(
         &self,
         request: Request<RunPodSandboxRequest>,
     ) -> Result<Response<RunPodSandboxResponse>, Status> {
+        // Handle Request
         let r = request.into_inner();
+        // Handle Config
         let config = r.config.expect("config from pod sandbox request");
-        let metadata = config.metadata.expect("metadata from config");
-        let windows = config.windows;
+        // Check for Windows config (currently unsupported)
+        let windows = config.clone().windows;
         if windows.is_some() {
-            panic!("Windows architecture is currently unsupported.")
+            panic!("Windows architecture is currently unsupported.") // TODO Unsure if we want to panic here?
         }
-        let _linux = config.linux.expect("linux from pod sandbox config");
+        // Extract the metadata (name, uid, etc)
+        let metadata = config.clone().metadata.expect("metadata from config");
+        // Extract the Linux config (OCI and runtime parameters, security context, etc)
+        let _linux =
+            config.clone().linux.expect("linux from pod sandbox config");
+        let oci_builder =
+            AuraeOCIBuilder::new().overload_pod_sandbox_config(config);
 
-        // TODO render _linux config onto "OCI spec" and pass to spawn_auraed_oci_to()
         // TODO Switch on "KernelSpec" which is a field that we will add to the RunPodSandboxRequest message
+        // TODO Switch on KernelSpec (if exists) and toggle between "VM Mode" and "Container Mode"
         // TODO Switch on "WASM" which is a field that we will add to the RunPodSandboxRequest
         // TODO We made the decision to create a "KernelSpec" *name structure that will be how we distinguish between VMs and Containers
 
-        // Create the Pod sandbox using recursive static binary auraed instead of "pause container"
-        // Switch on KernelSpec (if exists) and toggle between "VM Mode" and "Container Mode"
-
-        let syscall = create_syscall();
-
         // Initialize a new container builder with the AURAE_SELF_IDENTIFIER name as the "init" container running a recursive Auraed
-        let builder = ContainerBuilder::new(
+        let syscall = create_syscall();
+        let sandbox_builder = ContainerBuilder::new(
             AURAE_SELF_IDENTIFIER.to_string(),
             syscall.as_ref(),
         );
@@ -123,18 +129,21 @@ impl runtime_service_server::RuntimeService for RuntimeService {
                 .join(AURAE_SELF_IDENTIFIER)
                 .to_str()
                 .expect("recursive path"),
+            oci_builder.build().expect("building pod oci spec"),
         );
 
         let sandbox_id = metadata.name;
-        let mut sandbox = builder
+        let mut sandbox = sandbox_builder
             .with_root_path(Path::new(AURAE_PODS_PATH).join(sandbox_id.clone()))
             .expect("Setting pods directory")
             .as_init(Path::new(AURAE_BUNDLE_PATH).join(AURAE_SELF_IDENTIFIER))
             .with_systemd(false)
             .build()
-            .expect("building sandbox");
+            .expect("failed building pod sandbox: ensure valid OCI spec and proper container starting point");
 
         sandbox.start().expect("starting pod sandbox");
+
+        // TODO: Cache sandbox
 
         Ok(Response::new(RunPodSandboxResponse { pod_sandbox_id: sandbox_id }))
     }
@@ -143,6 +152,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         &self,
         _request: Request<StopPodSandboxRequest>,
     ) -> Result<Response<StopPodSandboxResponse>, Status> {
+        // TODO: Pull sandbox from cache
+        // TODO: sandbox.kill()
         todo!()
     }
 
@@ -150,6 +161,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         &self,
         _request: Request<RemovePodSandboxRequest>,
     ) -> Result<Response<RemovePodSandboxResponse>, Status> {
+        // TODO: Delete sandbox from cache
+        // TODO: Ensure /var/run/aurae/pods/$container_name is destroyed
         todo!()
     }
 
@@ -157,6 +170,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         &self,
         _request: Request<PodSandboxStatusRequest>,
     ) -> Result<Response<PodSandboxStatusResponse>, Status> {
+        // TODO: Pull sandbox from cache
+        // TODO: sandbox.status() // TODO consider a status append system where we add our own fields? Maybe enums?
         todo!()
     }
 
@@ -164,13 +179,29 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         &self,
         _request: Request<ListPodSandboxRequest>,
     ) -> Result<Response<ListPodSandboxResponse>, Status> {
+        // TODO: Pull all sandboxes from cache
         todo!()
     }
 
     async fn create_container(
         &self,
-        _request: Request<CreateContainerRequest>,
+        request: Request<CreateContainerRequest>,
     ) -> Result<Response<CreateContainerResponse>, Status> {
+        // Handle Request
+        let r = request.into_inner();
+        // Handle Config
+        let config = r.config.expect("config from create container request");
+        // Metadata
+        let metadata = config.metadata.expect("metadata from config");
+
+        // TODO: Pull sandbox from cache
+
+        let syscall = create_syscall();
+        let _sandbox_builder =
+            ContainerBuilder::new(metadata.name, syscall.as_ref());
+
+        // TODO schedule as tenant container
+
         todo!()
     }
 

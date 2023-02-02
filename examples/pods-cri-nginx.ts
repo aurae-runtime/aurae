@@ -34,7 +34,7 @@ import * as cri from "../auraescript/gen/cri.ts";
 // Start working on pods_service with CRI
 let runtime = new cri.RuntimeServiceClient();
 
-let response = runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
+let pod = await runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
     config: cri.PodSandboxConfig.fromPartial({
         hostname: "nova",
         logDirectory: "/var/log",
@@ -51,4 +51,18 @@ let response = runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
         }),
     })
 })
-helpers.print(response)
+helpers.print(pod)
+
+let container = runtime.createContainer(<cri.CreateContainerRequest>{
+    podSandboxId: pod.podSandboxId,
+    config: cri.ContainerConfig.fromPartial({
+        tty: false,
+        image: "nginx",
+        metadata: cri.ContainerMetadata.fromPartial({
+            name: "nginx",
+        })
+    }),
+
+})
+helpers.print(container)
+

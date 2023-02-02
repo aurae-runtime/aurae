@@ -35,11 +35,14 @@ use std::os::unix::prelude::PermissionsExt;
 use std::path::Path;
 
 const PROC_SELF_EXE: &str = "/proc/self/exe";
-const SPAWN_CONFIG: &[u8] = include_bytes!("config.json");
+//const SPAWN_CONFIG: &[u8] = include_bytes!("config.json");
 
 // TODO move output to PathBuf
 // TODO accept a OCI config from calling code (CRI has linux config that will need to be mapped to spec)
-pub fn spawn_auraed_oci_to(output: &str) -> Result<(), anyhow::Error> {
+pub fn spawn_auraed_oci_to(
+    output: &str,
+    spec: oci_spec::runtime::Spec,
+) -> Result<(), anyhow::Error> {
     // Here we read /proc/self/exe which will be a symbolic link to our binary.
     let auraed_path = fs::read_link(PROC_SELF_EXE)
         .context("reading auraed sym link from procfs")?;
@@ -54,7 +57,10 @@ pub fn spawn_auraed_oci_to(output: &str) -> Result<(), anyhow::Error> {
         .context("create new output dir clean")?;
 
     // Write our config.json
-    fs::write(oci_bundle_path.join(Path::new("config.json")), SPAWN_CONFIG)
+    let config_contents =
+        serde_json::to_vec_pretty(&spec).expect("json serialize oci config");
+
+    fs::write(oci_bundle_path.join(Path::new("config.json")), config_contents)
         .expect("writing default config.json for spawn image");
 
     // .
