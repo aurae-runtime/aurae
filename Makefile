@@ -63,7 +63,7 @@ all: install ## alias for install
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
 .PHONY: lint
-lint: musl $(GEN_RS) $(GEN_TS) libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
+lint: musl libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
 
 .PHONY: test
 test: build lint libs-test auraed-test auraescript-test aer-test ## Builds, lints, and tests (does not include ignored tests)
@@ -72,13 +72,13 @@ test: build lint libs-test auraed-test auraescript-test aer-test ## Builds, lint
 test-all: build lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
-build: musl $(GEN_RS) $(GEN_TS) auraed-build auraescript-build aer-build lint ## Build and lint
+build: musl auraed-build auraescript-build aer-build lint ## Build and lint
 
 .PHONY: install
-install: musl $(GEN_RS) $(GEN_TS) lint test auraed-debug auraescript-debug aer-debug  ## Lint, test, and install (debug) 🎉
+install: musl lint test auraed-debug auraescript-debug aer-debug  ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
-docs: $(GEN_RS) $(GEN_TS) docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
+docs: docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
 
 .PHONY: prcheck
 prcheck: build lint test-all docs docs-lint ## Meant to mimic the GHA checks (includes ignored tests)
@@ -307,13 +307,13 @@ ifeq (, $(wildcard /usr/local/bin/protoc-gen-doc))
 docs-stdlib:
 	$(error "No /usr/local/bin/protoc-gen-doc, install from https://github.com/pseudomuto/protoc-gen-doc")
 else
-docs-stdlib:
+docs-stdlib: $(GEN_TS) $(GEN_RS)
 	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0/discovery -I api/v0/observe -I api/v0/cells --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*/*.proto --experimental_allow_proto3_optional
 endif
 
 
 .PHONY: docs-crates
-docs-crates: musl ## Build the crate (documentation)
+docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
 	$(cargo) doc --target $(uname_m)-unknown-linux-musl --no-deps --package auraed
 	$(cargo) doc --no-deps --package auraescript
 	$(cargo) doc --no-deps --package aurae-client
