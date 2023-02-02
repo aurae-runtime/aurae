@@ -172,33 +172,35 @@ define AURAE_template =
 $(1): musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use during development)
 
 $(1)-lint: musl $(GEN_RS) $(GEN_TS)
-	$$(cargo) clippy --target $$(uname_m)-unknown-linux-musl -p $(1) --all-features -- -D clippy::all -D warnings
+	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 $(1)-test: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) test --target $(uname_m)-unknown-linux-musl -p auraed
+	$(cargo) test $(2) -p auraed
 
 $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
-	sudo -E $(cargo) test --target $(uname_m)-unknown-linux-musl -p $(1) -- --include-ignored
+	sudo -E $(cargo) test $(2) -p $(1) -- --include-ignored
 
 $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
-	sudo -E $(cargo) watch -- $(cargo) test --target $(uname_m)-unknown-linux-musl -p $(1) $(name) -- --include-ignored
+	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored
 
 $(1)-build: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build --target $(uname_m)-unknown-linux-musl -p $(1)
+	$(cargo) build $(2) -p $(1)
 
 $(1)-build-release: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build --target $(uname_m)-unknown-linux-musl -p $(1) --release
+	$(cargo) build $(2) -p $(1) --release
 
 $(1)-debug: musl $(GEN_RS) $(GEN_TS) $(1)-lint
-	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./$(1) --debug --force
+	$(cargo) install $(2) --path ./$(1) --debug --force
 
 $(1)-release: musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and install $(1)
-	$(cargo) install --target $(uname_m)-unknown-linux-musl --path ./$(1) --force
+	$(cargo) install $(2) --path ./$(1) --force
 
 .PHONY: $(1) $(1)-lint $(1)-test $(1)-test-all $(1)-test-watch $(1)-build $(1)-build-release $(1)-debug $(1)-release
 endef
 
-$(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p))))
+MUSL_TARGET=--target $(uname_m)-unknown-linux-musl
+
+$(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,$(p)),$(MUSL_TARGET),))))
 
 #------------------------------------------------------------------------------#
 
