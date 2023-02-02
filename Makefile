@@ -419,7 +419,7 @@ help:  ## Show help messages for make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: check-deps
-check-deps: musl ## Check if there are any unused dependencies in Cargo.toml
+check-deps: musl $(GEN_TS) $(GEN_RS) ## Check if there are any unused dependencies in Cargo.toml
 #	cargo +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
 #	cargo +nightly udeps --package auraescript
 #	cargo +nightly udeps --package aurae-client
