@@ -169,33 +169,40 @@ proto-vendor-grpc-health: ## Copy the gRPC Health interface from upstream
 PROGS = aer auraed auraescript
 
 define AURAE_template =
+.PHONY: $(1)
 $(1): musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use during development)
 
+.PHONY: $(1)-lint
 $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
+.PHONY: $(1)-test
 $(1)-test: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) test $(2) -p auraed
 
+.PHONY: $(1)-test-all
 $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
 	sudo -E $(cargo) test $(2) -p $(1) -- --include-ignored
 
+.PHONY: $(1)-test-watch
 $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
 	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored
 
+.PHONY: $(1)-build
 $(1)-build: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1)
 
+.PHONY: $(1)-build-release
 $(1)-build-release: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1) --release
 
+.PHONY: $(1)-debug
 $(1)-debug: musl $(GEN_RS) $(GEN_TS) $(1)-lint
 	$(cargo) install $(2) --path ./$(1) --debug --force
 
+.PHONY: $(1)-release
 $(1)-release: musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and install $(1)
 	$(cargo) install $(2) --path ./$(1) --force
-
-.PHONY: $(1) $(1)-lint $(1)-test $(1)-test-all $(1)-test-watch $(1)-build $(1)-build-release $(1)-debug $(1)-release
 endef
 
 MUSL_TARGET=--target $(uname_m)-unknown-linux-musl
