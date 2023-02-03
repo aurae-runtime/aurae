@@ -6,9 +6,14 @@ version = 3
 name = "aurae-ebpf"
 version = "0.1.0"
 dependencies = [
+ "aurae-ebpf-shared",
  "aya-bpf",
  "aya-log-ebpf",
 ]
+
+[[package]]
+name = "aurae-ebpf-shared"
+version = "0.1.0"
 
 [[package]]
 name = "aya-bpf"

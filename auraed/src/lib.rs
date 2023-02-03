@@ -63,21 +63,23 @@
 
 use crate::cri::oci::AuraeOCIBuilder;
 use crate::cri::runtime_service::RuntimeService;
+use crate::ebpf::loader::BpfLoader;
+use crate::logging::log_channel::LogChannel;
 use crate::{
     cells::CellService, discovery::DiscoveryService, init::SocketStream,
-    spawn::spawn_auraed_oci_to,
+    observe::ObserveService, spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
+use aurae_ebpf_shared::Signal;
 use aurae_proto::cri::runtime_service_server::RuntimeServiceServer;
 use aurae_proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
+    observe::observe_service_server::ObserveServiceServer,
 };
-use aya::programs::TracePoint;
-use aya::{include_bytes_aligned, Bpf};
-use aya_log::BpfLogger;
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
 use tonic::transport::server::Connected;
@@ -87,6 +89,7 @@ use tracing::{error, info, trace, warn};
 mod cells;
 mod cri;
 mod discovery;
+mod ebpf;
 mod graceful_shutdown;
 pub mod init;
 pub mod logging;
@@ -270,6 +273,17 @@ impl AuraedRuntime {
 
         // Initialize the bundler
 
+        // Install eBPF probes
+        info!("Installing eBPF probes");
+
+        let bpf_loader = &mut BpfLoader::new()?;
+        let signals = bpf_loader.load_tracepoint::<Signal>(
+            "signals",
+            "signal",
+            "signal_generate",
+            "SIGNALS",
+        )?;
+
         // Build gRPC Services
         let (mut health_reporter, health_service) =
             tonic_health::server::health_reporter();
@@ -285,6 +299,15 @@ impl AuraedRuntime {
             .set_serving::<DiscoveryServiceServer<DiscoveryService>>()
             .await;
 
+        let observe_service = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("TODO"))),
+            signals,
+        );
+        let observe_service_server = ObserveServiceServer::new(observe_service);
+        health_reporter
+            .set_serving::<ObserveServiceServer<ObserveService>>()
+            .await;
+
         // let pod_service = PodService::new(self.runtime_dir.clone());
         // let pod_service_server = PodServiceServer::new(pod_service.clone());
         // health_reporter.set_serving::<PodServiceServer<PodService>>().await;
@@ -294,29 +317,6 @@ impl AuraedRuntime {
         health_reporter
             .set_serving::<RuntimeServiceServer<RuntimeService>>()
             .await;
-
-        // Install eBPF probes
-
-        info!("Installing eBPF probes");
-
-        #[cfg(debug_assertions)]
-        let mut bpf = Bpf::load(include_bytes_aligned!(
-            "../../target/bpfel-unknown-none/debug/aurae-ebpf"
-        ))?;
-        #[cfg(not(debug_assertions))]
-        let mut bpf = Bpf::load(include_bytes_aligned!(
-            "../../target/bpfel-unknown-none/release/aurae-ebpf"
-        ))?;
-        if let Err(e) = BpfLogger::init(&mut bpf) {
-            // This can happen if you remove all log statements from your eBPF program.
-            warn!("failed to initialize eBPF logger: {}", e);
-        }
-        let program: &mut TracePoint = bpf
-            .program_mut("signals")
-            .expect("failed to load signals")
-            .try_into()?;
-        program.load()?;
-        let _ = program.attach("signal", "signal_generate")?;
 
         let graceful_shutdown = graceful_shutdown::GracefulShutdown::new(
             health_reporter,
@@ -332,6 +332,7 @@ impl AuraedRuntime {
                 .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
+                .add_service(observe_service_server)
                 // .add_service(pod_service_server)
                 .add_service(runtime_service_server)
                 .serve_with_incoming_shutdown(socket_stream, async {

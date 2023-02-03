@@ -43,9 +43,12 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
+aurae-ebpf-shared = { path = "../aurae-ebpf-shared" }
 aya = { version = ">=0.11", features=["async_tokio"] }
 aya-log = "0.1"
 backoff = { version = "0.4.0", features = ["tokio"] }
+bytes = "1.2.1"
+cgroups-rs = "0.3.0"
 clap = { workspace = true }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }

@@ -156,6 +156,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aurae-ebpf-shared"
+version = "0.1.0"
+dependencies = [
+ "aya",
+]
+
+[[package]]
 name = "aurae-proto"
 version = "0.1.0"
 dependencies = [
@@ -171,10 +178,16 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aurae-client",
+ "aurae-ebpf-shared",
  "aurae-proto",
  "aya",
  "aya-log",
  "backoff",
+<<<<<<< HEAD
+=======
+ "bytes 1.2.1",
+ "cgroups-rs",
+>>>>>>> dfb7e41 (Introduced basic eBPF loader and tracepoint probe that attaches to the signal/signal_generate trace event)
  "clap 4.1.4",
  "clone3",
  "fancy-regex",
@@ -350,24 +363,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
-name = "backtrace"
-version = "0.3.67"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "233d376d6d185f2a3093e58f283f60f880315b6c60075b01f36b3b85154564ca"
-dependencies = [
- "addr2line",
- "cc",
- "cfg-if 1.0.0",
- "libc",
- "miniz_oxide",
- "object 0.30.3",
- "rustc-demangle",
-]
-
-[[package]]
->>>>>>> 2a19d6d (Loading a dummy tracepoint probe)
 name = "base16ct"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

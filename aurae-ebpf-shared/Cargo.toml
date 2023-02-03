@@ -1,5 +1,5 @@
 [package]
-name = "signals-common"
+name = "aurae-ebpf-shared"
 version = "0.1.0"
 edition = "2021"
 

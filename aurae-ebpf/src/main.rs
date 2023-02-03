@@ -1,8 +1,18 @@
 #![no_std]
 #![no_main]
 
-use aya_bpf::{macros::tracepoint, programs::TracePointContext};
-use aya_log_ebpf::info;
+use aurae_ebpf_shared::Signal;
+use aya_bpf::macros::map;
+use aya_bpf::macros::tracepoint;
+use aya_bpf::maps::PerfEventArray;
+use aya_bpf::programs::TracePointContext;
+
+#[map(name = "SIGNALS")]
+static mut SIGNALS: PerfEventArray<Signal> =
+    PerfEventArray::<Signal>::with_max_entries(1024, 0);
+
+const SIGNAL_OFFSET: usize = 8;
+const PID_OFFSET: usize = 36;
 
 #[tracepoint(name = "signals")]
 pub fn signals(ctx: TracePointContext) -> u32 {
@@ -13,7 +23,24 @@ pub fn signals(ctx: TracePointContext) -> u32 {
 }
 
 fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
-    info!(&ctx, "tracepoint signal_generate called");
+    let signr: i32 = unsafe {
+        match ctx.read_at(SIGNAL_OFFSET) {
+            Ok(s) => s,
+            Err(errn) => return Err(errn as u32),
+        }
+    };
+
+    let pid: u32 = unsafe {
+        match ctx.read_at(PID_OFFSET) {
+            Ok(s) => s,
+            Err(errn) => return Err(errn as u32),
+        }
+    };
+
+    let s = Signal { signr, pid };
+    unsafe {
+        SIGNALS.output(&ctx, &s, 0);
+    }
     Ok(0)
 }
 

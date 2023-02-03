@@ -31,14 +31,13 @@
 // @todo @krisnova remove this once logging is further along
 #![allow(dead_code)]
 
+use aurae_ebpf_shared::Signal;
 use aurae_proto::observe::{
     observe_service_server, GetAuraeDaemonLogStreamRequest,
     GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
     GetPosixSignalsStreamResponse, GetSubProcessStreamRequest,
     GetSubProcessStreamResponse, LogItem,
 };
-use nix::unistd::Pid;
-use signal::Signal;
 use std::sync::Arc;
 use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc;
@@ -46,7 +45,10 @@ use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 use tracing::info;
 
-use crate::logging::log_channel::LogChannel;
+use crate::{
+    ebpf::perf_event_listener::PerfEventListener,
+    logging::log_channel::LogChannel,
+};
 
 /// The server side implementation of the ObserveService subsystem.
 #[derive(Debug)]
@@ -54,13 +56,18 @@ pub(crate) struct ObserveServiceServer {}
 
 pub struct ObserveService {
     aurae_logger: Arc<LogChannel>,
+    posix_signals: PerfEventListener<Signal>,
     sub_process_consumer_list: Vec<Receiver<LogItem>>,
 }
 
 impl ObserveService {
-    pub fn new(aurae_logger: Arc<LogChannel>) -> Self {
+    pub fn new(
+        aurae_logger: Arc<LogChannel>,
+        posix_signals: PerfEventListener<Signal>,
+    ) -> Self {
         Self {
             aurae_logger,
+            posix_signals,
             sub_process_consumer_list: Vec::<Receiver<LogItem>>::new(),
         }
     }
@@ -75,7 +82,7 @@ impl ObserveService {
     }
 
     fn get_posix_signals_stream(&self) -> Receiver<Signal> {
-        todo!()
+        self.posix_signals.subscribe()
     }
 }
 
@@ -141,32 +148,39 @@ impl observe_service_server::ObserveService for ObserveService {
     }
 }
 
-// TODO (jeroensoeters) move this elsewhere once the eBPF code is in
-#[derive(Clone, Debug, PartialEq)]
-struct PosixSignal {
-    //TODO (jeroensoeters) should we introduce an enum here?
-    signal: Signal,
-    pid: Pid,
-}
-
 #[cfg(test)]
 mod test {
     use tokio::sync::Mutex;
 
+    use crate::ebpf::loader::BpfLoader;
+
     use super::*;
-    use std::process::Command;
+    use std::{process::Command, time::Duration};
 
     #[tokio::test]
     async fn test_intercept_posix_signals() {
-        let service = ObserveService::new(Arc::new(LogChannel::new(
-            String::from("unused"),
-        )));
+        let bpf_loader =
+            &mut BpfLoader::new().expect("failed to initialize bpf loader");
+        let signals_listener = bpf_loader
+            .load_tracepoint::<Signal>(
+                "signals",
+                "signal",
+                "signal_generate",
+                "SIGNALS",
+            )
+            .expect("failed to attach signals tracepoint");
+
+        let service = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("unused"))),
+            signals_listener,
+        );
+
         let mut signals = service.get_posix_signals_stream();
 
         let intercepted = Arc::new(Mutex::new(Vec::new()));
         let intercepted_in_thread = intercepted.clone();
         let _ = tokio::spawn(async move {
-            for s in signals.recv().await {
+            while let Ok(s) = signals.recv().await {
                 let mut guard = intercepted_in_thread.lock().await;
                 guard.push(s);
             }
@@ -179,14 +193,13 @@ mod test {
         let pid = child.id();
         child.kill().expect("failed to kill child");
 
-        let expected_signal = PosixSignal {
-            pid: Pid::from_raw(i32::try_from(pid).expect("pid")),
-            signal: Signal::SIGKILL,
-        };
+        let expected_signal = Signal { pid: pid, signr: 9 };
+
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
         let intercepted_local = intercepted.clone();
         let guard = intercepted_local.lock().await;
 
-        //assert!(guard.contains(&expected_signal), "signal not found"); <- when this test passes the work is done :)
+        assert!(guard.contains(&expected_signal), "signal not found");
     }
 }

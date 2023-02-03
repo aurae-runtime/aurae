@@ -35,6 +35,7 @@ members = [
     "auraed",
     "auraescript",
     "aurae-client",
+    "aurae-ebpf-shared",
     "aurae-proto",
     "xtask",
 ]
