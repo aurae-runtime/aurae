@@ -189,11 +189,11 @@ $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run 
 	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored
 
 .PHONY: $(1)-build
-$(1)-build: musl $(GEN_RS) $(GEN_TS)
+$(1)-build: musl ebpf-build $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1)
 
 .PHONY: $(1)-build-release
-$(1)-build-release: musl $(GEN_RS) $(GEN_TS)
+$(1)-build-release: musl ebpf-release $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1) --release
 
 .PHONY: $(1)-debug
@@ -221,9 +221,15 @@ auraed-start: ## Starts the installed auraed executable
 
 # Commands for other crates
 
-.PHONY: ebpf
-ebpf:
-	$(cargo) run --package xtask -- build-ebpf
+.PHONY: ebpf-build
+ebpf-build:
+	cd ./aurae-ebpf && \
+		$(cargo) +nightly build --verbose --target=bpfel-unknown-none -Z build-std=core
+
+.PHONY: ebpf-release
+ebpf-release:
+	cd ./aurae-ebpf && \
+		$(cargo) +nightly build --verbose --package aurae-ebpf --target=bpfel-unknown-none -Z build-std=core --release
 
 .PHONY: libs-lint
 libs-lint: $(GEN_RS) $(GEN_TS)

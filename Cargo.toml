@@ -37,7 +37,6 @@ members = [
     "aurae-client",
     "aurae-ebpf-shared",
     "aurae-proto",
-    "xtask",
 ]
 
 exclude = [
