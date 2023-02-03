@@ -52,6 +52,11 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v3
 
+            ## Configure Git
+            # This fixes a current issue with git and dubious ownership of folders
+            # https://github.com/actions/runner-images/issues/6775
+            - run: git config --global --add safe.directory /__w/aurae/aurae
+
             - name: Make, stage, upload release artifacts
               run: make ci-upload-release-artifacts tag=$GITHUB_REF_NAME
               env:
