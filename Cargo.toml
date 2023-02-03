@@ -36,6 +36,11 @@ members = [
     "auraescript",
     "aurae-client",
     "aurae-proto",
+    "xtask",
+]
+
+exclude = [
+    "aurae-ebpf"
 ]
 
 [workspace.dependencies]
@@ -62,3 +67,4 @@ tonic-health = "0.8.0"
 tracing = "0.1"
 url = "2.3.1"
 validation = { path = "./crates/validation" }
+

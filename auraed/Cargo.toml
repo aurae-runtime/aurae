@@ -43,6 +43,8 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
+aya = { version = ">=0.11", features=["async_tokio"] }
+aya-log = "0.1"
 backoff = { version = "0.4.0", features = ["tokio"] }
 clap = { workspace = true }
 clone3 = "0.2.3"

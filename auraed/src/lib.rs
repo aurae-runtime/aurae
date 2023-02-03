@@ -73,13 +73,16 @@ use aurae_proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
 };
+use aya::programs::TracePoint;
+use aya::{include_bytes_aligned, Bpf};
+use aya_log::BpfLogger;
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
 use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
 use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
-use tracing::{error, info, trace};
+use tracing::{error, info, trace, warn};
 
 mod cells;
 mod cri;
@@ -291,6 +294,29 @@ impl AuraedRuntime {
         health_reporter
             .set_serving::<RuntimeServiceServer<RuntimeService>>()
             .await;
+
+        // Install eBPF probes
+
+        info!("Installing eBPF probes");
+
+        #[cfg(debug_assertions)]
+        let mut bpf = Bpf::load(include_bytes_aligned!(
+            "../../target/bpfel-unknown-none/debug/aurae-ebpf"
+        ))?;
+        #[cfg(not(debug_assertions))]
+        let mut bpf = Bpf::load(include_bytes_aligned!(
+            "../../target/bpfel-unknown-none/release/aurae-ebpf"
+        ))?;
+        if let Err(e) = BpfLogger::init(&mut bpf) {
+            // This can happen if you remove all log statements from your eBPF program.
+            warn!("failed to initialize eBPF logger: {}", e);
+        }
+        let program: &mut TracePoint = bpf
+            .program_mut("signals")
+            .expect("failed to load signals")
+            .try_into()?;
+        program.load()?;
+        let _ = program.attach("signal", "signal_generate")?;
 
         let graceful_shutdown = graceful_shutdown::GracefulShutdown::new(
             health_reporter,
