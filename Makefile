@@ -221,6 +221,10 @@ auraed-start: ## Starts the installed auraed executable
 
 # Commands for other crates
 
+.PHONY: ebpf
+ebpf:
+	$(cargo) xtask build-ebpf
+
 .PHONY: libs-lint
 libs-lint: $(GEN_RS) $(GEN_TS)
 	$(cargo) clippy --all-features --workspace --exclude auraed --exclude auraescript --exclude aer  -- -D clippy::all -D warnings
