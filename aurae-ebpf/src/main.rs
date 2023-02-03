@@ -11,6 +11,8 @@ use aya_bpf::programs::TracePointContext;
 static mut SIGNALS: PerfEventArray<Signal> =
     PerfEventArray::<Signal>::with_max_entries(1024, 0);
 
+// TODO (jeroensoeters): figure out how stable these offsets are and if we want
+//    to read from /sys/kernel/debug/tracing/events/signal/signal_generate/format
 const SIGNAL_OFFSET: usize = 8;
 const PID_OFFSET: usize = 36;
 

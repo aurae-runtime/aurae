@@ -31,7 +31,7 @@ impl BpfLoader {
 
     pub fn load_tracepoint<T: Clone + Send + 'static>(
         &mut self,
-        name: &str,
+        prog_name: &str,
         category: &str,
         event: &str,
         perf_buffer: &str,
@@ -39,7 +39,7 @@ impl BpfLoader {
         // Load the eBPF Tracepoint program
         let program: &mut TracePoint = self
             .bpf
-            .program_mut(name)
+            .program_mut(prog_name)
             .expect("failed to load tracepoint")
             .try_into()?;
         program.load()?;
