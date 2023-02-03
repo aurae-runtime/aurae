@@ -221,12 +221,12 @@ auraed-start: ## Starts the installed auraed executable
 
 # Commands for other crates
 
-.PHONY: ebpf-build
+.PHONY: ebpf-build ## Build auraed eBPF probes (debug)
 ebpf-build:
 	cd ./aurae-ebpf && \
 		$(cargo) +nightly build --verbose --target=bpfel-unknown-none -Z build-std=core
 
-.PHONY: ebpf-release
+.PHONY: ebpf-release ## Build auraed eBPF probes
 ebpf-release:
 	cd ./aurae-ebpf && \
 		$(cargo) +nightly build --verbose --package aurae-ebpf --target=bpfel-unknown-none -Z build-std=core --release
