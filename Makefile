@@ -223,7 +223,7 @@ auraed-start: ## Starts the installed auraed executable
 
 .PHONY: ebpf
 ebpf:
-	$(cargo) xtask build-ebpf
+	$(cargo) run --package xtask -- build-ebpf
 
 .PHONY: libs-lint
 libs-lint: $(GEN_RS) $(GEN_TS)
