@@ -1,9 +1,7 @@
+use std::ffi::CStr;
 use tracing::{info, Level};
-use tracing_rfc_5424::{
-    rfc3164::Rfc3164, tracing::TrivialTracingFormatter, transport::UnixSocket,
-};
 use tracing_subscriber::{
-    layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
+    layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer,
 };
 
 #[derive(thiserror::Error, Debug)]
@@ -17,8 +15,8 @@ pub(crate) enum LoggingError {
     #[error(transparent)]
     TryInitError(#[from] tracing_subscriber::util::TryInitError),
 
-    #[error(transparent)]
-    SyslogError(#[from] tracing_rfc_5424::layer::Error),
+    #[error("Failed to setup syslog logging")]
+    SyslogError,
 }
 
 pub(crate) fn init(verbose: bool, container: bool) -> Result<(), LoggingError> {
@@ -45,7 +43,7 @@ fn init_container_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing container logging");
 
     // Stdout
-    let stdout_layer = tracing_subscriber::Layer::with_filter(
+    let stdout_layer = Layer::with_filter(
         tracing_subscriber::fmt::layer().compact(),
         EnvFilter::new(format!("auraed={tracing_level}")),
     );
@@ -61,15 +59,22 @@ fn init_daemon_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing syslog logging");
 
     // Syslog
-    let syslog_layer = tracing_rfc_5424::layer::Layer::<
-        tracing_subscriber::Registry,
-        Rfc3164,
-        TrivialTracingFormatter,
-        UnixSocket,
-    >::try_default()?;
+    let syslog_identity =
+        CStr::from_bytes_with_nul(b"auraed\0").expect("valid CStr");
+    let syslog_facility = Default::default();
+    let syslog_options = syslog_tracing::Options::LOG_PID;
+    let Some(syslog) = syslog_tracing::Syslog::new(
+        syslog_identity,
+        syslog_options,
+        syslog_facility,
+    ) else {
+        return Err(LoggingError::SyslogError);
+    };
+
+    let syslog_layer = tracing_subscriber::fmt::layer().with_writer(syslog);
 
     // Stdout
-    let stdout_layer = tracing_subscriber::Layer::with_filter(
+    let stdout_layer = Layer::with_filter(
         tracing_subscriber::fmt::layer().compact(),
         EnvFilter::new(format!("auraed={tracing_level}")),
     );
