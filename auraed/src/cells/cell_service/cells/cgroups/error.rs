@@ -28,22 +28,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use cgroup::Cgroup;
-pub use cpu::CpuController;
-pub use cpuset::CpusetController;
-pub use error::{CgroupsError, Result};
-pub use limit::Limit;
-pub use weight::Weight;
+use crate::cells::cell_service::cells::CellName;
+use thiserror::Error;
 
-mod cgroup;
-pub mod cpu;
-pub mod cpuset;
-mod error;
-mod limit;
-mod weight;
+pub type Result<T> = std::result::Result<T, CgroupsError>;
 
-#[derive(Debug, Clone)]
-pub struct CgroupSpec {
-    pub cpu: Option<CpuController>,
-    pub cpuset: Option<CpusetController>,
+#[derive(Error, Debug)]
+pub enum CgroupsError {
+    #[error("cgroup '{cell_name}' creation failed: {source}")]
+    CreateCgroup { cell_name: CellName, source: anyhow::Error },
+    #[error("cgroup '{cell_name}' failed to add task: {source}")]
+    AddTaskToCgroup { cell_name: CellName, source: anyhow::Error },
+    #[error("cgroup '{cell_name}' deletion failed: {source}")]
+    DeleteCgroup { cell_name: CellName, source: anyhow::Error },
+    #[error("cgroup '{cell_name}' failed to read stats: {source}")]
+    ReadStats { cell_name: CellName, source: anyhow::Error },
 }

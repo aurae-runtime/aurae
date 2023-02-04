@@ -28,6 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use super::Result;
+use crate::cells::cell_service::cells::cgroups::CgroupsError;
 use crate::cells::cell_service::cells::{
     cgroups::{CpuController, CpusetController},
     CellName, CgroupSpec,
@@ -50,7 +52,7 @@ pub struct Cgroup {
 }
 
 impl Cgroup {
-    pub fn new(cell_name: CellName, spec: CgroupSpec) -> anyhow::Result<Self> {
+    pub fn new(cell_name: CellName, spec: CgroupSpec) -> Result<Self> {
         let CgroupSpec { cpu, cpuset } = spec;
 
         // Note: Cgroups v2 "no internal processes" rule.
@@ -123,8 +125,9 @@ impl Cgroup {
         .expect("valid cgroup");
 
         if let Err(e) = non_leaf.apply(&options) {
-            non_leaf.remove()?;
-            return Err(e);
+            // try to remove, but ignore the error as the original error is more appropriate to return
+            let _ = non_leaf.remove();
+            return Err(CgroupsError::CreateCgroup { cell_name, source: e });
         }
 
         // Now, create the leaf cgroup where we can run processes.
@@ -138,7 +141,7 @@ impl Cgroup {
         Ok(Self { cell_name })
     }
 
-    pub fn add_task(&self, pid: Pid) -> anyhow::Result<()> {
+    pub fn add_task(&self, pid: Pid) -> Result<()> {
         let manager = v2::manager::Manager::new(
             DEFAULT_CGROUP_ROOT.into(),
             get_leaf_path(&self.cell_name),
@@ -146,17 +149,23 @@ impl Cgroup {
         .expect("valid cgroup");
 
         let pid = nix_025::unistd::Pid::from_raw(pid.as_raw());
-        manager.add_task(pid)
+        manager.add_task(pid).map_err(|e| CgroupsError::AddTaskToCgroup {
+            cell_name: self.cell_name.clone(),
+            source: e,
+        })
     }
 
-    pub fn delete(&self) -> anyhow::Result<()> {
+    pub fn delete(&self) -> Result<()> {
         let leaf = v2::manager::Manager::new(
             DEFAULT_CGROUP_ROOT.into(),
             get_leaf_path(&self.cell_name),
         )
         .expect("valid cgroup");
 
-        leaf.remove()?;
+        leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
+            cell_name: self.cell_name.clone(),
+            source: e,
+        })?;
 
         let non_leaf = v2::manager::Manager::new(
             DEFAULT_CGROUP_ROOT.into(),
@@ -164,7 +173,10 @@ impl Cgroup {
         )
         .expect("valid cgroup");
 
-        non_leaf.remove()
+        non_leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
+            cell_name: self.cell_name.clone(),
+            source: e,
+        })
     }
 
     pub fn v2(&self) -> bool {
@@ -178,14 +190,17 @@ impl Cgroup {
 
     // TODO: use this
     #[allow(unused)]
-    pub fn stats(&self) -> anyhow::Result<Stats> {
+    pub fn stats(&self) -> Result<Stats> {
         let non_leaf = v2::manager::Manager::new(
             DEFAULT_CGROUP_ROOT.into(),
             self.cell_name.clone().into_inner(),
         )
         .expect("valid cgroup");
 
-        non_leaf.stats()
+        non_leaf.stats().map_err(|e| CgroupsError::ReadStats {
+            cell_name: self.cell_name.clone(),
+            source: e,
+        })
     }
 
     pub fn exists(cell_name: &CellName) -> bool {
