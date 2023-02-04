@@ -36,7 +36,7 @@ use aurae_proto::observe::{
     observe_service_server, GetAuraeDaemonLogStreamRequest,
     GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
     GetPosixSignalsStreamResponse, GetSubProcessStreamRequest,
-    GetSubProcessStreamResponse, LogItem,
+    GetSubProcessStreamResponse, LogItem, Signal as PosixSignal,
 };
 use std::sync::Arc;
 use tokio::sync::broadcast::Receiver;
@@ -144,7 +144,30 @@ impl observe_service_server::ObserveService for ObserveService {
         &self,
         _request: Request<GetPosixSignalsStreamRequest>,
     ) -> Result<Response<Self::GetPosixSignalsStreamStream>, Status> {
-        todo!()
+        let (tx, rx) =
+            mpsc::channel::<Result<GetPosixSignalsStreamResponse, Status>>(4);
+
+        let mut posix_signals = self.get_posix_signals_stream();
+
+        let _ignored = tokio::spawn(async move {
+            // TODO (jeroensoeters): not sure if this is the way to go, hooking up a
+            //    mpsc::channel to a broadcast::channel, might be better to wrap a
+            //    mpsc::channel in `PerfEventListener`
+            while let Ok(signal) = posix_signals.recv().await {
+                let resp = GetPosixSignalsStreamResponse {
+                    signal: Some(PosixSignal {
+                        signal: signal.signr,
+                        process_id: i64::from(signal.pid),
+                    }),
+                };
+                if tx.send(Ok(resp)).await.is_err() {
+                    // receiver is gone
+                    break;
+                }
+            }
+        });
+
+        Ok(Response::new(ReceiverStream::new(rx)))
     }
 }
 

@@ -30,7 +30,7 @@
 
 use aer::{
     discovery::DiscoveryServiceCommands, grpc::HealthCommands,
-    runtime::CellServiceCommands,
+    observe::ObserveServiceCommands, runtime::CellServiceCommands,
 };
 use clap::{Parser, Subcommand};
 
@@ -54,6 +54,11 @@ enum Commands {
         command: DiscoveryServiceCommands,
     },
     #[command(arg_required_else_help = true)]
+    Observe {
+        #[command(subcommand)]
+        command: ObserveServiceCommands,
+    },
+    #[command(arg_required_else_help = true)]
     Health {
         #[command(subcommand)]
         command: HealthCommands,
@@ -67,6 +72,7 @@ async fn main() {
     if let Err(e) = match args.command {
         Commands::Cell { command } => command.execute().await,
         Commands::Discovery { command } => command.execute().await,
+        Commands::Observe { command } => command.execute().await,
         Commands::Health { command } => command.execute().await,
     } {
         eprintln!("{e:#?}");

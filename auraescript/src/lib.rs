@@ -66,6 +66,7 @@ mod cells;
 mod cri;
 mod discovery;
 mod health;
+mod observe;
 
 pub fn init() -> JsRuntime {
     let extension = Extension::builder().ops(stdlib()).build();
@@ -91,6 +92,7 @@ fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
     ops.extend(cells::op_decls());
     ops.extend(discovery::op_decls());
+    ops.extend(observe::op_decls());
     ops.extend(health::op_decls());
     ops.extend(cri::op_decls());
     ops
