@@ -229,12 +229,12 @@ auraed-start: ## Starts the installed auraed executable
 .PHONY: ebpf-build ## Build auraed eBPF probes (debug)
 ebpf-build: nightly
 	cd ./aurae-ebpf && \
-		$(cargo) +nightly build --verbose --target=bpfel-unknown-none -Z build-std=core
+		$(cargo) +nightly build --target=bpfel-unknown-none -Z build-std=core
 
 .PHONY: ebpf-release ## Build auraed eBPF probes
 ebpf-release: nightly
 	cd ./aurae-ebpf && \
-		$(cargo) +nightly build --verbose --package aurae-ebpf --target=bpfel-unknown-none -Z build-std=core --release
+		$(cargo) +nightly build --package aurae-ebpf --target=bpfel-unknown-none -Z build-std=core --release
 
 .PHONY: libs-lint
 libs-lint: $(GEN_RS) $(GEN_TS)
