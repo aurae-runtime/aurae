@@ -70,7 +70,6 @@ use crate::{
     observe::ObserveService, spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
-use aurae_ebpf_shared::Signal;
 use aurae_proto::cri::runtime_service_server::RuntimeServiceServer;
 use aurae_proto::{
     cells::cell_service_server::CellServiceServer,
@@ -277,12 +276,7 @@ impl AuraedRuntime {
         info!("Installing eBPF probes");
 
         let bpf_loader = &mut BpfLoader::new()?;
-        let signals = bpf_loader.load_tracepoint::<Signal>(
-            "signals",
-            "signal",
-            "signal_generate",
-            "SIGNALS",
-        )?;
+        let signals = bpf_loader.load_signals_tracepoint()?;
 
         // Build gRPC Services
         let (mut health_reporter, health_service) =

@@ -50,10 +50,6 @@ use crate::{
     logging::log_channel::LogChannel,
 };
 
-/// The server side implementation of the ObserveService subsystem.
-#[derive(Debug)]
-pub(crate) struct ObserveServiceServer {}
-
 pub struct ObserveService {
     aurae_logger: Arc<LogChannel>,
     posix_signals: PerfEventListener<Signal>,
@@ -185,12 +181,7 @@ mod test {
         let bpf_loader =
             &mut BpfLoader::new().expect("failed to initialize bpf loader");
         let signals_listener = bpf_loader
-            .load_tracepoint::<Signal>(
-                "signals",
-                "signal",
-                "signal_generate",
-                "SIGNALS",
-            )
+            .load_signals_tracepoint()
             .expect("failed to attach signals tracepoint");
 
         let service = ObserveService::new(

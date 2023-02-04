@@ -1,3 +1,4 @@
+use aurae_ebpf_shared::Signal;
 use bytes::BytesMut;
 use std::mem::size_of;
 use tokio::sync::broadcast;
@@ -29,7 +30,16 @@ impl BpfLoader {
         Ok(Self { bpf })
     }
 
-    pub fn load_tracepoint<T: Clone + Send + 'static>(
+    pub fn load_signals_tracepoint(&mut self) -> Result<PerfEventListener<Signal>, anyhow::Error> {
+        self.load_tracepoint::<Signal>(
+            "signals",
+            "signal",
+            "signal_generate",
+            "SIGNALS",
+        )
+    }
+
+    fn load_tracepoint<T: Clone + Send + 'static>(
         &mut self,
         prog_name: &str,
         category: &str,

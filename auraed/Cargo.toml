@@ -70,7 +70,6 @@ procfs = "0.14.2"
 rtnetlink = "0.11.0"
 serde_json.workspace = true
 serde.workspace = true
-signal = "0.5.1"
 simplelog = "0.12.0"
 syslog-tracing = "0.1.0"
 thiserror = { workspace = true }
