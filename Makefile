@@ -114,6 +114,11 @@ config: ## Set up default config
 musl: ## Add target for musl
 	rustup target add $(uname_m)-unknown-linux-musl
 
+.PHONY: nightly
+nightly: ## Add nightly toolchain (needed for eBPF)
+	rustup toolchain list | grep -qc 'nightly-*' || \
+		rustup toolchain install nightly --component rust-src
+
 #------------------------------------------------------------------------------#
 
 # Clean Commands
@@ -222,12 +227,12 @@ auraed-start: ## Starts the installed auraed executable
 # Commands for other crates
 
 .PHONY: ebpf-build ## Build auraed eBPF probes (debug)
-ebpf-build:
+ebpf-build: nightly
 	cd ./aurae-ebpf && \
 		$(cargo) +nightly build --verbose --target=bpfel-unknown-none -Z build-std=core
 
 .PHONY: ebpf-release ## Build auraed eBPF probes
-ebpf-release:
+ebpf-release: nightly
 	cd ./aurae-ebpf && \
 		$(cargo) +nightly build --verbose --package aurae-ebpf --target=bpfel-unknown-none -Z build-std=core --release
 
