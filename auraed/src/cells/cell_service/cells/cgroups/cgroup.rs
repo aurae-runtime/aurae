@@ -42,7 +42,6 @@ const MICROSECONDS_PER_SECOND: u64 = 1000000;
 
 #[derive(Debug)]
 pub struct Cgroup {
-    cell_name: CellName,
     non_leaf: cgroups_rs::Cgroup,
     leaf: cgroups_rs::Cgroup,
 }
@@ -110,7 +109,7 @@ impl Cgroup {
         let leaf =
             CgroupBuilder::new(&name).build(hierarchy()).expect("valid cgroup");
 
-        Self { cell_name, non_leaf, leaf }
+        Self { non_leaf, leaf }
     }
 
     pub fn add_task(&self, pid: Pid) -> cgroups_rs::error::Result<()> {

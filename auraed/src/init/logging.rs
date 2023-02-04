@@ -81,6 +81,7 @@ fn init_daemon_logging(tracing_level: Level) -> Result<(), LoggingError> {
         .map_err(|e| e.into())
 }
 
+#[allow(unused)]
 fn init_stdout_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing stdout logging");
     tracing_subscriber::fmt()

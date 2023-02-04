@@ -50,8 +50,9 @@
     unused_comparisons,
     while_true
 )]
-#![warn(missing_debug_implementations,
-    // TODO: missing_docs,
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
     trivial_casts,
     trivial_numeric_casts,
     unused_extern_crates,
@@ -59,8 +60,6 @@
     unused_results
 )]
 #![warn(clippy::unwrap_used)]
-#![warn(missing_docs)]
-#![allow(dead_code)]
 
 use crate::cri::oci::AuraeOCIBuilder;
 use crate::cri::runtime_service::RuntimeService;
@@ -155,7 +154,7 @@ enum SubCommands {
     },
 }
 
-#[allow(missing_docs)] // TODO
+/// This is the core function of the auraed runtime.
 pub async fn daemon() -> i32 {
     let options = AuraedOptions::parse();
 

@@ -46,8 +46,6 @@ use tracing::{info, trace};
 
 pub(crate) struct DaemonSystemRuntime;
 
-const DEFAULT_NETWORK_SOCKET_ADDR: &str = "[::1]:8080";
-
 #[async_trait]
 impl SystemRuntime for DaemonSystemRuntime {
     async fn init(

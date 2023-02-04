@@ -28,9 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-// @todo @krisnova remove this once logging is futher along
-#![allow(dead_code)]
-//
 use super::get_timestamp_sec;
 use aurae_proto::observe::LogItem;
 use tokio::sync::broadcast::{self, Receiver, Sender};

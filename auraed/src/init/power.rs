@@ -34,7 +34,6 @@ use tracing::{info, trace};
 
 use ::libc;
 
-#[allow(dead_code)]
 pub(crate) fn syscall_reboot(action: i32) {
     unsafe {
         if libc::reboot(action) != 0 {
@@ -48,7 +47,6 @@ pub(crate) fn power_off() {
     syscall_reboot(libc::LINUX_REBOOT_CMD_POWER_OFF);
 }
 
-#[allow(dead_code)]
 pub(crate) fn reboot() {
     syscall_reboot(libc::LINUX_REBOOT_CMD_RESTART);
 }
@@ -65,6 +63,7 @@ pub(crate) struct InputEvent {
 
 // see  https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/input-event-codes.h#L191
 const KEY_POWER: u16 = 116;
+const KEY_RESTART: u16 = 0x198;
 
 fn to_u8_ptr<T>(p: *mut T) -> *mut u8 {
     p as _
@@ -106,6 +105,9 @@ pub(crate) fn spawn_thread_power_button_listener(
                         // - await for runtime
                         info!("Power Button pressed - shutting down now");
                         power_off();
+                    } else if event.code == KEY_RESTART {
+                        info!("Restart Button pressed - rebooting now");
+                        reboot();
                     }
                 }
                 Err(e) => {

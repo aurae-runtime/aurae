@@ -48,6 +48,7 @@ pub struct NestedAuraed {
     process: procfs::process::Process,
     #[allow(unused)]
     pidfd: i32,
+    #[allow(unused)]
     iso_ctl: IsolationControls,
     pub client_config: AuraeConfig,
 }
