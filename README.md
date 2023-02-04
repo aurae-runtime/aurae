@@ -26,8 +26,8 @@ workloads and enterprise identities all the way down to the socket layer.
 
 ## FOSDEM 2023 Presentation
 
-Slides: [Link to presentation](https://docs.google.com/presentation/d/1GxKN5tyv4lV2aZdEOUqy3R9tVCat-vrFJyelgFX7b1A/edit#slide=id.g1eef12fba1d_21_88)
-Video : [Link to website](https://fosdem.org/2023/schedule/event/rust_aurae_a_new_pid_1_for_distributed_systems/)
+ - Slides: [Link to presentation](https://docs.google.com/presentation/d/1GxKN5tyv4lV2aZdEOUqy3R9tVCat-vrFJyelgFX7b1A/edit#slide=id.g1eef12fba1d_21_88)
+ - Video : [Link to website](https://fosdem.org/2023/schedule/event/rust_aurae_a_new_pid_1_for_distributed_systems/)
 
 ## Project Status
 
