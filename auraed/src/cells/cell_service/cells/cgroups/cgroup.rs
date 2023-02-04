@@ -38,7 +38,7 @@ use libcgroups::common::{CgroupManager, ControllerOpt, DEFAULT_CGROUP_ROOT};
 use libcgroups::stats::Stats;
 use libcgroups::v2;
 use nix::unistd::Pid;
-use oci_spec_05::runtime::{LinuxCpuBuilder, LinuxResourcesBuilder};
+use oci_spec::runtime::{LinuxCpuBuilder, LinuxResourcesBuilder};
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -148,7 +148,6 @@ impl Cgroup {
         )
         .expect("valid cgroup");
 
-        let pid = nix_025::unistd::Pid::from_raw(pid.as_raw());
         manager.add_task(pid).map_err(|e| CgroupsError::AddTaskToCgroup {
             cell_name: self.cell_name.clone(),
             source: e,

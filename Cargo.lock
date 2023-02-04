@@ -197,9 +197,7 @@ dependencies = [
  "multi_log",
  "netlink-packet-route",
  "nix 0.25.1",
- "nix 0.26.2",
  "oci-spec 0.5.8",
- "oci-spec 0.6.0",
  "ocipkg",
  "procfs",
  "rtnetlink",
@@ -3339,7 +3337,7 @@ dependencies = [
 name = "test-helpers"
 version = "0.0.0"
 dependencies = [
- "nix 0.26.2",
+ "nix 0.25.1",
 ]
 
 [[package]]

@@ -59,10 +59,8 @@ log = "0.4.17"
 multi_log = "0.1.2"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched"] }
-nix_025 = { package = "nix", version = "0.25" } # needed for libcgroups as of v0.0.4
 ocipkg = "0.2.8"
-oci-spec = "0.6.0"
-oci-spec-05 = { package = "oci-spec", version = "0.5" } # needed for libcgroups as of v0.0.4
+oci-spec = "0.5" # upgrade to 0.6 blocked by libcgroups as of v0.0.4
 procfs = "0.14.2"
 rtnetlink = "0.11.0"
 serde_json.workspace = true
