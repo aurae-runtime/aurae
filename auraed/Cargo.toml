@@ -45,7 +45,7 @@ aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
 backoff = { version = "0.4.0", features = ["tokio"] }
 cgroups-rs = "0.3.0"
-clap = { version = "3.1.20", features = ["derive"] }
+clap = { workspace = true }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
 futures = "0.3.23"
