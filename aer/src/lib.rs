@@ -55,7 +55,6 @@ unused_results
 )]
 #![warn(clippy::unwrap_used)]
 // #![warn(missing_docs)] // TODO: We want the docs from the proto
-#![allow(dead_code)]
 
 pub mod cri;
 pub mod discovery;

@@ -33,7 +33,7 @@ use std::path::Path;
 use anyhow::anyhow;
 use walkdir::WalkDir;
 
-#[allow(dead_code)]
+#[allow(unused)]
 pub(crate) fn show_dir(
     dir: impl AsRef<Path>,
     recurse: bool,

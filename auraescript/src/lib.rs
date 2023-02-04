@@ -51,8 +51,6 @@
 // TODO: need to figure out how to get tonic to allow this without allowing for whole crate
 #![allow(unused_qualifications)]
 
-// TODO: There are multiple `#[allow(dead_code)]` attributes to use or clean up
-
 use anyhow::{anyhow, bail, Error};
 use deno_ast::{MediaType, ParseParams, SourceTextInfo};
 use deno_core::futures::FutureExt;

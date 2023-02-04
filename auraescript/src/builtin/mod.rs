@@ -36,13 +36,11 @@
 //! Most of the built-in logic that makes AuraeScript useful to an end-user
 //! lives in this module.
 
-#[allow(dead_code)]
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-#[allow(dead_code)]
 const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 
 /// Show meta information about AuraeScript.
-#[allow(dead_code)]
+#[allow(unused)]
 fn about() {
     println!("\n");
     println!("Aurae. Distributed Runtime.");
@@ -52,7 +50,6 @@ fn about() {
 }
 
 /// Show version information.
-#[allow(dead_code)]
 fn version() {
     println!("Version: {VERSION}");
 }

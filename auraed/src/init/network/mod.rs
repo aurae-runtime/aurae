@@ -215,7 +215,7 @@ async fn set_link_up(
         .map_err(|e| NetworkError::ErrorSettingLinkUp { iface, source: e })
 }
 
-#[allow(dead_code)]
+#[allow(unused)]
 async fn set_link_down(
     handle: &Handle,
     iface: String,
@@ -253,7 +253,7 @@ async fn get_link_index(
     }
 }
 
-#[allow(dead_code)]
+#[allow(unused)]
 async fn add_route_v4(
     handle: &Handle,
     iface: String,
