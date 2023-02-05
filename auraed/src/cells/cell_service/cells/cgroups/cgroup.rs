@@ -28,13 +28,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use super::Result;
+use crate::cells::cell_service::cells::cgroups::CgroupsError;
 use crate::cells::cell_service::cells::{
     cgroups::{CpuController, CpusetController},
     CellName, CgroupSpec,
 };
-use cgroups_rs::{cgroup_builder::CgroupBuilder, hierarchies, Hierarchy};
+use libcgroups::common::{CgroupManager, ControllerOpt, DEFAULT_CGROUP_ROOT};
+use libcgroups::stats::Stats;
+use libcgroups::v2;
 use nix::unistd::Pid;
+use oci_spec::runtime::{LinuxCpuBuilder, LinuxResourcesBuilder};
 use std::path::PathBuf;
+use std::str::FromStr;
 
 /// This is used as the denominator for the CPU quota/period configuration.  This allows users to
 /// set the quota as if it was in the unit "µs/s" without worrying about also setting the period.
@@ -42,12 +48,11 @@ const MICROSECONDS_PER_SECOND: u64 = 1000000;
 
 #[derive(Debug)]
 pub struct Cgroup {
-    non_leaf: cgroups_rs::Cgroup,
-    leaf: cgroups_rs::Cgroup,
+    cell_name: CellName,
 }
 
 impl Cgroup {
-    pub fn new(cell_name: CellName, spec: CgroupSpec) -> Self {
+    pub fn new(cell_name: CellName, spec: CgroupSpec) -> Result<Self> {
         let CgroupSpec { cpu, cpuset } = spec;
 
         // Note: Cgroups v2 "no internal processes" rule.
@@ -56,89 +61,156 @@ impl Cgroup {
         //        in leaf nodes (cgroups that do not themselves contain child cgroups)."
 
         // First we create the non-leaf cgroup using the spec
-        let mut name = cell_name.to_string();
-        let builder = CgroupBuilder::new(&name);
+        let builder = LinuxResourcesBuilder::default();
 
-        // cpu controller
-        let builder = if let Some(CpuController { weight, max }) = cpu {
-            let builder = builder.cpu();
+        // oci_spec, which libcgroups uses, combines the cpu and cpuset controllers
+        let builder = if cpu.is_some() || cpuset.is_some() {
+            let cpu_builder = LinuxCpuBuilder::default();
 
-            let builder = if let Some(weight) = weight {
-                builder.shares(weight.into_inner())
+            // cpu controller
+            let cpu_builder = if let Some(CpuController { weight, max }) = cpu {
+                let cpu_builder = if let Some(weight) = weight {
+                    cpu_builder.shares(weight.into_inner())
+                } else {
+                    cpu_builder
+                };
+
+                if let Some(max) = max {
+                    cpu_builder
+                        .quota(max.into_inner())
+                        .period(MICROSECONDS_PER_SECOND) // microseconds in a second
+                } else {
+                    cpu_builder
+                }
             } else {
-                builder
+                cpu_builder
             };
 
-            let builder = if let Some(max) = max {
-                builder.quota(max.into_inner()).period(MICROSECONDS_PER_SECOND) // microseconds in a second
-            } else {
-                builder
-            };
+            // cpuset controller
+            let cpu_builder =
+                if let Some(CpusetController { cpus, mems }) = cpuset {
+                    let cpu_builder = if let Some(cpus) = cpus {
+                        cpu_builder.cpus(cpus.into_inner())
+                    } else {
+                        cpu_builder
+                    };
 
-            builder.done()
+                    if let Some(mems) = mems {
+                        cpu_builder.mems(mems.into_inner())
+                    } else {
+                        cpu_builder
+                    }
+                } else {
+                    cpu_builder
+                };
+
+            let cpu = cpu_builder.build().expect("valid builder");
+            builder.cpu(cpu)
         } else {
             builder
         };
 
-        // cpuset controller
-        let builder = if let Some(CpusetController { cpus, mems }) = cpuset {
-            let builder = builder.cpu();
-
-            let builder = if let Some(cpus) = cpus {
-                builder.cpus(cpus.into_inner())
-            } else {
-                builder
-            };
-
-            let builder = if let Some(mems) = mems {
-                builder.mems(mems.into_inner())
-            } else {
-                builder
-            };
-
-            builder.done()
-        } else {
-            builder
+        let options = builder.build().expect("valid options");
+        let options = ControllerOpt {
+            resources: &options,
+            disable_oom_killer: false,
+            oom_score_adj: None,
+            freezer_state: None,
         };
 
-        let non_leaf = builder.build(hierarchy()).expect("valid cgroup");
+        let non_leaf = v2::manager::Manager::new(
+            DEFAULT_CGROUP_ROOT.into(),
+            cell_name.clone().into_inner(),
+        )
+        .expect("valid cgroup");
+
+        if let Err(e) = non_leaf.apply(&options) {
+            // try to remove, but ignore the error as the original error is more appropriate to return
+            let _ = non_leaf.remove();
+            return Err(CgroupsError::CreateCgroup { cell_name, source: e });
+        }
 
         // Now, create the leaf cgroup where we can run processes.
         // NOTE: '_' is a disallowed character in CellName, so won't collide
-        name.push_str("/_");
-        let leaf =
-            CgroupBuilder::new(&name).build(hierarchy()).expect("valid cgroup");
+        let _leaf = v2::manager::Manager::new(
+            DEFAULT_CGROUP_ROOT.into(),
+            get_leaf_path(&cell_name),
+        )
+        .expect("valid cgroup");
 
-        Self { non_leaf, leaf }
+        Ok(Self { cell_name })
     }
 
-    pub fn add_task(&self, pid: Pid) -> cgroups_rs::error::Result<()> {
-        self.leaf.add_task_by_tgid((pid.as_raw() as u64).into())
+    pub fn add_task(&self, pid: Pid) -> Result<()> {
+        let manager = v2::manager::Manager::new(
+            DEFAULT_CGROUP_ROOT.into(),
+            get_leaf_path(&self.cell_name),
+        )
+        .expect("valid cgroup");
+
+        manager.add_task(pid).map_err(|e| CgroupsError::AddTaskToCgroup {
+            cell_name: self.cell_name.clone(),
+            source: e,
+        })
     }
 
-    pub fn delete(&self) -> cgroups_rs::error::Result<()> {
-        self.leaf.delete()?;
-        self.non_leaf.delete()
+    pub fn delete(&self) -> Result<()> {
+        let leaf = v2::manager::Manager::new(
+            DEFAULT_CGROUP_ROOT.into(),
+            get_leaf_path(&self.cell_name),
+        )
+        .expect("valid cgroup");
+
+        leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
+            cell_name: self.cell_name.clone(),
+            source: e,
+        })?;
+
+        let non_leaf = v2::manager::Manager::new(
+            DEFAULT_CGROUP_ROOT.into(),
+            self.cell_name.clone().into_inner(),
+        )
+        .expect("valid cgroup");
+
+        non_leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
+            cell_name: self.cell_name.clone(),
+            source: e,
+        })
     }
 
     pub fn v2(&self) -> bool {
-        self.non_leaf.v2()
+        // Auraed will assume the V2 cgroup hierarchy by default.
+        // For now, we do not change this, albeit in theory we could
+        // likely create backwards compatability for V1 hierarchy.
+        //
+        // For now, we simply... don't.
+        true
+    }
+
+    // TODO: use this
+    #[allow(unused)]
+    pub fn stats(&self) -> Result<Stats> {
+        let non_leaf = v2::manager::Manager::new(
+            DEFAULT_CGROUP_ROOT.into(),
+            self.cell_name.clone().into_inner(),
+        )
+        .expect("valid cgroup");
+
+        non_leaf.stats().map_err(|e| CgroupsError::ReadStats {
+            cell_name: self.cell_name.clone(),
+            source: e,
+        })
     }
 
     pub fn exists(cell_name: &CellName) -> bool {
-        let mut path = PathBuf::from("/sys/fs/cgroup");
+        let mut path =
+            PathBuf::from_str(DEFAULT_CGROUP_ROOT).expect("valid path");
         path.push(cell_name.as_inner());
         path.exists()
     }
 }
 
-fn hierarchy() -> Box<dyn Hierarchy> {
-    // Auraed will assume the V2 cgroup hierarchy by default.
-    // For now, we do not change this, albeit in theory we could
-    // likely create backwards compatability for V1 hierarchy.
-    //
-    // For now, we simply... don't.
-    // hierarchies::auto() // Uncomment to auto detect Cgroup hierarchy
-    // hierarchies::V2
-    Box::new(hierarchies::V2::new())
+fn get_leaf_path(cell_name: &CellName) -> PathBuf {
+    // '_' is an invalid character in CellName, making it safe to use
+    cell_name.as_inner().join("_")
 }
