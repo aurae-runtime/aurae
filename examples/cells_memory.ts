@@ -37,9 +37,9 @@ let cellName = "ae-sleeper-cell";
 // [ Allocate ]
 let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
-        cpu: runtime.CpuController.fromPartial({
-            weight: 2, // Percentage of CPUs
-            max: 300000, // 30% of the CPU
+        mem: runtime.MemController.fromPartial({
+            high: 50000, // 50k
+            max: 100000, // 100k
         }),
         name: cellName,
     })
@@ -51,9 +51,9 @@ helpers.print(allocated)
 let started = await cells.start(<runtime.CellServiceStartRequest>{
     cellName,
     executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/sleep 4",
-        description: "Sleep for 4 seconds",
-        name: "sleep-4"
+        command: "/usr/bin/sleep 2",
+        description: "Sleep for 2 seconds",
+        name: "sleep-2"
     })
 })
 helpers.print(started)
@@ -63,12 +63,12 @@ const sleep = async (waitTime: number) =>
     new Promise(resolve =>
         setTimeout(resolve, waitTime));
 
-sleep(5000);
+sleep(3000);
 
 // [ Stop ]
 let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
     cellName,
-    executableName: "sleep-4",
+    executableName: "sleep-2",
 })
 helpers.print(stopped)
 
