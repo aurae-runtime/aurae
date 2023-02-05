@@ -43,7 +43,6 @@ pub mod memory;
 
 mod allocation;
 mod cgroup;
-mod error;
 mod limit;
 mod weight;
 
