@@ -28,8 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::Result;
-use crate::cells::cell_service::cells::cgroups::CgroupsError;
 use crate::cells::cell_service::cells::{
     cgroups::{CpuController, CpusetController, MemoryController},
     CellName, CgroupSpec,
@@ -38,9 +36,13 @@ use libcgroups::common::{CgroupManager, ControllerOpt, DEFAULT_CGROUP_ROOT};
 use libcgroups::stats::Stats;
 use libcgroups::v2;
 use nix::unistd::Pid;
-use oci_spec::runtime::{LinuxCpuBuilder, LinuxResourcesBuilder};
+use oci_spec::runtime::{
+    LinuxCpuBuilder, LinuxMemoryBuilder, LinuxResourcesBuilder,
+};
 use std::path::PathBuf;
 use std::str::FromStr;
+
+use super::error::{CgroupsError, Result};
 
 /// This is used as the denominator for the CPU quota/period configuration.  This allows users to
 /// set the quota as if it was in the unit "µs/s" without worrying about also setting the period.
@@ -57,7 +59,7 @@ impl Cgroup {
         spec: CgroupSpec,
         nested_auraed_pid: Pid,
     ) -> Result<Self> {
-        let CgroupSpec { cpu, cpuset, mem } = spec;
+        let CgroupSpec { cpu, cpuset, memory } = spec;
 
         // Note: Cgroups v2 "no internal processes" rule.
         // Docs: https://man7.org/linux/man-pages/man7/cgroups.7.html
@@ -88,7 +90,7 @@ impl Cgroup {
         let builder = LinuxResourcesBuilder::default();
 
         // oci_spec, which libcgroups uses, combines the cpu and cpuset controllers
-        let builder = if cpu.is_some() || cpuset.is_some() || mem.is_some() {
+        let builder = if cpu.is_some() || cpuset.is_some() || memory.is_some() {
             let cpu_builder = LinuxCpuBuilder::default();
 
             // cpu controller
@@ -128,29 +130,29 @@ impl Cgroup {
                     cpu_builder
                 };
 
-            let mem_builder = LinuxMemoryBuilder::default();
-            let mem_builder =
+            let memory_builder = LinuxMemoryBuilder::default();
+            let memory_builder =
                 if let Some(MemoryController { min: _, low, high: _, max }) =
-                    mem
+                    memory
                 {
-                    let mem_builder = if let Some(low) = low {
-                        mem_builder.threshold(low.into_inner())
+                    let memory_builder = if let Some(low) = low {
+                        memory_builder.reservation(low.into_inner())
                     } else {
-                        mem_builder
+                        memory_builder
                     };
 
                     if let Some(max) = max {
-                        mem_builder.limit(max)
+                        memory_builder.limit(max.into_inner())
                     } else {
-                        mem_builder
+                        memory_builder
                     }
                 } else {
-                    mem_builder
+                    memory_builder
                 };
 
             let cpu = cpu_builder.build().expect("valid cpu builder");
-            let mem = mem_builder.build().expect("valid mem builder");
-            builder.cpu(cpu).memory(mem)
+            let memory = memory_builder.build().expect("valid memory builder");
+            builder.cpu(cpu).memory(memory)
         } else {
             builder
         };

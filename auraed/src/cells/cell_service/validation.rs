@@ -59,7 +59,7 @@ pub struct ValidatedCell {
     pub cpuset: Option<ValidatedCpusetController>,
 
     #[field_type(Option<MemoryController>)]
-    pub mem: Option<ValidatedMemoryController>,
+    pub memory: Option<ValidatedMemoryController>,
 
     #[validate(none)]
     pub isolate_process: bool,
@@ -109,7 +109,7 @@ impl CellTypeValidator for CellValidator {
         };
 
         Ok(Some(ValidatedMemoryController::validate(
-            mem,
+            memory,
             Some(&*validation::field_name(field_name, parent_name)),
         )?))
     }

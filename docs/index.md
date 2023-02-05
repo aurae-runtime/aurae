@@ -1,6 +1,6 @@
 <!-- THE DOCUMENT -->
 
-![Deploy (aurae.io)] ![Documentation] ![Main Build (lint, compile, test)]
+![Workflow in progress: deploy] ![Workflow in progress: documentation] ![Workflow in progress: build]
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/aurae-runtime/aurae/main/docs/assets/logo/aurae.png" width="450">
@@ -20,14 +20,19 @@ virtual machines as well as set node configurations (e.g., like networking
 storage).
 
 Through system proportioning and enterprise workload isolation techniques, the
-Aurae [open-source] project can complement higher order schedulers and control planes (such as Kubernetes) as Aurae supports the
-usage of multi-tenant workloads and enterprise identities all the way down to
-the socket layer.
+Aurae [open-source] project can complement higher order schedulers and control
+planes (such as Kubernetes) as Aurae supports the usage of multi-tenant
+workloads and enterprise identities all the way down to the socket layer.
+
+## FOSDEM 2023 Presentation
+
+ - Slides: [Link to presentation](https://docs.google.com/presentation/d/1GxKN5tyv4lV2aZdEOUqy3R9tVCat-vrFJyelgFX7b1A/edit#slide=id.g1eef12fba1d_21_88)
+ - Video : [Link to website](https://fosdem.org/2023/schedule/event/rust_aurae_a_new_pid_1_for_distributed_systems/)
 
 ## Project Status
 
-> **STILL IN EARLY DEVELOPMENT!**<br> 
-> **The Aurae project and API can change without notice.**<br> 
+> **STILL IN EARLY DEVELOPMENT!**<br>
+> **The Aurae project and API can change without notice.**<br>
 > **Do not run the project in production until further notice!**
 
 - The Aurae project welcomes contributions of all kinds and sizes.
@@ -42,9 +47,9 @@ accessible to anyone.
 # **Expanded Overview**
 
 By [introducing Aurae cells] on top of a [Linux kernel] the control of each
-internal runtime process on a given node becomes possible.
-The auraed runtime maintains ownership of every process by managing everything from [PID]-1
-to nested processes.
+internal runtime process on a given node becomes possible. The auraed runtime
+maintains ownership of every process by managing everything from [PID]-1 to
+nested processes.
 
 Maintainable and predefined [.proto]-files contribute to the core definition of
 the distributed systems runtime and the standard library. During the build
@@ -91,7 +96,8 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 
 ---
 
-<!-- # **Getting Started**
+<!--
+# **Getting Started**
 ## **Building Aurae from Source**
 ### **Dependencies**
 ### **Prepare the Environment**
@@ -105,7 +111,7 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 ### **Back to the VM (setting up Aurae)** -->
 
 <!-- All the links!! -->
-<!-- +Footnotes -->
+<!-- +Footnotes
 
 [^cells]:
     Additionally, with Aurae cells, the project provides various ways to partition
@@ -119,15 +125,15 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 [^medium]:
     Learn more from the [Medium Blog: Why fix Kubernetes and Systemd?] by
     [Kris Nóva]).
+-->
 
-[^memory-safe]: 
-    The reliability and effectiveness of the Rust systems language make it an excellent choice for the development of the Aurae project. [Learn more about Rust]
+[^memory-safe]: The reliability and effectiveness of the Rust systems language make it an excellent choice for the development of the Aurae project. [Learn more about Rust]
 
 <!-- +Status Badges -->
 
-[deploy (aurae.io)]: https://github.com/aurae-runtime/aurae/actions/workflows/291-deploy-website-documentation-aurae-builder-make-docs.yml/badge.svg?branch=main "https://github.com/aurae-runtime/aurae/actions/workflows/291-deploy-website-documentation-aurae-builder-make-docs.yml"
-[documentation]: https://github.com/aurae-runtime/aurae/actions/workflows/290-check-website-documentation-aurae-builder-make-docs.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/290-check-website-documentation-aurae-builder-make-docs.yml"
-[main build (lint, compile, test)]: https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test.yml/badge.svg?branch=main "https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test.yml"
+[workflow in progress: deploy]: https://github.com/aurae-runtime/aurae/actions/workflows/291-deploy-website-documentation-aurae-builder-make-docs.yml/badge.svg?branch=main "https://github.com/aurae-runtime/aurae/actions/workflows/291-deploy-website-documentation-aurae-builder-make-docs.yml"
+[workflow in progress: documentation]: https://github.com/aurae-runtime/aurae/actions/workflows/290-check-website-documentation-aurae-builder-make-docs.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/290-check-website-documentation-aurae-builder-make-docs.yml"
+[workflow in progress: build]: https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test.yml"
 
 <!-- +aurae.io/ -->
 
@@ -141,7 +147,7 @@ let started = await cells.start(<runtime.StartExecutableRequest>{
 [spawned aurae instances]: https://aurae.io/stdlib/v0/#instance "Short lived nested virtual instances of Aurae"
 [v0 api reference]: https://aurae.io/stdlib/v0/ "Learn more about the current Aurae library definitions"
 [virtual machines]: https://aurae.io/stdlib/v0/#virtualmachine "Long-lived arbitrary virtual machines"
-[introducing Aurae cells]: https://aurae.io/blog/2022-10-24-aurae-cells/#IntroducingAuraeCells "Aurae Blog: 2022-10-24"
+[introducing aurae cells]: https://aurae.io/blog/2022-10-24-aurae-cells/#IntroducingAuraeCells "Aurae Blog: 2022-10-24"
 
 <!-- +Wiki -->
 

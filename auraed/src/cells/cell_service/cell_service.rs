@@ -269,7 +269,7 @@ impl TryFrom<&super::cells::Cell> for CellGraphNode {
             .collect();
 
         let super::cells::CellSpec { cgroup_spec, iso_ctl } = spec;
-        let super::cells::cgroups::CgroupSpec { cpu, cpuset, mem } =
+        let super::cells::cgroups::CgroupSpec { cpu, cpuset, memory } =
             cgroup_spec;
 
         Ok(Self {
@@ -277,7 +277,7 @@ impl TryFrom<&super::cells::Cell> for CellGraphNode {
                 name: name.to_string(),
                 cpu: cpu.as_ref().map(|x| x.into()),
                 cpuset: cpuset.as_ref().map(|x| x.into()),
-                mem: mem.as_ref().map(|x| x.into()),
+                memory: memory.as_ref().map(|x| x.into()),
                 isolate_process: iso_ctl.isolate_process,
                 isolate_network: iso_ctl.isolate_network,
             }),
@@ -500,7 +500,7 @@ mod tests {
             name: CellName::from(cell_name),
             cpu: Some(ValidatedCpuController { weight: None, max: None }),
             cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
-            mem: Some(ValidatedMemoryController {
+            memory: Some(ValidatedMemoryController {
                 min: None,
                 low: None,
                 high: None,

@@ -32,13 +32,13 @@ pub use allocation::Allocation;
 pub use cgroup::Cgroup;
 pub use cpu::CpuController;
 pub use cpuset::CpusetController;
-pub use error::{CgroupsError, Result};
 pub use limit::Limit;
-pub use mem::MemController;
+pub use memory::MemoryController;
 pub use weight::Weight;
 
 pub mod cpu;
 pub mod cpuset;
+pub mod error;
 pub mod memory;
 
 mod allocation;
@@ -50,5 +50,5 @@ mod weight;
 pub struct CgroupSpec {
     pub cpu: Option<CpuController>,
     pub cpuset: Option<CpusetController>,
-    pub mem: Option<MemoryController>,
+    pub memory: Option<MemoryController>,
 }

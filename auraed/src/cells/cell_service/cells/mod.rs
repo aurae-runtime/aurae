@@ -65,7 +65,12 @@ impl CellSpec {
                     max: Some(Limit::new(100000)),
                 }),
                 cpuset: None,
-                mem: Some(MemoryController { max: Some(Limit::new(1000000)) }),
+                memory: Some(MemoryController {
+                    min: None,
+                    low: None,
+                    high: None,
+                    max: Some(Limit::new(1000000)),
+                }),
             },
             iso_ctl: IsolationControls {
                 isolate_network: false,

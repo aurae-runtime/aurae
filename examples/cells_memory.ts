@@ -37,7 +37,7 @@ let cellName = "ae-sleeper-cell";
 // [ Allocate ]
 let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
     cell: runtime.Cell.fromPartial({
-        mem: runtime.MemoryController.fromPartial({
+        memory: runtime.MemoryController.fromPartial({
             high: 50000, // 50k
             max: 100000, // 100k
         }),
