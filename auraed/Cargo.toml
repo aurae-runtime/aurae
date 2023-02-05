@@ -44,6 +44,7 @@ anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
 backoff = { version = "0.4.0", features = ["tokio"] }
+cgroups-rs = "0.3.0"
 clap = { workspace = true }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
@@ -52,7 +53,6 @@ ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
 libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
-libcgroups = { version = "0.0.4", default-features = false, features = ["v2"] }
 libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-libcontainer", features = ["v2"], default-features = false }
 liboci-cli = "0.0.4"
 log = "0.4.17"
@@ -60,7 +60,7 @@ multi_log = "0.1.2"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched"] }
 ocipkg = "0.2.8"
-oci-spec = "0.5" # upgrade to 0.6 blocked by libcgroups as of v0.0.4
+oci-spec = "0.6.0"
 procfs = "0.14.2"
 rtnetlink = "0.11.0"
 serde_json.workspace = true
