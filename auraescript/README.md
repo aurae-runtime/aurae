@@ -36,11 +36,10 @@ cd aurae
 make pki config all
 ```
 
-Alternatively it is possible to build `aurascript` by itself. Check out this repository and use the Makefile.
+Alternatively it is possible to build `auraescript` by itself. Check out this repository and use the Makefile.
 
 ```bash
-cd auraescript
-make
+make auraescript
 ```
 
 ...or manually using Cargo.
