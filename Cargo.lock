@@ -182,7 +182,6 @@ dependencies = [
  "aurae-client",
  "aurae-proto",
  "backoff",
- "cgroups-rs",
  "clap 4.1.4",
  "clone3",
  "fancy-regex",
@@ -191,13 +190,14 @@ dependencies = [
  "iter_tools",
  "lazy_static",
  "libc",
+ "libcgroups 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "libcontainer",
  "liboci-cli",
  "log",
  "multi_log",
  "netlink-packet-route",
- "nix 0.26.2",
- "oci-spec 0.6.0",
+ "nix 0.25.1",
+ "oci-spec 0.5.8",
  "ocipkg",
  "procfs",
  "rtnetlink",
@@ -446,19 +446,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "cgroups-rs"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b97b639839204a6eb727ffbbd68e1dcfc55488c3a26cb0cda1d662b7a186e79"
-dependencies = [
- "libc",
- "log",
- "nix 0.25.1",
- "regex",
- "thiserror",
-]
 
 [[package]]
 name = "chrono"
@@ -1603,6 +1590,21 @@ checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 [[package]]
 name = "libcgroups"
 version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df7da5afffc27b9cdef1e65e377b39f30bbe0c6224b9bd2e590ccb400134280d"
+dependencies = [
+ "anyhow",
+ "fixedbitset",
+ "log",
+ "nix 0.25.1",
+ "oci-spec 0.5.8",
+ "procfs",
+ "serde",
+]
+
+[[package]]
+name = "libcgroups"
+version = "0.0.4"
 source = "git+https://github.com/krisnova/youki?branch=musl-libcontainer#cc2a4d0fdd5d7f2c05a218322a0c8bfd0ea22fdf"
 dependencies = [
  "anyhow",
@@ -1627,7 +1629,7 @@ dependencies = [
  "fastrand",
  "futures",
  "libc",
- "libcgroups",
+ "libcgroups 0.0.4 (git+https://github.com/krisnova/youki?branch=musl-libcontainer)",
  "log",
  "mio",
  "nix 0.25.1",
@@ -3335,7 +3337,7 @@ dependencies = [
 name = "test-helpers"
 version = "0.0.0"
 dependencies = [
- "nix 0.26.2",
+ "nix 0.25.1",
 ]
 
 [[package]]
