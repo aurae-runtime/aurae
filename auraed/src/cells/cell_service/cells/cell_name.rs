@@ -88,7 +88,6 @@ impl ValidatedField<String> for CellName {
         let input = input
             .split(SEPARATOR)
             .flat_map(|component| {
-                // NOTE: We must always reserve '/' (separator) and '_' (name of leaf cgroup)
                 validation::allow_regex(
                     component,
                     &validation::DOMAIN_NAME_LABEL_REGEX,

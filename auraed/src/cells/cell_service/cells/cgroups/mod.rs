@@ -31,14 +31,12 @@
 pub use cgroup::Cgroup;
 pub use cpu::CpuController;
 pub use cpuset::CpusetController;
-pub use error::{CgroupsError, Result};
 pub use limit::Limit;
 pub use weight::Weight;
 
 mod cgroup;
 pub mod cpu;
 pub mod cpuset;
-mod error;
 mod limit;
 mod weight;
 
