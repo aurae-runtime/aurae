@@ -28,28 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use allocation::Allocation;
-pub use cgroup::Cgroup;
-pub use cpu::CpuController;
-pub use cpuset::CpusetController;
-pub use error::{CgroupsError, Result};
-pub use limit::Limit;
-pub use mem::MemController;
-pub use weight::Weight;
-
-pub mod cpu;
-pub mod cpuset;
-pub mod memory;
-
-mod allocation;
-mod cgroup;
-mod error;
-mod limit;
-mod weight;
+use super::{Allocation, Limit};
 
 #[derive(Debug, Clone)]
-pub struct CgroupSpec {
-    pub cpu: Option<CpuController>,
-    pub cpuset: Option<CpusetController>,
-    pub mem: Option<MemoryController>,
+pub struct MemController {
+    pub min: Option<Allocation>,
+    pub low: Option<Allocation>,
+    pub high: Option<Limit>,
+    pub max: Option<Limit>,
 }

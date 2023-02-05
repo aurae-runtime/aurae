@@ -28,28 +28,48 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use allocation::Allocation;
-pub use cgroup::Cgroup;
-pub use cpu::CpuController;
-pub use cpuset::CpusetController;
-pub use error::{CgroupsError, Result};
-pub use limit::Limit;
-pub use mem::MemController;
-pub use weight::Weight;
+use std::fmt::{Display, Formatter};
+use std::ops::Deref;
+use validation::{ValidatedField, ValidationError};
 
-pub mod cpu;
-pub mod cpuset;
-pub mod memory;
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct Allocation(i64);
 
-mod allocation;
-mod cgroup;
-mod error;
-mod limit;
-mod weight;
+impl Allocation {
+    #[cfg(test)]
+    pub fn new(allocation: i64) -> Self {
+        Self(allocation)
+    }
 
-#[derive(Debug, Clone)]
-pub struct CgroupSpec {
-    pub cpu: Option<CpuController>,
-    pub cpuset: Option<CpusetController>,
-    pub mem: Option<MemoryController>,
+    pub fn into_inner(self) -> i64 {
+        self.0
+    }
+}
+
+impl ValidatedField<i64> for Allocation {
+    fn validate(
+        input: Option<i64>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Self, ValidationError> {
+        let input = validation::required(input, field_name, parent_name)?;
+
+        validation::minimum_value(input, 0, "units", field_name, parent_name)?;
+
+        Ok(Self(input))
+    }
+}
+
+impl Deref for Allocation {
+    type Target = i64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Display for Allocation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
 }

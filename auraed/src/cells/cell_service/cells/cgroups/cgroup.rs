@@ -31,7 +31,7 @@
 use super::Result;
 use crate::cells::cell_service::cells::cgroups::CgroupsError;
 use crate::cells::cell_service::cells::{
-    cgroups::{CpuController, CpusetController},
+    cgroups::{CpuController, CpusetController, MemController},
     CellName, CgroupSpec,
 };
 use libcgroups::common::{CgroupManager, ControllerOpt, DEFAULT_CGROUP_ROOT};
@@ -57,7 +57,7 @@ impl Cgroup {
         spec: CgroupSpec,
         nested_auraed_pid: Pid,
     ) -> Result<Self> {
-        let CgroupSpec { cpu, cpuset } = spec;
+        let CgroupSpec { cpu, cpuset, mem } = spec;
 
         // Note: Cgroups v2 "no internal processes" rule.
         // Docs: https://man7.org/linux/man-pages/man7/cgroups.7.html
@@ -70,7 +70,7 @@ impl Cgroup {
             cell_name.clone().into_inner(),
         )
         .expect("valid cgroup");
-        
+
         let leaf = v2::manager::Manager::new(
             DEFAULT_CGROUP_ROOT.into(),
             get_leaf_path(&cell_name),
@@ -88,7 +88,7 @@ impl Cgroup {
         let builder = LinuxResourcesBuilder::default();
 
         // oci_spec, which libcgroups uses, combines the cpu and cpuset controllers
-        let builder = if cpu.is_some() || cpuset.is_some() {
+        let builder = if cpu.is_some() || cpuset.is_some() || mem.is_some() {
             let cpu_builder = LinuxCpuBuilder::default();
 
             // cpu controller
@@ -128,8 +128,29 @@ impl Cgroup {
                     cpu_builder
                 };
 
-            let cpu = cpu_builder.build().expect("valid builder");
-            builder.cpu(cpu)
+            let mem_builder = LinuxMemoryBuilder::default();
+            let mem_builder =
+                if let Some(MemoryController { min: _, low, high: _, max }) =
+                    mem
+                {
+                    let mem_builder = if let Some(low) = low {
+                        mem_builder.threshold(low.into_inner())
+                    } else {
+                        mem_builder
+                    };
+
+                    if let Some(max) = max {
+                        mem_builder.limit(max)
+                    } else {
+                        mem_builder
+                    }
+                } else {
+                    mem_builder
+                };
+
+            let cpu = cpu_builder.build().expect("valid cpu builder");
+            let mem = mem_builder.build().expect("valid mem builder");
+            builder.cpu(cpu).memory(mem)
         } else {
             builder
         };

@@ -423,7 +423,7 @@ mod tests {
         fn cell_fn(cell: &Cell) -> Result<Graph> {
             Ok(Graph {
                 name: cell.name().clone(),
-                children: CellsCache::get_all(cell, |c| cell_fn(c))
+                children: CellsCache::get_all(cell, cell_fn)
                     .expect("get all failed")
                     .into_iter()
                     .filter_map(|x| x.ok())
