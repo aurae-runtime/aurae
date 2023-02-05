@@ -31,7 +31,7 @@
 use super::{Allocation, Limit};
 
 #[derive(Debug, Clone)]
-pub struct MemController {
+pub struct MemoryController {
     pub min: Option<Allocation>,
     pub low: Option<Allocation>,
     pub high: Option<Limit>,

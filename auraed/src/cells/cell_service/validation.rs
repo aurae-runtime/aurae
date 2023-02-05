@@ -11,7 +11,7 @@ use crate::cells::cell_service::cells::CellName;
 use aurae_proto::cells::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
     CellServiceStartRequest, CellServiceStopRequest, CpuController,
-    CpusetController, Executable, MemController,
+    CpusetController, Executable, MemoryController,
 };
 use std::ffi::OsString;
 use tokio::process::Command;
@@ -58,8 +58,8 @@ pub struct ValidatedCell {
     #[field_type(Option<CpusetController>)]
     pub cpuset: Option<ValidatedCpusetController>,
 
-    #[field_type(Option<MemController>)]
-    pub mem: Option<ValidatedMemController>,
+    #[field_type(Option<MemoryController>)]
+    pub mem: Option<ValidatedMemoryController>,
 
     #[validate(none)]
     pub isolate_process: bool,
@@ -99,16 +99,16 @@ impl CellTypeValidator for CellValidator {
         )?))
     }
 
-    fn validate_mem(
-        mem: Option<MemController>,
+    fn validate_memory(
+        memory: Option<MemoryController>,
         field_name: &str,
         parent_name: Option<&str>,
-    ) -> Result<Option<ValidatedMemController>, ValidationError> {
-        let Some(mem) = mem else {
+    ) -> Result<Option<ValidatedMemoryController>, ValidationError> {
+        let Some(memory) = memory else {
             return Ok(None);
         };
 
-        Ok(Some(ValidatedMemController::validate(
+        Ok(Some(ValidatedMemoryController::validate(
             mem,
             Some(&*validation::field_name(field_name, parent_name)),
         )?))
@@ -121,7 +121,7 @@ impl From<ValidatedCell> for super::cells::CellSpec {
             name: _,
             cpu,
             cpuset,
-            mem,
+            memory,
             isolate_process,
             isolate_network,
         } = x;
@@ -130,7 +130,7 @@ impl From<ValidatedCell> for super::cells::CellSpec {
             cgroup_spec: CgroupSpec {
                 cpu: cpu.map(|x| x.into()),
                 cpuset: cpuset.map(|x| x.into()),
-                mem: mem.map(|x| x.into()),
+                memory: memory.map(|x| x.into()),
             },
             iso_ctl: IsolationControls { isolate_process, isolate_network },
         }
@@ -178,7 +178,7 @@ impl From<ValidatedCpusetController> for cgroups::cpuset::CpusetController {
 }
 
 #[derive(ValidatedType, Debug, Clone)]
-pub struct ValidatedMemController {
+pub struct ValidatedMemoryController {
     #[field_type(Option<i64>)]
     #[validate(opt)]
     pub min: Option<Allocation>,
@@ -196,11 +196,11 @@ pub struct ValidatedMemController {
     pub max: Option<Limit>,
 }
 
-impl MemControllerTypeValidator for MemControllerValidator {}
+impl MemoryControllerTypeValidator for MemoryControllerValidator {}
 
-impl From<ValidatedMemController> for cgroups::mem::MemController {
-    fn from(value: ValidatedMemController) -> Self {
-        let ValidatedMemController { min, low, high, max } = value;
+impl From<ValidatedMemoryController> for cgroups::memory::MemoryController {
+    fn from(value: ValidatedMemoryController) -> Self {
+        let ValidatedMemoryController { min, low, high, max } = value;
         Self { min, low, high, max }
     }
 }

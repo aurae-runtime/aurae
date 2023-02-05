@@ -48,7 +48,7 @@ use aurae_proto::cells::{
     CellServiceAllocateResponse, CellServiceFreeRequest,
     CellServiceFreeResponse, CellServiceListRequest, CellServiceListResponse,
     CellServiceStartRequest, CellServiceStartResponse, CellServiceStopRequest,
-    CellServiceStopResponse, CpuController, CpusetController, MemController,
+    CellServiceStopResponse, CpuController, CpusetController, MemoryController,
 };
 use backoff::backoff::Backoff;
 use std::sync::Arc;
@@ -312,9 +312,9 @@ impl From<&super::cells::cgroups::cpuset::CpusetController>
     }
 }
 
-impl From<&super::cells::cgroups::mem::MemController> for MemController {
-    fn from(value: &super::cells::cgroups::MemController) -> Self {
-        let super::cells::cgroups::MemController { min, low, high, max } =
+impl From<&super::cells::cgroups::memory::MemoryController> for MemoryController {
+    fn from(value: &super::cells::cgroups::MemoryController) -> Self {
+        let super::cells::cgroups::MemoryController { min, low, high, max } =
             value.clone();
 
         Self {
@@ -427,7 +427,7 @@ mod tests {
     use super::*;
     use crate::cells::cell_service::validation::{
         ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
-        ValidatedMemController,
+        ValidatedMemoryController,
     };
     use iter_tools::Itertools;
     use test_helpers::*;
@@ -500,7 +500,7 @@ mod tests {
             name: CellName::from(cell_name),
             cpu: Some(ValidatedCpuController { weight: None, max: None }),
             cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
-            mem: Some(ValidatedMemController {
+            mem: Some(ValidatedMemoryController {
                 min: None,
                 low: None,
                 high: None,

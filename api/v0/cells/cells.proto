@@ -89,7 +89,7 @@ service CellService {
 }
 
 /// An Aurae cell is a name given to Linux control groups (cgroups) that also
-/// include a name, and special pre-exec functionality that is executed from
+/// includes a name, and special pre-exec functionality that is executed from
 /// within the same context as any executables scheduled.
 ///
 /// A cell must be allocated for every executable scheduled. A cell defines the
@@ -164,7 +164,7 @@ message Cell {
 
   CpuController cpu = 2;
   CpusetController cpuset = 3;
-  MemController mem = 4;
+  MemoryController memory = 4;
 
   /// Will isolate the process (and proc filesystem) from the host.
   /// Will unshare the pid, ipc, uts, and mount namespaces.
@@ -224,7 +224,7 @@ message CpusetController {
 
 // Docs:
 // https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files
-message MemController {
+message MemoryController {
   // Hard memory protection. If the memory usage of a cgroup is within its
   // effective min boundary, the cgroup’s memory won’t be reclaimed under any
   // conditions. If there is no unprotected reclaimable memory available, OOM

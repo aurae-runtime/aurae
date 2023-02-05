@@ -31,7 +31,7 @@
 use super::Result;
 use crate::cells::cell_service::cells::cgroups::CgroupsError;
 use crate::cells::cell_service::cells::{
-    cgroups::{CpuController, CpusetController, MemController},
+    cgroups::{CpuController, CpusetController, MemoryController},
     CellName, CgroupSpec,
 };
 use libcgroups::common::{CgroupManager, ControllerOpt, DEFAULT_CGROUP_ROOT};
