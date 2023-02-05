@@ -86,7 +86,7 @@ lint: musl libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
 test: build lint libs-test auraed-test auraescript-test aer-test ## Builds, lints, and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: build lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
+test-all: build lint libs-test-all auraed-test-all auraescript-test-all aer-test-all docs-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
 build: musl auraed-build auraescript-build aer-build lint ## Build and lint
@@ -290,6 +290,7 @@ docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
 	$(cargo) doc --no-deps --package auraescript
 	$(cargo) doc --no-deps --package client
 	$(cargo) doc --no-deps --package aer
+	cp -rv target/$(uname_m)-unknown-linux-musl/doc/* docs/crate
 	cp -rv target/doc/* docs/crate
 
 .PHONY: docs-other
@@ -304,6 +305,24 @@ ifeq ($(uid), 0)
 else
 	sudo -E ./hack/serve.sh
 endif
+
+.PHONY: docs-stdlib-test
+docs-stdlib-test: docs-stdlib docs/stdlib/v0/index.md
+	@echo "Missing docs. Run 'make docs-stdlib' to create them"
+	@exit 1
+
+.PHONY: docs-crates-test
+docs-crates-test: docs-crates docs/crate/aer/ docs/crate/auraed/ docs/crate/auraescript/ docs/crate/client/
+	@echo "Missing docs. Run 'make docs-crates' to create them"
+	@exit 1
+
+.PHONY: docs-other-test
+docs-other-test: docs-other docs/index.md docs/stdlib/index.md
+	@echo "Missing docs. Run 'make docs-other' to create them"
+	@exit 1
+
+.PHONY: docs-test-all
+docs-test-all: docs-stdlib-test docs-crates-test docs-other-test
 
 #------------------------------------------------------------------------------#
 
