@@ -54,17 +54,6 @@
 //! sudo -E auraed
 //! ```
 //!
-//!
-//! ## Building from source
-//!
-//! We suggest using the [aurae](https://github.com/aurae-runtime/aurae) repository for building all parts of the project.
-//!
-//! It is possible to build `auraed` by itself. Check out this repository and use the Makefile.
-//!
-//! ```bash
-//! make auraed
-//! ```
-//!
 //! See [`The Aurae Standard Library`] for API reference.
 //!
 //! [`The Aurae Standard Library`]: https://aurae.io/stdlib
@@ -213,7 +202,6 @@ pub async fn run(
             )
         })?;
 
-
         // We don't want TLS in cell context
         let mut server = if context != AuraeContext::Cell {
             let server_crt =
@@ -236,12 +224,14 @@ pub async fn run(
                 .identity(server_identity)
                 .client_ca_root(ca_crt_pem);
 
-            info!("Validating SSL Identity and Root Certificate Authority (CA)");
+            info!(
+                "Validating SSL Identity and Root Certificate Authority (CA)"
+            );
             //let _log_collector = self.log_collector.clone();
 
             Server::builder()
-                    .tls_config(tls)
-                    .with_context(|| "gRPC server failed to configure tls")?
+                .tls_config(tls)
+                .with_context(|| "gRPC server failed to configure tls")?
         } else {
             Server::builder()
         };
@@ -319,7 +309,7 @@ pub async fn run(
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.
         let server_handle = tokio::spawn(async move {
-                server
+            server
                 .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
