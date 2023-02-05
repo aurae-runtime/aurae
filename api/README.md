@@ -10,7 +10,7 @@ A subsystem is a smaller and scoped subsection of the library composed of RPCs a
 
 Each subsystem is unique. Each subsystem is liable to come with its own guarantees, and expectations.
 
-In protobuf terms a subsystem is a group of [remote procedure calls (RPCs)]([https://developers.google.com/protocol-buffers/docs/proto3#services]([https://protobuf.dev/reference/protobuf/proto3-spec/#service_definition](https://protobuf.dev/reference/protobuf/proto3-spec/#service_definition))) and [services](https://developers.google.com/protocol-buffers/docs/proto3#services).
+In protobuf terms a subsystem is a group of remote procedure calls (RPCs) and [services](https://protobuf.dev/reference/protobuf/proto3-spec/#service_definition).
 
 ### What are resources?
 
