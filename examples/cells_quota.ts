@@ -51,9 +51,29 @@ helpers.print(allocated)
 let started = await cells.start(<runtime.CellServiceStartRequest>{
     cellName,
     executable: runtime.Executable.fromPartial({
-        command: "/usr/bin/sleep 42",
-        description: "Sleep for 42 seconds",
-        name: "sleep-42"
+        command: "/usr/bin/sleep 4",
+        description: "Sleep for 4 seconds",
+        name: "sleep-4"
     })
 })
 helpers.print(started)
+
+// wait for sleep to complete
+const sleep = async (waitTime: number) =>
+    new Promise(resolve =>
+        setTimeout(resolve, waitTime));
+
+sleep(5000);
+
+// [ Stop ]
+let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
+    cellName,
+    executableName: "sleep-4",
+})
+helpers.print(stopped)
+
+// [ Free ]
+let freed = await cells.free(<runtime.CellServiceFreeRequest>{
+    cellName
+});
+helpers.print(freed)
