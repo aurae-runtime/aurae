@@ -10,7 +10,7 @@ A subsystem is a smaller and scoped subsection of the library composed of RPCs a
 
 Each subsystem is unique. Each subsystem is liable to come with its own guarantees, and expectations.
 
-In protobuf terms a subsystem is a group of [remote procedure calls (RPCs)](https://developers.google.com/protocol-buffers/docs/proto3#services) and [services](https://developers.google.com/protocol-buffers/docs/proto3#services).
+In protobuf terms a subsystem is a group of remote procedure calls (RPCs) and [services](https://protobuf.dev/reference/protobuf/proto3-spec/#service_definition).
 
 ### What are resources?
 
@@ -22,7 +22,7 @@ The core resources are intended to be fundamental and composable, similar to the
 
 Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed to directly to, or received directly from an RPC.
 
-In protobuf terms a resource is a [message](https://developers.google.com/protocol-buffers/docs/proto3#simple).
+In protobuf terms a resource is a [message](https://protobuf.dev/programming-guides/proto3/#simple).
 
 ### What are services?
 
@@ -31,7 +31,7 @@ Services are a section of the API designed to be a way of grouping functionality
 A service should be discreet in the terms of how it mutates the system. For example if a service starts, it should stop. If a service allocates, it should free. And so on.
 
 Services should be named after a resource or set of functionality around common resources.
-Services should follow the `service NameService` paradigm as defined in the [style guide](https://developers.google.com/protocol-buffers/docs/style)
+Services should follow the `service NameService` paradigm as defined in the [style guide](https://protobuf.dev/programming-guides/style/)
 
 For example the service that mutates a `Cell` should be called `CellService`.
 
@@ -41,11 +41,11 @@ A function is a discreet piece of functionality designed to execute on the "back
 
 The library is designed to be executed procedurally and quickly. Many function calls per second is a reasonable expectation for any client.
 
-In protobuf terms a function is a [remote procedure call (RPC)](https://developers.google.com/protocol-buffers/docs/proto3#services)
+In protobuf terms a function is a [remote procedure call (RPC)](https://protobuf.dev/programming-guides/proto3/#services)
 
 ### API Definition Convention
 
-Generally follow [this style guide](https://developers.google.com/protocol-buffers/docs/style) in the `.proto` files.
+Generally follow [this style guide](https://protobuf.dev/programming-guides/style/) in the `.proto` files.
 
 It is short, but the main points are:
 
