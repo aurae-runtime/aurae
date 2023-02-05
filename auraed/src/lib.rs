@@ -186,6 +186,7 @@ pub async fn daemon() -> i32 {
         server_key: PathBuf::from(options.server_key),
         ca_crt: PathBuf::from(options.ca_crt),
         runtime_dir: PathBuf::from(options.runtime_dir),
+        nested: options.nested,
     };
 
     let e = match init::init(options.verbose, options.nested, options.socket)
@@ -219,6 +220,8 @@ struct AuraedRuntime {
     pub server_key: PathBuf,
     /// Configurable runtime directory. Defaults to /var/run/aurae.
     pub runtime_dir: PathBuf,
+    /// Flag indicating whether this is the host daemon or a nested daemon
+    pub nested: bool,
     // /// Provides logging channels to expose auraed logging via grpc
     //pub log_collector: Arc<LogChannel>,
 }
@@ -272,11 +275,17 @@ impl AuraedRuntime {
 
         // Initialize the bundler
 
-        // Install eBPF probes
-        info!("Installing eBPF probes");
+        // Install eBPF probes in the host Aurae daemon
+        let (_loader, signals) = if self.nested {
+            (None, None)
+        } else {
+            info!("Installing eBPF probes");
+            let mut bpf_loader = BpfLoader::new()?;
+            let listener = bpf_loader.load_signals_tracepoint()?;
 
-        let bpf_loader = &mut BpfLoader::new()?;
-        let signals = bpf_loader.load_signals_tracepoint()?;
+            // Need to move bpf_loader out to prevent it from being dropped
+            (Some(bpf_loader), Some(listener))
+        };
 
         // Build gRPC Services
         let (mut health_reporter, health_service) =

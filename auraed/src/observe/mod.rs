@@ -52,14 +52,14 @@ use crate::{
 
 pub struct ObserveService {
     aurae_logger: Arc<LogChannel>,
-    posix_signals: PerfEventListener<Signal>,
+    posix_signals: Option<PerfEventListener<Signal>>,
     sub_process_consumer_list: Vec<Receiver<LogItem>>,
 }
 
 impl ObserveService {
     pub fn new(
         aurae_logger: Arc<LogChannel>,
-        posix_signals: PerfEventListener<Signal>,
+        posix_signals: Option<PerfEventListener<Signal>>,
     ) -> Self {
         Self {
             aurae_logger,
@@ -78,7 +78,10 @@ impl ObserveService {
     }
 
     fn get_posix_signals_stream(&self) -> Receiver<Signal> {
-        self.posix_signals.subscribe()
+        self.posix_signals
+            .as_ref()
+            .expect("posix signal perf event listener")
+            .subscribe()
     }
 }
 
@@ -140,6 +143,10 @@ impl observe_service_server::ObserveService for ObserveService {
         &self,
         _request: Request<GetPosixSignalsStreamRequest>,
     ) -> Result<Response<Self::GetPosixSignalsStreamStream>, Status> {
+        if self.posix_signals.is_none() {
+            return Err(Status::unimplemented("GetPosixSignalStream is not implemented for nested Aurae daemons"));
+        }
+
         let (tx, rx) =
             mpsc::channel::<Result<GetPosixSignalsStreamResponse, Status>>(4);
 
@@ -186,7 +193,7 @@ mod test {
 
         let service = ObserveService::new(
             Arc::new(LogChannel::new(String::from("unused"))),
-            signals_listener,
+            Some(signals_listener),
         );
 
         let mut signals = service.get_posix_signals_stream();
