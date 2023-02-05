@@ -28,48 +28,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use cell::Cell;
-pub use cell_name::CellName;
-pub use cells::Cells;
-pub use cells_cache::CellsCache;
-use cgroups::CgroupSpec;
-pub use error::{CellsError, Result};
-pub use nested_auraed::IsolationControls;
+use crate::cells::cell_service::cells::CellName;
+use thiserror::Error;
 
-mod cell;
-mod cell_name;
-#[allow(clippy::module_inception)]
-mod cells;
-mod cells_cache;
-pub mod cgroups;
-mod error;
-mod nested_auraed;
+pub type Result<T> = std::result::Result<T, CgroupsError>;
 
-#[derive(Debug, Clone)]
-pub struct CellSpec {
-    pub cgroup_spec: CgroupSpec,
-    pub iso_ctl: IsolationControls,
-}
-
-impl CellSpec {
-    #[cfg(test)]
-    pub(crate) fn new_for_tests() -> Self {
-        use crate::cells::cell_service::cells::cgroups::{
-            CpuController, Limit, Weight,
-        };
-
-        Self {
-            cgroup_spec: CgroupSpec {
-                cpu: Some(CpuController {
-                    weight: Some(Weight::new(100)),
-                    max: Some(Limit::new(100000)),
-                }),
-                cpuset: None,
-            },
-            iso_ctl: IsolationControls {
-                isolate_network: false,
-                isolate_process: false,
-            },
-        }
-    }
+#[derive(Error, Debug)]
+pub enum CgroupsError {
+    #[error("cgroup '{cell_name}' creation failed: {source}")]
+    CreateCgroup { cell_name: CellName, source: anyhow::Error },
+    #[error("cgroup '{cell_name}' failed to add task: {source}")]
+    AddTaskToCgroup { cell_name: CellName, source: anyhow::Error },
+    #[error("cgroup '{cell_name}' deletion failed: {source}")]
+    DeleteCgroup { cell_name: CellName, source: anyhow::Error },
+    #[error("cgroup '{cell_name}' failed to read stats: {source}")]
+    ReadStats { cell_name: CellName, source: anyhow::Error },
 }

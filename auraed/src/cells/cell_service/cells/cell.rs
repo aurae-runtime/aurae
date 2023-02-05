@@ -114,8 +114,20 @@ impl Cell {
 
         let pid = auraed.pid();
 
-        let cgroup: Cgroup =
-            Cgroup::new(self.cell_name.clone(), self.spec.cgroup_spec.clone());
+        let cgroup = match Cgroup::new(
+            self.cell_name.clone(),
+            self.spec.cgroup_spec.clone(),
+            pid,
+        ) {
+            Ok(cgroup) => cgroup,
+            Err(e) => {
+                let _best_effort = auraed.kill();
+                return Err(CellsError::AbortedAllocateCell {
+                    cell_name: self.cell_name.clone(),
+                    source: e,
+                });
+            }
+        };
 
         if let Err(e) = cgroup.add_task(pid) {
             let _best_effort = auraed.kill();
