@@ -240,13 +240,13 @@ message MemoryController {
   // the effective low boundary (or effective min boundary if it is higher),
   // pages are reclaimed proportionally to the overage, reducing reclaim
   // pressure for smaller overages.
-  // NOTE: unused by aurae
   optional int64 low = 2;
 
   // Memory usage throttle limit. This is the main mechanism to control memory
   // usage of a cgroup. If a cgroup’s usage goes over the high boundary, the
   // processes of the cgroup are throttled and put under heavy reclaim
   // pressure.
+  // NOTE: unused by aurae
   optional int64 high = 3;
 
   // Memory usage hard limit. This is the final protection mechanism. If a

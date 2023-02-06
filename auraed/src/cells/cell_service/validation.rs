@@ -2,7 +2,7 @@ use super::cells::{
     cgroups::{
         self,
         cpuset::{Cpus, Mems},
-        Allocation, CgroupSpec, Limit, Weight,
+        CgroupSpec, Limit, Protection, Weight,
     },
     IsolationControls,
 };
@@ -181,11 +181,11 @@ impl From<ValidatedCpusetController> for cgroups::cpuset::CpusetController {
 pub struct ValidatedMemoryController {
     #[field_type(Option<i64>)]
     #[validate(opt)]
-    pub min: Option<Allocation>,
+    pub min: Option<Protection>,
 
     #[field_type(Option<i64>)]
     #[validate(opt)]
-    pub low: Option<Allocation>,
+    pub low: Option<Protection>,
 
     #[field_type(Option<i64>)]
     #[validate(opt)]

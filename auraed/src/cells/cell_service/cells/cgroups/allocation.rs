@@ -35,6 +35,7 @@ use validation::{ValidatedField, ValidationError};
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct Allocation(i64);
 
+#[allow(unused)]
 impl Allocation {
     #[cfg(test)]
     pub fn new(allocation: i64) -> Self {
