@@ -65,8 +65,8 @@ mod builtin;
 mod cells;
 mod cri;
 mod discovery;
-mod observe;
 mod health;
+mod observe;
 
 pub fn init() -> JsRuntime {
     let extension = Extension::builder().ops(stdlib()).build();
