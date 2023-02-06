@@ -183,15 +183,8 @@ dependencies = [
  "aya",
  "aya-log",
  "backoff",
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
- "bytes 1.2.1",
-=======
  "bytes",
->>>>>>> dd4ec8a (Cleanup)
  "cgroups-rs",
->>>>>>> dfb7e41 (Introduced basic eBPF loader and tracepoint probe that attaches to the signal/signal_generate trace event)
  "clap 4.1.4",
  "clone3",
  "fancy-regex",
@@ -3672,25 +3665,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
-name = "tracing-rfc-5424"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9bf4f714de9028944a67b76aa580330bf66ce0cc02bf07fe75ccfd14c99f7ed"
-dependencies = [
- "backtrace",
- "bytes",
- "chrono",
- "hostname",
- "local-ip-address",
- "tracing",
- "tracing-core",
- "tracing-subscriber",
-]
-
-[[package]]
->>>>>>> dd4ec8a (Cleanup)
 name = "tracing-subscriber"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
