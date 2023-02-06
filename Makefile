@@ -272,7 +272,7 @@ endif
 
 
 .PHONY: docs-crates
-docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
+docs-crates: musl ebpf-build $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
 	$(cargo) doc --target $(uname_m)-unknown-linux-musl --no-deps --package auraed
 	$(cargo) doc --no-deps --package auraescript
 	$(cargo) doc --no-deps --package aurae-client
