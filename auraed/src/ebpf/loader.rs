@@ -66,7 +66,7 @@ impl BpfLoader {
             trace!("spawning task for cpu {}", cpu_id);
             let mut per_cpu_buffer = perf_array.open(cpu_id, None)?;
             let per_cpu_tx = tx.clone();
-            let _ = tokio::spawn(async move {
+            let _ignored = tokio::spawn(async move {
                 trace!("task for cpu awaiting for events {}", cpu_id);
                 let mut buffers = (0..100)
                     .map(|_| BytesMut::with_capacity(signal_struct_size))
@@ -99,7 +99,7 @@ impl BpfLoader {
                             Err(err) => {
                                 // if no one is listening the error returned. XXX find a
                                 // better way of handling this.
-                                let errstr = format!("{}", err);
+                                let errstr = format!("{err}");
                                 if !errstr.contains("channel closed") {
                                     warn!(
                                         "failed to send perf event internally: {}",
