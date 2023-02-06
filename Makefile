@@ -119,6 +119,10 @@ nightly: ## Add nightly toolchain (needed for eBPF)
 	rustup toolchain list | grep -qc 'nightly-*' || \
 		rustup toolchain install nightly --component rust-src
 
+.PHONY: bpf-linker
+bpf-linker: ## Install bpf-linker (needed for eBPF)
+	cargo install --list | grep -qc 'bpf-linker' || \
+		cargo install bpf-linker
 #------------------------------------------------------------------------------#
 
 # Clean Commands
@@ -227,12 +231,12 @@ auraed-start: ## Starts the installed auraed executable
 # Commands for other crates
 
 .PHONY: ebpf-build ## Build auraed eBPF probes (debug)
-ebpf-build: nightly
+ebpf-build: nightly bpf-linker
 	cd ./aurae-ebpf && \
 		$(cargo) +nightly build --target=bpfel-unknown-none -Z build-std=core
 
 .PHONY: ebpf-release ## Build auraed eBPF probes
-ebpf-release: nightly
+ebpf-release: nightly bpf-linker
 	cd ./aurae-ebpf && \
 		$(cargo) +nightly build --package aurae-ebpf --target=bpfel-unknown-none -Z build-std=core --release
 
