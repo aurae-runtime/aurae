@@ -40,7 +40,7 @@ members = [
 ]
 
 exclude = [
-    "ebpf-probes"
+    "ebpf"
 ]
 
 [workspace.dependencies]

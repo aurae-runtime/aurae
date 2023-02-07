@@ -103,11 +103,34 @@ mod spawn;
 /// processes and commands. Access to the socket must be governed
 /// by an appropriate mTLS Authorization setting in order to maintain
 /// a secure multi tenant system.
-const AURAE_RUNTIME_DIR: &str = "/var/run/aurae";
 const AURAE_SOCK: &str = "aurae.sock";
-const AURAE_BUNDLE: &str = "/var/lib/aurae";
 
+/// Default runtime directory for Aurae.
+///
+/// All aspects of the auraed daemon should respect this value.
+///
+/// Here is where the auraed daemon will store artifacts such as
+/// OCI bundles for containers, the aurae.sock socket file, and
+/// runtime pod configuration.
+///
+/// This is the main "runtime" location for all artifacts that are
+/// a consequence of runtime operations.
+const AURAE_RUNTIME_DIR: &str = "/var/run/aurae";
+
+/// Default library directory for Aurae.
+///
+/// All aspects of the auraed library and dependency artifacts
+/// should respect this value.
+///
+/// Here is where the daemon will look for artifacts such as eBPF
+/// bytecode (ELF objects/probes) and other dependencies that can
+/// optionally be included at runtime.
+const AURAE_LIBRARY_DIR: &str = "/var/lib/aurae";
+
+/// Default exit code for successful termination of auraed.
 const EXIT_OKAY: i32 = 0;
+
+/// Default exit code for a runtime error of auraed.
 const EXIT_ERROR: i32 = 1;
 
 /// Command line options for auraed.
@@ -137,9 +160,9 @@ struct AuraedOptions {
     /// Aurae runtime path.  Defaults to /var/run/aurae.
     #[clap(short, long, value_parser, default_value = AURAE_RUNTIME_DIR)]
     runtime_dir: String,
-    /// Aurae bundle path. Defaults to /var/lib/aurae
-    #[clap(short, long, value_parser, default_value = AURAE_BUNDLE)]
-    bundle: String,
+    /// Aurae library path. Defaults to /var/lib/aurae
+    #[clap(short, long, value_parser, default_value = AURAE_LIBRARY_DIR)]
+    library: String,
     /// Toggle verbosity. Default false
     #[clap(short, long, alias = "ritz")]
     verbose: bool,
@@ -273,15 +296,15 @@ impl AuraedRuntime {
             )
         })?;
 
-        // Initialize the bundler
-
         // Install eBPF probes in the host Aurae daemon
         let (_loader, signals) = if self.nested {
             (None, None)
         } else {
-            info!("Installing eBPF probes");
-            let mut bpf_loader = BpfLoader::new()?;
-            let listener = bpf_loader.load_signals_tracepoint()?;
+            // Load eBPF probes
+            // TODO: Add flags/options to "opt-out" of the various BPF probes
+            let mut bpf_loader = BpfLoader::new();
+            let listener =
+                bpf_loader.read_and_load_tracepoint_signal_signal_generate()?;
 
             // Need to move bpf_loader out to prevent it from being dropped
             (Some(bpf_loader), Some(listener))

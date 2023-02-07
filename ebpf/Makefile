@@ -20,17 +20,22 @@
 # ---------------------------------------------------------------------------- #
 
 cargo         =  cargo
+aurae_ebpf    =  /var/lib/aurae/ebpf
 
 default: all ## Build all eBPF probes (debug)
 
-all: ebpf-build ## Build all eBPF probes (debug)
+all: build ## Build all eBPF probes (debug)
 
-.PHONY: ebpf-build ## Build all eBPF probes (debug)
-ebpf-build: nightly bpf-linker
+install: ## Install the eBPF probes to /var/lib/aurae/probes (release only)
+	@mkdir -p $(aurae_ebpf)
+	@cp -v  ./target/bpfel-unknown-none/release/instrument* $(aurae_ebpf)
+
+.PHONY: build ## Build all eBPF probes (debug)
+build: nightly bpf-linker
 	$(cargo) +nightly build --target=bpfel-unknown-none -Z build-std=core
 
-.PHONY: ebpf-release ## Build all eBPF probes
-ebpf-release: nightly bpf-linker
+.PHONY: release ## Build all eBPF probes
+release: nightly bpf-linker
 	$(cargo) +nightly build --package ebpf-probes --target=bpfel-unknown-none -Z build-std=core --release
 
 .PHONY: nightly

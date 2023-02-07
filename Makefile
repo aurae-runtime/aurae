@@ -114,15 +114,6 @@ config: ## Set up default config
 musl: ## Add target for musl
 	rustup target add $(uname_m)-unknown-linux-musl
 
-.PHONY: nightly
-nightly: ## Add nightly toolchain (needed for eBPF)
-	rustup toolchain list | grep -qc 'nightly-x86_64-unknown-linux-gnu' || \
-		rustup toolchain install nightly-x86_64-unknown-linux-gnu --component rust-src
-
-.PHONY: bpf-linker
-bpf-linker: ## Install bpf-linker (needed for eBPF)
-	cargo install --list | grep -qc 'bpf-linker' || \
-		cargo install bpf-linker
 #------------------------------------------------------------------------------#
 
 # Clean Commands
@@ -198,7 +189,7 @@ $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run 
 	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored
 
 .PHONY: $(1)-build
-$(1)-build: musl ebpf-build $(GEN_RS) $(GEN_TS)
+$(1)-build: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1)
 
 .PHONY: $(1)-build-release
@@ -229,16 +220,6 @@ auraed-start: ## Starts the installed auraed executable
 #------------------------------------------------------------------------------#
 
 # Commands for other crates
-
-.PHONY: ebpf-build ## Build auraed eBPF probes (debug)
-ebpf-build: nightly bpf-linker
-	cd ./aurae-ebpf && \
-		$(cargo) +nightly build --target=bpfel-unknown-none -Z build-std=core
-
-.PHONY: ebpf-release ## Build auraed eBPF probes
-ebpf-release: nightly bpf-linker
-	cd ./aurae-ebpf && \
-		$(cargo) +nightly build --package aurae-ebpf --target=bpfel-unknown-none -Z build-std=core --release
 
 .PHONY: libs-lint
 libs-lint: $(GEN_RS) $(GEN_TS)
@@ -272,7 +253,7 @@ endif
 
 
 .PHONY: docs-crates
-docs-crates: musl ebpf-build $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
+docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
 	$(cargo) doc --target $(uname_m)-unknown-linux-musl --no-deps --package auraed
 	$(cargo) doc --no-deps --package auraescript
 	$(cargo) doc --no-deps --package aurae-client

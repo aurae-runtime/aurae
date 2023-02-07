@@ -32,6 +32,7 @@ use aya_bpf::programs::TracePointContext;
 static mut SIGNALS: PerfEventArray<Signal> =
     PerfEventArray::<Signal>::with_max_entries(1024, 0);
 
+
 // TODO (jeroensoeters): figure out how stable these offsets are and if we want
 //    to read from /sys/kernel/debug/tracing/events/signal/signal_generate/format
 //
@@ -73,6 +74,7 @@ fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
     }
     Ok(0)
 }
+
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {

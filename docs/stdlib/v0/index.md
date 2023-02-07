@@ -31,9 +31,12 @@
 - [observe.proto](#observe-proto)
     - [GetAuraeDaemonLogStreamRequest](#aurae-observe-v0-GetAuraeDaemonLogStreamRequest)
     - [GetAuraeDaemonLogStreamResponse](#aurae-observe-v0-GetAuraeDaemonLogStreamResponse)
+    - [GetPosixSignalsStreamRequest](#aurae-observe-v0-GetPosixSignalsStreamRequest)
+    - [GetPosixSignalsStreamResponse](#aurae-observe-v0-GetPosixSignalsStreamResponse)
     - [GetSubProcessStreamRequest](#aurae-observe-v0-GetSubProcessStreamRequest)
     - [GetSubProcessStreamResponse](#aurae-observe-v0-GetSubProcessStreamResponse)
     - [LogItem](#aurae-observe-v0-LogItem)
+    - [Signal](#aurae-observe-v0-Signal)
   
     - [LogChannelType](#aurae-observe-v0-LogChannelType)
   
@@ -400,6 +403,31 @@ Cells is the most fundamental isolation boundary for Aurae.
 
 
 
+<a name="aurae-observe-v0-GetPosixSignalsStreamRequest"></a>
+
+### GetPosixSignalsStreamRequest
+
+
+
+
+
+
+
+<a name="aurae-observe-v0-GetPosixSignalsStreamResponse"></a>
+
+### GetPosixSignalsStreamResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| signal | [Signal](#aurae-observe-v0-Signal) |  |  |
+
+
+
+
+
+
 <a name="aurae-observe-v0-GetSubProcessStreamRequest"></a>
 
 ### GetSubProcessStreamRequest
@@ -447,6 +475,22 @@ TODO: not implemented
 
 
 
+
+<a name="aurae-observe-v0-Signal"></a>
+
+### Signal
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| signal | [int32](#int32) |  |  |
+| process_id | [int64](#int64) |  |  |
+
+
+
+
+
  
 
 
@@ -476,6 +520,7 @@ TODO: not implemented
 | ----------- | ------------ | ------------- | ------------|
 | GetAuraeDaemonLogStream | [GetAuraeDaemonLogStreamRequest](#aurae-observe-v0-GetAuraeDaemonLogStreamRequest) | [GetAuraeDaemonLogStreamResponse](#aurae-observe-v0-GetAuraeDaemonLogStreamResponse) stream | request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ). |
 | GetSubProcessStream | [GetSubProcessStreamRequest](#aurae-observe-v0-GetSubProcessStreamRequest) | [GetSubProcessStreamResponse](#aurae-observe-v0-GetSubProcessStreamResponse) stream | TODO: request log stream for a sub process |
+| GetPosixSignalsStream | [GetPosixSignalsStreamRequest](#aurae-observe-v0-GetPosixSignalsStreamRequest) | [GetPosixSignalsStreamResponse](#aurae-observe-v0-GetPosixSignalsStreamResponse) stream | request POSIX signals stream for the host |
 
  
 

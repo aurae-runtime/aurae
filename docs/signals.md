@@ -13,3 +13,10 @@ The `auraed` daemon will proxy signals sent to nested cells and nested `auraed` 
 | SIGINT  | 2     | SIGINT  | Ignored by `auraed`                                                                                                                   |
 
 
+## Observe signals with auraed eBPF
+
+```bash 
+aer observe get-posix-signals-stream
+```
+
+
