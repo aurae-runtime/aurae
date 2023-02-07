@@ -18,6 +18,8 @@
 # Dual Licensed: MIT License                                                   #
 # Copyright 2023 The Aurae Authors (The Nivenly Foundation)                    #
 # ---------------------------------------------------------------------------- #
+dir := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(dir)../hack/_common.mk
 
 cargo         =  cargo
 aurae_ebpf    =  /var/lib/aurae/ebpf
@@ -50,7 +52,3 @@ bpf-linker: ## Install bpf-linker (needed for eBPF)
 
 clean: ## Clean the target artifacts
 	cargo clean
-
-.PHONY: help
-help:  ## Show help messages for make targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
