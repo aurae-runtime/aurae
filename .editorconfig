@@ -1,0 +1,34 @@
+; https://editorconfig.org/
+
+# top-most EditorConfig file
+root = true
+
+[*]
+charset = utf-8
+trim_trailing_whitespace = true
+
+# Unix-style newlines with a newline ending every file
+end_of_line = lf
+insert_final_newline = true
+
+[Makefile]
+indent_style = tab
+indent_size = 4
+
+[*.md]
+indent_size = 4
+trim_trailing_whitespace = false
+eclint_indent_style = unset
+
+# TODO: what's right for proto files? toml? yaml? (at least for buf.gen.yaml)
+
+[*.rs]
+indent_style = space
+indent_size = 4
+
+[*.ts]
+indent_style = space
+indent_size = 4
+
+[Dockerfile]
+indent_size = 4
