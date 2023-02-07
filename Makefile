@@ -116,8 +116,8 @@ musl: ## Add target for musl
 
 .PHONY: nightly
 nightly: ## Add nightly toolchain (needed for eBPF)
-	rustup toolchain list | grep -qc 'nightly-*' || \
-		rustup toolchain install nightly --component rust-src
+	rustup toolchain list | grep -qc 'nightly-x86_64-unknown-linux-gnu' || \
+		rustup toolchain install nightly-x86_64-unknown-linux-gnu --component rust-src
 
 .PHONY: bpf-linker
 bpf-linker: ## Install bpf-linker (needed for eBPF)
