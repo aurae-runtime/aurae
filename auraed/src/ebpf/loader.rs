@@ -78,7 +78,6 @@ impl BpfLoader {
 
     /// Load a "PerfEvent" BPF program at runtime given an ELF object and
     /// program configuration.
-    #[allow(clippy::uninlined-format-args)]
     fn load_perf_event_program<T: Clone + Send + 'static>(
         &mut self,
         aurae_obj_name: &str,
@@ -89,8 +88,7 @@ impl BpfLoader {
     ) -> Result<PerfEventListener<T>, anyhow::Error> {
         info!("Loading eBPF program: {}", aurae_obj_name);
         let mut bpf_object = Bpf::load_file(format!(
-            "{}/ebpf/{}",
-            AURAE_LIBRARY_DIR, aurae_obj_name
+            "{AURAE_LIBRARY_DIR}/ebpf/{aurae_obj_name}",
         ))?;
 
         // Load the eBPF Tracepoint program
