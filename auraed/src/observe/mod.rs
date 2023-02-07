@@ -185,6 +185,7 @@ mod test {
 
     #[tokio::test]
     async fn test_intercept_posix_signals() {
+        skip_if_not_root!("test_intercept_posix_signals");
         let bpf_loader =
             &mut BpfLoader::new().expect("failed to initialize bpf loader");
         let signals_listener = bpf_loader
