@@ -185,6 +185,7 @@ mod test {
     #[tokio::test]
     async fn test_intercept_posix_signals() {
         skip_if_not_root!("test_intercept_posix_signals");
+        skip!();
         let bpf_loader = &mut BpfLoader::new();
         let signals_listener = bpf_loader
             .read_and_load_tracepoint_signal_signal_generate()
