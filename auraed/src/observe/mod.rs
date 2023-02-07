@@ -176,20 +176,18 @@ impl observe_service_server::ObserveService for ObserveService {
 
 #[cfg(test)]
 mod test {
-    use tokio::sync::Mutex;
-
-    use crate::ebpf::loader::BpfLoader;
-
     use super::*;
+    use crate::ebpf::loader::BpfLoader;
     use std::{process::Command, time::Duration};
+    use test_helpers::*;
+    use tokio::sync::Mutex;
 
     #[tokio::test]
     async fn test_intercept_posix_signals() {
         skip_if_not_root!("test_intercept_posix_signals");
-        let bpf_loader =
-            &mut BpfLoader::new().expect("failed to initialize bpf loader");
+        let bpf_loader = &mut BpfLoader::new();
         let signals_listener = bpf_loader
-            .load_signals_tracepoint()
+            .read_and_load_tracepoint_signal_signal_generate()
             .expect("failed to attach signals tracepoint");
 
         let service = ObserveService::new(
