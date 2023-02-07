@@ -44,7 +44,13 @@ use aya::{
 };
 use log::info;
 
-pub struct BpfLoader {}
+pub struct BpfLoader {
+    // The "bpf_scope" is critical to maintain the memory presence of the
+    // loaded bpf object.
+    // This specific BPF object needs to persist up to lib.rs such that
+    // the rest of the program can access this scope.
+    bpf_scopes: Vec<Bpf>,
+}
 
 /// Definition of the Aurae eBPF probe to capture all generated (and valid)
 /// kernel signals at runtime.
@@ -57,23 +63,14 @@ const CHANNEL_CAPACITY: usize = 1024;
 
 impl BpfLoader {
     pub fn new() -> Self {
-        Self {}
+        Self { bpf_scopes: vec![] }
     }
 
     pub fn read_and_load_tracepoint_signal_signal_generate(
         &mut self,
     ) -> Result<PerfEventListener<Signal>, anyhow::Error> {
-        info!(
-            "Loading eBPF program: {}",
-            INSTRUMENT_TRACEPOINT_SIGNAL_SIGNAL_GENERATE
-        );
-        let object = Bpf::load_file(format!(
-            "{}/ebpf/{}",
-            AURAE_LIBRARY_DIR, INSTRUMENT_TRACEPOINT_SIGNAL_SIGNAL_GENERATE
-        ))?;
-
         self.load_perf_event_program::<Signal>(
-            object,
+            INSTRUMENT_TRACEPOINT_SIGNAL_SIGNAL_GENERATE,
             "signals",
             "signal",
             "signal_generate",
@@ -84,13 +81,19 @@ impl BpfLoader {
     /// Load a "PerfEvent" BPF program at runtime given an ELF object and
     /// program configuration.
     fn load_perf_event_program<T: Clone + Send + 'static>(
-        &self,
-        mut bpf_object: Bpf,
+        &mut self,
+        aurae_obj_name: &str,
         prog_name: &str,
         category: &str,
         event: &str,
         perf_buffer: &str,
     ) -> Result<PerfEventListener<T>, anyhow::Error> {
+        info!("Loading eBPF program: {}", aurae_obj_name);
+        let mut bpf_object = Bpf::load_file(format!(
+            "{}/ebpf/{}",
+            AURAE_LIBRARY_DIR, aurae_obj_name
+        ))?;
+
         // Load the eBPF Tracepoint program
         let program: &mut TracePoint = bpf_object
             .program_mut(prog_name)
@@ -162,6 +165,9 @@ impl BpfLoader {
                 }
             });
         }
+
+        // Append to bpf_scopes
+        self.bpf_scopes.push(bpf_object);
 
         Ok(PerfEventListener::new(tx))
     }

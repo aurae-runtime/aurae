@@ -297,10 +297,9 @@ impl AuraedRuntime {
         })?;
 
         // Install eBPF probes in the host Aurae daemon
-        let (_loader, signals) = if self.nested {
+        let (_bpf_scope, signals) = if self.nested {
             (None, None)
         } else {
-            // Load eBPF probes
             // TODO: Add flags/options to "opt-out" of the various BPF probes
             let mut bpf_loader = BpfLoader::new();
             let listener =
