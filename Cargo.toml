@@ -35,12 +35,12 @@ members = [
     "auraed",
     "auraescript",
     "aurae-client",
-    "aurae-ebpf-shared",
+    "ebpf-shared",
     "aurae-proto",
 ]
 
 exclude = [
-    "aurae-ebpf"
+    "ebpf-probes"
 ]
 
 [workspace.dependencies]

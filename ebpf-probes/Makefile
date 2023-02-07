@@ -1,0 +1,51 @@
+# ---------------------------------------------------------------------------- #
+#                      SPDX-License-Identifier: GPL-2.0                        #
+#                      SPDX-License-Identifier: MIT                            #
+#                                                                              #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+# Dual Licensed: GNU GENERAL PUBLIC LICENSE 2.0                                #
+# Dual Licensed: MIT License                                                   #
+# Copyright 2023 The Aurae Authors (The Nivenly Foundation)                    #
+# ---------------------------------------------------------------------------- #
+
+cargo         =  cargo
+
+default: all ## Build all eBPF probes (debug)
+
+all: ebpf-build ## Build all eBPF probes (debug)
+
+.PHONY: ebpf-build ## Build all eBPF probes (debug)
+ebpf-build: nightly bpf-linker
+	$(cargo) +nightly build --target=bpfel-unknown-none -Z build-std=core
+
+.PHONY: ebpf-release ## Build all eBPF probes
+ebpf-release: nightly bpf-linker
+	$(cargo) +nightly build --package ebpf-probes --target=bpfel-unknown-none -Z build-std=core --release
+
+.PHONY: nightly
+nightly: ## Add nightly toolchain (needed for eBPF)
+	rustup toolchain list | grep -qc 'nightly-x86_64-unknown-linux-gnu' || \
+		rustup toolchain install nightly-x86_64-unknown-linux-gnu --component rust-src
+
+.PHONY: bpf-linker
+bpf-linker: ## Install bpf-linker (needed for eBPF)
+	cargo install --list | grep -qc 'bpf-linker' || \
+		cargo install bpf-linker
+
+clean: ## Clean the target artifacts
+	cargo clean
+
+.PHONY: help
+help:  ## Show help messages for make targets
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'

@@ -3,15 +3,6 @@
 version = 3
 
 [[package]]
-name = "aurae-ebpf"
-version = "0.1.0"
-dependencies = [
- "aurae-ebpf-shared",
- "aya-bpf",
- "aya-log-ebpf",
-]
-
-[[package]]
 name = "aurae-ebpf-shared"
 version = "0.0.0"
 
@@ -85,6 +76,15 @@ version = "0.1.11-dev.0"
 source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
 dependencies = [
  "aya-log-common",
+]
+
+[[package]]
+name = "ebpf-probes"
+version = "0.1.0"
+dependencies = [
+ "aurae-ebpf-shared",
+ "aya-bpf",
+ "aya-log-ebpf",
 ]
 
 [[package]]

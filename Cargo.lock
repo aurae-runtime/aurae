@@ -314,7 +314,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "log",
- "object 0.28.4",
+ "object",
  "parking_lot",
  "thiserror",
  "tokio",
@@ -476,6 +476,19 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cgroups-rs"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d5761f3a351b92e0e02a31ca418190bb323edb0d4fce0109b6dba673dc3fdc1"
+dependencies = [
+ "libc",
+ "log",
+ "nix 0.25.1",
+ "regex",
+ "thiserror",
+]
 
 [[package]]
 name = "chrono"
@@ -1982,12 +1995,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "object"
+version = "0.28.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e42c982f2d955fac81dd7e1d0e1426a7d702acd9c98d19ab01083a6a0328c424"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "oci-spec"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98135224dd4faeb24c05a2fac911ed53ea6b09ecb09d7cada1cb79963ab2ee34"
 dependencies = [
  "derive_builder 0.11.2",
+ "getset",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "oci-spec"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "214b837f7dde5026f2028ead5ae720073277c19f82ff85623b142c39d4b843e7"
+dependencies = [
+ "derive_builder 0.12.0",
  "getset",
  "serde",
  "serde_json",

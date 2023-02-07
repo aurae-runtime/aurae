@@ -1,16 +1,17 @@
 [package]
-name = "aurae-ebpf"
+name = "ebpf-probes"
 version = "0.1.0"
 edition = "2021"
+license = "Dual MIT/GPL"
 
 [dependencies]
-aurae-ebpf-shared = { path = "../aurae-ebpf-shared" }
+aurae-ebpf-shared = { path = "../ebpf-shared" }
 aya-bpf = { git = "https://github.com/aya-rs/aya", branch = "main" }
 aya-log-ebpf = { git = "https://github.com/aya-rs/aya", branch = "main" }
 
 [[bin]]
-name = "aurae-ebpf"
-path = "src/main.rs"
+name = "instrument-tracepoint-signal-signal-generate"
+path = "src/probe-tracepoint-signal-signal-generate.rs"
 
 [profile.dev]
 opt-level = 3

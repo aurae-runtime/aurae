@@ -19,18 +19,20 @@ impl BpfLoader {
     pub fn new() -> Result<Self, anyhow::Error> {
         #[cfg(debug_assertions)]
         let bpf = Bpf::load(include_bytes_aligned!(
-            "../../../aurae-ebpf/target/bpfel-unknown-none/debug/aurae-ebpf"
+            "../../../ebpf-probes/target/bpfel-unknown-none/debug/ebpf-probes"
         ))?;
 
         #[cfg(not(debug_assertions))]
         let bpf = Bpf::load(include_bytes_aligned!(
-            "../../../aurae-ebpf/target/bpfel-unknown-none/release/aurae-ebpf"
+            "../../../ebpf-probes/target/bpfel-unknown-none/release/ebpf-probes"
         ))?;
 
         Ok(Self { bpf })
     }
 
-    pub fn load_signals_tracepoint(&mut self) -> Result<PerfEventListener<Signal>, anyhow::Error> {
+    pub fn load_signals_tracepoint(
+        &mut self,
+    ) -> Result<PerfEventListener<Signal>, anyhow::Error> {
         self.load_tracepoint::<Signal>(
             "signals",
             "signal",
