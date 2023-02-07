@@ -5,10 +5,13 @@
 
 - [cells.proto](#cells-proto)
     - [Cell](#aurae-cells-v0-Cell)
+    - [CellGraphNode](#aurae-cells-v0-CellGraphNode)
     - [CellServiceAllocateRequest](#aurae-cells-v0-CellServiceAllocateRequest)
     - [CellServiceAllocateResponse](#aurae-cells-v0-CellServiceAllocateResponse)
     - [CellServiceFreeRequest](#aurae-cells-v0-CellServiceFreeRequest)
     - [CellServiceFreeResponse](#aurae-cells-v0-CellServiceFreeResponse)
+    - [CellServiceListRequest](#aurae-cells-v0-CellServiceListRequest)
+    - [CellServiceListResponse](#aurae-cells-v0-CellServiceListResponse)
     - [CellServiceStartRequest](#aurae-cells-v0-CellServiceStartRequest)
     - [CellServiceStartResponse](#aurae-cells-v0-CellServiceStartResponse)
     - [CellServiceStopRequest](#aurae-cells-v0-CellServiceStopRequest)
@@ -61,6 +64,22 @@ An isolation resource used to divide a system into smaller resource
 | cpuset | [CpusetController](#aurae-cells-v0-CpusetController) |  |  |
 | isolate_process | [bool](#bool) |  | Will isolate the process (and proc filesystem) from the host. / Will unshare the pid, ipc, uts, and mount namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
 | isolate_network | [bool](#bool) |  | Will isolate the network from the host. / Will unshare the net namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
+
+
+
+
+
+
+<a name="aurae-cells-v0-CellGraphNode"></a>
+
+### CellGraphNode
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell | [Cell](#aurae-cells-v0-Cell) |  |  |
+| children | [CellGraphNode](#aurae-cells-v0-CellGraphNode) | repeated |  |
 
 
 
@@ -122,6 +141,31 @@ Used to remove or free a cell after it has been allocated.
 
 ### CellServiceFreeResponse
 Response after removing or freeing a cell.
+
+
+
+
+
+
+<a name="aurae-cells-v0-CellServiceListRequest"></a>
+
+### CellServiceListRequest
+
+
+
+
+
+
+
+<a name="aurae-cells-v0-CellServiceListResponse"></a>
+
+### CellServiceListResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cells | [CellGraphNode](#aurae-cells-v0-CellGraphNode) | repeated |  |
 
 
 
@@ -266,6 +310,7 @@ Cells is the most fundamental isolation boundary for Aurae.
 | Free | [CellServiceFreeRequest](#aurae-cells-v0-CellServiceFreeRequest) | [CellServiceFreeResponse](#aurae-cells-v0-CellServiceFreeResponse) | Free up previously requested resources for an existing cell |
 | Start | [CellServiceStartRequest](#aurae-cells-v0-CellServiceStartRequest) | [CellServiceStartResponse](#aurae-cells-v0-CellServiceStartResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
 | Stop | [CellServiceStopRequest](#aurae-cells-v0-CellServiceStopRequest) | [CellServiceStopResponse](#aurae-cells-v0-CellServiceStopResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
+| List | [CellServiceListRequest](#aurae-cells-v0-CellServiceListRequest) | [CellServiceListResponse](#aurae-cells-v0-CellServiceListResponse) |  |
 
  
 
