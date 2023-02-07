@@ -28,21 +28,19 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_ebpf_shared::Signal;
-use bytes::BytesMut;
-use std::mem::size_of;
-use tokio::sync::broadcast;
-use tracing::{trace, warn};
-
 use crate::ebpf::perf_event_listener::PerfEventListener;
-
 use crate::AURAE_LIBRARY_DIR;
+use aurae_ebpf_shared::Signal;
 use aya::util::nr_cpus;
 use aya::{
     maps::perf::AsyncPerfEventArray, programs::TracePoint, util::online_cpus,
     Bpf,
 };
+use bytes::BytesMut;
 use log::info;
+use std::mem::size_of;
+use tokio::sync::broadcast;
+use tracing::{trace, warn};
 
 pub struct BpfLoader {
     // The "bpf_scope" is critical to maintain the memory presence of the
@@ -80,6 +78,7 @@ impl BpfLoader {
 
     /// Load a "PerfEvent" BPF program at runtime given an ELF object and
     /// program configuration.
+    #[allow(clippy::uninlined-format-args)]
     fn load_perf_event_program<T: Clone + Send + 'static>(
         &mut self,
         aurae_obj_name: &str,
