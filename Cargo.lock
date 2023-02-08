@@ -156,6 +156,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aurae-ebpf-shared"
+version = "0.0.0"
+dependencies = [
+ "aya",
+]
+
+[[package]]
 name = "aurae-proto"
 version = "0.1.0"
 dependencies = [
@@ -167,12 +174,17 @@ dependencies = [
 
 [[package]]
 name = "auraed"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "aurae-client",
+ "aurae-ebpf-shared",
  "aurae-proto",
+ "aya",
+ "aya-log",
  "backoff",
+ "bytes",
+ "cgroups-rs",
  "clap 4.1.4",
  "clone3",
  "fancy-regex",
@@ -288,6 +300,48 @@ dependencies = [
  "rustversion",
  "tower-layer",
  "tower-service",
+]
+
+[[package]]
+name = "aya"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "758d57288601ecc9d149e3413a5f23d6b72c0373febc97044d4f4aa149033b5e"
+dependencies = [
+ "bitflags",
+ "bytes",
+ "futures",
+ "lazy_static",
+ "libc",
+ "log",
+ "object",
+ "parking_lot",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "aya-log"
+version = "0.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe523bb45d7b2916b73f781580d308545fe843712c8154728168af1e7ec26b66"
+dependencies = [
+ "aya",
+ "aya-log-common",
+ "bytes",
+ "log",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "aya-log-common"
+version = "0.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0213297ff4b3d9156ed6c479d34a6eeb27b39dab5b88cd438cfd137ad63a945c"
+dependencies = [
+ "aya",
+ "num_enum",
 ]
 
 [[package]]
@@ -422,6 +476,19 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cgroups-rs"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d5761f3a351b92e0e02a31ca418190bb323edb0d4fce0109b6dba673dc3fdc1"
+dependencies = [
+ "libc",
+ "log",
+ "nix 0.25.1",
+ "regex",
+ "thiserror",
+]
 
 [[package]]
 name = "chrono"
@@ -1925,6 +1992,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2819ce041d2ee131036f4fc9d6ae7ae125a3a40e97ba64d04fe799ad9dabbb44"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "object"
+version = "0.28.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e42c982f2d955fac81dd7e1d0e1426a7d702acd9c98d19ab01083a6a0328c424"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]

@@ -28,62 +28,18 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-syntax = "proto3";
+use tokio::sync::broadcast::{Receiver, Sender};
 
-package aurae.observe.v0;
-
-option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/observe;observev0";
-
-enum LogChannelType {
-  LOG_CHANNEL_TYPE_UNSPECIFIED = 0;
-  LOG_CHANNEL_TYPE_STDOUT = 1;
-  LOG_CHANNEL_TYPE_STDERR = 2;
+pub struct PerfEventListener<T> {
+    tx: Sender<T>,
 }
 
-service ObserveService {
+impl<T> PerfEventListener<T> {
+    pub fn new(tx: Sender<T>) -> Self {
+        Self { tx }
+    }
 
-  // request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ).
-  rpc GetAuraeDaemonLogStream(GetAuraeDaemonLogStreamRequest) returns (stream GetAuraeDaemonLogStreamResponse) {}
-
-  // TODO: request log stream for a sub process
-  rpc GetSubProcessStream(GetSubProcessStreamRequest) returns (stream GetSubProcessStreamResponse) {}
-
-  // request POSIX signals stream for the host
-  rpc GetPosixSignalsStream(GetPosixSignalsStreamRequest) returns (stream GetPosixSignalsStreamResponse) {}
+    pub fn subscribe(&self) -> Receiver<T> {
+        self.tx.subscribe()
+    }
 }
-
-message GetPosixSignalsStreamRequest { 
-}
-
-message GetPosixSignalsStreamResponse {
-  Signal signal = 1;
-}
-
-message Signal {
-  int32 signal = 1;
-  int64 process_id = 2;
-}
-
-message GetAuraeDaemonLogStreamRequest {
-}
-
-// TODO: not implemented
-message GetSubProcessStreamRequest {
-  LogChannelType channel_type = 1;
-  int64 process_id = 2;
-}
-
-message LogItem {
-  string channel = 1;
-  string line = 2;
-  int64 timestamp = 3;
-}
-
-message GetAuraeDaemonLogStreamResponse {
-  LogItem item = 1;
-}
-
-message GetSubProcessStreamResponse {
-  LogItem item = 1;
-}
-

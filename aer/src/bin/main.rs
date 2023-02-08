@@ -30,7 +30,7 @@
 
 use aer::{
     discovery::DiscoveryServiceCommands, grpc::HealthCommands,
-    runtime::CellServiceCommands,
+    observe::ObserveServiceCommands, runtime::CellServiceCommands,
 };
 use clap::{Parser, Subcommand};
 
@@ -58,6 +58,11 @@ enum Commands {
         #[command(subcommand)]
         command: HealthCommands,
     },
+    #[command(arg_required_else_help = true)]
+    Observe {
+        #[command(subcommand)]
+        command: ObserveServiceCommands,
+    },
 }
 
 #[tokio::main]
@@ -68,6 +73,7 @@ async fn main() {
         Commands::Cell { command } => command.execute().await,
         Commands::Discovery { command } => command.execute().await,
         Commands::Health { command } => command.execute().await,
+        Commands::Observe { command } => command.execute().await,
     } {
         eprintln!("{e:#?}");
     }
