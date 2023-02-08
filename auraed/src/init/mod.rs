@@ -56,7 +56,31 @@ const BANNER: &str = "
     ┃  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ ┃
     ┃  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ┃
     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-         Distributed Systems Runtime Daemon\n";
+
+         Distributed Systems Runtime Daemon
+
+ ┌───────────────────────────────────────────────────┐
+ │  WARNING WARNING WARNING WARNING WARNING WARNING  │
+ │                                                   │
+ │ The Aurae Runtime Project is currently in a state │
+ │ of 'Early Active Development'. The current APIs   │
+ │ and features of the project should be considered  │
+ │ unstable. As the project matures the APIs and     │
+ │ features will stabilize.                          |
+ │                                                   │
+ │ As the project maintainers deem appropriate the   │
+ │ project will remove this warning.                 │
+ │                                                   │
+ │ At the time this banner is removed the project    │
+ │ will have documentation available in the main     │
+ │ repository on current API stability and backwards |
+ │ compatability.                                    │
+ │                                                   │
+ │          github.com/aurae-runtime/aurae           │
+ │                                                   │
+ │  WARNING WARNING WARNING WARNING WARNING WARNING  │
+ └───────────────────────────────────────────────────┘
+\n";
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum InitError {
