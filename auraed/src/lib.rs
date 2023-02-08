@@ -63,27 +63,32 @@
 
 use crate::cri::oci::AuraeOCIBuilder;
 use crate::cri::runtime_service::RuntimeService;
+use crate::ebpf::loader::BpfLoader;
+use crate::logging::log_channel::LogChannel;
 use crate::{
     cells::CellService, discovery::DiscoveryService, init::SocketStream,
-    spawn::spawn_auraed_oci_to,
+    observe::ObserveService, spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
 use aurae_proto::cri::runtime_service_server::RuntimeServiceServer;
 use aurae_proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
+    observe::observe_service_server::ObserveServiceServer,
 };
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
 use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
-use tracing::{error, info, trace};
+use tracing::{error, info, trace, warn};
 
 mod cells;
 mod cri;
 mod discovery;
+mod ebpf;
 mod graceful_shutdown;
 pub mod init;
 pub mod logging;
@@ -98,11 +103,34 @@ mod spawn;
 /// processes and commands. Access to the socket must be governed
 /// by an appropriate mTLS Authorization setting in order to maintain
 /// a secure multi tenant system.
-const AURAE_RUNTIME_DIR: &str = "/var/run/aurae";
 const AURAE_SOCK: &str = "aurae.sock";
-const AURAE_BUNDLE: &str = "/var/lib/aurae";
 
+/// Default runtime directory for Aurae.
+///
+/// All aspects of the auraed daemon should respect this value.
+///
+/// Here is where the auraed daemon will store artifacts such as
+/// OCI bundles for containers, the aurae.sock socket file, and
+/// runtime pod configuration.
+///
+/// This is the main "runtime" location for all artifacts that are
+/// a consequence of runtime operations.
+const AURAE_RUNTIME_DIR: &str = "/var/run/aurae";
+
+/// Default library directory for Aurae.
+///
+/// All aspects of the auraed library and dependency artifacts
+/// should respect this value.
+///
+/// Here is where the daemon will look for artifacts such as eBPF
+/// bytecode (ELF objects/probes) and other dependencies that can
+/// optionally be included at runtime.
+const AURAE_LIBRARY_DIR: &str = "/var/lib/aurae";
+
+/// Default exit code for successful termination of auraed.
 const EXIT_OKAY: i32 = 0;
+
+/// Default exit code for a runtime error of auraed.
 const EXIT_ERROR: i32 = 1;
 
 /// Command line options for auraed.
@@ -132,9 +160,9 @@ struct AuraedOptions {
     /// Aurae runtime path.  Defaults to /var/run/aurae.
     #[clap(short, long, value_parser, default_value = AURAE_RUNTIME_DIR)]
     runtime_dir: String,
-    /// Aurae bundle path. Defaults to /var/lib/aurae
-    #[clap(short, long, value_parser, default_value = AURAE_BUNDLE)]
-    bundle: String,
+    /// Aurae library path. Defaults to /var/lib/aurae
+    #[clap(short, long, value_parser, default_value = AURAE_LIBRARY_DIR)]
+    library: String,
     /// Toggle verbosity. Default false
     #[clap(short, long, alias = "ritz")]
     verbose: bool,
@@ -181,6 +209,7 @@ pub async fn daemon() -> i32 {
         server_key: PathBuf::from(options.server_key),
         ca_crt: PathBuf::from(options.ca_crt),
         runtime_dir: PathBuf::from(options.runtime_dir),
+        nested: options.nested,
     };
 
     let e = match init::init(options.verbose, options.nested, options.socket)
@@ -214,6 +243,8 @@ struct AuraedRuntime {
     pub server_key: PathBuf,
     /// Configurable runtime directory. Defaults to /var/run/aurae.
     pub runtime_dir: PathBuf,
+    /// Flag indicating whether this is the host daemon or a nested daemon
+    pub nested: bool,
     // /// Provides logging channels to expose auraed logging via grpc
     //pub log_collector: Arc<LogChannel>,
 }
@@ -265,7 +296,18 @@ impl AuraedRuntime {
             )
         })?;
 
-        // Initialize the bundler
+        // Install eBPF probes in the host Aurae daemon
+        let (_bpf_scope, signals) = if self.nested {
+            (None, None)
+        } else {
+            // TODO: Add flags/options to "opt-out" of the various BPF probes
+            let mut bpf_loader = BpfLoader::new();
+            let listener =
+                bpf_loader.read_and_load_tracepoint_signal_signal_generate()?;
+
+            // Need to move bpf_loader out to prevent it from being dropped
+            (Some(bpf_loader), Some(listener))
+        };
 
         // Build gRPC Services
         let (mut health_reporter, health_service) =
@@ -277,9 +319,18 @@ impl AuraedRuntime {
 
         let discovery_service = DiscoveryService::new();
         let discovery_service_server =
-            DiscoveryServiceServer::new(discovery_service.clone());
+            DiscoveryServiceServer::new(discovery_service);
         health_reporter
             .set_serving::<DiscoveryServiceServer<DiscoveryService>>()
+            .await;
+
+        let observe_service = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("TODO"))),
+            signals,
+        );
+        let observe_service_server = ObserveServiceServer::new(observe_service);
+        health_reporter
+            .set_serving::<ObserveServiceServer<ObserveService>>()
             .await;
 
         // let pod_service = PodService::new(self.runtime_dir.clone());
@@ -306,6 +357,7 @@ impl AuraedRuntime {
                 .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
+                .add_service(observe_service_server)
                 // .add_service(pod_service_server)
                 .add_service(runtime_service_server)
                 .serve_with_incoming_shutdown(socket_stream, async {

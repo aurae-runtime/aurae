@@ -7,3 +7,4 @@ mod config;
 pub mod cri;
 pub mod discovery;
 pub mod grpc;
+pub mod observe;
