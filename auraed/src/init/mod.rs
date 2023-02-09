@@ -66,14 +66,14 @@ const BANNER: &str = "
  │ of 'Early Active Development'. The current APIs   │
  │ and features of the project should be considered  │
  │ unstable. As the project matures the APIs and     │
- │ features will stabilize.                          |
+ │ features will stabilize.                          │
  │                                                   │
  │ As the project maintainers deem appropriate the   │
  │ project will remove this warning.                 │
  │                                                   │
  │ At the time this banner is removed the project    │
  │ will have documentation available in the main     │
- │ repository on current API stability and backwards |
+ │ repository on current API stability and backwards │
  │ compatability.                                    │
  │                                                   │
  │          github.com/aurae-runtime/aurae           │
