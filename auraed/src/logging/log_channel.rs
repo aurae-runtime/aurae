@@ -35,8 +35,8 @@ use tokio::sync::broadcast::{self, Receiver, Sender};
 /// Abstraction Layer for one log generating entity
 /// LogChannel provides channels between Log producers and log consumers
 #[derive(Clone, Debug)]
-pub(crate) struct LogChannel {
-    pub name: String,
+pub struct LogChannel {
+    name: String,
     tx: Sender<LogItem>,
 }
 

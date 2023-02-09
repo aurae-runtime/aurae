@@ -5,10 +5,13 @@
 
 - [cells.proto](#cells-proto)
     - [Cell](#aurae-cells-v0-Cell)
+    - [CellGraphNode](#aurae-cells-v0-CellGraphNode)
     - [CellServiceAllocateRequest](#aurae-cells-v0-CellServiceAllocateRequest)
     - [CellServiceAllocateResponse](#aurae-cells-v0-CellServiceAllocateResponse)
     - [CellServiceFreeRequest](#aurae-cells-v0-CellServiceFreeRequest)
     - [CellServiceFreeResponse](#aurae-cells-v0-CellServiceFreeResponse)
+    - [CellServiceListRequest](#aurae-cells-v0-CellServiceListRequest)
+    - [CellServiceListResponse](#aurae-cells-v0-CellServiceListResponse)
     - [CellServiceStartRequest](#aurae-cells-v0-CellServiceStartRequest)
     - [CellServiceStartResponse](#aurae-cells-v0-CellServiceStartResponse)
     - [CellServiceStopRequest](#aurae-cells-v0-CellServiceStopRequest)
@@ -16,6 +19,7 @@
     - [CpuController](#aurae-cells-v0-CpuController)
     - [CpusetController](#aurae-cells-v0-CpusetController)
     - [Executable](#aurae-cells-v0-Executable)
+    - [MemoryController](#aurae-cells-v0-MemoryController)
   
     - [CellService](#aurae-cells-v0-CellService)
   
@@ -28,9 +32,12 @@
 - [observe.proto](#observe-proto)
     - [GetAuraeDaemonLogStreamRequest](#aurae-observe-v0-GetAuraeDaemonLogStreamRequest)
     - [GetAuraeDaemonLogStreamResponse](#aurae-observe-v0-GetAuraeDaemonLogStreamResponse)
+    - [GetPosixSignalsStreamRequest](#aurae-observe-v0-GetPosixSignalsStreamRequest)
+    - [GetPosixSignalsStreamResponse](#aurae-observe-v0-GetPosixSignalsStreamResponse)
     - [GetSubProcessStreamRequest](#aurae-observe-v0-GetSubProcessStreamRequest)
     - [GetSubProcessStreamResponse](#aurae-observe-v0-GetSubProcessStreamResponse)
     - [LogItem](#aurae-observe-v0-LogItem)
+    - [Signal](#aurae-observe-v0-Signal)
   
     - [LogChannelType](#aurae-observe-v0-LogChannelType)
   
@@ -59,8 +66,25 @@ An isolation resource used to divide a system into smaller resource
 | name | [string](#string) |  | Resource parameters for control groups (cgroups) / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) / crate. See / [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs) |
 | cpu | [CpuController](#aurae-cells-v0-CpuController) |  |  |
 | cpuset | [CpusetController](#aurae-cells-v0-CpusetController) |  |  |
+| memory | [MemoryController](#aurae-cells-v0-MemoryController) |  |  |
 | isolate_process | [bool](#bool) |  | Will isolate the process (and proc filesystem) from the host. / Will unshare the pid, ipc, uts, and mount namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
 | isolate_network | [bool](#bool) |  | Will isolate the network from the host. / Will unshare the net namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
+
+
+
+
+
+
+<a name="aurae-cells-v0-CellGraphNode"></a>
+
+### CellGraphNode
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cell | [Cell](#aurae-cells-v0-Cell) |  |  |
+| children | [CellGraphNode](#aurae-cells-v0-CellGraphNode) | repeated |  |
 
 
 
@@ -70,12 +94,12 @@ An isolation resource used to divide a system into smaller resource
 <a name="aurae-cells-v0-CellServiceAllocateRequest"></a>
 
 ### CellServiceAllocateRequest
-An Aurae cell is a name given to Linux control groups (cgroups) that also include
-/ a name, and special pre-exec functionality that is executed from within the same context
-/ as any executables scheduled.
+An Aurae cell is a name given to Linux control groups (cgroups) that also
+/ includes a name, and special pre-exec functionality that is executed from
+/ within the same context as any executables scheduled.
 /
-/ A cell must be allocated for every executable scheduled. A cell defines the resource
-/ constraints of the system to allocate for an arbitrary use case.
+/ A cell must be allocated for every executable scheduled. A cell defines the
+/ resource constraints of the system to allocate for an arbitrary use case.
 
 
 | Field | Type | Label | Description |
@@ -122,6 +146,31 @@ Used to remove or free a cell after it has been allocated.
 
 ### CellServiceFreeResponse
 Response after removing or freeing a cell.
+
+
+
+
+
+
+<a name="aurae-cells-v0-CellServiceListRequest"></a>
+
+### CellServiceListRequest
+
+
+
+
+
+
+
+<a name="aurae-cells-v0-CellServiceListResponse"></a>
+
+### CellServiceListResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cells | [CellGraphNode](#aurae-cells-v0-CellGraphNode) | repeated |  |
 
 
 
@@ -243,6 +292,25 @@ The most primitive workload in Aurae, a standard executable process.
 
 
 
+
+<a name="aurae-cells-v0-MemoryController"></a>
+
+### MemoryController
+Docs:
+https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| min | [int64](#int64) | optional | Hard memory protection. If the memory usage of a cgroup is within its effective min boundary, the cgroup’s memory won’t be reclaimed under any conditions. If there is no unprotected reclaimable memory available, OOM killer is invoked. Above the effective min boundary (or effective low boundary if it is higher), pages are reclaimed proportionally to the overage, reducing reclaim pressure for smaller overages. NOTE: unused by aurae |
+| low | [int64](#int64) | optional | Best-effort memory protection. If the memory usage of a cgroup is within its effective low boundary, the cgroup’s memory won’t be reclaimed unless there is no reclaimable memory available in unprotected cgroups. Above the effective low boundary (or effective min boundary if it is higher), pages are reclaimed proportionally to the overage, reducing reclaim pressure for smaller overages. NOTE: unused by aurae |
+| high | [int64](#int64) | optional | Memory usage throttle limit. This is the main mechanism to control memory usage of a cgroup. If a cgroup’s usage goes over the high boundary, the processes of the cgroup are throttled and put under heavy reclaim pressure. |
+| max | [int64](#int64) | optional | Memory usage hard limit. This is the final protection mechanism. If a cgroup’s memory usage reaches this limit and can’t be reduced, the OOM killer is invoked in the cgroup. Under certain circumstances, the usage may go over the limit temporarily. |
+
+
+
+
+
  
 
  
@@ -266,6 +334,7 @@ Cells is the most fundamental isolation boundary for Aurae.
 | Free | [CellServiceFreeRequest](#aurae-cells-v0-CellServiceFreeRequest) | [CellServiceFreeResponse](#aurae-cells-v0-CellServiceFreeResponse) | Free up previously requested resources for an existing cell |
 | Start | [CellServiceStartRequest](#aurae-cells-v0-CellServiceStartRequest) | [CellServiceStartResponse](#aurae-cells-v0-CellServiceStartResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
 | Stop | [CellServiceStopRequest](#aurae-cells-v0-CellServiceStopRequest) | [CellServiceStopResponse](#aurae-cells-v0-CellServiceStopResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
+| List | [CellServiceListRequest](#aurae-cells-v0-CellServiceListRequest) | [CellServiceListResponse](#aurae-cells-v0-CellServiceListResponse) |  |
 
  
 
@@ -355,6 +424,31 @@ Cells is the most fundamental isolation boundary for Aurae.
 
 
 
+<a name="aurae-observe-v0-GetPosixSignalsStreamRequest"></a>
+
+### GetPosixSignalsStreamRequest
+
+
+
+
+
+
+
+<a name="aurae-observe-v0-GetPosixSignalsStreamResponse"></a>
+
+### GetPosixSignalsStreamResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| signal | [Signal](#aurae-observe-v0-Signal) |  |  |
+
+
+
+
+
+
 <a name="aurae-observe-v0-GetSubProcessStreamRequest"></a>
 
 ### GetSubProcessStreamRequest
@@ -402,6 +496,22 @@ TODO: not implemented
 
 
 
+
+<a name="aurae-observe-v0-Signal"></a>
+
+### Signal
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| signal | [int32](#int32) |  |  |
+| process_id | [int64](#int64) |  |  |
+
+
+
+
+
  
 
 
@@ -431,6 +541,7 @@ TODO: not implemented
 | ----------- | ------------ | ------------- | ------------|
 | GetAuraeDaemonLogStream | [GetAuraeDaemonLogStreamRequest](#aurae-observe-v0-GetAuraeDaemonLogStreamRequest) | [GetAuraeDaemonLogStreamResponse](#aurae-observe-v0-GetAuraeDaemonLogStreamResponse) stream | request log stream for aurae. everything logged via log macros in aurae (info!, error!, trace!, ... ). |
 | GetSubProcessStream | [GetSubProcessStreamRequest](#aurae-observe-v0-GetSubProcessStreamRequest) | [GetSubProcessStreamResponse](#aurae-observe-v0-GetSubProcessStreamResponse) stream | TODO: request log stream for a sub process |
+| GetPosixSignalsStream | [GetPosixSignalsStreamRequest](#aurae-observe-v0-GetPosixSignalsStreamRequest) | [GetPosixSignalsStreamResponse](#aurae-observe-v0-GetPosixSignalsStreamResponse) stream | request POSIX signals stream for the host |
 
  
 

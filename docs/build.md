@@ -17,12 +17,15 @@ commands provided below.
 - [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/)
 - [buf](https://docs.buf.build/installation)
 - [musl libc](https://musl.libc.org)
+- [BPF Linker](https://github.com/aya-rs/bpf-linker)
+
 
 ##### Ubuntu
 
 ```bash
 sudo apt-get install -y protobuf-compiler; # Protocol Buffer Compiler
 sudo apt-get install -y musl-tools; # musl libc
+sudo apt-get install -y build-essentials; # gcc compiler
 ```
 
 ##### Arch
@@ -31,6 +34,7 @@ sudo apt-get install -y musl-tools; # musl libc
 yay -S protobuf # Protocol Buffer Compiler
 yay -S buf # buf
 yay -S musl # musl libc 
+yay -S gcc # gcc compiler
 ```
 
 ### Prepare the Environment

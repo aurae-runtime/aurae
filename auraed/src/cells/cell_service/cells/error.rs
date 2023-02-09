@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::{cgroups::CgroupsError, CellName};
+use super::{cgroups::error::CgroupsError, CellName};
 use std::io;
 use thiserror::Error;
 use tracing::error;

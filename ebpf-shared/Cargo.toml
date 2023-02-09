@@ -1,0 +1,15 @@
+[package]
+name = "aurae-ebpf-shared"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[features]
+default = []
+user = [ "aya" ]
+
+[dependencies]
+aya = { version = ">=0.11", optional=true }
+
+[lib]
+path = "src/lib.rs"

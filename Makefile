@@ -27,6 +27,8 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
+dir := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(dir)/hack/_common.mk
 
 # Variables and Settings
 branch       ?=  main
@@ -193,7 +195,7 @@ $(1)-build: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1)
 
 .PHONY: $(1)-build-release
-$(1)-build-release: musl $(GEN_RS) $(GEN_TS)
+$(1)-build-release: musl ebpf-release $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1) --release
 
 .PHONY: $(1)-debug
@@ -232,6 +234,10 @@ libs-test: $(GEN_RS) $(GEN_TS)
 .PHONY: libs-test-all
 libs-test-all: $(GEN_RS) $(GEN_TS)
 	$(cargo) test --workspace --exclude auraed --exclude auraescript --exclude aer -- --include-ignored
+
+.PHONY: ebpf
+ebpf:
+	cd ebpf && make release install
 
 #------------------------------------------------------------------------------#
 
@@ -353,10 +359,6 @@ headers-check: ## Only check for problematic files.
 .PHONY: headers-write
 headers-write: ## Fix any problematic files blindly.
 	./hack/headers-write
-
-.PHONY: help
-help:  ## Show help messages for make targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: check-deps
 check-deps: musl $(GEN_TS) $(GEN_RS) ## Check if there are any unused dependencies in Cargo.toml

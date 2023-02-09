@@ -28,19 +28,21 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use super::Result;
-use crate::cells::cell_service::cells::cgroups::CgroupsError;
 use crate::cells::cell_service::cells::{
-    cgroups::{CpuController, CpusetController},
+    cgroups::{CpuController, CpusetController, MemoryController},
     CellName, CgroupSpec,
 };
 use libcgroups::common::{CgroupManager, ControllerOpt, DEFAULT_CGROUP_ROOT};
 use libcgroups::stats::Stats;
 use libcgroups::v2;
 use nix::unistd::Pid;
-use oci_spec::runtime::{LinuxCpuBuilder, LinuxResourcesBuilder};
+use oci_spec::runtime::{
+    LinuxCpuBuilder, LinuxMemoryBuilder, LinuxResourcesBuilder,
+};
 use std::path::PathBuf;
 use std::str::FromStr;
+
+use super::error::{CgroupsError, Result};
 
 /// This is used as the denominator for the CPU quota/period configuration.  This allows users to
 /// set the quota as if it was in the unit "µs/s" without worrying about also setting the period.
@@ -52,19 +54,43 @@ pub struct Cgroup {
 }
 
 impl Cgroup {
-    pub fn new(cell_name: CellName, spec: CgroupSpec) -> Result<Self> {
-        let CgroupSpec { cpu, cpuset } = spec;
+    pub fn new(
+        cell_name: CellName,
+        spec: CgroupSpec,
+        nested_auraed_pid: Pid,
+    ) -> Result<Self> {
+        let CgroupSpec { cpu, cpuset, memory } = spec;
 
         // Note: Cgroups v2 "no internal processes" rule.
         // Docs: https://man7.org/linux/man-pages/man7/cgroups.7.html
         // TLDR: "...with the exception of the root cgroup, processes may reside only
         //        in leaf nodes (cgroups that do not themselves contain child cgroups)."
 
-        // First we create the non-leaf cgroup using the spec
+        // First we create the cgroup managers. This doesn't do anything on the system.
+        let non_leaf = v2::manager::Manager::new(
+            DEFAULT_CGROUP_ROOT.into(),
+            cell_name.clone().into_inner(),
+        )
+        .expect("valid cgroup");
+
+        let leaf = v2::manager::Manager::new(
+            DEFAULT_CGROUP_ROOT.into(),
+            get_leaf_path(&cell_name),
+        )
+        .expect("valid cgroup");
+
+        // libcgroups will only create the cgroup when the first task is added,
+        // so we need to add a task before applying the controllers.
+        if let Err(e) = leaf.add_task(nested_auraed_pid) {
+            let _ = leaf.remove();
+            let _ = non_leaf.remove();
+            return Err(CgroupsError::AddTaskToCgroup { cell_name, source: e });
+        }
+
         let builder = LinuxResourcesBuilder::default();
 
         // oci_spec, which libcgroups uses, combines the cpu and cpuset controllers
-        let builder = if cpu.is_some() || cpuset.is_some() {
+        let builder = if cpu.is_some() || cpuset.is_some() || memory.is_some() {
             let cpu_builder = LinuxCpuBuilder::default();
 
             // cpu controller
@@ -104,8 +130,29 @@ impl Cgroup {
                     cpu_builder
                 };
 
-            let cpu = cpu_builder.build().expect("valid builder");
-            builder.cpu(cpu)
+            let memory_builder = LinuxMemoryBuilder::default();
+            let memory_builder =
+                if let Some(MemoryController { min: _, low, high: _, max }) =
+                    memory
+                {
+                    let memory_builder = if let Some(low) = low {
+                        memory_builder.reservation(low.into_inner())
+                    } else {
+                        memory_builder
+                    };
+
+                    if let Some(max) = max {
+                        memory_builder.limit(max.into_inner())
+                    } else {
+                        memory_builder
+                    }
+                } else {
+                    memory_builder
+                };
+
+            let cpu = cpu_builder.build().expect("valid cpu builder");
+            let memory = memory_builder.build().expect("valid memory builder");
+            builder.cpu(cpu).memory(memory)
         } else {
             builder
         };
@@ -118,25 +165,13 @@ impl Cgroup {
             freezer_state: None,
         };
 
-        let non_leaf = v2::manager::Manager::new(
-            DEFAULT_CGROUP_ROOT.into(),
-            cell_name.clone().into_inner(),
-        )
-        .expect("valid cgroup");
-
         if let Err(e) = non_leaf.apply(&options) {
             // try to remove, but ignore the error as the original error is more appropriate to return
+            // libcgroups takes care of killing any processes it finds
+            let _ = leaf.remove();
             let _ = non_leaf.remove();
             return Err(CgroupsError::CreateCgroup { cell_name, source: e });
         }
-
-        // Now, create the leaf cgroup where we can run processes.
-        // NOTE: '_' is a disallowed character in CellName, so won't collide
-        let _leaf = v2::manager::Manager::new(
-            DEFAULT_CGROUP_ROOT.into(),
-            get_leaf_path(&cell_name),
-        )
-        .expect("valid cgroup");
 
         Ok(Self { cell_name })
     }

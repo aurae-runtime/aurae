@@ -54,8 +54,24 @@ pub struct CellSpec {
 impl CellSpec {
     #[cfg(test)]
     pub(crate) fn new_for_tests() -> Self {
+        use crate::cells::cell_service::cells::cgroups::{
+            CpuController, Limit, MemoryController, Weight,
+        };
+
         Self {
-            cgroup_spec: CgroupSpec { cpu: None, cpuset: None },
+            cgroup_spec: CgroupSpec {
+                cpu: Some(CpuController {
+                    weight: Some(Weight::new(100)),
+                    max: Some(Limit::new(100000)),
+                }),
+                cpuset: None,
+                memory: Some(MemoryController {
+                    min: None,
+                    low: None,
+                    high: None,
+                    max: Some(Limit::new(1000000)),
+                }),
+            },
             iso_ctl: IsolationControls {
                 isolate_network: false,
                 isolate_process: false,

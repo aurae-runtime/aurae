@@ -30,7 +30,7 @@
 
 [package]
 name = "auraed"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
 license = "Apache-2.0"
@@ -43,7 +43,12 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
+aurae-ebpf-shared = { path = "../ebpf-shared" }
+aya = { version = ">=0.11", features=["async_tokio"] }
+aya-log = "0.1"
 backoff = { version = "0.4.0", features = ["tokio"] }
+bytes = "1.2.1"
+cgroups-rs = "0.3.0"
 clap = { workspace = true }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
@@ -66,6 +71,7 @@ rtnetlink = "0.11.0"
 serde_json.workspace = true
 serde.workspace = true
 simplelog = "0.12.0"
+syslog-tracing = "0.1.0"
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "macros", "net", "process", "rt-multi-thread", "signal", "sync"] }
 tokio-stream = { version = "0.1", features = ["net", "sync"] }
@@ -74,7 +80,6 @@ tonic-health = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
 tracing-log = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
-tracing-rfc-5424 = { version = "0.1.0" }  # syslog tracing
 uuid = { version = "1.2.2", features = ["v4"] }
 validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }

@@ -59,6 +59,7 @@ unused_results
 pub mod cri;
 pub mod discovery;
 pub mod grpc;
+pub mod observe;
 pub mod runtime;
 
 /// Executes an rpc call with the default `AuraeClient` and prints the results.

@@ -48,7 +48,7 @@ use aurae_proto::cells::{
     CellServiceAllocateResponse, CellServiceFreeRequest,
     CellServiceFreeResponse, CellServiceListRequest, CellServiceListResponse,
     CellServiceStartRequest, CellServiceStartResponse, CellServiceStopRequest,
-    CellServiceStopResponse, CpuController, CpusetController,
+    CellServiceStopResponse, CpuController, CpusetController, MemoryController,
 };
 use backoff::backoff::Backoff;
 use std::sync::Arc;
@@ -269,13 +269,15 @@ impl TryFrom<&super::cells::Cell> for CellGraphNode {
             .collect();
 
         let super::cells::CellSpec { cgroup_spec, iso_ctl } = spec;
-        let super::cells::cgroups::CgroupSpec { cpu, cpuset } = cgroup_spec;
+        let super::cells::cgroups::CgroupSpec { cpu, cpuset, memory } =
+            cgroup_spec;
 
         Ok(Self {
             cell: Some(Cell {
                 name: name.to_string(),
                 cpu: cpu.as_ref().map(|x| x.into()),
                 cpuset: cpuset.as_ref().map(|x| x.into()),
+                memory: memory.as_ref().map(|x| x.into()),
                 isolate_process: iso_ctl.isolate_process,
                 isolate_network: iso_ctl.isolate_network,
             }),
@@ -306,6 +308,20 @@ impl From<&super::cells::cgroups::cpuset::CpusetController>
         Self {
             cpus: cpus.map(|x| x.into_inner()),
             mems: mems.map(|x| x.into_inner()),
+        }
+    }
+}
+
+impl From<&super::cells::cgroups::memory::MemoryController> for MemoryController {
+    fn from(value: &super::cells::cgroups::MemoryController) -> Self {
+        let super::cells::cgroups::MemoryController { min, low, high, max } =
+            value.clone();
+
+        Self {
+            min: min.map(|x| x.into_inner()),
+            low: low.map(|x| x.into_inner()),
+            high: high.map(|x| x.into_inner()),
+            max: max.map(|x| x.into_inner()),
         }
     }
 }
@@ -411,6 +427,7 @@ mod tests {
     use super::*;
     use crate::cells::cell_service::validation::{
         ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
+        ValidatedMemoryController,
     };
     use iter_tools::Itertools;
     use test_helpers::*;
@@ -483,6 +500,12 @@ mod tests {
             name: CellName::from(cell_name),
             cpu: Some(ValidatedCpuController { weight: None, max: None }),
             cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
+            memory: Some(ValidatedMemoryController {
+                min: None,
+                low: None,
+                high: None,
+                max: None,
+            }),
             isolate_process: false,
             isolate_network: false,
         };

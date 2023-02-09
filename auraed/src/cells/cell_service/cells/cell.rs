@@ -117,6 +117,7 @@ impl Cell {
         let cgroup = match Cgroup::new(
             self.cell_name.clone(),
             self.spec.cgroup_spec.clone(),
+            pid,
         ) {
             Ok(cgroup) => cgroup,
             Err(e) => {

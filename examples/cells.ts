@@ -45,7 +45,7 @@ let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
         }),
     })
 });
-helpers.print(allocated)
+helpers.print('Allocated:', allocated)
 
 // [ Start ]
 let started = await cells.start(<runtime.CellServiceStartRequest>{
@@ -56,7 +56,7 @@ let started = await cells.start(<runtime.CellServiceStartRequest>{
         name: "sleep-42"
     })
 })
-helpers.print(started)
+helpers.print('Started:', started)
 
 // [ Allocate nested ]
 let nested_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
@@ -68,21 +68,21 @@ let nested_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>
         }),
     })
 });
-helpers.print(nested_allocated)
+helpers.print('Allocated Nested:', nested_allocated)
 
 // [ List cells ]
 let listed = await cells.list(<runtime.CellServiceListRequest>{})
-helpers.print(listed)
+helpers.print('Listed:', listed)
 
 // [ Stop ]
 let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
     cellName,
     executableName: "sleep-42",
 })
-helpers.print(stopped)
+helpers.print('Stopped:', stopped)
 
 // [ Free ]
 let freed = await cells.free(<runtime.CellServiceFreeRequest>{
     cellName
 });
-helpers.print(freed)
+helpers.print('Freed:', freed)

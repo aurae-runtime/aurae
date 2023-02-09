@@ -2,7 +2,7 @@ use super::cells::{
     cgroups::{
         self,
         cpuset::{Cpus, Mems},
-        CgroupSpec, Limit, Weight,
+        CgroupSpec, Limit, Protection, Weight,
     },
     IsolationControls,
 };
@@ -11,7 +11,7 @@ use crate::cells::cell_service::cells::CellName;
 use aurae_proto::cells::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
     CellServiceStartRequest, CellServiceStopRequest, CpuController,
-    CpusetController, Executable,
+    CpusetController, Executable, MemoryController,
 };
 use std::ffi::OsString;
 use tokio::process::Command;
@@ -58,6 +58,9 @@ pub struct ValidatedCell {
     #[field_type(Option<CpusetController>)]
     pub cpuset: Option<ValidatedCpusetController>,
 
+    #[field_type(Option<MemoryController>)]
+    pub memory: Option<ValidatedMemoryController>,
+
     #[validate(none)]
     pub isolate_process: bool,
 
@@ -95,6 +98,21 @@ impl CellTypeValidator for CellValidator {
             Some(&*validation::field_name(field_name, parent_name)),
         )?))
     }
+
+    fn validate_memory(
+        memory: Option<MemoryController>,
+        field_name: &str,
+        parent_name: Option<&str>,
+    ) -> Result<Option<ValidatedMemoryController>, ValidationError> {
+        let Some(memory) = memory else {
+            return Ok(None);
+        };
+
+        Ok(Some(ValidatedMemoryController::validate(
+            memory,
+            Some(&*validation::field_name(field_name, parent_name)),
+        )?))
+    }
 }
 
 impl From<ValidatedCell> for super::cells::CellSpec {
@@ -103,6 +121,7 @@ impl From<ValidatedCell> for super::cells::CellSpec {
             name: _,
             cpu,
             cpuset,
+            memory,
             isolate_process,
             isolate_network,
         } = x;
@@ -111,6 +130,7 @@ impl From<ValidatedCell> for super::cells::CellSpec {
             cgroup_spec: CgroupSpec {
                 cpu: cpu.map(|x| x.into()),
                 cpuset: cpuset.map(|x| x.into()),
+                memory: memory.map(|x| x.into()),
             },
             iso_ctl: IsolationControls { isolate_process, isolate_network },
         }
@@ -154,6 +174,34 @@ impl From<ValidatedCpusetController> for cgroups::cpuset::CpusetController {
     fn from(value: ValidatedCpusetController) -> Self {
         let ValidatedCpusetController { cpus, mems } = value;
         Self { cpus, mems }
+    }
+}
+
+#[derive(ValidatedType, Debug, Clone)]
+pub struct ValidatedMemoryController {
+    #[field_type(Option<i64>)]
+    #[validate(opt)]
+    pub min: Option<Protection>,
+
+    #[field_type(Option<i64>)]
+    #[validate(opt)]
+    pub low: Option<Protection>,
+
+    #[field_type(Option<i64>)]
+    #[validate(opt)]
+    pub high: Option<Limit>,
+
+    #[field_type(Option<i64>)]
+    #[validate(opt)]
+    pub max: Option<Limit>,
+}
+
+impl MemoryControllerTypeValidator for MemoryControllerValidator {}
+
+impl From<ValidatedMemoryController> for cgroups::memory::MemoryController {
+    fn from(value: ValidatedMemoryController) -> Self {
+        let ValidatedMemoryController { min, low, high, max } = value;
+        Self { min, low, high, max }
     }
 }
 
