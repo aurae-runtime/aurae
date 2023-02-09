@@ -71,7 +71,8 @@ service CellService {
   /// Reserve requested system resources for a new cell.
   /// For cells specifically this will allocate and reserve cgroup resources
   /// only.
-  rpc Allocate(CellServiceAllocateRequest) returns (CellServiceAllocateResponse) {}
+  rpc Allocate(CellServiceAllocateRequest)
+      returns (CellServiceAllocateResponse) {}
 
   /// Free up previously requested resources for an existing cell
   rpc Free(CellServiceFreeRequest) returns (CellServiceFreeResponse) {}
@@ -87,12 +88,12 @@ service CellService {
   rpc List(CellServiceListRequest) returns (CellServiceListResponse) {}
 }
 
-/// An Aurae cell is a name given to Linux control groups (cgroups) that also include
-/// a name, and special pre-exec functionality that is executed from within the same context
-/// as any executables scheduled.
+/// An Aurae cell is a name given to Linux control groups (cgroups) that also
+/// includes a name, and special pre-exec functionality that is executed from
+/// within the same context as any executables scheduled.
 ///
-/// A cell must be allocated for every executable scheduled. A cell defines the resource
-/// constraints of the system to allocate for an arbitrary use case.
+/// A cell must be allocated for every executable scheduled. A cell defines the
+/// resource constraints of the system to allocate for an arbitrary use case.
 message CellServiceAllocateRequest {
   /// A smaller resource constrained section of the system.
   Cell cell = 1;
@@ -108,9 +109,7 @@ message CellServiceAllocateResponse {
 }
 
 /// Used to remove or free a cell after it has been allocated.
-message CellServiceFreeRequest {
-  string cell_name = 1;
-}
+message CellServiceFreeRequest { string cell_name = 1; }
 
 /// Response after removing or freeing a cell.
 message CellServiceFreeResponse {}
@@ -131,10 +130,10 @@ message CellServiceStartResponse {
   /// in various libc libraries.
   int32 pid = 1;
 
-  //int32 gid = 2;     // TODO
-  //int32 uid = 3;     // TODO
-  //string user = 4;   // TODO
-  //string group = 5;  // TODO
+  // int32 gid = 2;     // TODO
+  // int32 uid = 3;     // TODO
+  // string user = 4;   // TODO
+  // string group = 5;  // TODO
 }
 
 /// Request to stop an executable at runtime.
@@ -147,9 +146,7 @@ message CellServiceStopResponse {}
 
 message CellServiceListRequest {}
 
-message CellServiceListResponse {
-  repeated CellGraphNode cells = 1;
-}
+message CellServiceListResponse { repeated CellGraphNode cells = 1; }
 
 message CellGraphNode {
   Cell cell = 1;
@@ -167,6 +164,7 @@ message Cell {
 
   CpuController cpu = 2;
   CpusetController cpuset = 3;
+  MemoryController memory = 4;
 
   /// Will isolate the process (and proc filesystem) from the host.
   /// Will unshare the pid, ipc, uts, and mount namespaces.
@@ -181,7 +179,6 @@ message Cell {
   ///
   /// Default: false
   bool isolate_network = 11;
-
 }
 
 /// The most primitive workload in Aurae, a standard executable process.
@@ -190,7 +187,6 @@ message Executable {
   string command = 2;
   string description = 4;
 }
-
 
 // cgroup
 
@@ -224,4 +220,40 @@ message CpusetController {
   optional string mems = 2;
 
   // cpus_partition is not supported
+}
+
+// Docs:
+// https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files
+message MemoryController {
+  // Hard memory protection. If the memory usage of a cgroup is within its
+  // effective min boundary, the cgroup’s memory won’t be reclaimed under any
+  // conditions. If there is no unprotected reclaimable memory available, OOM
+  // killer is invoked. Above the effective min boundary (or effective low
+  // boundary if it is higher), pages are reclaimed proportionally to the
+  // overage, reducing reclaim pressure for smaller overages.
+  // NOTE: unused by aurae
+  optional int64 min = 1;
+
+  // Best-effort memory protection. If the memory usage of a cgroup is within
+  // its effective low boundary, the cgroup’s memory won’t be reclaimed unless
+  // there is no reclaimable memory available in unprotected cgroups. Above
+  // the effective low boundary (or effective min boundary if it is higher),
+  // pages are reclaimed proportionally to the overage, reducing reclaim
+  // pressure for smaller overages.
+  optional int64 low = 2;
+
+  // Memory usage throttle limit. This is the main mechanism to control memory
+  // usage of a cgroup. If a cgroup’s usage goes over the high boundary, the
+  // processes of the cgroup are throttled and put under heavy reclaim
+  // pressure.
+  // NOTE: unused by aurae
+  optional int64 high = 3;
+
+  // Memory usage hard limit. This is the final protection mechanism. If a
+  // cgroup’s memory usage reaches this limit and can’t be reduced, the OOM
+  // killer is invoked in the cgroup. Under certain circumstances, the usage
+  // may go over the limit temporarily.
+  optional int64 max = 4;
+
+  // TODO: swap controls
 }

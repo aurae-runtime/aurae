@@ -55,7 +55,7 @@ impl CellSpec {
     #[cfg(test)]
     pub(crate) fn new_for_tests() -> Self {
         use crate::cells::cell_service::cells::cgroups::{
-            CpuController, Limit, Weight,
+            CpuController, Limit, MemoryController, Weight,
         };
 
         Self {
@@ -65,6 +65,12 @@ impl CellSpec {
                     max: Some(Limit::new(100000)),
                 }),
                 cpuset: None,
+                memory: Some(MemoryController {
+                    min: None,
+                    low: None,
+                    high: None,
+                    max: Some(Limit::new(1000000)),
+                }),
             },
             iso_ctl: IsolationControls {
                 isolate_network: false,

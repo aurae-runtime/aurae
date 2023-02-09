@@ -1,3 +1,4 @@
+#!/usr/bin/env auraescript
 /* -------------------------------------------------------------------------- *\
  *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
@@ -27,34 +28,51 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+import * as helpers from "../auraescript/gen/helpers.ts";
+import * as runtime from "../auraescript/gen/cells.ts";
 
-use super::{cgroups::error::CgroupsError, CellName};
-use std::io;
-use thiserror::Error;
-use tracing::error;
+let cells = new runtime.CellServiceClient();
+let cellName = "ae-sleeper-cell";
 
-pub type Result<T> = std::result::Result<T, CellsError>;
+// [ Allocate ]
+let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
+    cell: runtime.Cell.fromPartial({
+        memory: runtime.MemoryController.fromPartial({
+            high: 50000, // 50k
+            max: 100000, // 100k
+        }),
+        name: cellName,
+    })
+});
+helpers.print(allocated)
 
-#[derive(Error, Debug)]
-pub enum CellsError {
-    #[error("cell '{cell_name}' already exists'")]
-    CellExists { cell_name: CellName },
-    #[error("cell '{cell_name}' not found")]
-    CellNotFound { cell_name: CellName },
-    #[error("cell '{cell_name}' is not allocated")]
-    CellNotAllocated { cell_name: CellName },
-    #[error("cell '{cell_name}' could not be allocated: {source}")]
-    FailedToAllocateCell { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' allocation was aborted: {source}")]
-    AbortedAllocateCell { cell_name: CellName, source: CgroupsError },
-    #[error("cell '{cell_name}' could not kill children: {source}")]
-    FailedToKillCellChildren { cell_name: CellName, source: io::Error },
-    #[error("cell '{cell_name}' could not be freed: {source}")]
-    FailedToFreeCell { cell_name: CellName, source: CgroupsError },
-    #[error(
-        "cgroup '{cell_name}' exists on host, but is not controlled by auraed"
-    )]
-    CgroupIsNotACell { cell_name: CellName },
-    #[error("cgroup '{cell_name}` not found on host")]
-    CgroupNotFound { cell_name: CellName },
-}
+// [ Start ]
+let started = await cells.start(<runtime.CellServiceStartRequest>{
+    cellName,
+    executable: runtime.Executable.fromPartial({
+        command: "/usr/bin/sleep 2",
+        description: "Sleep for 2 seconds",
+        name: "sleep-2"
+    })
+})
+helpers.print(started)
+
+// wait for sleep to complete
+const sleep = async (waitTime: number) =>
+    new Promise(resolve =>
+        setTimeout(resolve, waitTime));
+
+sleep(3000);
+
+// [ Stop ]
+let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
+    cellName,
+    executableName: "sleep-2",
+})
+helpers.print(stopped)
+
+// [ Free ]
+let freed = await cells.free(<runtime.CellServiceFreeRequest>{
+    cellName
+});
+helpers.print(freed)
