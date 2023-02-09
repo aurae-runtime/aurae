@@ -110,7 +110,8 @@ pub async fn init(
     }
 }
 
-enum Context {
+#[derive(Debug, PartialEq)]
+pub(crate) enum Context {
     /// auraed is running as true PID 1
     Pid1,
     /// auraed is nested in a [Cell]
@@ -122,7 +123,7 @@ enum Context {
 }
 
 impl Context {
-    fn get(nested: bool) -> Self {
+    pub fn get(nested: bool) -> Self {
         // TODO: Manage nested bool without passing --nested
         let in_cgroup = in_new_cgroup_namespace();
         if in_cgroup && !nested {

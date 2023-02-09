@@ -111,7 +111,7 @@ impl observe_service_server::ObserveService for ObserveService {
                     // receiver is gone
                     break;
                 }
-            }
+            }   
         });
 
         Ok(Response::new(ReceiverStream::new(rx)))
