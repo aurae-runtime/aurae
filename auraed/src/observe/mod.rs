@@ -214,7 +214,7 @@ mod test {
         let pid = child.id();
         child.kill().expect("failed to kill child");
 
-        let expected_signal = Signal { pid: pid, signr: 9 };
+        let expected_signal = Signal { pid, signr: 9 };
 
         tokio::time::sleep(Duration::from_millis(500)).await;
 
