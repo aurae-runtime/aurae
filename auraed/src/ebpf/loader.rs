@@ -41,7 +41,7 @@ use log::info;
 use procfs::page_size;
 use std::mem::size_of;
 use tokio::sync::broadcast;
-use tracing::{trace, warn};
+use tracing::{error, trace};
 
 pub struct BpfLoader {
     // The "bpf_scope" is critical to maintain the memory presence of the
@@ -159,14 +159,14 @@ impl BpfLoader {
                     {
                         Ok(events) => events,
                         Err(error) => {
-                            warn!("fail to read events from the perf, bailing out: {}", error);
+                            error!("fail to read events from per-cpu perf buffer, bailing out: {}", error);
                             return;
                         }
                     };
 
                     if events.lost > 0 {
-                        warn!(
-                            "queues are getting full, dropped {} perf events",
+                        error!(
+                            "buffer full, dropped {} perf events - this should never happen!",
                             events.lost
                         );
                     }
@@ -181,8 +181,8 @@ impl BpfLoader {
                                 // better way of handling this.
                                 let errstr = format!("{err}");
                                 if !errstr.contains("channel closed") {
-                                    warn!(
-                                        "failed to send perf event internally: {}",
+                                    error!(
+                                        "failed to broadcast perf event: {}",
                                         err
                                     );
                                 }
