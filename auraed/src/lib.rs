@@ -64,6 +64,7 @@
 use crate::cri::oci::AuraeOCIBuilder;
 use crate::cri::runtime_service::RuntimeService;
 use crate::ebpf::loader::BpfLoader;
+use crate::init::Context as AuraeContext;
 use crate::logging::log_channel::LogChannel;
 use crate::{
     cells::CellService, discovery::DiscoveryService, init::SocketStream,
@@ -209,7 +210,7 @@ pub async fn daemon() -> i32 {
         server_key: PathBuf::from(options.server_key),
         ca_crt: PathBuf::from(options.ca_crt),
         runtime_dir: PathBuf::from(options.runtime_dir),
-        nested: options.nested,
+        context: AuraeContext::get(options.nested),
     };
 
     let e = match init::init(options.verbose, options.nested, options.socket)
@@ -243,8 +244,8 @@ struct AuraedRuntime {
     pub server_key: PathBuf,
     /// Configurable runtime directory. Defaults to /var/run/aurae.
     pub runtime_dir: PathBuf,
-    /// Flag indicating whether this is the host daemon or a nested daemon
-    pub nested: bool,
+    /// Context in which this Aurae instance is operating
+    pub context: AuraeContext,
     // /// Provides logging channels to expose auraed logging via grpc
     //pub log_collector: Arc<LogChannel>,
 }
@@ -297,17 +298,20 @@ impl AuraedRuntime {
         })?;
 
         // Install eBPF probes in the host Aurae daemon
-        let (_bpf_scope, signals) = if self.nested {
+        let (_bpf_scope, signals) = if self.context == AuraeContext::Cell
+            || self.context == AuraeContext::Container
+        {
             (None, None)
         } else {
             // TODO: Add flags/options to "opt-out" of the various BPF probes
+            info!("Loading eBPF probes");
             let mut bpf_loader = BpfLoader::new();
             let listener = bpf_loader
                 .read_and_load_tracepoint_signal_signal_generate()
                 .ok();
 
             if listener.is_none() {
-                info!("Missing eBPF probe. Skipping signal reporting.");
+                warn!("Missing eBPF probe. Skipping signal reporting.");
             }
 
             // Need to move bpf_loader out to prevent it from being dropped
