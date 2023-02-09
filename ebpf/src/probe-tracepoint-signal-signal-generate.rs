@@ -28,10 +28,13 @@ use aya_bpf::macros::tracepoint;
 use aya_bpf::maps::PerfEventArray;
 use aya_bpf::programs::TracePointContext;
 
+#[link_section = "license"]
+#[used]
+pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
+
 #[map(name = "SIGNALS")]
 static mut SIGNALS: PerfEventArray<Signal> =
     PerfEventArray::<Signal>::with_max_entries(1024, 0);
-
 
 // TODO (jeroensoeters): figure out how stable these offsets are and if we want
 //    to read from /sys/kernel/debug/tracing/events/signal/signal_generate/format
@@ -74,7 +77,6 @@ fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
     }
     Ok(0)
 }
-
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {

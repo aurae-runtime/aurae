@@ -31,7 +31,6 @@ workloads and enterprise identities all the way down to the socket layer.
  
  <a href="https://www.youtube.com/watch?v=5a277u4j6fU" target="_blank"><img src="http://img.youtube.com/vi/5a277u4j6fU/hqdefault.jpg" width="480" height="360" border="10" /></a>
 
-
 ## Project Status
 
 > **STILL IN EARLY DEVELOPMENT!**<br>
