@@ -302,11 +302,16 @@ impl AuraedRuntime {
         } else {
             // TODO: Add flags/options to "opt-out" of the various BPF probes
             let mut bpf_loader = BpfLoader::new();
-            let listener =
-                bpf_loader.read_and_load_tracepoint_signal_signal_generate()?;
+            let listener = bpf_loader
+                .read_and_load_tracepoint_signal_signal_generate()
+                .ok();
+
+            if listener.is_none() {
+                info!("Missing eBPF probe. Skipping signal reporting.");
+            }
 
             // Need to move bpf_loader out to prevent it from being dropped
-            (Some(bpf_loader), Some(listener))
+            (Some(bpf_loader), listener)
         };
 
         // Build gRPC Services

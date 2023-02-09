@@ -37,11 +37,11 @@ use aya::{
     Bpf,
 };
 use bytes::BytesMut;
-use log::info;
+use log::trace;
 use procfs::page_size;
 use std::mem::size_of;
 use tokio::sync::broadcast;
-use tracing::{error, trace};
+use tracing::error;
 
 pub struct BpfLoader {
     // The "bpf_scope" is critical to maintain the memory presence of the
@@ -86,7 +86,7 @@ impl BpfLoader {
         event: &str,
         perf_buffer: &str,
     ) -> Result<PerfEventListener<T>, anyhow::Error> {
-        info!("Loading eBPF program: {}", aurae_obj_name);
+        trace!("Loading eBPF program: {}", aurae_obj_name);
         let mut bpf_object = Bpf::load_file(format!(
             "{AURAE_LIBRARY_DIR}/ebpf/{aurae_obj_name}",
         ))?;
