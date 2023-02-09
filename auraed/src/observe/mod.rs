@@ -174,52 +174,53 @@ impl observe_service_server::ObserveService for ObserveService {
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::ebpf::loader::BpfLoader;
-//     use std::{process::Command, time::Duration};
-//     use test_helpers::*;
-//     use tokio::sync::Mutex;
-//
-//     #[tokio::test]
-//     async fn test_intercept_posix_signals() {
-//         skip_if_not_root!("test_intercept_posix_signals");
-//         let bpf_loader = &mut BpfLoader::new();
-//         let signals_listener = bpf_loader
-//             .read_and_load_tracepoint_signal_signal_generate()
-//             .expect("failed to attach signals tracepoint");
-//
-//         let service = ObserveService::new(
-//             Arc::new(LogChannel::new(String::from("unused"))),
-//             Some(signals_listener),
-//         );
-//
-//         let mut signals = service.get_posix_signals_stream();
-//
-//         let intercepted = Arc::new(Mutex::new(Vec::new()));
-//         let intercepted_in_thread = intercepted.clone();
-//         let _ = tokio::spawn(async move {
-//             while let Ok(s) = signals.recv().await {
-//                 let mut guard = intercepted_in_thread.lock().await;
-//                 guard.push(s);
-//             }
-//         });
-//
-//         let mut child = Command::new("sleep")
-//             .arg("400")
-//             .spawn()
-//             .expect("failed to execute child");
-//         let pid = child.id();
-//         child.kill().expect("failed to kill child");
-//
-//         let expected_signal = Signal { pid: pid, signr: 9 };
-//
-//         tokio::time::sleep(Duration::from_millis(500)).await;
-//
-//         let intercepted_local = intercepted.clone();
-//         let guard = intercepted_local.lock().await;
-//
-//         assert!(guard.contains(&expected_signal), "signal not found");
-//     }
-// }
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::ebpf::loader::BpfLoader;
+    use std::{process::Command, time::Duration};
+    use test_helpers::*;
+    use tokio::sync::Mutex;
+
+    #[tokio::test]
+    #[ignore] // Cannot run this in CI as we don't want to install eBPF probes on the GHA hosts :)
+    async fn test_intercept_posix_signals() {
+        skip_if_not_root!("test_intercept_posix_signals");
+        let bpf_loader = &mut BpfLoader::new();
+        let signals_listener = bpf_loader
+            .read_and_load_tracepoint_signal_signal_generate()
+            .expect("failed to attach signals tracepoint");
+
+        let service = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("unused"))),
+            Some(signals_listener),
+        );
+
+        let mut signals = service.get_posix_signals_stream();
+
+        let intercepted = Arc::new(Mutex::new(Vec::new()));
+        let intercepted_in_thread = intercepted.clone();
+        let _ = tokio::spawn(async move {
+            while let Ok(s) = signals.recv().await {
+                let mut guard = intercepted_in_thread.lock().await;
+                guard.push(s);
+            }
+        });
+
+        let mut child = Command::new("sleep")
+            .arg("400")
+            .spawn()
+            .expect("failed to execute child");
+        let pid = child.id();
+        child.kill().expect("failed to kill child");
+
+        let expected_signal = Signal { pid: pid, signr: 9 };
+
+        tokio::time::sleep(Duration::from_millis(500)).await;
+
+        let intercepted_local = intercepted.clone();
+        let guard = intercepted_local.lock().await;
+
+        assert!(guard.contains(&expected_signal), "signal not found");
+    }
+}

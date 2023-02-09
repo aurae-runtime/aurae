@@ -38,6 +38,7 @@ use aya::{
 };
 use bytes::BytesMut;
 use log::info;
+use procfs::page_size;
 use std::mem::size_of;
 use tokio::sync::broadcast;
 use tracing::{trace, warn};
@@ -55,9 +56,8 @@ pub struct BpfLoader {
 const INSTRUMENT_TRACEPOINT_SIGNAL_SIGNAL_GENERATE: &str =
     "instrument-tracepoint-signal-signal-generate";
 
-/// Definition of the channel capacity for the perf event buffer fro ALL CPUs.
-// TODO: We should consider some basic math here. Perhaps 1024 * Available CPUs (Relevant for nested auraed in cgroups)
-const CHANNEL_CAPACITY: usize = 1024;
+/// Size (in pages) for the circular per-CPU buffers that BPF perfbuf creates.
+const PER_CPU_BUFFER_SIZE_IN_PAGES: usize = 2;
 
 impl BpfLoader {
     pub fn new() -> Self {
@@ -100,28 +100,58 @@ impl BpfLoader {
         // Load the program
         program.load()?;
 
+        // Query the number of CPUs on the host
+        let num_cpus = nr_cpus()?;
+
+        // Query the page size on the host
+        let page_size = page_size()?;
+
+        // Get the size of the event payload
+        let event_struct_size: usize = size_of::<T>();
+
+        // Calculate the capacity of the per-CPU buffers based on the size of
+        // the event
+        let per_cpu_buffer_capacity = (PER_CPU_BUFFER_SIZE_IN_PAGES
+            * page_size as usize)
+            / event_struct_size;
+
+        // Set the capacity of the channel to the combined capacity of all the
+        // per-CPU buffers
+        let channel_capacity = per_cpu_buffer_capacity * num_cpus;
+
         // Attach to kernel trace event
         let _ = program.attach(category, event)?;
 
-        // Spawn a thread per CPU to listen for events from the kernel. Each thread has its own perf event buffer.
-        let (tx, _) = broadcast::channel(CHANNEL_CAPACITY);
-        let signal_struct_size: usize = size_of::<T>();
+        // Create the channel for braodcasting the events
+        let (tx, _) = broadcast::channel(channel_capacity);
+
+        // Open the BPF_PERF_EVENT_ARRAY BPF map that is used to send data from
+        // kernel to userspace. This array contains the per-CPU buffers and is
+        // indexed by CPU id.
+        // https://libbpf.readthedocs.io/en/latest/api.html
         let mut perf_array =
             AsyncPerfEventArray::try_from(bpf_object.map_mut(perf_buffer)?)?;
 
-        let _num_cpus = nr_cpus()?;
+        // Spawn a thread per CPU to listen for events from the kernel.
         for cpu_id in online_cpus()? {
             trace!("spawning task for cpu {}", cpu_id);
-            let mut per_cpu_buffer = perf_array.open(cpu_id, None)?;
+            // Open the per-CPU buffer for the current CPU id
+            let mut per_cpu_buffer =
+                perf_array.open(cpu_id, Some(PER_CPU_BUFFER_SIZE_IN_PAGES))?;
+
+            // Clone the sender of the event broadcast channel
             let per_cpu_tx = tx.clone();
+
+            // Spawn the thread to listen on the per-CPU buffer
             let _ignored = tokio::spawn(async move {
                 trace!("task for cpu awaiting for events {}", cpu_id);
-                // Calculate the capacity of events per CPU
-                let _buffer_max = _num_cpus * 64;
-                let mut buffers = (0..100)
-                    .map(|_| BytesMut::with_capacity(signal_struct_size))
+
+                // Allocate enough memory to drain the entire buffer
+                let mut buffers = (0..per_cpu_buffer_capacity)
+                    .map(|_| BytesMut::with_capacity(event_struct_size))
                     .collect::<Vec<_>>();
 
+                // Start polling the per-CPU buffer for events
                 loop {
                     let events = match per_cpu_buffer
                         .read_events(&mut buffers)
@@ -136,7 +166,7 @@ impl BpfLoader {
 
                     if events.lost > 0 {
                         warn!(
-                            "queues are getting full, lost {} perf events",
+                            "queues are getting full, dropped {} perf events",
                             events.lost
                         );
                     }
