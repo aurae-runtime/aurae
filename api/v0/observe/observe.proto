@@ -52,7 +52,10 @@ service ObserveService {
   rpc GetPosixSignalsStream(GetPosixSignalsStreamRequest) returns (stream GetPosixSignalsStreamResponse) {}
 }
 
-message GetPosixSignalsStreamRequest { 
+/// Request a stream of POSIX signals
+message GetPosixSignalsStreamRequest {
+  /// The scope of this request. If no scope is specified, a stream of all POXIS
+  /// signals on the host will be returned.
   oneof workload {
     Cell cell = 2;
     Container container = 3;
