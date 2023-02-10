@@ -72,12 +72,11 @@ impl SandboxCache {
     }
 
     pub fn remove(&mut self, sandbox_id: &String) -> Result<()> {
-        if !self.cache.contains_key(sandbox_id) {
+        if self.cache.remove(sandbox_id).is_none() {
             return Err(RuntimeServiceError::SandboxNotFound {
                 sandbox_id: sandbox_id.clone(),
             });
         }
-        let _ = self.cache.remove(sandbox_id);
         Ok(())
     }
 }

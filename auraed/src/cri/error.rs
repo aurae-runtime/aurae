@@ -41,6 +41,8 @@ pub enum RuntimeServiceError {
     SandboxExists { sandbox_id: String },
     #[error("sandbox '{sandbox_id}' not found")]
     SandboxNotFound { sandbox_id: String },
+    #[error("sandobx '{sandbox_id}' not in exited state")]
+    SandboxNotExited { sandbox_id: String },
     #[error("Failed to kill sandbox '{sandbox_id}': {error}")]
     KillError { sandbox_id: String, error: String },
     #[error(transparent)]
@@ -57,6 +59,9 @@ impl From<RuntimeServiceError> for Status {
             }
             RuntimeServiceError::SandboxNotFound { .. } => {
                 Status::not_found(msg)
+            }
+            RuntimeServiceError::SandboxNotExited { .. } => {
+                Status::failed_precondition(msg)
             }
             RuntimeServiceError::KillError { .. } => Status::internal(msg),
             RuntimeServiceError::AuraeClientError(e) => match e {
