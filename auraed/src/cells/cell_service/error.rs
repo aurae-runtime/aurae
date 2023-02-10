@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{cells::CellsError, executables::ExecutablesError};
-use aurae_client::AuraeClientError;
+use client::AuraeClientError;
 use thiserror::Error;
 use tonic::Status;
 use tracing::error;

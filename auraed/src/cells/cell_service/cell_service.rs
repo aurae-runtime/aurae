@@ -40,9 +40,6 @@ use super::{
 };
 use crate::cells::cell_service::cells::CellsError;
 use ::validation::ValidatedType;
-use aurae_client::{
-    cells::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
-};
 use aurae_proto::cells::{
     cell_service_server, Cell, CellGraphNode, CellServiceAllocateRequest,
     CellServiceAllocateResponse, CellServiceFreeRequest,
@@ -51,6 +48,9 @@ use aurae_proto::cells::{
     CellServiceStopResponse, CpuController, CpusetController, MemoryController,
 };
 use backoff::backoff::Backoff;
+use client::{
+    cells::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
+};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -312,7 +312,9 @@ impl From<&super::cells::cgroups::cpuset::CpusetController>
     }
 }
 
-impl From<&super::cells::cgroups::memory::MemoryController> for MemoryController {
+impl From<&super::cells::cgroups::memory::MemoryController>
+    for MemoryController
+{
     fn from(value: &super::cells::cgroups::MemoryController) -> Self {
         let super::cells::cgroups::MemoryController { min, low, high, max } =
             value.clone();

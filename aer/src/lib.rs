@@ -66,7 +66,7 @@ pub mod runtime;
 #[macro_export]
 macro_rules! execute {
     ($call:path, $req:ident) => {{
-        let client = ::aurae_client::AuraeClient::default().await?;
+        let client = ::client::AuraeClient::default().await?;
         let res = $call(&client, $req).await?;
         println!("{res:#?}");
         res

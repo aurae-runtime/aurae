@@ -298,10 +298,10 @@ impl<'a> Command<'a> {
                 todo!("client streaming")
             }
             (false, true) => quote! {
-                crate::execute_server_streaming!(::aurae_client::#module::#client_mod::#client_ident::#function, req);
+                crate::execute_server_streaming!(::client::#module::#client_mod::#client_ident::#function, req);
             },
             _ => quote! {
-                let _ = crate::execute!(::aurae_client::#module::#client_mod::#client_ident::#function, req);
+                let _ = crate::execute!(::client::#module::#client_mod::#client_ident::#function, req);
             },
         };
 
