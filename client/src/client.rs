@@ -42,10 +42,10 @@ use tower::service_fn;
 
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
 
-type Result<T> = std::result::Result<T, AuraeClientError>;
+type Result<T> = std::result::Result<T, ClientError>;
 
 #[derive(Error, Debug)]
-pub enum AuraeClientError {
+pub enum ClientError {
     #[error(transparent)]
     ConnectionError(#[from] tonic::transport::Error),
     #[error(transparent)]
@@ -54,19 +54,19 @@ pub enum AuraeClientError {
 
 /// Instance of a single client for an Aurae consumer.
 #[derive(Debug, Clone)]
-pub struct AuraeClient {
+pub struct Client {
     /// The channel used for gRPC connections before encryption is handled.
     pub(crate) channel: Channel,
     #[allow(unused)]
     client_cert_details: ClientCertDetails,
 }
 
-impl AuraeClient {
+impl Client {
     pub async fn default() -> Result<Self> {
         Self::new(AuraeConfig::try_default()?).await
     }
 
-    /// Create a new AuraeClient.
+    /// Create a new Client.
     ///
     /// Note: A new client is required for every independent execution of this process.
     pub async fn new(

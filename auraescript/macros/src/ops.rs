@@ -86,7 +86,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
                             ::aurae_proto::#module::#output_type,
                             ::anyhow::Error
                         > {
-                            let client = ::client::AuraeClient::default().await?;
+                            let client = ::client::Client::default().await?;
                             let res = ::client::#module::#service_name_in_snake_case::#client_ident::#name(
                                 &client,
                                 req

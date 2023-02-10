@@ -48,9 +48,7 @@ use aurae_proto::cells::{
     CellServiceStopResponse, CpuController, CpusetController, MemoryController,
 };
 use backoff::backoff::Backoff;
-use client::{
-    cells::cell_service::CellServiceClient, AuraeClient, AuraeClientError,
-};
+use client::{cells::cell_service::CellServiceClient, Client, ClientError};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -74,9 +72,9 @@ macro_rules! do_in_cell {
             .build();
 
         let client = loop {
-            match AuraeClient::new(client_config.clone()).await {
+            match Client::new(client_config.clone()).await {
                 Ok(client) => break Ok(client),
-                e @ Err(AuraeClientError::ConnectionError(_)) => {
+                e @ Err(ClientError::ConnectionError(_)) => {
                     trace!("aurae client failed to connect: {e:?}");
                     if let Some(delay) = retry_strategy.next_backoff() {
                         trace!("retrying in {delay:?}");

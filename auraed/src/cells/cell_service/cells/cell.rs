@@ -167,8 +167,8 @@ impl Cell {
         do_free!(self, kill(), broadcast_kill())
     }
 
-    // NOTE: Having this function return the AuraeClient means we need to make it async,
-    // or we need to make [AuraeClient::new] not async.
+    // NOTE: Having this function return the Client means we need to make it async,
+    // or we need to make [Client::new] not async.
     pub fn client_config(&self) -> Result<AuraeConfig> {
         let CellState::Allocated { nested_auraed, .. } = &self.state else {
             return Err(CellsError::CellNotAllocated {

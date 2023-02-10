@@ -1,4 +1,4 @@
-pub use client::{AuraeClient, AuraeClientError};
+pub use client::{Client, ClientError};
 pub use config::{AuraeConfig, AuthConfig, SystemConfig};
 
 pub mod cells;
