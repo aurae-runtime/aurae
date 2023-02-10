@@ -28,7 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::cri::PodSandboxConfig;
 use oci_spec::runtime::{
     Capability, LinuxBuilder, LinuxDeviceCgroupBuilder, LinuxNamespaceBuilder,
     LinuxNamespaceType, LinuxResourcesBuilder, LinuxRlimitBuilder,
@@ -39,6 +38,7 @@ use oci_spec::runtime::{
     SpecBuilder, UserBuilder,
 };
 use oci_spec::OciSpecError;
+use proto::cri::PodSandboxConfig;
 use std::collections::{HashMap, HashSet};
 
 pub struct AuraeOCIBuilder {

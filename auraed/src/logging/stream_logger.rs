@@ -28,8 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::observe::LogItem;
 use log::Log;
+use proto::observe::LogItem;
 use tokio::sync::broadcast::Sender;
 
 /// Sends log messages generated in rust code to the logging channel

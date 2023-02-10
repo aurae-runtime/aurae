@@ -8,7 +8,7 @@ use super::cells::{
 };
 use super::executables::ExecutableName;
 use crate::cells::cell_service::cells::CellName;
-use aurae_proto::cells::{
+use proto::cells::{
     Cell, CellServiceAllocateRequest, CellServiceFreeRequest,
     CellServiceStartRequest, CellServiceStopRequest, CpuController,
     CpusetController, Executable, MemoryController,

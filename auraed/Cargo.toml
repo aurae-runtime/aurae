@@ -42,7 +42,6 @@ path = "src/bin/main.rs"
 [dependencies]
 anyhow = { workspace = true }
 client = { workspace = true }
-aurae-proto = { workspace = true }
 aurae-ebpf-shared = { path = "../ebpf-shared" }
 aya = { version = ">=0.11", features=["async_tokio"] }
 aya-log = "0.1"
@@ -67,6 +66,7 @@ nix = { workspace = true, features = ["sched"] }
 ocipkg = "0.2.8"
 oci-spec = "0.5" # upgrade to 0.6 blocked by libcgroups as of v0.0.4
 procfs = "0.14.2"
+proto = { workspace = true }
 rtnetlink = "0.11.0"
 serde_json.workspace = true
 serde.workspace = true

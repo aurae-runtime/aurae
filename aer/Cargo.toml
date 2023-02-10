@@ -12,9 +12,9 @@ path = "src/bin/main.rs"
 [dependencies]
 anyhow = { workspace = true }
 client = { workspace = true }
-aurae-proto = { workspace = true }
 clap = { workspace = true }
 futures-util = "0.3.25"
 macros = { package = "aer-macros", path = "macros" }
+proto = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }

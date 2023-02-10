@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::discovery::{
+use proto::discovery::{
     discovery_service_server, DiscoverRequest, DiscoverResponse,
 };
 use thiserror::Error;

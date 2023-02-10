@@ -36,7 +36,7 @@ members = [
     "auraescript",
     "client",
     "ebpf-shared",
-    "aurae-proto",
+    "proto",
 ]
 
 exclude = [
@@ -46,13 +46,13 @@ exclude = [
 [workspace.dependencies]
 anyhow = "1.0.66"
 client = { path = "./client" }
-aurae-proto = { path = "./aurae-proto" }
 clap = { version = "4.1.1", features = ["derive"] }
 fancy-regex = "0.10.0"
 heck = "0.4.0"
 lazy_static = "1.4.0"
 nix = "0.25" # upgrade to 0.26 blocked by libcgroups as of v0.0.4
 proc-macro2 = "1.0"
+proto = { path = "./proto" }
 protobuf = "3.2.0"
 protobuf-parse = "=3.2.0" # This crate makes no promises of stabilty, so we pin to the exact version
 quote = "1.0"

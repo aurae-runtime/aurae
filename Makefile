@@ -130,7 +130,7 @@ clean-certs: ## Clean the cert material
 
 .PHONY: clean-gen
 clean-gens: ## Clean gen directories
-	rm -rf aurae-proto/src/gen/*
+	rm -rf proto/src/gen/*
 	rm -rf auraescript/gen/*
 
 #------------------------------------------------------------------------------#
@@ -138,9 +138,9 @@ clean-gens: ## Clean gen directories
 # Protobuf Commands
 
 GEN_TS_PATTERN = auraescript/gen/v0/%.ts
-GEN_RS_PATTERN = aurae-proto/src/gen/aurae.%.v0.rs
-GEN_SERDE_RS_PATTERN = aurae-proto/src/gen/aurae.%.v0.serde.rs
-GEN_TONIC_RS_PATTERN = aurae-proto/src/gen/aurae.%.v0.tonic.rs
+GEN_RS_PATTERN = proto/src/gen/aurae.%.v0.rs
+GEN_SERDE_RS_PATTERN = proto/src/gen/aurae.%.v0.serde.rs
+GEN_TONIC_RS_PATTERN = proto/src/gen/aurae.%.v0.tonic.rs
 
 PROTOS = $(wildcard api/v0/*/*.proto)
 PROTO_DIRS = $(filter-out api/v0/README.md, $(wildcard api/v0/*))

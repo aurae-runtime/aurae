@@ -81,9 +81,9 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
                     quote! {
                         #[::deno_core::op]
                         pub(crate) async fn #op_ident(
-                            req: ::aurae_proto::#module::#input_type
+                            req: ::proto::#module::#input_type
                         ) -> std::result::Result<
-                            ::aurae_proto::#module::#output_type,
+                            ::proto::#module::#output_type,
                             ::anyhow::Error
                         > {
                             let client = ::client::Client::default().await?;

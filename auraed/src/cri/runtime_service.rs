@@ -31,7 +31,12 @@
 #[allow(unused_imports)]
 use crate::cri::oci::AuraeOCIBuilder;
 use crate::spawn_auraed_oci_to;
-use aurae_proto::cri::{
+use libcontainer;
+use libcontainer::{
+    container::builder::ContainerBuilder,
+    syscall::syscall::create_syscall,
+};
+use proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
     ContainerEventResponse, ContainerStatsRequest, ContainerStatsResponse,
@@ -54,9 +59,6 @@ use aurae_proto::cri::{
     UpdateContainerResourcesResponse, UpdateRuntimeConfigRequest,
     UpdateRuntimeConfigResponse, VersionRequest, VersionResponse,
 };
-use libcontainer;
-use libcontainer::container::builder::ContainerBuilder;
-use libcontainer::syscall::syscall::create_syscall;
 use std::path::Path;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
