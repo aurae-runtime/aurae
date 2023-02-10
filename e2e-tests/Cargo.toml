@@ -1,0 +1,13 @@
+[package]
+name = "e2e-tests"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aurae-client = { workspace = true }
+aurae-proto = { workspace = true }
+futures-util = "0.3.26"
+tokio = { workspace = true }
+uuid = { version = "1.2.2", features = ["v4"] }

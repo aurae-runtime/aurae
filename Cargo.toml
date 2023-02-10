@@ -37,6 +37,7 @@ members = [
     "client",
     "ebpf-shared",
     "proto",
+    "e2e-tests",
 ]
 
 exclude = [
