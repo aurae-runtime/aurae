@@ -16,7 +16,7 @@ mod tests {
     use tokio::sync::Mutex;
 
     #[tokio::test]
-    async fn get_posix_signals_for_daemon() {
+    async fn get_posix_signals_for_the_host() {
         let client = AuraeClient::default().await;
         let client = client.expect("failed to initialize aurae-client");
 
@@ -91,7 +91,12 @@ mod tests {
     }
 
     #[test]
-    fn get_posix_signals_for_contains() {
+    fn get_posix_signals_for_a_cell() {
+        assert!(true);
+    }
+
+    #[test]
+    fn get_posix_signals_for_a_container() {
         assert!(true);
     }
 }
