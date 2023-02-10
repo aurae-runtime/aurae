@@ -54,28 +54,20 @@ service ObserveService {
 
 /// Request a stream of POSIX signals
 message GetPosixSignalsStreamRequest {
-  /// The scope of this request. If no scope is specified, a stream of all POXIS
-  /// signals on the host will be returned.
-  oneof workload {
-    Cell cell = 2;
-    Container container = 3;
-    VirtualMachine vm = 4;
-  }
+  /// The workload to which te response will be scoped. If no workload is
+  /// specified, a stream of all POSIX signals on the host will be returned.
+  Workload workload = 1;
 }
 
-message Host {
+enum WorkloadType {
+  WORKLOAD_CELL = 0;
+  WORKLOAD_CONTAINER = 1;
+  WORKLOAD_VM = 2;
 }
 
-message Cell {
-  string cell_name = 1;
-}
-
-message Container {
-  string container_id = 1;
-}
-
-message VirtualMachine {
-  string vm_id = 1;
+message Workload {
+  WorkloadType type = 1;
+  string id = 2;
 }
 
 message GetPosixSignalsStreamResponse {
