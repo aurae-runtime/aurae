@@ -262,7 +262,7 @@ endif
 docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
 	$(cargo) doc --target $(uname_m)-unknown-linux-musl --no-deps --package auraed
 	$(cargo) doc --no-deps --package auraescript
-	$(cargo) doc --no-deps --package aurae-client
+	$(cargo) doc --no-deps --package client
 	$(cargo) doc --no-deps --package aer
 	cp -rv target/doc/* docs/crate
 
@@ -364,5 +364,5 @@ headers-write: ## Fix any problematic files blindly.
 check-deps: musl $(GEN_TS) $(GEN_RS) ## Check if there are any unused dependencies in Cargo.toml
 #	cargo +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
 #	cargo +nightly udeps --package auraescript
-#	cargo +nightly udeps --package aurae-client
+#	cargo +nightly udeps --package client
 #	cargo +nightly udeps --package aer

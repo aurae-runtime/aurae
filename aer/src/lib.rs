@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! A command line tool named "aer" built on the Rust client ("aurae-client") that has an
+//! A command line tool named "aer" built on the Rust client ("client") that has an
 //! identical scope of a single auraed node.
 //!
 //! This tool is for "power-users" and exists as a way of quickly developing and debugging
