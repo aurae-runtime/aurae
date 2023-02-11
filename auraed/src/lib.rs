@@ -71,13 +71,13 @@ use crate::{
     observe::ObserveService, spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
+use clap::{Parser, Subcommand};
 use proto::{
     cells::cell_service_server::CellServiceServer,
     cri::runtime_service_server::RuntimeServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
     observe::observe_service_server::ObserveServiceServer,
 };
-use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::AsyncRead;
@@ -95,7 +95,7 @@ pub mod init;
 pub mod logging;
 mod observe;
 mod spawn;
-mod virtual_machines;
+mod vms;
 
 /// Default Unix domain socket path for `auraed`.
 ///

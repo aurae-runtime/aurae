@@ -55,6 +55,6 @@ pub mod observe {
     include!("gen/aurae.observe.v0.rs");
 }
 
-pub mod virtual_machines {
-    include!("gen/aurae.virtual_machines.v0.rs");
+pub mod vms {
+    include!("gen/aurae.vms.v0.rs");
 }

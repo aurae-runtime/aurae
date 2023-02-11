@@ -30,9 +30,9 @@
 
 syntax = "proto3";
 
-package aurae.virtual_machines.v0;
+package aurae.vms.v0;
 
-option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/virtual_machines;virtual_machinesv0";
+option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/vms;vmsv0";
 
 service VmService {
   // Reserve requested system resources for a new VM.
