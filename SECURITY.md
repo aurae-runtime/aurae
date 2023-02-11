@@ -5,7 +5,7 @@
 
 ## Reporting a Vulnerability
 
-You are welcome to report suspected security vulnerabilities to security@aurae.io. Due to Aurae's early development status, we may not respond or fix the issues reported. Once we have a release that we recommend for production, we will define a security SLA for the community.
+You are welcome to report suspected security vulnerabilities to security@aurae.io. Due to Aurae's early development status, we may not respond or fix the issues reported, but we will use reports to help inform and prioritize how we focus our backlog. Once we have a release that we recommend for production, we will define a security SLA for the community.
 
 In your report, please include as much detail as possible:
 
