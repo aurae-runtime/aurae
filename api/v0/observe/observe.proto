@@ -60,13 +60,14 @@ message GetPosixSignalsStreamRequest {
 }
 
 enum WorkloadType {
-  WORKLOAD_CELL = 0;
-  WORKLOAD_CONTAINER = 1;
-  WORKLOAD_VM = 2;
+  WORKLOAD_TYPE_UNSPECIFIED = 0;
+  WORKLOAD_TYPE_CELL = 1;
+  WORKLOAD_TYPE_CONTAINER = 2;
+  WORKLOAD_TYPE_VM = 3;
 }
 
 message Workload {
-  WorkloadType type = 1;
+  WorkloadType workload_type = 1;
   string id = 2;
 }
 

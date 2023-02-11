@@ -10,4 +10,5 @@ aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
 futures-util = "0.3.26"
 tokio = { workspace = true }
+tonic = { workspace = true }
 uuid = { version = "1.2.2", features = ["v4"] }

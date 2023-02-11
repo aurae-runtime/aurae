@@ -902,6 +902,7 @@ dependencies = [
  "aurae-proto",
  "futures-util",
  "tokio",
+ "tonic",
  "uuid",
 ]
 
