@@ -29,6 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::isolation_controls::{Isolation, IsolationControls};
+use crate::AURAE_RUNTIME_DIR;
 use client::AuraeConfig;
 use clone3::Flags;
 use nix::{
