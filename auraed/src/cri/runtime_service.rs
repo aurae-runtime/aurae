@@ -30,11 +30,10 @@
 
 #[allow(unused_imports)]
 use crate::cri::oci::AuraeOCIBuilder;
-use crate::spawn_auraed_oci_to;
+use crate::{spawn_auraed_oci_to, AURAE_RUNTIME_DIR};
 use libcontainer;
 use libcontainer::{
-    container::builder::ContainerBuilder,
-    syscall::syscall::create_syscall,
+    container::builder::ContainerBuilder, syscall::syscall::create_syscall,
 };
 use proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
@@ -66,11 +65,11 @@ use tonic::{Request, Response, Status};
 // The string to refer to the nested runtime spaces for recursive Auraed environments.
 const AURAE_SELF_IDENTIFIER: &str = "_aurae";
 
-// Top level path for all Aurae runtime pod state
-const AURAE_PODS_PATH: &str = "/var/run/aurae/pods";
+// Top level path for all Aurae runtime pod state relative to the AURAE_RUNTIME_PATH
+const AURAE_PODS_PATH: &str = "pods";
 
-// Specific path for the Aurae spawn OCI bundle
-const AURAE_BUNDLE_PATH: &str = "/var/run/aurae/bundles";
+// Specific path for the Aurae spawn OCI bundle relative to the AURAE_RUNTIME_PATH
+const AURAE_BUNDLE_PATH: &str = "bundles";
 
 #[derive(Debug, Clone)]
 pub struct RuntimeService {}
@@ -127,7 +126,8 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         // Spawn auraed here
         // TODO Check if sandbox already exists?
         let _spawned = spawn_auraed_oci_to(
-            Path::new(AURAE_BUNDLE_PATH)
+            Path::new(AURAE_RUNTIME_DIR)
+                .join(AURAE_BUNDLE_PATH)
                 .join(AURAE_SELF_IDENTIFIER)
                 .to_str()
                 .expect("recursive path"),
@@ -136,9 +136,9 @@ impl runtime_service_server::RuntimeService for RuntimeService {
 
         let sandbox_id = metadata.name;
         let mut sandbox = sandbox_builder
-            .with_root_path(Path::new(AURAE_PODS_PATH).join(sandbox_id.clone()))
+            .with_root_path(Path::new(AURAE_RUNTIME_DIR).join(AURAE_PODS_PATH).join(sandbox_id.clone()))
             .expect("Setting pods directory")
-            .as_init(Path::new(AURAE_BUNDLE_PATH).join(AURAE_SELF_IDENTIFIER))
+            .as_init(Path::new(AURAE_RUNTIME_DIR).join(AURAE_BUNDLE_PATH).join(AURAE_SELF_IDENTIFIER))
             .with_systemd(false)
             .build()
             .expect("failed building pod sandbox: ensure valid OCI spec and proper container starting point");
