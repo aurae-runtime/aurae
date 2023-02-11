@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
-use aurae_proto::virtual_machines::{VirtualMachine, vm_service_server, VmServiceAllocateRequest, VmServiceAllocateResponse, VmServiceFreeRequest, VmServiceFreeResponse, VmServiceStartRequest, VmServiceStartResponse, VmServiceStopRequest, VmServiceStopResponse};
+use proto::virtual_machines::{VirtualMachine, vm_service_server, VmServiceAllocateRequest, VmServiceAllocateResponse, VmServiceFreeRequest, VmServiceFreeResponse, VmServiceStartRequest, VmServiceStartResponse, VmServiceStopRequest, VmServiceStopResponse};
 
 #[derive(Debug, Clone)]
 pub struct VmService {
