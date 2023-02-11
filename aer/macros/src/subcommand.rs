@@ -578,7 +578,7 @@ fn write_mapping(
     let input_type =
         proto_reader::helpers::to_unqualified_type(method.input_type());
 
-    let module_path = format!("::aurae_proto::{}::", module.to_token_stream());
+    let module_path = format!("::proto::{}::", module.to_token_stream());
     mapping.push_str(&module_path);
     mapping.push_str(input_type);
     mapping.push('{');

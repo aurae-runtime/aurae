@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::get_timestamp_sec;
-use aurae_proto::observe::LogItem;
+use proto::observe::LogItem;
 use tokio::sync::broadcast::{self, Receiver, Sender};
 
 /// Abstraction Layer for one log generating entity

@@ -29,7 +29,7 @@
 # ---------------------------------------------------------------------------- #
 
 [package]
-name = "aurae-proto"
+name = "proto"
 version = "0.0.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]

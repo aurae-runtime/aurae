@@ -1,18 +1,18 @@
 version: v1
 plugins:
   - remote: buf.build/prost/plugins/prost:v0.2.1-1
-    out: aurae-proto/src/gen
+    out: proto/src/gen
     opt:
       - bytes=.
       - file_descriptor_set
       - compile_well_known_types
       - extern_path=.google.protobuf=::pbjson_types
   - remote: buf.build/prost/plugins/serde:v0.2.1-1
-    out: aurae-proto/src/gen
+    out: proto/src/gen
     opt:
       - extern_path=.google.protobuf=::pbjson_types
   - remote: buf.build/prost/plugins/tonic:v0.2.1-1
-    out: aurae-proto/src/gen
+    out: proto/src/gen
     opt:
       - compile_well_known_types
       - extern_path=.google.protobuf=::pbjson_types

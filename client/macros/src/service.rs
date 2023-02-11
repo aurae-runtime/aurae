@@ -71,10 +71,10 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
                     quote! {
                         async fn #name(
                             &self,
-                            req: ::aurae_proto::#module::#input_type
+                            req: ::proto::#module::#input_type
                         ) -> Result<
                             ::tonic::Response<
-                                ::tonic::Streaming<::aurae_proto::#module::#output_type>
+                                ::tonic::Streaming<::proto::#module::#output_type>
                             >,
                             ::tonic::Status
                         >
@@ -84,9 +84,9 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
                     quote! {
                         async fn #name(
                             &self,
-                            req: ::aurae_proto::#module::#input_type
+                            req: ::proto::#module::#input_type
                         ) -> Result<
-                            ::tonic::Response<::aurae_proto::#module::#output_type>,
+                            ::tonic::Response<::proto::#module::#output_type>,
                             ::tonic::Status
                         >
                     }
@@ -101,7 +101,7 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
         .map(|(signature, name)| {
             quote! {
                 #signature {
-                    let mut client = ::aurae_proto::#module::#client_namespace::#client_ident::new(self.channel.clone());
+                    let mut client = ::proto::#module::#client_namespace::#client_ident::new(self.channel.clone());
                     client.#name(req).await
                 }
             }

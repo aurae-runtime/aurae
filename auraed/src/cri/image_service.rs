@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_proto::cri::{
+use proto::cri::{
     image_service_server, ImageFsInfoRequest, ImageFsInfoResponse,
     ImageStatusRequest, ImageStatusResponse, ListImagesRequest,
     ListImagesResponse, PullImageRequest, PullImageResponse,

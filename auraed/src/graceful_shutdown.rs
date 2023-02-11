@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use crate::{cells::CellService, discovery::DiscoveryService};
-use aurae_proto::{
+use proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
 };

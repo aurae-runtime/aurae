@@ -40,15 +40,15 @@ use super::{
 };
 use crate::cells::cell_service::cells::CellsError;
 use ::validation::ValidatedType;
-use aurae_proto::cells::{
+use backoff::backoff::Backoff;
+use client::{cells::cell_service::CellServiceClient, Client, ClientError};
+use proto::cells::{
     cell_service_server, Cell, CellGraphNode, CellServiceAllocateRequest,
     CellServiceAllocateResponse, CellServiceFreeRequest,
     CellServiceFreeResponse, CellServiceListRequest, CellServiceListResponse,
     CellServiceStartRequest, CellServiceStartResponse, CellServiceStopRequest,
     CellServiceStopResponse, CpuController, CpusetController, MemoryController,
 };
-use backoff::backoff::Backoff;
-use client::{cells::cell_service::CellServiceClient, Client, ClientError};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
