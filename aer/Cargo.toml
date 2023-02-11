@@ -11,7 +11,7 @@ path = "src/bin/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-aurae-client = { workspace = true }
+client = { workspace = true }
 aurae-proto = { workspace = true }
 clap = { workspace = true }
 futures-util = "0.3.25"

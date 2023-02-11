@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::isolation_controls::{Isolation, IsolationControls};
-use aurae_client::AuraeConfig;
+use client::AuraeConfig;
 use clone3::Flags;
 use nix::{
     libc::SIGCHLD,

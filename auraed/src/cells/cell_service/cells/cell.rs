@@ -32,7 +32,7 @@ use super::{
     cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec, Cells,
     CellsCache, CellsError, Result,
 };
-use aurae_client::AuraeConfig;
+use client::AuraeConfig;
 use tracing::info;
 
 // TODO https://github.com/aurae-runtime/aurae/issues/199 &&
@@ -167,8 +167,8 @@ impl Cell {
         do_free!(self, kill(), broadcast_kill())
     }
 
-    // NOTE: Having this function return the AuraeClient means we need to make it async,
-    // or we need to make [AuraeClient::new] not async.
+    // NOTE: Having this function return the Client means we need to make it async,
+    // or we need to make [Client::new] not async.
     pub fn client_config(&self) -> Result<AuraeConfig> {
         let CellState::Allocated { nested_auraed, .. } = &self.state else {
             return Err(CellsError::CellNotAllocated {
@@ -261,7 +261,7 @@ impl CellsCache for Cell {
 impl Drop for Cell {
     /// During normal behavior, cells are freed before being dropped,
     /// but cache reconciliation may result in a drop in other circumstances.
-    /// Here we have a chance to clean up, no matter the circumstance.   
+    /// Here we have a chance to clean up, no matter the circumstance.
     fn drop(&mut self) {
         // We use kill here to be aggressive in cleaning up if anything has been left behind.
         let _best_effort = self.kill();

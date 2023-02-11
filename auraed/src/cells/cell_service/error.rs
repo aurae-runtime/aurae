@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{cells::CellsError, executables::ExecutablesError};
-use aurae_client::AuraeClientError;
+use client::ClientError;
 use thiserror::Error;
 use tonic::Status;
 use tracing::error;
@@ -45,7 +45,7 @@ pub(crate) enum CellsServiceError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]
-    AuraeClientError(#[from] AuraeClientError),
+    ClientError(#[from] ClientError),
 }
 
 impl From<CellsServiceError> for Status {
@@ -84,11 +84,9 @@ impl From<CellsServiceError> for Status {
                 }
             },
             CellsServiceError::Io(_) => Status::internal(msg),
-            CellsServiceError::AuraeClientError(e) => match e {
-                AuraeClientError::ConnectionError(_) => {
-                    Status::unavailable(msg)
-                }
-                AuraeClientError::Other(_) => Status::unknown(msg),
+            CellsServiceError::ClientError(e) => match e {
+                ClientError::ConnectionError(_) => Status::unavailable(msg),
+                ClientError::Other(_) => Status::unknown(msg),
             },
         }
     }

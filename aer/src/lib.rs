@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-//! A command line tool named "aer" built on the Rust client ("aurae-client") that has an
+//! A command line tool named "aer" built on the Rust client ("client") that has an
 //! identical scope of a single auraed node.
 //!
 //! This tool is for "power-users" and exists as a way of quickly developing and debugging
@@ -62,18 +62,18 @@ pub mod grpc;
 pub mod observe;
 pub mod runtime;
 
-/// Executes an rpc call with the default `AuraeClient` and prints the results.
+/// Executes an rpc call with the default `Client` and prints the results.
 #[macro_export]
 macro_rules! execute {
     ($call:path, $req:ident) => {{
-        let client = ::aurae_client::AuraeClient::default().await?;
+        let client = ::client::Client::default().await?;
         let res = $call(&client, $req).await?;
         println!("{res:#?}");
         res
     }};
 }
 
-/// Executes an rpc call with the default `AuraeClient` and prints the results.
+/// Executes an rpc call with the default `Client` and prints the results.
 /// For use with server streaming requests.
 /// The initial response will be printed, followed by printing the stream of messages.
 #[macro_export]

@@ -114,7 +114,7 @@ pub(crate) fn service(input: TokenStream) -> TokenStream {
         }
 
         #[::tonic::async_trait]
-        impl #client_ident for crate::client::AuraeClient {
+        impl #client_ident for crate::client::Client {
             #(#rpc_implementations)*
         }
     };

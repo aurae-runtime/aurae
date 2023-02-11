@@ -1,5 +1,5 @@
 [package]
-name = "aurae-client"
+name = "client"
 version = "0.0.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
@@ -8,7 +8,7 @@ license = "Apache-2.0"
 [dependencies]
 anyhow = { workspace = true }
 aurae-proto = { workspace = true }
-macros = { package = "aurae-client-macros", path = "macros" }
+macros = { package = "client-macros", path = "macros" }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
