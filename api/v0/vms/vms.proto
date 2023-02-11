@@ -1,0 +1,155 @@
+/* -------------------------------------------------------------------------- *\
+ *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *                                                                            *
+ *                +--------------------------------------------+              *
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * -------------------------------------------------------------------------- *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+\* -------------------------------------------------------------------------- */
+
+syntax = "proto3";
+
+package aurae.vms.v0;
+
+option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/vms;vmsv0";
+
+service VmService {
+  // Reserve requested system resources for a new VM.
+  rpc Allocate(VmServiceAllocateRequest) returns (VmServiceAllocateResponse) {}
+
+  // Free up previously requested resources for an existing VM
+  rpc Free(VmServiceFreeRequest) returns (VmServiceFreeResponse) {}
+
+  // Start a new VM.
+  rpc Start(VmServiceStartRequest) returns (VmServiceStartResponse) {}
+
+  // Stop one or more VMs.
+  rpc Stop(VmServiceStopRequest) returns (VmServiceStopResponse) {}
+}
+
+message VmServiceAllocateRequest{
+  VirtualMachine machine = 1;
+}
+
+message VmServiceAllocateResponse{
+  string vm_id = 1;
+}
+
+message VmServiceFreeRequest{}
+message VmServiceFreeResponse{
+  string vm_id = 1;
+}
+
+message VmServiceStartRequest{
+  string vm_id = 1;
+  string executable = 2;
+}
+message VmServiceStartResponse{}
+
+message VmServiceStopRequest{
+  string vm_id = 1;
+}
+message VmServiceStopResponse{}
+
+
+// An Aurae virtual machine
+message VirtualMachine {
+  // The identifier of the VM
+  string id = 1;
+
+  // The memory size of VM
+  uint32 mem_size_mb = 2;
+
+  // The number of vCPUs for the VM
+  uint32 vcpu_count = 3;
+
+  // The path to the VM kernel image
+  string kernel_img_path = 4;
+
+  // Arguments to pass to the kernel
+  repeated string kernel_args = 5;
+
+  // Root drive config
+  RootDrive root_drive = 6;
+
+  // Additional drive mount configs
+  repeated DriveMount drive_mounts = 7;
+
+  // Network interface configs
+  repeated NetworkInterface network_interfaces = 8;
+}
+
+// Network config for a VM
+message NetworkInterface {
+  // The mac address for the device
+  string mac_address = 1;
+
+  // The name of the tap device on the host
+  string host_dev_name = 2;
+
+  // Optional static IP configuration
+  optional IPConfiguration ipconfig = 3;
+}
+
+// Static IP configuration for a VM network interface
+message IPConfiguration {
+  // PrimaryAddr specifies, in CIDR notation, the primary address
+  // and subnet that a network interface will be assigned inside
+  // the VM.
+  string primary_addr = 1;
+
+  // GatewayAddr specifies the default gateway that a network interface
+  // should use inside the VM.
+  string gateway_addr = 2;
+
+  // Nameservers is a list of nameservers that the VM will be configured to use internally
+  repeated string nameservers = 3;
+}
+
+// Message to specify the block device config for a  VM
+message RootDrive {
+  // The path on the host to the filesystem image or device
+  // that will supply the rootfs of the VM.
+  string host_path = 1;
+
+  // Mount the root filesystem as read-write. (Default: false)
+  bool is_writeable = 2;
+}
+
+message DriveMount {
+  // The path on the host to the filesystem image or device
+  // that will be mounted inside the VM.
+  string host_path = 1;
+
+  // The path inside the VM guest at which the filesystem image or device will be mounted.
+  string vm_path = 2;
+
+  // The filesystem type (i.e. ext4, xfs, etc.), as
+  // used when mounting the filesystem image inside the VM. The VM guest kernel
+  // is expected to have support for this filesystem.
+  string fs_type = 3;
+
+  // Mount the root filesystem as read-write. (Default: false)
+  bool is_writeable = 4;
+}
