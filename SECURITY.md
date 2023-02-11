@@ -1,8 +1,12 @@
 # Security Policy
 
+```
+⚠️ At this time, Aurae is in early development, and we do not recommend running Aurae in any production environment. 
+```
+
 ## Reporting a Vulnerability
 
-Please report suspected security vulnerabilities to security@aurae.io. You will receive a response from us within 72 hours. If the issue is confirmed, we will release a patch as soon as possible.
+You are welcome to report suspected security vulnerabilities to security@aurae.io. Due to Aurae's early development status, we may not respond or fix the issues reported. Once we have a release that we recommend for production, we will define a security SLA for the community.
 
 In your report, please include as much detail as possible:
 
