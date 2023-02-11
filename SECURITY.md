@@ -1,7 +1,7 @@
 # Security Policy
 
 ```
-⚠️ At this time, Aurae is in early development, and we do not recommend running Aurae in any production environment. 
+⚠️ At this time, Aurae is in early development, and we do not recommend running it in any production environment. 
 ```
 
 ## Reporting a Vulnerability
