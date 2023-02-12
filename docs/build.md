@@ -28,6 +28,14 @@ sudo apt-get install -y musl-tools; # musl libc
 sudo apt-get install -y build-essential; # gcc compiler
 ```
 
+##### Fedora
+
+```bash
+sudo dnf install -y protobuf-compiler; # Protocol Buffer Compiler
+sudo dnf install -y musl-gcc; # musl libc
+sudo dnf install -y '@Development Tools'; # gcc compiler
+```
+
 ##### Arch
 
 ```bash
