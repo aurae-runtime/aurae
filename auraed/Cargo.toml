@@ -39,15 +39,17 @@ license = "Apache-2.0"
 name = "auraed"
 path = "src/bin/main.rs"
 
+[package.metadata.cargo-udeps.ignore]
+normal = []
+development = ["multi_log", "simplelog"]
+
 [dependencies]
 anyhow = { workspace = true }
 client = { workspace = true }
 aurae-ebpf-shared = { path = "../ebpf-shared" }
 aya = { version = ">=0.11", features=["async_tokio"] }
-aya-log = "0.1"
 backoff = { version = "0.4.0", features = ["tokio"] }
 bytes = "1.2.1"
-cgroups-rs = "0.3.0"
 clap = { workspace = true }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
@@ -58,19 +60,15 @@ libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
 libcgroups = { version = "0.0.4", default-features = false, features = ["v2"] }
 libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-libcontainer", features = ["v2"], default-features = false }
-liboci-cli = "0.0.4"
 log = "0.4.17"
-multi_log = "0.1.2"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched"] }
-ocipkg = "0.2.8"
 oci-spec = "0.5" # upgrade to 0.6 blocked by libcgroups as of v0.0.4
 procfs = "0.14.2"
 proto = { workspace = true }
 rtnetlink = "0.11.0"
 serde_json.workspace = true
 serde.workspace = true
-simplelog = "0.12.0"
 syslog-tracing = "0.1.0"
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "macros", "net", "process", "rt-multi-thread", "signal", "sync"] }
@@ -86,5 +84,7 @@ validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
 
 [dev-dependencies]
+multi_log = "0.1.2"
+simplelog = "0.12.0"
 simple_test_case = "1.1.0"
 test-helpers = { workspace = true }
