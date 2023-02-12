@@ -31,7 +31,7 @@
 #[allow(unused_imports)]
 use crate::cri::oci::AuraeOCIBuilder;
 use crate::cri::sandbox::SandboxBuilder;
-use crate::spawn_auraed_oci_to;
+use crate::{spawn_auraed_oci_to, AURAE_RUNTIME_DIR};
 use chrono::Utc;
 use libcontainer;
 use libcontainer::container::builder::ContainerBuilder;
