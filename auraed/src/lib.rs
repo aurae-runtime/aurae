@@ -192,7 +192,7 @@ pub async fn daemon() -> i32 {
         Some(SubCommands::Spawn { output }) => {
             info!("Spawning Auraed OCI bundle: {}", output);
             spawn_auraed_oci_to(
-                output,
+                PathBuf::from(output),
                 AuraeOCIBuilder::new()
                     .build()
                     .expect("building default oci spec"),
