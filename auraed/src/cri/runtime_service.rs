@@ -128,9 +128,7 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         let _spawned = spawn_auraed_oci_to(
             Path::new(AURAE_RUNTIME_DIR)
                 .join(AURAE_BUNDLE_PATH)
-                .join(AURAE_SELF_IDENTIFIER)
-                .to_str()
-                .expect("recursive path"),
+                .join(AURAE_SELF_IDENTIFIER),
             oci_builder.build().expect("building pod oci spec"),
         );
 
