@@ -25,7 +25,7 @@ commands provided below.
 ```bash
 sudo apt-get install -y protobuf-compiler; # Protocol Buffer Compiler
 sudo apt-get install -y musl-tools; # musl libc
-sudo apt-get install -y build-essentials; # gcc compiler
+sudo apt-get install -y build-essential; # gcc compiler
 ```
 
 ##### Arch
