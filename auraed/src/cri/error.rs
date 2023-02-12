@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,9 +28,43 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub mod image_service;
-pub mod oci;
-pub mod runtime_service;
+use aurae_client::AuraeClientError;
+use thiserror::Error;
+use tonic::Status;
+use tracing::error;
 
-mod error;
-mod sandbox_cache;
+pub(crate) type Result<T> = std::result::Result<T, RuntimeServiceError>;
+
+#[derive(Debug, Error)]
+pub enum RuntimeServiceError {
+    #[error("sandbox '{sandbox_id}' already exists")]
+    SandboxExists { sandbox_id: String },
+    #[error("sandbox '{sandbox_id}' not found")]
+    SandboxNotFound { sandbox_id: String },
+    #[error("Failed to kill sandbox '{sandbox_id}': {error}")]
+    KillError { sandbox_id: String, error: String },
+    #[error(transparent)]
+    AuraeClientError(#[from] AuraeClientError),
+}
+
+impl From<RuntimeServiceError> for Status {
+    fn from(err: RuntimeServiceError) -> Self {
+        let msg = err.to_string();
+        error!("{msg}");
+        match err {
+            RuntimeServiceError::SandboxExists { .. } => {
+                Status::already_exists(msg)
+            }
+            RuntimeServiceError::SandboxNotFound { .. } => {
+                Status::not_found(msg)
+            }
+            RuntimeServiceError::KillError { .. } => Status::internal(msg),
+            RuntimeServiceError::AuraeClientError(e) => match e {
+                AuraeClientError::ConnectionError(_) => {
+                    Status::unavailable(msg)
+                }
+                AuraeClientError::Other(_) => Status::unknown(msg),
+            },
+        }
+    }
+}

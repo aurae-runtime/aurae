@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -28,9 +28,56 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub mod image_service;
-pub mod oci;
-pub mod runtime_service;
+use super::error::{Result, RuntimeServiceError};
 
-mod error;
-mod sandbox_cache;
+use libcontainer::container::Container;
+use std::collections::HashMap;
+
+type Cache = HashMap<String, Container>;
+
+#[derive(Debug, Clone, Default)]
+pub struct SandboxCache {
+    cache: Cache,
+}
+
+impl SandboxCache {
+    pub fn add(
+        &mut self,
+        sandbox_id: String,
+        sandbox: Container,
+    ) -> Result<()> {
+        if self.cache.contains_key(&sandbox_id) {
+            return Err(RuntimeServiceError::SandboxExists { sandbox_id });
+        }
+        let _ = self.cache.insert(sandbox_id, sandbox);
+        Ok(())
+    }
+
+    pub fn get_mut(&mut self, sandbox_id: &String) -> Result<&mut Container> {
+        let Some(sandbox) = self.cache.get_mut(sandbox_id) else {
+                return Err(RuntimeServiceError::SandboxNotFound { sandbox_id: sandbox_id.clone() });
+            };
+        Ok(sandbox)
+    }
+
+    pub fn get(&self, sandbox_id: &String) -> Result<&Container> {
+        let Some(sandbox) = self.cache.get(sandbox_id) else {
+                return Err(RuntimeServiceError::SandboxNotFound { sandbox_id: sandbox_id.clone() });
+            };
+        Ok(sandbox)
+    }
+
+    pub fn list(&self) -> Result<Vec<&Container>> {
+        Ok(self.cache.values().collect())
+    }
+
+    pub fn remove(&mut self, sandbox_id: &String) -> Result<()> {
+        if !self.cache.contains_key(sandbox_id) {
+            return Err(RuntimeServiceError::SandboxNotFound {
+                sandbox_id: sandbox_id.clone(),
+            });
+        }
+        let _ = self.cache.remove(sandbox_id);
+        Ok(())
+    }
+}
