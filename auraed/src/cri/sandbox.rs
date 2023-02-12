@@ -67,6 +67,7 @@ pub struct SandboxBuilder {
 }
 
 impl SandboxBuilder {
+    // TODO: Consider embedding the ContainerBuilder directly into this SandboxBuilder. For now just require a started init container.
     pub fn new(name: String, init: Container) -> SandboxBuilder {
         SandboxBuilder { name, init }
     }
