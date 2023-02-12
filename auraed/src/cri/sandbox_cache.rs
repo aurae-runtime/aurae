@@ -29,11 +29,13 @@
 \* -------------------------------------------------------------------------- */
 
 use super::error::{Result, RuntimeServiceError};
-
-use libcontainer::container::Container;
+use crate::cri::sandbox::Sandbox;
 use std::collections::HashMap;
 
-type Cache = HashMap<String, Container>;
+/// Cache is the in-memory cache which is embedded
+/// into the SandboxCache structure which provides access
+/// and controls for the cache.
+type Cache = HashMap<String, Sandbox>;
 
 #[derive(Debug, Clone, Default)]
 pub struct SandboxCache {
@@ -41,11 +43,7 @@ pub struct SandboxCache {
 }
 
 impl SandboxCache {
-    pub fn add(
-        &mut self,
-        sandbox_id: String,
-        sandbox: Container,
-    ) -> Result<()> {
+    pub fn add(&mut self, sandbox_id: String, sandbox: Sandbox) -> Result<()> {
         if self.cache.contains_key(&sandbox_id) {
             return Err(RuntimeServiceError::SandboxExists { sandbox_id });
         }
@@ -53,21 +51,21 @@ impl SandboxCache {
         Ok(())
     }
 
-    pub fn get_mut(&mut self, sandbox_id: &String) -> Result<&mut Container> {
+    pub fn get_mut(&mut self, sandbox_id: &String) -> Result<&mut Sandbox> {
         let Some(sandbox) = self.cache.get_mut(sandbox_id) else {
                 return Err(RuntimeServiceError::SandboxNotFound { sandbox_id: sandbox_id.clone() });
             };
         Ok(sandbox)
     }
 
-    pub fn get(&self, sandbox_id: &String) -> Result<&Container> {
+    pub fn get(&self, sandbox_id: &String) -> Result<&Sandbox> {
         let Some(sandbox) = self.cache.get(sandbox_id) else {
                 return Err(RuntimeServiceError::SandboxNotFound { sandbox_id: sandbox_id.clone() });
             };
         Ok(sandbox)
     }
 
-    pub fn list(&self) -> Result<Vec<&Container>> {
+    pub fn list(&self) -> Result<Vec<&Sandbox>> {
         Ok(self.cache.values().collect())
     }
 

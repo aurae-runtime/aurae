@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_client::AuraeClientError;
+use client::ClientError;
 use thiserror::Error;
 use tonic::Status;
 use tracing::error;
@@ -46,7 +46,7 @@ pub enum RuntimeServiceError {
     #[error("Failed to kill sandbox '{sandbox_id}': {error}")]
     KillError { sandbox_id: String, error: String },
     #[error(transparent)]
-    AuraeClientError(#[from] AuraeClientError),
+    ClientError(#[from] ClientError),
 }
 
 impl From<RuntimeServiceError> for Status {
@@ -64,11 +64,9 @@ impl From<RuntimeServiceError> for Status {
                 Status::failed_precondition(msg)
             }
             RuntimeServiceError::KillError { .. } => Status::internal(msg),
-            RuntimeServiceError::AuraeClientError(e) => match e {
-                AuraeClientError::ConnectionError(_) => {
-                    Status::unavailable(msg)
-                }
-                AuraeClientError::Other(_) => Status::unknown(msg),
+            RuntimeServiceError::ClientError(e) => match e {
+                ClientError::ConnectionError(_) => Status::unavailable(msg),
+                ClientError::Other(_) => Status::unknown(msg),
             },
         }
     }
