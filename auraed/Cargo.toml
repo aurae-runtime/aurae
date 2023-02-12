@@ -39,10 +39,6 @@ license = "Apache-2.0"
 name = "auraed"
 path = "src/bin/main.rs"
 
-[package.metadata.cargo-udeps.ignore]
-normal = []
-development = ["multi_log", "simplelog"]
-
 [dependencies]
 anyhow = { workspace = true }
 client = { workspace = true }
