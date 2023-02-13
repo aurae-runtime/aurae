@@ -239,6 +239,13 @@ libs-test-all: $(GEN_RS) $(GEN_TS)
 ebpf:
 	cd ebpf && make release install
 
+.PHONY: e2e-test
+e2e-test:
+	sudo -E auraed &
+	sleep 5
+	$(cargo) test --package e2e-tests --lib -- --exact --nocapture --test-threads=1
+	sudo pkill -9 auraed
+
 #------------------------------------------------------------------------------#
 
 # Documentation Commands
