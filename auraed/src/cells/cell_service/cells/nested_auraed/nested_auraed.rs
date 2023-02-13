@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::isolation_controls::{Isolation, IsolationControls};
-use crate::AURAE_RUNTIME_DIR;
+use crate::AURAED_RUNTIME;
 use client::AuraeConfig;
 use clone3::Flags;
 use nix::{
@@ -65,8 +65,14 @@ impl NestedAuraed {
         // TODO: handle expect
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
-        client_config.system.socket =
-            format!("{AURAE_RUNTIME_DIR}/aurae-{random}.sock");
+        client_config.system.socket = format!(
+            "{}/aurae-{random}.sock",
+            AURAED_RUNTIME
+                .get()
+                .expect("runtime")
+                .runtime_dir
+                .to_string_lossy()
+        );
 
         let mut command = Command::new("auraed");
         let _ = command.current_dir("/").args([

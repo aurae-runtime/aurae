@@ -31,16 +31,12 @@
 use std::{net::SocketAddr, path::PathBuf, str::FromStr};
 
 use super::{SocketStream, SystemRuntime, SystemRuntimeError};
-use crate::{
-    init::{
-        logging,
-        system_runtimes::{
-            create_tcp_socket_stream, create_unix_socket_stream,
-        },
-        BANNER,
-    },
-    AURAE_RUNTIME_DIR, AURAE_SOCK,
+use crate::init::{
+    logging,
+    system_runtimes::{create_tcp_socket_stream, create_unix_socket_stream},
+    AURAE_SOCK, BANNER,
 };
+use crate::AURAED_RUNTIME;
 use tonic::async_trait;
 use tracing::{info, trace};
 
@@ -59,10 +55,12 @@ impl SystemRuntime for DaemonSystemRuntime {
 
         // Running as a daemon supports both TCP and Unix sockets for listening, depending on the
         // socket address that's passed in.
-        let mut default_aurae_sock_path = PathBuf::from(AURAE_RUNTIME_DIR);
-        default_aurae_sock_path.push(AURAE_SOCK);
         let sockaddr = socket_address.unwrap_or_else(|| {
-            default_aurae_sock_path
+            AURAED_RUNTIME
+                .get()
+                .expect("runtime")
+                .runtime_dir
+                .join(AURAE_SOCK)
                 .to_str()
                 .expect("valid default aurae sock path")
                 .into()

@@ -31,7 +31,7 @@
 #[allow(unused_imports)]
 use crate::cri::oci::AuraeOCIBuilder;
 use crate::cri::sandbox::SandboxBuilder;
-use crate::{spawn_auraed_oci_to, AURAE_RUNTIME_DIR};
+use crate::spawn_auraed_oci_to;
 use chrono::Utc;
 use libcontainer;
 use libcontainer::container::builder::ContainerBuilder;
@@ -140,7 +140,10 @@ impl runtime_service_server::RuntimeService for RuntimeService {
             // Spawn auraed here
             // TODO Check if sandbox already exists?
             let _spawned = spawn_auraed_oci_to(
-                Path::new(AURAE_RUNTIME_DIR)
+                crate::AURAED_RUNTIME
+                    .get()
+                    .expect("runtime")
+                    .runtime_dir
                     .join(AURAE_BUNDLE_PATH)
                     .join(AURAE_SELF_IDENTIFIER),
                 oci_builder.build().expect("building pod oci spec"),

@@ -31,10 +31,10 @@
 use std::path::PathBuf;
 
 use super::{SocketStream, SystemRuntime, SystemRuntimeError};
-use crate::{
-    init::{logging, system_runtimes::create_unix_socket_stream, BANNER},
-    AURAE_RUNTIME_DIR, AURAE_SOCK,
+use crate::init::{
+    logging, system_runtimes::create_unix_socket_stream, AURAE_SOCK, BANNER,
 };
+use crate::AURAED_RUNTIME;
 use tonic::async_trait;
 use tracing::info;
 
@@ -50,12 +50,14 @@ impl SystemRuntime for CellSystemRuntime {
         println!("{BANNER}");
         logging::init(verbose, false)?;
         info!("Running as a cell");
-        let mut default_aurae_sock_path = PathBuf::from(AURAE_RUNTIME_DIR);
-        default_aurae_sock_path.push(AURAE_SOCK);
         create_unix_socket_stream(
-            socket_address
-                .map(PathBuf::from)
-                .unwrap_or_else(|| default_aurae_sock_path),
+            socket_address.map(PathBuf::from).unwrap_or_else(|| {
+                AURAED_RUNTIME
+                    .get()
+                    .expect("runtime")
+                    .runtime_dir
+                    .join(AURAE_SOCK)
+            }),
         )
         .await
     }
