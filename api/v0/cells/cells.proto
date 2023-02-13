@@ -34,100 +34,100 @@ package aurae.cells.v0;
 
 option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/cells;cellsv0";
 
-/// Cells
-/// ===
-///
-/// The Cells API is a resource-oriented set of services.
-/// Resource type API modelled after the "Resource-oriented design" shared by
-/// Source: https://google.aip.dev/121
-///
-/// API Verbs
-/// ===
-///
-/// We call out a set of common verbs to the cells subsystem.
-/// These verbs should be generic enough to use for each resource
-/// added to the RPCs and services.
-///
-/// If functionality can not be implemented by one of these
-/// verbs a new verb may be introduced as long as it reasonably
-/// applicable to similar RPCs and services.
-///
-/// * Allocate   Reserve resources, and manage any prerequisites but do not
-/// start
-/// * Free       Free resources, and destroy any prerequisites that have been
-/// started
-/// * Start      Run a resource immediately
-/// * Stop       Stop a resource immediately
-/// * Spawn      A special function that creates a child instance with inherited
-/// properties of the parent
+// Cells
+// ===
+//
+// The Cells API is a resource-oriented set of services.
+// Resource type API modelled after the "Resource-oriented design" shared by
+// Source: https://google.aip.dev/121
+//
+// API Verbs
+// ===
+//
+// We call out a set of common verbs to the cells subsystem.
+// These verbs should be generic enough to use for each resource
+// added to the RPCs and services.
+//
+// If functionality can not be implemented by one of these
+// verbs a new verb may be introduced as long as it reasonably
+// applicable to similar RPCs and services.
+//
+// * Allocate   Reserve resources, and manage any prerequisites but do not
+// start
+// * Free       Free resources, and destroy any prerequisites that have been
+// started
+// * Start      Run a resource immediately
+// * Stop       Stop a resource immediately
+// * Spawn      A special function that creates a child instance with inherited
+// properties of the parent
 
-/// Cells is the most fundamental isolation boundary for Aurae.
-/// A cell is an isolate set of resources of the system which can be
-/// used to run workloads.
-///
-/// A cell is composed of a unique cgroup namespace, and unshared kernel
-/// namespaces.
+// Cells is the most fundamental isolation boundary for Aurae.
+// A cell is an isolate set of resources of the system which can be
+// used to run workloads.
+//
+// A cell is composed of a unique cgroup namespace, and unshared kernel
+// namespaces.
 service CellService {
-  /// Reserve requested system resources for a new cell.
-  /// For cells specifically this will allocate and reserve cgroup resources
-  /// only.
+  // Reserve requested system resources for a new cell.
+  // For cells specifically this will allocate and reserve cgroup resources
+  // only.
   rpc Allocate(CellServiceAllocateRequest)
       returns (CellServiceAllocateResponse) {}
 
-  /// Free up previously requested resources for an existing cell
+  // Free up previously requested resources for an existing cell
   rpc Free(CellServiceFreeRequest) returns (CellServiceFreeResponse) {}
 
-  /// Start a new Executable inside of an existing cell. Can be called
-  /// in serial to start more than one executable in the same cell.
+  // Start a new Executable inside of an existing cell. Can be called
+  // in serial to start more than one executable in the same cell.
   rpc Start(CellServiceStartRequest) returns (CellServiceStartResponse) {}
 
-  /// Stop one or more Executables inside of an existing cell.
-  /// Can be called in serial to stop/retry more than one executable.
+  // Stop one or more Executables inside of an existing cell.
+  // Can be called in serial to stop/retry more than one executable.
   rpc Stop(CellServiceStopRequest) returns (CellServiceStopResponse) {}
 
   rpc List(CellServiceListRequest) returns (CellServiceListResponse) {}
 }
 
-/// An Aurae cell is a name given to Linux control groups (cgroups) that also
-/// includes a name, and special pre-exec functionality that is executed from
-/// within the same context as any executables scheduled.
-///
-/// A cell must be allocated for every executable scheduled. A cell defines the
-/// resource constraints of the system to allocate for an arbitrary use case.
+// An Aurae cell is a name given to Linux control groups (cgroups) that also
+// includes a name, and special pre-exec functionality that is executed from
+// within the same context as any executables scheduled.
+//
+// A cell must be allocated for every executable scheduled. A cell defines the
+// resource constraints of the system to allocate for an arbitrary use case.
 message CellServiceAllocateRequest {
-  /// A smaller resource constrained section of the system.
+  // A smaller resource constrained section of the system.
   Cell cell = 1;
 }
 
-/// The response after a cell has been allocated.
+// The response after a cell has been allocated.
 message CellServiceAllocateResponse {
   string cell_name = 1;
 
-  /// A bool that will be set to true if the cgroup was created with
-  /// cgroup v2 controller.
+  // A bool that will be set to true if the cgroup was created with
+  // cgroup v2 controller.
   bool cgroup_v2 = 2;
 }
 
-/// Used to remove or free a cell after it has been allocated.
+// Used to remove or free a cell after it has been allocated.
 message CellServiceFreeRequest { string cell_name = 1; }
 
-/// Response after removing or freeing a cell.
+// Response after removing or freeing a cell.
 message CellServiceFreeResponse {}
 
-/// A request for starting an executable inside of a Cell.
-///
-/// This is the lowest level of raw executive functionality.
-/// Here you can define shell commands, and meta information about the command.
-/// An executable is started synchronously.
+// A request for starting an executable inside of a Cell.
+//
+// This is the lowest level of raw executive functionality.
+// Here you can define shell commands, and meta information about the command.
+// An executable is started synchronously.
 message CellServiceStartRequest {
   optional string cell_name = 1;
   Executable executable = 2;
 }
 
-/// The response after starting an executable within a Cell.
+// The response after starting an executable within a Cell.
 message CellServiceStartResponse {
-  /// Return a pid as an int32 based on the pid_t type
-  /// in various libc libraries.
+  // Return a pid as an int32 based on the pid_t type
+  // in various libc libraries.
   int32 pid = 1;
 
   // int32 gid = 2;     // TODO
@@ -136,7 +136,7 @@ message CellServiceStartResponse {
   // string group = 5;  // TODO
 }
 
-/// Request to stop an executable at runtime.
+// Request to stop an executable at runtime.
 message CellServiceStopRequest {
   optional string cell_name = 1;
   string executable_name = 2;
@@ -153,35 +153,35 @@ message CellGraphNode {
   repeated CellGraphNode children = 2;
 }
 
-/// An isolation resource used to divide a system into smaller resource
-/// boundaries.
+// An isolation resource used to divide a system into smaller resource
+// boundaries.
 message Cell {
-  /// Resource parameters for control groups (cgroups)
-  /// Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs)
-  /// crate. See
-  /// [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
+  // Resource parameters for control groups (cgroups)
+  // Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs)
+  // crate. See
+  // [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs)
   string name = 1;
 
   CpuController cpu = 2;
   CpusetController cpuset = 3;
   MemoryController memory = 4;
 
-  /// Will isolate the process (and proc filesystem) from the host.
-  /// Will unshare the pid, ipc, uts, and mount namespaces.
-  /// The cgroup namespace is always unshared with the host.
-  ///
-  /// Default: false
+  // Will isolate the process (and proc filesystem) from the host.
+  // Will unshare the pid, ipc, uts, and mount namespaces.
+  // The cgroup namespace is always unshared with the host.
+  //
+  // Default: false
   bool isolate_process = 10;
 
-  /// Will isolate the network from the host.
-  /// Will unshare the net namespaces.
-  /// The cgroup namespace is always unshared with the host.
-  ///
-  /// Default: false
+  // Will isolate the network from the host.
+  // Will unshare the net namespaces.
+  // The cgroup namespace is always unshared with the host.
+  //
+  // Default: false
   bool isolate_network = 11;
 }
 
-/// The most primitive workload in Aurae, a standard executable process.
+// The most primitive workload in Aurae, a standard executable process.
 message Executable {
   string name = 1;
   string command = 2;
