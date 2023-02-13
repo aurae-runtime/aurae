@@ -180,7 +180,7 @@ $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 
 .PHONY: $(1)-test
 $(1)-test: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) test $(2) -p auraed
+	$(cargo) test $(2) -p $(1)
 
 .PHONY: $(1)-test-all
 $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
