@@ -38,11 +38,11 @@ use proto::observe::{
     observe_service_server, GetAuraeDaemonLogStreamRequest,
     GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
     GetPosixSignalsStreamResponse, GetSubProcessStreamRequest,
-    GetSubProcessStreamResponse, LogItem, Signal as PosixSignal,
+    GetSubProcessStreamResponse, LogItem, Signal as PosixSignal, WorkloadType,
 };
-use std::sync::Arc;
-use tokio::sync::broadcast::Receiver;
+use std::{ffi::OsString, sync::Arc};
 use tokio::sync::mpsc;
+use tokio::sync::{broadcast::Receiver, Mutex};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 use tracing::info;
@@ -52,8 +52,12 @@ use crate::{
     logging::log_channel::LogChannel,
 };
 
+use self::cgroup_cache::CgroupCache;
+
+//TODO (jeroensoeters) move this service to its own module
 pub struct ObserveService {
     aurae_logger: Arc<LogChannel>,
+    cgroup_cache: Arc<Mutex<CgroupCache>>,
     posix_signals: Option<PerfEventListener<Signal>>,
     sub_process_consumer_list: Vec<Receiver<LogItem>>,
 }
@@ -65,6 +69,9 @@ impl ObserveService {
     ) -> Self {
         Self {
             aurae_logger,
+            cgroup_cache: Arc::new(Mutex::new(cgroup_cache::CgroupCache::new(
+                OsString::from("/sys/fs/cgroup"),
+            ))),
             posix_signals,
             sub_process_consumer_list: Vec::<Receiver<LogItem>>::new(),
         }
@@ -79,11 +86,49 @@ impl ObserveService {
         self.aurae_logger.subscribe()
     }
 
-    fn get_posix_signals_stream(&self) -> Receiver<Signal> {
-        self.posix_signals
+    async fn get_posix_signals_stream(
+        &self,
+        filter: Option<(WorkloadType, String)>,
+    ) -> ReceiverStream<Result<GetPosixSignalsStreamResponse, Status>> {
+        let (tx, rx) =
+            mpsc::channel::<Result<GetPosixSignalsStreamResponse, Status>>(4);
+
+        let mut posix_signals = self
+            .posix_signals
             .as_ref()
             .expect("posix signal perf event listener")
-            .subscribe()
+            .subscribe();
+
+        let thread_cache = self.cgroup_cache.clone();
+        let _ignored = tokio::spawn(async move {
+            while let Ok(signal) = posix_signals.recv().await {
+                let accept = match filter {
+                    Some((WorkloadType::Cell, ref id)) => {
+                        let cgroup_path = format!("/sys/fs/cgroup/{}/_", id);
+                        let mut cache = thread_cache.lock().await;
+                        cache
+                            .get(signal.cgroupid)
+                            .map(|path| path.eq_ignore_ascii_case(cgroup_path))
+                            .unwrap_or(false)
+                    }
+                    _ => true,
+                };
+                if accept {
+                    let resp = GetPosixSignalsStreamResponse {
+                        signal: Some(PosixSignal {
+                            signal: signal.signr,
+                            process_id: i64::from(signal.pid),
+                        }),
+                    };
+                    if tx.send(Ok(resp)).await.is_err() {
+                        // receiver is gone
+                        break;
+                    }
+                }
+            }
+        });
+
+        ReceiverStream::new(rx)
     }
 }
 
@@ -143,36 +188,21 @@ impl observe_service_server::ObserveService for ObserveService {
 
     async fn get_posix_signals_stream(
         &self,
-        _request: Request<GetPosixSignalsStreamRequest>,
+        request: Request<GetPosixSignalsStreamRequest>,
     ) -> Result<Response<Self::GetPosixSignalsStreamStream>, Status> {
         if self.posix_signals.is_none() {
             return Err(Status::unimplemented("GetPosixSignalStream is not implemented for nested Aurae daemons"));
         }
 
-        let (tx, rx) =
-            mpsc::channel::<Result<GetPosixSignalsStreamResponse, Status>>(4);
-
-        let mut posix_signals = self.get_posix_signals_stream();
-
-        let _ignored = tokio::spawn(async move {
-            // TODO (jeroensoeters): not sure if this is the way to go, hooking up a
-            //    mpsc::channel to a broadcast::channel, might be better to wrap a
-            //    mpsc::channel in `PerfEventListener`
-            while let Ok(signal) = posix_signals.recv().await {
-                let resp = GetPosixSignalsStreamResponse {
-                    signal: Some(PosixSignal {
-                        signal: signal.signr,
-                        process_id: i64::from(signal.pid),
-                    }),
-                };
-                if tx.send(Ok(resp)).await.is_err() {
-                    // receiver is gone
-                    break;
-                }
-            }
-        });
-
-        Ok(Response::new(ReceiverStream::new(rx)))
+        Ok(Response::new(
+            self.get_posix_signals_stream(
+                request
+                    .into_inner()
+                    .workload
+                    .map(|w| (w.workload_type(), w.id)),
+            )
+            .await,
+        ))
     }
 }
 

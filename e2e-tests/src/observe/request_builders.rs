@@ -9,16 +9,25 @@ use aurae_proto::{
 
 struct CellBuilder {
     cell_name: Option<String>,
+    parent: Option<String>,
     isolate_process: bool,
 }
 
 impl CellBuilder {
     pub fn new() -> Self {
-        Self { cell_name: None, isolate_process: false }
+        Self { cell_name: None, parent: None, isolate_process: false }
     }
 
     pub fn cell_name(&mut self, cell_name: String) -> &CellBuilder {
         self.cell_name = Some(cell_name);
+        self
+    }
+
+    pub fn parent_cell_name(
+        &mut self,
+        parent_cell_name: String,
+    ) -> &CellBuilder {
+        self.parent = Some(parent_cell_name);
         self
     }
 
@@ -28,11 +37,13 @@ impl CellBuilder {
     }
 
     pub fn build(&self) -> Cell {
+        let cell_name = if let Some(parent) = &self.parent {
+            format!("{}/ae-e2e-{}", parent, uuid::Uuid::new_v4())
+        } else {
+            format!("ae-e2e-{}", uuid::Uuid::new_v4())
+        };
         Cell {
-            name: self
-                .cell_name
-                .clone()
-                .unwrap_or(format!("ae-e2e-{}", uuid::Uuid::new_v4())),
+            name: cell_name,
             cpu: None,
             cpuset: None,
             memory: None,
@@ -56,6 +67,14 @@ impl CellServiceAllocateRequestBuilder {
         cell_name: String,
     ) -> &CellServiceAllocateRequestBuilder {
         self.cell_builder.cell_name(cell_name);
+        self
+    }
+
+    pub fn parent_cell_name(
+        &mut self,
+        parent_cell_name: String,
+    ) -> &CellServiceAllocateRequestBuilder {
+        self.cell_builder.parent_cell_name(parent_cell_name);
         self
     }
 

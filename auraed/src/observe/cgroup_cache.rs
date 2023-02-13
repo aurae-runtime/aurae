@@ -29,12 +29,13 @@
 \* -------------------------------------------------------------------------- */
 use std::collections::HashMap;
 use std::ffi::OsString;
-use std::fs;
-use std::os::unix::prelude::DirEntryExt;
 use tracing::warn;
+use walkdir::DirEntryExt;
+use walkdir::WalkDir;
 
 /// Used for looking up cgroup paths by inode number
-struct CgroupCache {
+/// TODO (jeroensoeters) maybe change this to an LRU cache in the future
+pub(crate) struct CgroupCache {
     root: OsString,
     cache: HashMap<u64, OsString>,
 }
@@ -46,26 +47,25 @@ impl CgroupCache {
 
     pub fn get(&mut self, ino: u64) -> Option<OsString> {
         if let Some(path) = self.cache.get(&ino) {
+            //warn!("cache hit!");
             Some(path.clone())
         } else {
+            //warn!("cache miss! {}", ino);
             self.refresh_cache();
             self.cache.get(&ino).cloned()
         }
     }
 
     fn refresh_cache(&mut self) {
-        fs::read_dir(&self.root)
-            .unwrap_or_else(|_| panic!("could not read from {:?}", self.root))
-            .for_each(|res| match res {
-                Ok(dir_entry) => {
-                    _ = self
-                        .cache
-                        .insert(dir_entry.ino(), dir_entry.file_name());
-                }
-                Err(e) => {
-                    warn!("could not read from {:?}: {}", self.root, e);
-                }
-            });
+        WalkDir::new(&self.root).into_iter().for_each(|res| match res {
+            Ok(dir_entry) => {
+                //warn!("registering ino {}", dir_entry.ino());
+                _ = self.cache.insert(dir_entry.ino(), dir_entry.path().into());
+            }
+            Err(e) => {
+                warn!("could not read from {:?}: {}", self.root, e);
+            }
+        });
     }
 }
 
