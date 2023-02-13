@@ -62,7 +62,7 @@ message GetPosixSignalsStreamRequest {
 enum WorkloadType {
   WORKLOAD_TYPE_UNSPECIFIED = 0;
   WORKLOAD_TYPE_CELL = 1;
-  WORKLOAD_TYPE_CONTAINER = 2;
+  WORKLOAD_TYPE_POD_SANDBOX = 2;
   WORKLOAD_TYPE_VM = 3;
 }
 
