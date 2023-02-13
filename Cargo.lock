@@ -898,9 +898,9 @@ dependencies = [
 name = "e2e-tests"
 version = "0.1.0"
 dependencies = [
- "aurae-client",
- "aurae-proto",
+ "client",
  "futures-util",
+ "proto",
  "tokio",
  "tonic",
  "uuid",

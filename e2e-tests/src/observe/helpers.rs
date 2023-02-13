@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
-use aurae_client::observe::observe_service::ObserveServiceClient;
-use aurae_client::{cells::cell_service::CellServiceClient, AuraeClient};
-use aurae_proto::cells::{
+use client::observe::observe_service::ObserveServiceClient;
+use client::{cells::cell_service::CellServiceClient, Client as AuraeClient};
+use proto::cells::{
     CellServiceAllocateRequest, CellServiceStartRequest, CellServiceStopRequest,
 };
-
-use aurae_proto::observe::{GetPosixSignalsStreamRequest, Signal};
+use proto::observe::{GetPosixSignalsStreamRequest, Signal};
 use tokio::sync::Mutex;
 
 pub async fn allocate_cell(

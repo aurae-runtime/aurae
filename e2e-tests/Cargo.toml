@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aurae-client = { workspace = true }
-aurae-proto = { workspace = true }
+client = { workspace = true }
+proto = { workspace = true }
 futures-util = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }

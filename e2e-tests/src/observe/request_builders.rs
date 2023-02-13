@@ -1,6 +1,6 @@
 use std::cell;
 
-use aurae_proto::{
+use proto::{
     cells::{
         Cell, CellServiceAllocateRequest, CellServiceStartRequest, Executable,
     },

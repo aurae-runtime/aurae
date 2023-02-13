@@ -2,8 +2,8 @@
 mod tests {
     use std::time::Duration;
 
-    use aurae_client::AuraeClient;
-    use aurae_proto::{cells::CellServiceStopRequest, observe::Signal};
+    use client::Client as AuraeClient;
+    use proto::{cells::CellServiceStopRequest, observe::Signal};
 
     use crate::observe::{
         helpers::{

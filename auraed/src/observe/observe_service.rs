@@ -36,13 +36,13 @@ use crate::{
     logging::log_channel::LogChannel,
 };
 use aurae_ebpf_shared::Signal;
-use aurae_proto::observe::{
+use cgroup_cache::CgroupCache;
+use proto::observe::{
     observe_service_server, GetAuraeDaemonLogStreamRequest,
     GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
     GetPosixSignalsStreamResponse, GetSubProcessStreamRequest,
     GetSubProcessStreamResponse, LogItem, Signal as PosixSignal, WorkloadType,
 };
-use cgroup_cache::CgroupCache;
 use std::{ffi::OsString, sync::Arc};
 use tokio::sync::mpsc;
 use tokio::sync::{broadcast::Receiver, Mutex};
