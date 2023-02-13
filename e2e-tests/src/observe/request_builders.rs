@@ -58,12 +58,12 @@ impl CellServiceAllocateRequestBuilder {
         &mut self,
         parent_cell_name: String,
     ) -> &CellServiceAllocateRequestBuilder {
-        self.cell_builder.parent_cell_name(parent_cell_name);
+        _ = self.cell_builder.parent_cell_name(parent_cell_name);
         self
     }
 
     pub fn isolate_process(&mut self) -> &CellServiceAllocateRequestBuilder {
-        self.cell_builder.isolate_process();
+        _ = self.cell_builder.isolate_process();
         self
     }
 
@@ -117,7 +117,7 @@ impl CellServiceStartRequestBuilder {
     }
 
     pub fn executable_name(&mut self, name: String) -> &mut Self {
-        self.executable_builder.executable_name(name);
+        _ = self.executable_builder.executable_name(name);
         self
     }
 
