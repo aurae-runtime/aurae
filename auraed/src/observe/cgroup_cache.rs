@@ -72,7 +72,9 @@ impl CgroupCache {
 
 #[cfg(test)]
 mod test {
+    use std::fs;
     use std::fs::File;
+    use std::os::unix::fs::DirEntryExt;
 
     use super::*;
 
@@ -87,23 +89,23 @@ mod test {
     fn get_must_return_file_for_ino() {
         let mut cache = CgroupCache::new(OsString::from("/tmp"));
 
-        let file_name1 = OsString::from(uuid::Uuid::new_v4().to_string());
-        let ino1 = create_file(&file_name1);
+        let file_name1 = uuid::Uuid::new_v4().to_string();
+        let ino1 = create_file(&OsString::from(&file_name1));
 
-        let file_name2 = OsString::from(uuid::Uuid::new_v4().to_string());
-        let ino2 = create_file(&file_name2);
+        let file_name2 = uuid::Uuid::new_v4().to_string();
+        let ino2 = create_file(&OsString::from(&file_name2));
 
         assert!(cache.get(ino1).is_some());
         assert!(cache
             .get(ino1)
             .expect("should not happen")
-            .eq_ignore_ascii_case(file_name1));
+            .eq_ignore_ascii_case(format!("/tmp/{file_name1}")));
 
         assert!(cache.get(ino2).is_some());
         assert!(cache
             .get(ino2)
             .expect("should not happen")
-            .eq_ignore_ascii_case(file_name2));
+            .eq_ignore_ascii_case(format!("/tmp/{file_name2}")));
     }
 
     fn create_file(file_name: &OsString) -> u64 {
