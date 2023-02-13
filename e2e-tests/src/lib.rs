@@ -19,4 +19,10 @@
 )]
 #![warn(clippy::unwrap_used)]
 
+//! End-to-end tests for Aurae.
+//!
+//! These tests require a running Aurae daemon in the background.
+//! `make e2e-test` will span an Aurae daemon in the bacground and run the
+//! entire end-to-end test suite.
+
 mod observe;

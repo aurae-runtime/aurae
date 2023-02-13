@@ -3,7 +3,7 @@
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Signal {
-    pub cgroupid: u64,
-    pub signr: i32,
+    pub cgroup_id: u64,
+    pub signum: i32,
     pub pid: u32,
 }

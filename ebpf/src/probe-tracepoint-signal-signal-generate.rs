@@ -58,7 +58,7 @@ pub fn signals(ctx: TracePointContext) -> u32 {
 }
 
 fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
-    let signr: i32 = unsafe {
+    let signum: i32 = unsafe {
         match ctx.read_at(SIGNAL_OFFSET) {
             Ok(s) => s,
             Err(errn) => return Err(errn as u32),
@@ -72,9 +72,9 @@ fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
         }
     };
 
-    let cgroupid = unsafe { helpers::bpf_get_current_cgroup_id() };
+    let cgroup_id = unsafe { helpers::bpf_get_current_cgroup_id() };
 
-    let s = Signal { cgroupid, signr, pid };
+    let s = Signal { cgroup_id, signum, pid };
     unsafe {
         SIGNALS.output(&ctx, &s, 0);
     }

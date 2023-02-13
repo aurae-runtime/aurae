@@ -109,14 +109,14 @@ impl ObserveService {
                 let accept = !match_cgroup_path || {
                     let mut cache = thread_cache.lock().await;
                     cache
-                        .get(signal.cgroupid)
+                        .get(signal.cgroup_id)
                         .map(|path| path.eq_ignore_ascii_case(&cgroup_path))
                         .unwrap_or(false)
                 };
                 if accept {
                     let resp = GetPosixSignalsStreamResponse {
                         signal: Some(PosixSignal {
-                            signal: signal.signr,
+                            signal: signal.signum,
                             process_id: i64::from(signal.pid),
                         }),
                     };
