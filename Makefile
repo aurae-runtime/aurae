@@ -240,7 +240,7 @@ ebpf:
 	cd ebpf && make release install
 
 .PHONY: e2e-test
-e2e-test:
+e2e-test: # Run the end-to-end tests for auraed
 	sudo -E auraed &
 	sleep 5
 	$(cargo) test --package e2e-tests --lib -- --exact --nocapture --test-threads=1

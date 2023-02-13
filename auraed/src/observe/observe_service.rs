@@ -96,19 +96,22 @@ impl ObserveService {
             .expect("posix signal perf event listener")
             .subscribe();
 
+        let (match_cgroup_path, cgroup_path) = match filter {
+            Some((WorkloadType::Cell, id)) => {
+                (true, format!("/sys/fs/cgroup/{}/_", id))
+            }
+            _ => (false, String::new()),
+        };
+
         let thread_cache = self.cgroup_cache.clone();
         let _ignored = tokio::spawn(async move {
             while let Ok(signal) = posix_signals.recv().await {
-                let accept = match filter {
-                    Some((WorkloadType::Cell, ref id)) => {
-                        let cgroup_path = format!("/sys/fs/cgroup/{}/_", id);
-                        let mut cache = thread_cache.lock().await;
-                        cache
-                            .get(signal.cgroupid)
-                            .map(|path| path.eq_ignore_ascii_case(cgroup_path))
-                            .unwrap_or(false)
-                    }
-                    _ => true,
+                let accept = !match_cgroup_path || {
+                    let mut cache = thread_cache.lock().await;
+                    cache
+                        .get(signal.cgroupid)
+                        .map(|path| path.eq_ignore_ascii_case(&cgroup_path))
+                        .unwrap_or(false)
                 };
                 if accept {
                     let resp = GetPosixSignalsStreamResponse {
