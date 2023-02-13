@@ -1,0 +1,16 @@
+[package]
+name = "test-helpers-macros"
+version = "0.0.0"
+edition = "2021"
+publish = false
+authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
+license = "Apache-2.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+heck = { workspace = true }
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true }

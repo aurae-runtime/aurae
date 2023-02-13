@@ -170,6 +170,7 @@ dependencies = [
  "simplelog",
  "syslog-tracing",
  "test-helpers",
+ "test-helpers-macros",
  "thiserror",
  "tokio",
  "tokio-stream",
@@ -3217,6 +3218,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "test-helpers-macros"
+version = "0.0.0"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "text_lines"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3322,6 +3333,7 @@ dependencies = [
  "memchr",
  "mio",
  "num_cpus",
+ "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",

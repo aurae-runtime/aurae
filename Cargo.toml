@@ -62,6 +62,7 @@ serde = "1.0"
 serde_json = "1.0"
 syn = { version = "1.0", features = ["full"] } # used in macros, so full doesn't affect binary size
 test-helpers = { path = "./crates/test-helpers" }
+test-helpers-macros = { path = "./crates/test-helpers-macros" }
 thiserror = "1.0.37"
 tokio = "1.22.0"
 tonic = "0.8.2"
