@@ -221,7 +221,7 @@ mod tests {
         )
         .await;
 
-        // Start intercepting signals for the first cell
+        // Start intercepting signals for the nested cell
         let intercepted_signals = intercept_posix_signals_stream(
             &client,
             GetPosixSignalsStreamRequestBuilder::new()
