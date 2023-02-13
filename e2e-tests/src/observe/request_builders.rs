@@ -6,19 +6,13 @@ use proto::{
 };
 
 struct CellBuilder {
-    cell_name: Option<String>,
     parent: Option<String>,
     isolate_process: bool,
 }
 
 impl CellBuilder {
     pub fn new() -> Self {
-        Self { cell_name: None, parent: None, isolate_process: false }
-    }
-
-    pub fn cell_name(&mut self, cell_name: String) -> &CellBuilder {
-        self.cell_name = Some(cell_name);
-        self
+        Self { parent: None, isolate_process: false }
     }
 
     pub fn parent_cell_name(
@@ -58,14 +52,6 @@ pub(crate) struct CellServiceAllocateRequestBuilder {
 impl CellServiceAllocateRequestBuilder {
     pub fn new() -> Self {
         Self { cell_builder: CellBuilder::new() }
-    }
-
-    pub fn cell_name(
-        &mut self,
-        cell_name: String,
-    ) -> &CellServiceAllocateRequestBuilder {
-        self.cell_builder.cell_name(cell_name);
-        self
     }
 
     pub fn parent_cell_name(

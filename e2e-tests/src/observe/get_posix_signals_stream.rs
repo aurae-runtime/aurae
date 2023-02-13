@@ -17,6 +17,7 @@ mod tests {
     };
 
     #[tokio::test]
+    #[ignore = "we can not run eBPF tests in Github actions"]
     async fn must_get_posix_signals_for_the_host() {
         let client = AuraeClient::default().await;
         let client = client.expect("failed to initialize aurae-client");
@@ -71,6 +72,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "we can not run eBPF tests in Github actions"]
     async fn must_get_posix_signals_for_a_cell() {
         let client = AuraeClient::default().await;
         let client = client.expect("failed to initialize aurae-client");
@@ -161,6 +163,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "we can not run eBPF tests in Github actions"]
     async fn must_get_posix_signals_for_a_nested_cell() {
         let client = AuraeClient::default().await;
         let client = client.expect("failed to initialize aurae-client");
@@ -286,7 +289,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // This is for a different PR :)
+    #[ignore = "placeholder test for a follow-up pid mapping issue"]
     async fn must_map_host_pids_to_namespace_pids() {
         let client = AuraeClient::default().await;
         let client = client.expect("failed to initialize aurae-client");
