@@ -98,7 +98,7 @@ impl ObserveService {
 
         let (match_cgroup_path, cgroup_path) = match filter {
             Some((WorkloadType::Cell, id)) => {
-                (true, format!("/sys/fs/cgroup/{}/_", id))
+                (true, format!("/sys/fs/cgroup/{id}/_"))
             }
             _ => (false, String::new()),
         };
