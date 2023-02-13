@@ -34,7 +34,11 @@ use walkdir::DirEntryExt;
 use walkdir::WalkDir;
 
 /// Used for looking up cgroup paths by inode number
-/// TODO (jeroensoeters) maybe change this to an LRU cache in the future
+///
+/// TODO (jeroensoeters) maybe change this to an LRU cache in the future? Also
+/// we should think if inode wraparound is a potential issue. We could look at
+/// how the Linux inode cache is implemented:
+/// https://elixir.bootlin.com/linux/latest/source/fs/inode.c
 pub(crate) struct CgroupCache {
     root: OsString,
     cache: HashMap<u64, OsString>,
