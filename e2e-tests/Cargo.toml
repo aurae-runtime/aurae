@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 aurae-client = { workspace = true }
 aurae-proto = { workspace = true }
-futures-util = "0.3.26"
+futures-util = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
-uuid = { version = "1.2.2", features = ["v4"] }
+uuid = { workspace = true }

@@ -3,12 +3,7 @@ mod tests {
     use std::time::Duration;
 
     use aurae_client::AuraeClient;
-    use aurae_proto::{
-        cells::CellServiceStopRequest,
-        observe::{
-            GetPosixSignalsStreamRequest, Signal, Workload, WorkloadType,
-        },
-    };
+    use aurae_proto::{cells::CellServiceStopRequest, observe::Signal};
 
     use crate::observe::{
         helpers::{
@@ -188,6 +183,7 @@ mod tests {
         )
         .await;
 
+        // Allocate a nested cell
         let nested_cell_name = allocate_cell(
             &client,
             CellServiceAllocateRequestBuilder::new()
@@ -196,6 +192,7 @@ mod tests {
         )
         .await;
 
+        // Start an executable in the nested cell
         let nested_exe_name = format!("ae-e2e-{}", uuid::Uuid::new_v4());
         let nested_pid = start_in_cell(
             &client,

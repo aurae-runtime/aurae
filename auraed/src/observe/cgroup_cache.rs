@@ -47,10 +47,8 @@ impl CgroupCache {
 
     pub fn get(&mut self, ino: u64) -> Option<OsString> {
         if let Some(path) = self.cache.get(&ino) {
-            //warn!("cache hit!");
             Some(path.clone())
         } else {
-            //warn!("cache miss! {}", ino);
             self.refresh_cache();
             self.cache.get(&ino).cloned()
         }
@@ -59,7 +57,6 @@ impl CgroupCache {
     fn refresh_cache(&mut self) {
         WalkDir::new(&self.root).into_iter().for_each(|res| match res {
             Ok(dir_entry) => {
-                //warn!("registering ino {}", dir_entry.ino());
                 _ = self.cache.insert(dir_entry.ino(), dir_entry.path().into());
             }
             Err(e) => {
