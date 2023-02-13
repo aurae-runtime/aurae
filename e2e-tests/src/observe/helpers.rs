@@ -14,7 +14,7 @@ pub async fn allocate_cell(
 ) -> String {
     let res = client.allocate(req).await;
     assert!(res.is_ok());
-    res.expect("CellServiceAllocateResponse").into_inner().cell_name.to_string()
+    res.expect("CellServiceAllocateResponse").into_inner().cell_name
 }
 
 pub async fn start_in_cell(
@@ -43,7 +43,7 @@ pub async fn intercept_posix_signals_stream(
     let intercepted = Arc::new(Mutex::new(Vec::new()));
     let intercepted_in_thread = intercepted.clone();
 
-    let _ = tokio::spawn(async move {
+    let _ignored = tokio::spawn(async move {
         while let Some(res) = futures_util::StreamExt::next(&mut signals).await
         {
             let res = res.expect("signal");

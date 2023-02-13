@@ -1,5 +1,3 @@
-use std::cell;
-
 use proto::{
     cells::{
         Cell, CellServiceAllocateRequest, CellServiceStartRequest, Executable,
@@ -97,8 +95,8 @@ struct ExecutableBuilder {
 impl ExecutableBuilder {
     pub fn new() -> Self {
         Self {
-            name: String::from(format!("ae-sleeper-{}", uuid::Uuid::new_v4())),
-            command: String::from(format!("sleep 400")),
+            name: format!("ae-sleeper-{}", uuid::Uuid::new_v4()),
+            command: "sleep 400".to_string(),
             description: String::from("description"),
         }
     }
