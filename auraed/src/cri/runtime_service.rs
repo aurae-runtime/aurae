@@ -134,8 +134,7 @@ impl runtime_service_server::RuntimeService for RuntimeService {
             let bundle_path = crate::AURAED_RUNTIME
                 .get()
                 .expect("runtime")
-                .runtime_dir
-                .join("bundles")
+                .bundles_dir()
                 .join(AURAE_SELF_IDENTIFIER);
 
             // Spawn auraed here
@@ -148,8 +147,7 @@ impl runtime_service_server::RuntimeService for RuntimeService {
             let pod_path = crate::AURAED_RUNTIME
                 .get()
                 .expect("runtime")
-                .runtime_dir
-                .join("pods")
+                .pods_dir()
                 .join(sandbox_id.clone());
 
             // Define the init container startup environment

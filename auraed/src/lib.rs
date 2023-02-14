@@ -120,6 +120,20 @@ pub struct AuraedRuntime {
     //pub log_collector: Arc<LogChannel>,
 }
 
+impl AuraedRuntime {
+    pub(crate) fn bundles_dir(&self) -> PathBuf {
+        self.runtime_dir.join("bundles")
+    }
+
+    pub(crate) fn pods_dir(&self) -> PathBuf {
+        self.runtime_dir.join("pods")
+    }
+
+    pub(crate) fn default_socket_address(&self) -> PathBuf {
+        self.runtime_dir.join("aurae.sock")
+    }
+}
+
 impl Default for AuraedRuntime {
     fn default() -> Self {
         // In order to prevent there use from other areas, do not make values into constants.

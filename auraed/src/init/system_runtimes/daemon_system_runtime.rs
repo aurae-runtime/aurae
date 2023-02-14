@@ -34,7 +34,7 @@ use super::{SocketStream, SystemRuntime, SystemRuntimeError};
 use crate::init::{
     logging,
     system_runtimes::{create_tcp_socket_stream, create_unix_socket_stream},
-    AURAE_SOCK, BANNER,
+    BANNER,
 };
 use crate::AURAED_RUNTIME;
 use tonic::async_trait;
@@ -59,8 +59,7 @@ impl SystemRuntime for DaemonSystemRuntime {
             AURAED_RUNTIME
                 .get()
                 .expect("runtime")
-                .runtime_dir
-                .join(AURAE_SOCK)
+                .default_socket_address()
                 .to_str()
                 .expect("valid default aurae sock path")
                 .into()

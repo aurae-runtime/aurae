@@ -82,8 +82,6 @@ const BANNER: &str = "
  └───────────────────────────────────────────────────┘
 \n";
 
-const AURAE_SOCK: &str = "aurae.sock";
-
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum InitError {
     #[error(transparent)]

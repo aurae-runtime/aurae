@@ -32,7 +32,7 @@ use std::path::PathBuf;
 
 use super::{SocketStream, SystemRuntime, SystemRuntimeError};
 use crate::init::{
-    logging, system_runtimes::create_unix_socket_stream, AURAE_SOCK, BANNER,
+    logging, system_runtimes::create_unix_socket_stream, BANNER,
 };
 use crate::AURAED_RUNTIME;
 use tonic::async_trait;
@@ -52,11 +52,7 @@ impl SystemRuntime for ContainerSystemRuntime {
         info!("Running as a container.");
         create_unix_socket_stream(
             socket_address.map(PathBuf::from).unwrap_or_else(|| {
-                AURAED_RUNTIME
-                    .get()
-                    .expect("runtime")
-                    .runtime_dir
-                    .join(AURAE_SOCK)
+                AURAED_RUNTIME.get().expect("runtime").default_socket_address()
             }),
         )
         .await
