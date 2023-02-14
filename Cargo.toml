@@ -37,6 +37,7 @@ members = [
     "client",
     "ebpf-shared",
     "proto",
+    "e2e-tests",
 ]
 
 exclude = [
@@ -48,6 +49,7 @@ anyhow = "1.0.66"
 client = { path = "./client" }
 clap = { version = "4.1.1", features = ["derive"] }
 fancy-regex = "0.10.0"
+futures-util = "0.3.26"
 heck = "0.4.0"
 lazy_static = "1.4.0"
 nix = "0.25" # upgrade to 0.26 blocked by libcgroups as of v0.0.4
@@ -65,5 +67,6 @@ tokio = "1.22.0"
 tonic = "0.8.2"
 tonic-health = "0.8.0"
 tracing = "0.1"
+uuid = { version = "1.2.2", features = ["v4"]}
 url = "2.3.1"
 validation = { path = "./crates/validation" }

@@ -23,6 +23,7 @@
 #![no_main]
 
 use aurae_ebpf_shared::Signal;
+use aya_bpf::helpers;
 use aya_bpf::macros::map;
 use aya_bpf::macros::tracepoint;
 use aya_bpf::maps::PerfEventArray;
@@ -57,7 +58,7 @@ pub fn signals(ctx: TracePointContext) -> u32 {
 }
 
 fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
-    let signr: i32 = unsafe {
+    let signum: i32 = unsafe {
         match ctx.read_at(SIGNAL_OFFSET) {
             Ok(s) => s,
             Err(errn) => return Err(errn as u32),
@@ -71,7 +72,9 @@ fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
         }
     };
 
-    let s = Signal { signr, pid };
+    let cgroup_id = unsafe { helpers::bpf_get_current_cgroup_id() };
+
+    let s = Signal { cgroup_id, signum, pid };
     unsafe {
         SIGNALS.output(&ctx, &s, 0);
     }

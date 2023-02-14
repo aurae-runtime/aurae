@@ -1,20 +1,14 @@
 [package]
-name = "aer"
+name = "e2e-tests"
 version = "0.0.0"
 edition = "2021"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
 license = "Apache-2.0"
 
-[[bin]]
-name = "aer"
-path = "src/bin/main.rs"
-
 [dependencies]
-anyhow = { workspace = true }
 client = { workspace = true }
-clap = { workspace = true }
-futures-util = { workspace = true }
-macros = { package = "aer-macros", path = "macros" }
 proto = { workspace = true }
-serde = { workspace = true }
+futures-util = { workspace = true }
 tokio = { workspace = true }
+tonic = { workspace = true }
+uuid = { workspace = true }

@@ -895,6 +895,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "e2e-tests"
+version = "0.0.0"
+dependencies = [
+ "client",
+ "futures-util",
+ "proto",
+ "tokio",
+ "tonic",
+ "uuid",
+]
+
+[[package]]
 name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

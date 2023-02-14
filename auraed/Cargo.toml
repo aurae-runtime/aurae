@@ -75,7 +75,7 @@ tonic-health = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
 tracing-log = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
-uuid = { version = "1.2.2", features = ["v4"] }
+uuid = { workspace = true }
 validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
