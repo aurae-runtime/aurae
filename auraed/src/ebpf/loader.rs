@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use crate::ebpf::perf_event_listener::PerfEventListener;
-use crate::AURAE_LIBRARY_DIR;
+use crate::AURAED_RUNTIME;
 use aurae_ebpf_shared::Signal;
 use aya::util::nr_cpus;
 use aya::{
@@ -88,7 +88,12 @@ impl BpfLoader {
     ) -> Result<PerfEventListener<T>, anyhow::Error> {
         trace!("Loading eBPF program: {}", aurae_obj_name);
         let mut bpf_object = Bpf::load_file(format!(
-            "{AURAE_LIBRARY_DIR}/ebpf/{aurae_obj_name}",
+            "{}/ebpf/{aurae_obj_name}",
+            AURAED_RUNTIME
+                .get()
+                .expect("runtime")
+                .library_dir
+                .to_string_lossy(),
         ))?;
 
         // Load the eBPF Tracepoint program

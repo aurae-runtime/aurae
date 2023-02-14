@@ -62,16 +62,15 @@
 #![warn(clippy::unwrap_used)]
 
 use crate::cri::oci::AuraeOCIBuilder;
-use crate::cri::runtime_service::RuntimeService;
-use crate::ebpf::loader::BpfLoader;
-use crate::init::Context as AuraeContext;
-use crate::logging::log_channel::LogChannel;
 use crate::{
-    cells::CellService, discovery::DiscoveryService, init::SocketStream,
-    observe::ObserveService, spawn::spawn_auraed_oci_to,
+    cells::CellService, cri::runtime_service::RuntimeService,
+    discovery::DiscoveryService, ebpf::loader::BpfLoader,
+    init::Context as AuraeContext, init::SocketStream,
+    logging::log_channel::LogChannel, observe::ObserveService,
+    spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
-use clap::{Parser, Subcommand};
+use once_cell::sync::OnceCell;
 use proto::{
     cells::cell_service_server::CellServiceServer,
     cri::runtime_service_server::RuntimeServiceServer,
@@ -91,143 +90,13 @@ mod cri;
 mod discovery;
 mod ebpf;
 mod graceful_shutdown;
-pub mod init;
-pub mod logging;
+mod init;
+mod logging;
 mod observe;
 mod spawn;
 mod vms;
 
-/// Default Unix domain socket path for `auraed`.
-///
-/// Warning: This socket is created (by default) with user
-/// mode 0o766 which allows for unprivileged access to the
-/// auraed daemon which can in turn be used to execute privileged
-/// processes and commands. Access to the socket must be governed
-/// by an appropriate mTLS Authorization setting in order to maintain
-/// a secure multi tenant system.
-const AURAE_SOCK: &str = "aurae.sock";
-
-/// Default runtime directory for Aurae.
-///
-/// All aspects of the auraed daemon should respect this value.
-///
-/// Here is where the auraed daemon will store artifacts such as
-/// OCI bundles for containers, the aurae.sock socket file, and
-/// runtime pod configuration.
-///
-/// This is the main "runtime" location for all artifacts that are
-/// a consequence of runtime operations.
-const AURAE_RUNTIME_DIR: &str = "/var/run/aurae";
-
-/// Default library directory for Aurae.
-///
-/// All aspects of the auraed library and dependency artifacts
-/// should respect this value.
-///
-/// Here is where the daemon will look for artifacts such as eBPF
-/// bytecode (ELF objects/probes) and other dependencies that can
-/// optionally be included at runtime.
-const AURAE_LIBRARY_DIR: &str = "/var/lib/aurae";
-
-/// Default exit code for successful termination of auraed.
-const EXIT_OKAY: i32 = 0;
-
-/// Default exit code for a runtime error of auraed.
-const EXIT_ERROR: i32 = 1;
-
-/// Command line options for auraed.
-///
-/// Defines the configurable options which can be used to populate
-/// an AuraeRuntime structure.
-#[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-struct AuraedOptions {
-    /// The signed server certificate. Defaults to /etc/aurae/pki/_signed.server.crt
-    #[clap(
-        long,
-        value_parser,
-        default_value = "/etc/aurae/pki/_signed.server.crt"
-    )]
-    server_crt: String,
-    /// The secret server key. Defaults to /etc/aurae/pki/server.key
-    #[clap(long, value_parser, default_value = "/etc/aurae/pki/server.key")]
-    server_key: String,
-    /// The CA certificate. Defaults to /etc/aurae/pki/ca.crt
-    #[clap(long, value_parser, default_value = "/etc/aurae/pki/ca.crt")]
-    ca_crt: String,
-    /// Aurae socket address.  Depending on context, this should be a file or a network address.
-    /// Defaults to ${runtime_dir}/aurae.sock or [::1]:8080 respectively.
-    #[clap(short, long, value_parser)]
-    socket: Option<String>,
-    /// Aurae runtime path.  Defaults to /var/run/aurae.
-    #[clap(short, long, value_parser, default_value = AURAE_RUNTIME_DIR)]
-    runtime_dir: String,
-    /// Aurae library path. Defaults to /var/lib/aurae
-    #[clap(short, long, value_parser, default_value = AURAE_LIBRARY_DIR)]
-    library: String,
-    /// Toggle verbosity. Default false
-    #[clap(short, long, alias = "ritz")]
-    verbose: bool,
-    /// Run auraed as a nested instance of itself in an Aurae cell.
-    #[clap(long)]
-    nested: bool,
-    // Subcommands for the project
-    #[clap(subcommand)]
-    subcmd: Option<SubCommands>,
-}
-
-#[derive(Subcommand, Debug)]
-enum SubCommands {
-    Spawn {
-        #[clap(short, long, value_parser, default_value = ".")]
-        output: String,
-    },
-}
-
-/// This is the core function of the auraed runtime.
-pub async fn daemon() -> i32 {
-    let options = AuraedOptions::parse();
-
-    match &options.subcmd {
-        Some(SubCommands::Spawn { output }) => {
-            info!("Spawning Auraed OCI bundle: {}", output);
-            spawn_auraed_oci_to(
-                PathBuf::from(output),
-                AuraeOCIBuilder::new()
-                    .build()
-                    .expect("building default oci spec"),
-            )
-            .expect("spawning");
-            return EXIT_OKAY;
-        }
-        None => {}
-    }
-
-    info!("Starting Aurae Daemon Runtime");
-    info!("Aurae Daemon is pid {}", std::process::id());
-
-    let runtime = AuraedRuntime {
-        server_crt: PathBuf::from(options.server_crt),
-        server_key: PathBuf::from(options.server_key),
-        ca_crt: PathBuf::from(options.ca_crt),
-        runtime_dir: PathBuf::from(options.runtime_dir),
-        context: AuraeContext::get(options.nested),
-    };
-
-    let e = match init::init(options.verbose, options.nested, options.socket)
-        .await
-    {
-        SocketStream::Tcp(stream) => runtime.run(stream).await,
-        SocketStream::Unix(stream) => runtime.run(stream).await,
-    };
-
-    if e.is_err() {
-        error!("{:?}", e);
-        EXIT_ERROR
-    } else {
-        EXIT_OKAY
-    }
-}
+static AURAED_RUNTIME: OnceCell<AuraedRuntime> = OnceCell::new();
 
 /// Each instance of Aurae holds internal state in memory. Below are the
 /// settings which can be configured for a given Aurae daemon instance.
@@ -236,7 +105,7 @@ pub async fn daemon() -> i32 {
 /// material. Each new instance of a subsystem will read these from the local
 /// filesystem at runtime in order to authenticate.
 #[derive(Debug)]
-struct AuraedRuntime {
+pub struct AuraedRuntime {
     /// Certificate Authority for an organization or mesh of Aurae instances.
     pub ca_crt: PathBuf,
     /// The signed server X509 certificate for this unique instance.
@@ -245,18 +114,49 @@ struct AuraedRuntime {
     pub server_key: PathBuf,
     /// Configurable runtime directory. Defaults to /var/run/aurae.
     pub runtime_dir: PathBuf,
-    /// Context in which this Aurae instance is operating
-    pub context: AuraeContext,
+    /// Configurable library directory. Defaults to /var/lib/aurae.
+    pub library_dir: PathBuf,
     // /// Provides logging channels to expose auraed logging via grpc
     //pub log_collector: Arc<LogChannel>,
 }
 
-/// Primary daemon structure. Holds state and memory for this instance of
-/// Aurae.
 impl AuraedRuntime {
-    /// Starts the runtime loop for the daemon.
-    pub async fn run<T, IO, IE>(
-        &self,
+    pub(crate) fn bundles_dir(&self) -> PathBuf {
+        self.runtime_dir.join("bundles")
+    }
+
+    pub(crate) fn pods_dir(&self) -> PathBuf {
+        self.runtime_dir.join("pods")
+    }
+
+    pub(crate) fn default_socket_address(&self) -> PathBuf {
+        self.runtime_dir.join("aurae.sock")
+    }
+}
+
+impl Default for AuraedRuntime {
+    fn default() -> Self {
+        // In order to prevent their use from other areas, do not make these values into constants.
+        AuraedRuntime {
+            ca_crt: PathBuf::from("/etc/aurae/pki/ca.crt"),
+            server_crt: PathBuf::from("/etc/aurae/pki/_signed.server.crt"),
+            server_key: PathBuf::from("/etc/aurae/pki/server.key"),
+            runtime_dir: PathBuf::from("/var/run/aurae"),
+            library_dir: PathBuf::from("/var/lib/aurae"),
+        }
+    }
+}
+
+/// Starts the runtime loop for the daemon.
+pub async fn run(
+    runtime: AuraedRuntime,
+    socket: Option<String>,
+    verbose: bool,
+    nested: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    async fn inner<T, IO, IE>(
+        runtime: &AuraedRuntime,
+        context: AuraeContext,
         socket_stream: T,
     ) -> Result<(), Box<dyn std::error::Error>>
     where
@@ -264,22 +164,22 @@ impl AuraedRuntime {
         IO: AsyncRead + AsyncWrite + Connected + Unpin + Send + 'static,
         IE: Into<Box<dyn std::error::Error + Send + Sync>>,
     {
-        trace!("{:#?}", self);
+        trace!("{:#?}", runtime);
 
         let server_crt =
-            tokio::fs::read(&self.server_crt).await.with_context(|| {
+            tokio::fs::read(&runtime.server_crt).await.with_context(|| {
                 format!(
                     "Aurae requires a signed TLS certificate to run as a server, but failed to
                     load: '{}'. Please see https://aurae.io/certs/ for information on best
                     practices to quickly generate one.",
-                    self.server_crt.display()
+                    runtime.server_crt.display()
                 )
             })?;
-        let server_key = tokio::fs::read(&self.server_key).await?;
+        let server_key = tokio::fs::read(&runtime.server_key).await?;
         let server_identity = Identity::from_pem(server_crt, server_key);
         info!("Register Server SSL Identity");
 
-        let ca_crt = tokio::fs::read(&self.ca_crt).await?;
+        let ca_crt = tokio::fs::read(&runtime.ca_crt).await?;
         let ca_crt_pem = Certificate::from_pem(ca_crt.clone());
 
         let tls = ServerTlsConfig::new()
@@ -289,18 +189,18 @@ impl AuraedRuntime {
         info!("Validating SSL Identity and Root Certificate Authority (CA)");
         //let _log_collector = self.log_collector.clone();
 
-        let runtime_dir = Path::new(&self.runtime_dir);
+        let runtime_dir = Path::new(&runtime.runtime_dir);
         // Create runtime directory
         tokio::fs::create_dir_all(runtime_dir).await.with_context(|| {
             format!(
                 "Failed to create runtime directory: {}",
-                self.runtime_dir.display()
+                runtime.runtime_dir.display()
             )
         })?;
 
         // Install eBPF probes in the host Aurae daemon
-        let (_bpf_scope, signals) = if self.context == AuraeContext::Cell
-            || self.context == AuraeContext::Container
+        let (_bpf_scope, signals) = if context == AuraeContext::Cell
+            || context == AuraeContext::Container
         {
             (None, None)
         } else {
@@ -400,14 +300,21 @@ impl AuraedRuntime {
 
         Ok(())
     }
+
+    let runtime = AURAED_RUNTIME.get_or_init(|| runtime);
+
+    let (context, stream) = init::init(verbose, nested, socket).await;
+    match stream {
+        SocketStream::Tcp(stream) => inner(runtime, context, stream).await,
+        SocketStream::Unix(stream) => inner(runtime, context, stream).await,
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_socket_path() {
-        assert_eq!(AURAE_RUNTIME_DIR, "/var/run/aurae");
-    }
+/// Write the container OCI spec to the filesystem in preparation for spawning Auraed using a container runtime.
+pub fn prep_oci_spec_for_spawn(output: &str) {
+    spawn_auraed_oci_to(
+        PathBuf::from(output),
+        AuraeOCIBuilder::new().build().expect("building default oci spec"),
+    )
+    .expect("spawning");
 }

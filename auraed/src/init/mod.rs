@@ -93,8 +93,9 @@ pub async fn init(
     verbose: bool,
     nested: bool,
     socket_address: Option<String>,
-) -> SocketStream {
-    let init_result = match Context::get(nested) {
+) -> (Context, SocketStream) {
+    let context = Context::get(nested);
+    let init_result = match context {
         Context::Pid1 => Pid1SystemRuntime {}.init(verbose, socket_address),
         Context::Cell => CellSystemRuntime {}.init(verbose, socket_address),
         Context::Container => {
@@ -105,13 +106,13 @@ pub async fn init(
     .await;
 
     match init_result {
-        Ok(x) => x,
+        Ok(stream) => (context, stream),
         Err(e) => panic!("Failed to initialize: {e:?}"),
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum Context {
+pub enum Context {
     /// auraed is running as true PID 1
     Pid1,
     /// auraed is nested in a [Cell]

@@ -160,6 +160,7 @@ dependencies = [
  "netlink-packet-route",
  "nix 0.25.1",
  "oci-spec 0.5.8",
+ "once_cell",
  "procfs",
  "proto",
  "rtnetlink",

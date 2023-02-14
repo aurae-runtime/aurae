@@ -271,6 +271,7 @@ impl Drop for Cell {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{AuraedRuntime, AURAED_RUNTIME};
     use test_helpers::*;
 
     #[test]
@@ -278,6 +279,8 @@ mod tests {
         skip_if_not_root!("test_cant_unfree");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_cant_unfree");
+
+        let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
 
         let cell_name = CellName::random_for_tests();
         let mut cell = Cell::new(cell_name, CellSpec::new_for_tests());

@@ -280,6 +280,7 @@ impl CellsCache for Cells {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{AuraedRuntime, AURAED_RUNTIME};
     use test_helpers::*;
 
     #[test]
@@ -287,6 +288,8 @@ mod tests {
         skip_if_not_root!("test_allocate");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_cant_unfree");
+
+        let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
 
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
@@ -303,6 +306,8 @@ mod tests {
         skip_if_not_root!("test_duplicate_allocate_is_error");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_cant_unfree");
+
+        let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
 
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
@@ -326,6 +331,8 @@ mod tests {
         skip_if_not_root!("test_get");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_get");
+
+        let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
 
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
@@ -357,6 +364,8 @@ mod tests {
         skip_if_not_root!("test_free");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_free");
+
+        let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
 
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
@@ -393,6 +402,8 @@ mod tests {
     fn test_cell_graph_triple_nested() {
         skip_if_not_root!("test_cell_graph_triple_nested");
         skip_if_seccomp!("test_cell_graph_triple_nested");
+
+        let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
 
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
