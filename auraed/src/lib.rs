@@ -136,7 +136,7 @@ impl AuraedRuntime {
 
 impl Default for AuraedRuntime {
     fn default() -> Self {
-        // In order to prevent there use from other areas, do not make values into constants.
+        // In order to prevent their use from other areas, do not make these values into constants.
         AuraedRuntime {
             ca_crt: PathBuf::from("/etc/aurae/pki/ca.crt"),
             server_crt: PathBuf::from("/etc/aurae/pki/_signed.server.crt"),

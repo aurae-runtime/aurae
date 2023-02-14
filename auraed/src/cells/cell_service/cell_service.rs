@@ -429,6 +429,7 @@ mod tests {
         ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
         ValidatedMemoryController,
     };
+    use crate::{AuraedRuntime, AURAED_RUNTIME};
     use iter_tools::Itertools;
     use test_helpers::*;
 
@@ -436,6 +437,8 @@ mod tests {
     async fn test_list() {
         skip_if_not_root!("test_list");
         skip_if_seccomp!("test_list");
+
+        let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
 
         let service = CellService::new();
 
