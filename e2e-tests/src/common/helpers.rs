@@ -3,7 +3,8 @@ use std::sync::Arc;
 use client::observe::observe_service::ObserveServiceClient;
 use client::{cells::cell_service::CellServiceClient, Client as AuraeClient};
 use proto::cells::{
-    CellServiceAllocateRequest, CellServiceStartRequest, CellServiceStopRequest,
+    CellServiceAllocateRequest, CellServiceListRequest,
+    CellServiceListResponse, CellServiceStartRequest, CellServiceStopRequest,
 };
 use proto::observe::{GetPosixSignalsStreamRequest, Signal};
 use tokio::sync::Mutex;
@@ -29,6 +30,12 @@ pub async fn start_in_cell(
 pub async fn stop_in_cell(client: &AuraeClient, req: CellServiceStopRequest) {
     let res = client.stop(req).await;
     assert!(res.is_ok());
+}
+
+pub async fn list_cells(client: &AuraeClient) -> CellServiceListResponse {
+    let res = client.list(CellServiceListRequest {}).await;
+    assert!(res.is_ok());
+    res.expect("CellServiceListResponse").into_inner()
 }
 
 pub async fn intercept_posix_signals_stream(

@@ -25,4 +25,6 @@
 //! `make e2e-test` will span an Aurae daemon in the bacground and run the
 //! entire end-to-end test suite.
 
+mod cells;
+mod common;
 mod observe;

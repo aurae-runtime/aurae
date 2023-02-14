@@ -5,7 +5,7 @@ mod tests {
     use client::Client as AuraeClient;
     use proto::{cells::CellServiceStopRequest, observe::Signal};
 
-    use crate::observe::{
+    use crate::common::{
         helpers::{
             allocate_cell, intercept_posix_signals_stream, start_in_cell,
             stop_in_cell,
