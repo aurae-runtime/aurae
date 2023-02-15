@@ -32,7 +32,6 @@ use super::{
     Executable, ExecutableName, ExecutableSpec, ExecutablesError, Result,
 };
 use std::collections::HashMap;
-use std::process::ExitStatus;
 
 type Cache = HashMap<ExecutableName, Executable>;
 
@@ -79,7 +78,7 @@ impl Executables {
     pub async fn stop(
         &mut self,
         executable_name: &ExecutableName,
-    ) -> Result<ExitStatus> {
+    ) -> Result<Executable> {
         let Some(executable) = self.cache.get_mut(executable_name) else {
             return Err(ExecutablesError::ExecutableNotFound { executable_name: executable_name.clone() });
         };
@@ -91,7 +90,7 @@ impl Executables {
             }
         })?;
 
-        let Some(exit_status) = exit_status else {
+        let Some(_exit_status) = exit_status else {
             // Exes that never started return None
             let executable = self.cache.remove(executable_name).expect("exe in cache");
             return Err(ExecutablesError::ExecutableNotFound {
@@ -99,14 +98,15 @@ impl Executables {
             });
         };
 
-        let _ = self.cache.remove(executable_name).ok_or_else(|| {
-            // get_mut would have already thrown this error, so we should never reach here
-            ExecutablesError::ExecutableNotFound {
-                executable_name: executable_name.clone(),
-            }
-        })?;
+        let executable =
+            self.cache.remove(executable_name).ok_or_else(|| {
+                // get_mut would have already thrown this error, so we should never reach here
+                ExecutablesError::ExecutableNotFound {
+                    executable_name: executable_name.clone(),
+                }
+            })?;
 
-        Ok(exit_status)
+        Ok(executable)
     }
 
     /// Stops all executables concurrently

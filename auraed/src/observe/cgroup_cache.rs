@@ -39,6 +39,7 @@ use walkdir::WalkDir;
 /// we should think if inode wraparound is a potential issue. We could look at
 /// how the Linux inode cache is implemented:
 /// https://elixir.bootlin.com/linux/latest/source/fs/inode.c
+#[derive(Debug)]
 pub(crate) struct CgroupCache {
     root: OsString,
     cache: HashMap<u64, OsString>,

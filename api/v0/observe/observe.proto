@@ -86,7 +86,7 @@ message GetAuraeDaemonLogStreamRequest {
 // TODO: not implemented
 message GetSubProcessStreamRequest {
   LogChannelType channel_type = 1;
-  int64 process_id = 2;
+  int32 process_id = 2;
 }
 
 message LogItem {

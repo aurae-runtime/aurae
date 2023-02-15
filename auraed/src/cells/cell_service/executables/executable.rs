@@ -15,6 +15,8 @@ use tracing::info_span;
 pub struct Executable {
     pub name: ExecutableName,
     pub description: String,
+    pub stdout: LogChannel,
+    pub stderr: LogChannel,
     state: ExecutableState,
 }
 
@@ -39,7 +41,9 @@ impl Executable {
     pub fn new<T: Into<ExecutableSpec>>(spec: T) -> Self {
         let ExecutableSpec { name, description, command } = spec.into();
         let state = ExecutableState::Init { command };
-        Self { name, description, state }
+        let stdout = LogChannel::new(format!("{}::stdout", name));
+        let stderr = LogChannel::new(format!("{}::stderr", name));
+        Self { name, description, stdout, stderr, state }
     }
 
     /// Starts the underlying process.
@@ -56,8 +60,8 @@ impl Executable {
             .stderr(Stdio::piped())
             .spawn()?;
 
+        let log_channel = self.stdout.clone();
         let stdout = child.stdout.take().expect("stdout");
-        let log_channel = LogChannel::new(format!("{}::stdout", self.name));
         let span = info_span!("running process", name = ?self.name);
         let stdout = tokio::spawn(async move {
             let log_channel = log_channel;
@@ -74,8 +78,8 @@ impl Executable {
             }
         });
 
+        let log_channel = self.stderr.clone();
         let stderr = child.stderr.take().expect("stderr");
-        let log_channel = LogChannel::new(format!("{}::stderr", self.name));
         let span = info_span!("running process", name = ?self.name);
         let stderr = tokio::spawn(async move {
             let log_channel = log_channel;
