@@ -12,3 +12,4 @@ futures-util = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
 uuid = { workspace = true }
+pretty_assertions = "1.3.0"

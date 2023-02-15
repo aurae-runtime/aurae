@@ -1,11 +1,10 @@
 #[cfg(test)]
 mod test {
-    use client::Client;
-    use proto::cells::{Cell, CellGraphNode, CellServiceListResponse};
-
-    use crate::common::{
-        helpers::{allocate_cell, list_cells},
-        request_builders::CellServiceAllocateRequestBuilder,
+    use crate::common::request_builders::CellServiceAllocateRequestBuilder;
+    use client::{cells::cell_service::CellServiceClient, Client};
+    use pretty_assertions::assert_eq;
+    use proto::cells::{
+        Cell, CellGraphNode, CellServiceListRequest, CellServiceListResponse,
     };
 
     #[tokio::test]
@@ -15,30 +14,36 @@ mod test {
         let client = client.expect("failed to initialize aurae-client");
 
         // Allocate a cell
-        let cell1_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new().build(),
-        )
-        .await;
+        let cell1_name = client
+            .allocate(CellServiceAllocateRequestBuilder::new().build())
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Allocate a nested cell
-        let nested_cell_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new()
-                .parent_cell_name(cell1_name.clone())
-                .build(),
-        )
-        .await;
+        let nested_cell_name = client
+            .allocate(
+                CellServiceAllocateRequestBuilder::new()
+                    .parent_cell_name(cell1_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Allocate another non-nested cell
-        let cell2_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new().build(),
-        )
-        .await;
+        let cell2_name = client
+            .allocate(CellServiceAllocateRequestBuilder::new().build())
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // List all cells
-        let list_response = list_cells(&client).await;
+        let list_response =
+            client.list(CellServiceListRequest {}).await.unwrap().into_inner();
 
         // The expected response
         let expected = CellServiceListResponse {
@@ -79,10 +84,6 @@ mod test {
         };
 
         // Assert that the actual response matches the expected
-        assert_eq!(
-            list_response, expected,
-            "got {:#?}\nexpected {:#?}",
-            list_response, expected
-        );
+        assert_eq!(list_response, expected);
     }
 }

@@ -1,42 +1,10 @@
 use std::sync::Arc;
 
 use client::observe::observe_service::ObserveServiceClient;
-use client::{cells::cell_service::CellServiceClient, Client};
-use proto::cells::{
-    CellServiceAllocateRequest, CellServiceListRequest,
-    CellServiceListResponse, CellServiceStartRequest, CellServiceStopRequest,
-};
+use client::Client;
+
 use proto::observe::{GetPosixSignalsStreamRequest, Signal};
 use tokio::sync::Mutex;
-
-pub async fn allocate_cell(
-    client: &Client,
-    req: CellServiceAllocateRequest,
-) -> String {
-    let res = client.allocate(req).await;
-    assert!(res.is_ok());
-    res.expect("CellServiceAllocateResponse").into_inner().cell_name
-}
-
-pub async fn start_in_cell(
-    client: &Client,
-    req: CellServiceStartRequest,
-) -> i32 {
-    let res = client.start(req).await;
-    assert!(res.is_ok());
-    res.expect("CellServiceStartResponse").into_inner().pid
-}
-
-pub async fn stop_in_cell(client: &Client, req: CellServiceStopRequest) {
-    let res = client.stop(req).await;
-    assert!(res.is_ok());
-}
-
-pub async fn list_cells(client: &Client) -> CellServiceListResponse {
-    let res = client.list(CellServiceListRequest {}).await;
-    assert!(res.is_ok());
-    res.expect("CellServiceListResponse").into_inner()
-}
 
 pub async fn intercept_posix_signals_stream(
     client: &Client,
