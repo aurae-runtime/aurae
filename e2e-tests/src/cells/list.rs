@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test {
-    use client::Client as AuraeClient;
+    use client::Client;
     use proto::cells::{Cell, CellGraphNode, CellServiceListResponse};
 
     use crate::common::{
@@ -11,7 +11,7 @@ mod test {
     #[tokio::test]
     #[ignore = "this test requires a fresh Aurae daemon which right now we cannot guarantee"]
     async fn must_list_allocated_cells_recursively() {
-        let client = AuraeClient::default().await;
+        let client = Client::default().await;
         let client = client.expect("failed to initialize aurae-client");
 
         // Allocate a cell
