@@ -61,12 +61,18 @@
 )]
 #![warn(clippy::unwrap_used)]
 
-use crate::cri::oci::AuraeOCIBuilder;
 use crate::{
-    cells::CellService, cri::runtime_service::RuntimeService,
-    discovery::DiscoveryService, ebpf::loader::BpfLoader,
-    init::Context as AuraeContext, init::SocketStream,
-    logging::log_channel::LogChannel, observe::ObserveService,
+    cells::CellService,
+    cri::oci::AuraeOCIBuilder,
+    cri::runtime_service::RuntimeService,
+    discovery::DiscoveryService,
+    ebpf::{
+        tracepoint_programs::SignalSignalGenerateTracepointProgram, BpfHandle,
+    },
+    init::Context as AuraeContext,
+    init::SocketStream,
+    logging::log_channel::LogChannel,
+    observe::ObserveService,
     spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
@@ -199,24 +205,38 @@ pub async fn run(
         })?;
 
         // Install eBPF probes in the host Aurae daemon
-        let (_bpf_scope, signals) = if context == AuraeContext::Cell
+        let (_bpf_handle, posix_signals_listener) = if context
+            == AuraeContext::Cell
             || context == AuraeContext::Container
         {
             (None, None)
         } else {
             // TODO: Add flags/options to "opt-out" of the various BPF probes
             info!("Loading eBPF probes");
-            let mut bpf_loader = BpfLoader::new();
-            let listener = bpf_loader
-                .read_and_load_tracepoint_signal_signal_generate()
-                .ok();
 
-            if listener.is_none() {
-                warn!("Missing eBPF probe. Skipping signal reporting.");
-            }
+            let mut bpf_handle = match BpfHandle::load() {
+                Ok(bpf) => Some(bpf),
+                Err(e) => {
+                    warn!("eBPF: Cannot load probes: {e}");
+                    None
+                }
+            };
 
-            // Need to move bpf_loader out to prevent it from being dropped
-            (Some(bpf_loader), listener)
+            let posix_signals_listener = if let Some(bpf) = &mut bpf {
+                let posix_signals_listener = match bpf.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, _>() {
+                    Ok(x) => Some(x),
+                    Err(e) => {
+                        warn!("eBPF: Skipping SignalSignalGenerateTracepointProgram due to {e}");
+                        None
+                    }
+                };
+
+                posix_signals_listener
+            } else {
+                None
+            };
+
+            (bpf_handle, posix_signals_listener)
         };
 
         // Build gRPC Services
@@ -225,7 +245,7 @@ pub async fn run(
 
         let observe_service = ObserveService::new(
             Arc::new(LogChannel::new(String::from("TODO"))),
-            signals,
+            posix_signals_listener,
         );
         let observe_service_server =
             ObserveServiceServer::new(observe_service.clone());

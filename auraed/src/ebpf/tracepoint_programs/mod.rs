@@ -28,9 +28,17 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use bpf_file::BpfFile;
-pub use bpf_handle::BpfHandle;
+use aurae_ebpf_shared::Signal;
+pub use perf_event_broadcast::PerfEventBroadcast;
+pub use tracepoint_program::TracepointProgram;
 
-mod bpf_file;
-mod bpf_handle;
-pub mod tracepoint_programs;
+mod perf_event_broadcast;
+mod tracepoint_program;
+
+pub struct SignalSignalGenerateTracepointProgram;
+impl TracepointProgram<Signal> for SignalSignalGenerateTracepointProgram {
+    const PROGRAM_NAME: &'static str = "signals";
+    const CATEGORY: &'static str = "signal";
+    const EVENT: &'static str = "signal_generate";
+    const PERF_BUFFER: &'static str = "SIGNALS";
+}

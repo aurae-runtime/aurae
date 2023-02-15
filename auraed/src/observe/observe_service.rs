@@ -32,7 +32,7 @@
 #![allow(dead_code)]
 
 use crate::{
-    ebpf::perf_event_listener::PerfEventListener,
+    ebpf::tracepoint_programs::PerfEventBroadcast,
     logging::log_channel::LogChannel,
 };
 use aurae_ebpf_shared::Signal;
@@ -59,7 +59,7 @@ use super::error::ObserveServiceError;
 pub struct ObserveService {
     aurae_logger: Arc<LogChannel>,
     cgroup_cache: Arc<Mutex<CgroupCache>>,
-    posix_signals: Option<PerfEventListener<Signal>>,
+    posix_signals: Option<PerfEventBroadcast<Signal>>,
     sub_process_consumer_list:
         Arc<Mutex<HashMap<i32, HashMap<LogChannelType, LogChannel>>>>,
 }
@@ -67,11 +67,11 @@ pub struct ObserveService {
 impl ObserveService {
     pub fn new(
         aurae_logger: Arc<LogChannel>,
-        posix_signals: Option<PerfEventListener<Signal>>,
+        posix_signals: Option<PerfEventBroadcast<Signal>>,
     ) -> Self {
         Self {
             aurae_logger,
-            cgroup_cache: Arc::new(Mutex::new(cgroup_cache::CgroupCache::new(
+            cgroup_cache: Arc::new(Mutex::new(CgroupCache::new(
                 OsString::from("/sys/fs/cgroup"),
             ))),
             posix_signals,
@@ -139,6 +139,7 @@ impl ObserveService {
         let (tx, rx) =
             mpsc::channel::<Result<GetPosixSignalsStreamResponse, Status>>(4);
 
+        // TODO: this panics if eBPF program hasn't been loaded
         let mut posix_signals = self
             .posix_signals
             .as_ref()
