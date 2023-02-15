@@ -35,10 +35,8 @@ use tracing::error;
 
 #[derive(Debug, Error)]
 pub enum ObserveServiceError {
-    #[error("Failed to register channel type {channel_type:?} for {pid}")]
-    RegisterChannelError { pid: i32, channel_type: LogChannelType },
-    #[error("Failed to unregister channel type {channel_type:?} for {pid}")]
-    UnregisterChannelError { pid: i32, channel_type: LogChannelType },
+    #[error("Channel already registered with type {channel_type:?} for {pid}")]
+    ChannelAlreadyRegistered { pid: i32, channel_type: LogChannelType },
     #[error("Failed to find any registered channels for {pid}")]
     NoChannelsForPid { pid: i32 },
     #[error("Failed to find channel type {channel_type:?} for {pid}")]
@@ -52,8 +50,7 @@ impl From<ObserveServiceError> for Status {
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            ObserveServiceError::RegisterChannelError { .. }
-            | ObserveServiceError::UnregisterChannelError { .. } => {
+            ObserveServiceError::ChannelAlreadyRegistered { .. } => {
                 Status::internal(msg)
             }
             ObserveServiceError::NoChannelsForPid { .. }

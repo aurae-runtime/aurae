@@ -96,7 +96,7 @@ impl ObserveService {
             .get(&channel_type)
             .is_some()
         {
-            return Err(ObserveServiceError::RegisterChannelError {
+            return Err(ObserveServiceError::ChannelAlreadyRegistered {
                 pid,
                 channel_type,
             });
@@ -117,16 +117,13 @@ impl ObserveService {
         let mut consumer_list = self.sub_process_consumer_list.lock().await;
         if let Some(channels) = consumer_list.get_mut(&pid) {
             if channels.remove(&channel_type).is_none() {
-                return Err(ObserveServiceError::UnregisterChannelError {
+                return Err(ObserveServiceError::ChannelNotRegistered {
                     pid,
                     channel_type,
                 });
             }
         } else {
-            return Err(ObserveServiceError::UnregisterChannelError {
-                pid,
-                channel_type,
-            });
+            return Err(ObserveServiceError::NoChannelsForPid { pid });
         }
         Ok(())
     }
