@@ -36,6 +36,7 @@ use tokio::sync::broadcast::{self, Receiver, Sender};
 /// LogChannel provides channels between Log producers and log consumers
 #[derive(Clone, Debug)]
 pub struct LogChannel {
+    /// The human readable (public) name for this log channel.
     pub name: String,
     tx: Sender<LogItem>,
 }

@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+pub(crate) use error::ObserveServiceError;
 pub(crate) use observe_service::ObserveService;
 
 mod cgroup_cache;

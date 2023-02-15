@@ -195,16 +195,20 @@ impl CellService {
             .as_raw();
 
         // Ensure the observe service is aware of the executable's logs.
-        self.observe_service.register_sub_process_channel(
-            pid,
-            LogChannelType::Stdout,
-            &executable.stdout,
-        );
-        self.observe_service.register_sub_process_channel(
-            pid,
-            LogChannelType::Stderr,
-            &executable.stderr,
-        );
+        self.observe_service
+            .register_sub_process_channel(
+                pid,
+                LogChannelType::Stdout,
+                executable.stdout.clone(),
+            )
+            .await?;
+        self.observe_service
+            .register_sub_process_channel(
+                pid,
+                LogChannelType::Stderr,
+                executable.stderr.clone(),
+            )
+            .await?;
 
         Ok(Response::new(CellServiceStartResponse { pid }))
     }
@@ -243,9 +247,11 @@ impl CellService {
 
         // Remove the executable logs from the observe service.
         self.observe_service
-            .unregister_sub_process_channel(pid, LogChannelType::Stdout);
+            .unregister_sub_process_channel(pid, LogChannelType::Stdout)
+            .await?;
         self.observe_service
-            .unregister_sub_process_channel(pid, LogChannelType::Stderr);
+            .unregister_sub_process_channel(pid, LogChannelType::Stderr)
+            .await?;
 
         Ok(Response::new(CellServiceStopResponse::default()))
     }

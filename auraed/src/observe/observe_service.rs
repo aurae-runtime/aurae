@@ -61,7 +61,7 @@ pub struct ObserveService {
     cgroup_cache: Arc<Mutex<CgroupCache>>,
     posix_signals: Option<PerfEventListener<Signal>>,
     sub_process_consumer_list:
-        Arc<Mutex<HashMap<i32, HashMap<LogChannelType, Receiver<LogItem>>>>>,
+        Arc<Mutex<HashMap<i32, HashMap<LogChannelType, LogChannel>>>>,
 }
 
 impl ObserveService {
@@ -83,12 +83,12 @@ impl ObserveService {
         &self,
         pid: i32,
         channel_type: LogChannelType,
-        channel: &LogChannel,
+        channel: LogChannel,
     ) -> Result<(), ObserveServiceError> {
         info!("Registering channel for pid {pid} {channel_type:?}");
         let mut consumer_list = self.sub_process_consumer_list.lock().await;
         if consumer_list.get(&pid).is_none() {
-            consumer_list.insert(pid, HashMap::new());
+            let _ = consumer_list.insert(pid, HashMap::new());
         }
         if consumer_list
             .get(&pid)
@@ -101,10 +101,10 @@ impl ObserveService {
                 channel_type,
             });
         }
-        consumer_list
+        let _ = consumer_list
             .get_mut(&pid)
             .expect("pid channels")
-            .insert(channel_type, channel.subscribe());
+            .insert(channel_type, channel);
         Ok(())
     }
 
@@ -116,9 +116,7 @@ impl ObserveService {
         info!("Unregistering for pid {pid} {channel_type:?}");
         let mut consumer_list = self.sub_process_consumer_list.lock().await;
         if let Some(channels) = consumer_list.get_mut(&pid) {
-            if channels.contains_key(&channel_type) {
-                channels.remove(&channel_type);
-            } else {
+            if channels.remove(&channel_type).is_none() {
                 return Err(ObserveServiceError::UnregisterChannelError {
                     pid,
                     channel_type,
@@ -234,7 +232,7 @@ impl observe_service_server::ObserveService for ObserveService {
         println!("Requested Channel {channel:?}");
         println!("Requested Process ID {pid}");
 
-        let log_consumer = {
+        let mut log_consumer = {
             let mut consumer_list = self.sub_process_consumer_list.lock().await;
             consumer_list
                 .get_mut(&pid)
@@ -244,7 +242,9 @@ impl observe_service_server::ObserveService for ObserveService {
                     pid,
                     channel_type: channel,
                 })?
-        };
+                .clone()
+        }
+        .subscribe();
 
         let (tx, rx) =
             mpsc::channel::<Result<GetSubProcessStreamResponse, Status>>(4);
@@ -300,8 +300,8 @@ mod tests {
 
     use super::ObserveService;
 
-    #[test]
-    fn test_register_sub_process_channel_success() {
+    #[tokio::test]
+    async fn test_register_sub_process_channel_success() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
             None,
@@ -310,15 +310,16 @@ mod tests {
             .register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
-                &LogChannel::new(String::from("foo"))
+                LogChannel::new(String::from("foo"))
             )
+            .await
             .is_ok());
 
-        svc.sub_process_consumer_list.clear();
+        svc.sub_process_consumer_list.lock().await.clear();
     }
 
-    #[test]
-    fn test_register_sub_process_channel_duplicate_error() {
+    #[tokio::test]
+    async fn test_register_sub_process_channel_duplicate_error() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
             None,
@@ -327,22 +328,24 @@ mod tests {
             .register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
-                &LogChannel::new(String::from("foo"))
+                LogChannel::new(String::from("foo"))
             )
+            .await
             .is_ok());
         assert!(svc
             .register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
-                &LogChannel::new(String::from("bar"))
+                LogChannel::new(String::from("bar"))
             )
+            .await
             .is_err());
 
-        svc.sub_process_consumer_list.clear();
+        svc.sub_process_consumer_list.lock().await.clear();
     }
 
-    #[test]
-    fn test_unregister_sub_process_channel_success() {
+    #[tokio::test]
+    async fn test_unregister_sub_process_channel_success() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
             None,
@@ -351,31 +354,34 @@ mod tests {
             .register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
-                &LogChannel::new(String::from("foo"))
+                LogChannel::new(String::from("foo"))
             )
+            .await
             .is_ok());
         assert!(svc
             .unregister_sub_process_channel(42, LogChannelType::Stdout)
+            .await
             .is_ok());
 
-        svc.sub_process_consumer_list.clear();
+        svc.sub_process_consumer_list.lock().await.clear();
     }
 
-    #[test]
-    fn test_unregister_sub_process_channel_no_pid_error() {
+    #[tokio::test]
+    async fn test_unregister_sub_process_channel_no_pid_error() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
             None,
         );
         assert!(svc
             .unregister_sub_process_channel(42, LogChannelType::Stdout)
+            .await
             .is_err());
 
-        svc.sub_process_consumer_list.clear();
+        svc.sub_process_consumer_list.lock().await.clear();
     }
 
-    #[test]
-    fn test_unregister_sub_process_channel_no_channel_type_error() {
+    #[tokio::test]
+    async fn test_unregister_sub_process_channel_no_channel_type_error() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
             None,
@@ -384,13 +390,15 @@ mod tests {
             .register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
-                &LogChannel::new(String::from("foo"))
+                LogChannel::new(String::from("foo"))
             )
+            .await
             .is_ok());
         assert!(svc
             .unregister_sub_process_channel(42, LogChannelType::Stderr)
+            .await
             .is_err());
 
-        svc.sub_process_consumer_list.clear();
+        svc.sub_process_consumer_list.lock().await.clear();
     }
 }

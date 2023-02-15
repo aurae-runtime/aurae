@@ -34,7 +34,7 @@ use tonic::Status;
 use tracing::error;
 
 #[derive(Debug, Error)]
-pub(crate) enum ObserveServiceError {
+pub enum ObserveServiceError {
     #[error("Failed to register channel type {channel_type:?} for {pid}")]
     RegisterChannelError { pid: i32, channel_type: LogChannelType },
     #[error("Failed to unregister channel type {channel_type:?} for {pid}")]
