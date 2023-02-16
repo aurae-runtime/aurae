@@ -54,8 +54,8 @@ use proto::{
     },
     observe::LogChannelType,
 };
-use std::sync::Arc;
 use std::time::Duration;
+use std::{process::ExitStatus, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Code, Request, Response, Status};
 use tracing::{info, trace};
@@ -234,16 +234,19 @@ impl CellService {
         info!("CellService: stop() executable_name={:?}", executable_name,);
 
         let mut executables = self.executables.lock().await;
-        let executable = executables
-            .stop(&executable_name)
-            .await
-            .map_err(CellsServiceError::ExecutablesError)?;
 
-        let pid = executable
+        let pid = executables
+            .get(&executable_name)
+            .map_err(CellsServiceError::ExecutablesError)?
             .pid()
             .map_err(CellsServiceError::Io)?
             .expect("pid")
             .as_raw();
+
+        let _: ExitStatus = executables
+            .stop(&executable_name)
+            .await
+            .map_err(CellsServiceError::ExecutablesError)?;
 
         // Remove the executable logs from the observe service.
         self.observe_service

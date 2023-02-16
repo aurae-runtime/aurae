@@ -41,8 +41,8 @@ impl Executable {
     pub fn new<T: Into<ExecutableSpec>>(spec: T) -> Self {
         let ExecutableSpec { name, description, command } = spec.into();
         let state = ExecutableState::Init { command };
-        let stdout = LogChannel::new(format!("{}::stdout", name));
-        let stderr = LogChannel::new(format!("{}::stderr", name));
+        let stdout = LogChannel::new(format!("{name}::stdout"));
+        let stderr = LogChannel::new(format!("{name}::stderr"));
         Self { name, description, stdout, stderr, state }
     }
 
