@@ -31,6 +31,7 @@
 // @todo @krisnova remove this once logging is further along
 #![allow(dead_code)]
 
+use super::cgroup_cache;
 use crate::{
     ebpf::tracepoint_programs::PerfEventBroadcast,
     logging::log_channel::LogChannel,
@@ -51,9 +52,9 @@ use tokio::sync::{broadcast::Receiver, Mutex};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 use tracing::info;
-
 use super::cgroup_cache;
 use super::error::ObserveServiceError;
+use procfs::process::Process;
 
 #[derive(Debug, Clone)]
 pub struct ObserveService {
@@ -156,6 +157,22 @@ impl ObserveService {
         let thread_cache = self.cgroup_cache.clone();
         let _ignored = tokio::spawn(async move {
             while let Ok(signal) = posix_signals.recv().await {
+                if signal.signum == 9 {
+                    let p = Process::new(signal.pid as i32);
+                    match p {
+                        Ok(pr) => {
+                            info!(
+                                "pid: {}, nspid {:#?}",
+                                pr.pid,
+                                pr.status().expect("status").nspid
+                            );
+                        }
+                        Err(_) => {
+                            info!("PROCESS NOT FOUND {}", signal.pid);
+                        }
+                    }
+                }
+
                 let accept = !match_cgroup_path || {
                     let mut cache = thread_cache.lock().await;
                     cache

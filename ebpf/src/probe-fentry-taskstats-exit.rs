@@ -22,10 +22,10 @@
 #![no_std]
 #![no_main]
 
-use aurae_ebpf_shared::Signal;
+use aurae_ebpf_shared::ForkedProcess;
 use aya_bpf::helpers;
+use aya_bpf::macros::fentry;
 use aya_bpf::macros::map;
-use aya_bpf::macros::tracepoint;
 use aya_bpf::maps::PerfEventArray;
 use aya_bpf::programs::TracePointContext;
 
@@ -33,53 +33,22 @@ use aya_bpf::programs::TracePointContext;
 #[used]
 pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 
-#[map(name = "SIGNALS")]
-static mut SIGNALS: PerfEventArray<Signal> =
-    PerfEventArray::<Signal>::with_max_entries(1024, 0);
+#[map(name = "PROCESS_EXITS")]
+static mut PROCESS_EXITS: PerfEventArray<u32> =
+    PerfEventArray::<u32>::with_max_entries(1024, 0);
 
-// TODO (jeroensoeters): figure out how stable these offsets are and if we want
-//    to read from /sys/kernel/debug/tracing/events/signal/signal_generate/format
-//
-// @krisnova Checked going back to kernel version 5.0 these offsets remain unchanged:
-//    <linux>/include/trace/events/signal.h
-//      - 6.1  https://github.com/torvalds/linux/blob/v6.1/include/trace/events/signal.h
-//      - 5.18 https://github.com/torvalds/linux/blob/v5.18/include/trace/events/signal.h
-//      - 5.4  https://github.com/torvalds/linux/blob/v5.4/include/trace/events/signal.h
-//      - 5.0  https://github.com/torvalds/linux/blob/v5.0/include/trace/events/signal.h
-const SIGNAL_OFFSET: usize = 8;
-const PID_OFFSET: usize = 36;
+const PARENT_PID_OFFSET: usize = 8;
+const CHILD_PID_OFFSET: usize = 28;
 
-//TODO (jeroensoeters) rename this to signal_generate to match the name of the actual trace event
-#[tracepoint(name = "signals")]
-pub fn signals(ctx: TracePointContext) -> u32 {
-    match try_signals(ctx) {
-        Ok(ret) => ret,
-        Err(ret) => ret,
-    }
-}
+#[fentry(name = "fentry_taskstats_exit")]
+pub fn fentry_taskstats_exit(ctx: TracePointContext) -> u32 {
+    let pid = helpers::bpf_get_current_pid_tgid();
 
-fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
-    let signum: i32 = unsafe {
-        match ctx.read_at(SIGNAL_OFFSET) {
-            Ok(s) => s,
-            Err(errn) => return Err(errn as u32),
-        }
-    };
-
-    let pid: i32 = unsafe {
-        match ctx.read_at(PID_OFFSET) {
-            Ok(s) => s,
-            Err(errn) => return Err(errn as u32),
-        }
-    };
-
-    let cgroup_id = unsafe { helpers::bpf_get_current_cgroup_id() };
-
-    let s = Signal { cgroup_id, signum, pid };
     unsafe {
-        SIGNALS.output(&ctx, &s, 0);
+        PROCESS_EXITS.output(&ctx, pid, 0);
     }
-    Ok(0)
+
+    0
 }
 
 #[panic_handler]
