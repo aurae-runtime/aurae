@@ -58,7 +58,7 @@ use std::time::Duration;
 use std::{process::ExitStatus, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Code, Request, Response, Status};
-use tracing::{info, trace};
+use tracing::{info, trace, warn};
 
 macro_rules! do_in_cell {
     ($self:ident, $cell_name:ident, $function:ident, $request:ident) => {{
@@ -195,20 +195,28 @@ impl CellService {
             .as_raw();
 
         // Ensure the observe service is aware of the executable's logs.
-        self.observe_service
+        if let Err(e) = self
+            .observe_service
             .register_sub_process_channel(
                 pid,
                 LogChannelType::Stdout,
                 executable.stdout.clone(),
             )
-            .await?;
-        self.observe_service
+            .await
+        {
+            warn!("failed to register stdout channel for pid {pid}: {e}");
+        }
+        if let Err(e) = self
+            .observe_service
             .register_sub_process_channel(
                 pid,
                 LogChannelType::Stderr,
                 executable.stderr.clone(),
             )
-            .await?;
+            .await
+        {
+            warn!("failed to register stderr channel for pid {pid}: {e}");
+        }
 
         Ok(Response::new(CellServiceStartResponse { pid }))
     }
@@ -249,12 +257,20 @@ impl CellService {
             .map_err(CellsServiceError::ExecutablesError)?;
 
         // Remove the executable logs from the observe service.
-        self.observe_service
+        if let Err(e) = self
+            .observe_service
             .unregister_sub_process_channel(pid, LogChannelType::Stdout)
-            .await?;
-        self.observe_service
+            .await
+        {
+            warn!("failed to unregister stdout channel for pid {pid}: {e}");
+        }
+        if let Err(e) = self
+            .observe_service
             .unregister_sub_process_channel(pid, LogChannelType::Stderr)
-            .await?;
+            .await
+        {
+            warn!("failed to unregister stderr channel for pid {pid}: {e}");
+        }
 
         Ok(Response::new(CellServiceStopResponse::default()))
     }
