@@ -28,9 +28,39 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use bpf_file::BpfFile;
-pub use bpf_handle::BpfHandle;
+use super::{
+    tracepoint_programs::{PerfEventBroadcast, TracepointProgram},
+    BpfFile,
+};
+use aya::Bpf;
 
-mod bpf_file;
-mod bpf_handle;
-pub mod tracepoint_programs;
+// This is critical to maintain the memory presence of the
+// loaded bpf object.
+// This specific BPF object needs to persist up to lib.rs such that
+// the rest of the program can access this scope.
+pub struct BpfHandle(Bpf);
+
+impl BpfHandle {
+    pub fn load() -> Result<Self, anyhow::Error> {
+        let bpf = InstrumentTracepointSignalSignalGenerate::load()?;
+        Ok(Self(bpf))
+    }
+
+    pub fn load_and_attach_tracepoint_program<TProgram, TEvent>(
+        &mut self,
+    ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
+    where
+        TProgram: TracepointProgram<TEvent>,
+        TEvent: Clone + Send + 'static,
+    {
+        TProgram::load_and_attach(&mut self.0)
+    }
+}
+
+struct InstrumentTracepointSignalSignalGenerate;
+impl BpfFile for InstrumentTracepointSignalSignalGenerate {
+    /// Definition of the Aurae eBPF probe to capture all generated (and valid)
+    /// kernel signals at runtime.
+    const OBJ_NAME: &'static str =
+        "instrument-tracepoint-signal-signal-generate";
+}

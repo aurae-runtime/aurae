@@ -31,16 +31,14 @@
 use tokio::sync::broadcast::{Receiver, Sender};
 
 #[derive(Debug, Clone)]
-pub struct PerfEventListener<T> {
-    tx: Sender<T>,
-}
+pub struct PerfEventBroadcast<T>(Sender<T>);
 
-impl<T> PerfEventListener<T> {
+impl<T> PerfEventBroadcast<T> {
     pub fn new(tx: Sender<T>) -> Self {
-        Self { tx }
+        Self(tx)
     }
 
     pub fn subscribe(&self) -> Receiver<T> {
-        self.tx.subscribe()
+        self.0.subscribe()
     }
 }
