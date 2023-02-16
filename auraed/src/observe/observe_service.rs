@@ -166,7 +166,7 @@ impl ObserveService {
                     let resp = GetPosixSignalsStreamResponse {
                         signal: Some(PosixSignal {
                             signal: signal.signum,
-                            process_id: i64::from(signal.pid),
+                            process_id: signal.pid,
                         }),
                     };
                     if tx.send(Ok(resp)).await.is_err() {
