@@ -1,20 +1,17 @@
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
-
-    use client::Client as AuraeClient;
-    use proto::{cells::CellServiceStopRequest, observe::Signal};
-
-    use crate::observe::{
-        helpers::{
-            allocate_cell, intercept_posix_signals_stream, start_in_cell,
-            stop_in_cell,
-        },
+    use crate::common::{
+        helpers::intercept_posix_signals_stream,
         request_builders::{
             CellServiceAllocateRequestBuilder, CellServiceStartRequestBuilder,
             GetPosixSignalsStreamRequestBuilder,
         },
     };
+    use client::{
+        cells::cell_service::CellServiceClient, Client as AuraeClient,
+    };
+    use proto::{cells::CellServiceStopRequest, observe::Signal};
+    use std::time::Duration;
 
     #[tokio::test]
     #[ignore = "we can not run eBPF tests in Github actions"]
@@ -23,22 +20,26 @@ mod tests {
         let client = client.expect("failed to initialize aurae-client");
 
         // Allocate a cell
-        let cell_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new().build(),
-        )
-        .await;
+        let cell_name = client
+            .allocate(CellServiceAllocateRequestBuilder::new().build())
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Start an executable
         let exe_name = format!("ae-e2e-{}", uuid::Uuid::new_v4());
-        let pid = start_in_cell(
-            &client,
-            CellServiceStartRequestBuilder::new()
-                .cell_name(cell_name.clone())
-                .executable_name(exe_name.clone())
-                .build(),
-        )
-        .await;
+        let pid = client
+            .start(
+                CellServiceStartRequestBuilder::new()
+                    .cell_name(cell_name.clone())
+                    .executable_name(exe_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .pid;
 
         // Start intercepting POSIX signals for the host
         let intercepted_signals = intercept_posix_signals_stream(
@@ -48,14 +49,12 @@ mod tests {
         .await;
 
         // Stop the executable (should trigger SIGKILL)
-        stop_in_cell(
-            &client,
-            CellServiceStopRequest {
+        _ = client
+            .stop(CellServiceStopRequest {
                 cell_name: Some(cell_name.clone()),
                 executable_name: exe_name.clone(),
-            },
-        )
-        .await;
+            })
+            .await;
 
         // Wait for a little for the signal to arrive
         tokio::time::sleep(Duration::from_millis(500)).await;
@@ -78,40 +77,48 @@ mod tests {
         let client = client.expect("failed to initialize aurae-client");
 
         // Allocate a cell
-        let cell1_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new().build(),
-        )
-        .await;
+        let cell1_name = client
+            .allocate(CellServiceAllocateRequestBuilder::new().build())
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Start an executable
         let exe1_name = format!("ae-e2e-{}", uuid::Uuid::new_v4());
-        let pid1 = start_in_cell(
-            &client,
-            CellServiceStartRequestBuilder::new()
-                .cell_name(cell1_name.clone())
-                .executable_name(exe1_name.clone())
-                .build(),
-        )
-        .await;
+        let pid1 = client
+            .start(
+                CellServiceStartRequestBuilder::new()
+                    .cell_name(cell1_name.clone())
+                    .executable_name(exe1_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .pid;
 
         // Allocate a second cell
-        let cell2_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new().build(),
-        )
-        .await;
+        let cell2_name = client
+            .allocate(CellServiceAllocateRequestBuilder::new().build())
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Start a second executable
         let exe2_name = format!("ae-e2e-{}", uuid::Uuid::new_v4());
-        let pid2 = start_in_cell(
-            &client,
-            CellServiceStartRequestBuilder::new()
-                .cell_name(cell2_name.clone())
-                .executable_name(exe2_name.clone())
-                .build(),
-        )
-        .await;
+        let pid2 = client
+            .start(
+                CellServiceStartRequestBuilder::new()
+                    .cell_name(cell2_name.clone())
+                    .executable_name(exe2_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .pid;
 
         // Start intercepting signals for the first cell
         let intercepted_signals = intercept_posix_signals_stream(
@@ -123,24 +130,20 @@ mod tests {
         .await;
 
         // Stop executable in the first cell
-        stop_in_cell(
-            &client,
-            CellServiceStopRequest {
+        _ = client
+            .stop(CellServiceStopRequest {
                 cell_name: Some(cell1_name.clone()),
                 executable_name: exe1_name.clone(),
-            },
-        )
-        .await;
+            })
+            .await;
 
         // Stop executable in the second cell
-        stop_in_cell(
-            &client,
-            CellServiceStopRequest {
+        _ = client
+            .stop(CellServiceStopRequest {
                 cell_name: Some(cell2_name.clone()),
                 executable_name: exe2_name.clone(),
-            },
-        )
-        .await;
+            })
+            .await;
 
         // Wait for a little for the signals to arrive
         tokio::time::sleep(Duration::from_millis(500)).await;
@@ -169,60 +172,74 @@ mod tests {
         let client = client.expect("failed to initialize aurae-client");
 
         // Allocate a cell
-        let cell1_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new().build(),
-        )
-        .await;
+        let cell1_name = client
+            .allocate(CellServiceAllocateRequestBuilder::new().build())
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Start an executable
         let exe1_name = format!("ae-e2e-{}", uuid::Uuid::new_v4());
-        let pid1 = start_in_cell(
-            &client,
-            CellServiceStartRequestBuilder::new()
-                .cell_name(cell1_name.clone())
-                .executable_name(exe1_name.clone())
-                .build(),
-        )
-        .await;
+        let pid1 = client
+            .start(
+                CellServiceStartRequestBuilder::new()
+                    .cell_name(cell1_name.clone())
+                    .executable_name(exe1_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .pid;
 
         // Allocate a nested cell
-        let nested_cell_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new()
-                .parent_cell_name(cell1_name.clone())
-                .build(),
-        )
-        .await;
+        let nested_cell_name = client
+            .allocate(
+                CellServiceAllocateRequestBuilder::new()
+                    .parent_cell_name(cell1_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Start an executable in the nested cell
         let nested_exe_name = format!("ae-e2e-{}", uuid::Uuid::new_v4());
-        let nested_pid = start_in_cell(
-            &client,
-            CellServiceStartRequestBuilder::new()
-                .cell_name(nested_cell_name.clone())
-                .executable_name(nested_exe_name.clone())
-                .build(),
-        )
-        .await;
+        let nested_pid = client
+            .start(
+                CellServiceStartRequestBuilder::new()
+                    .cell_name(nested_cell_name.clone())
+                    .executable_name(nested_exe_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .pid;
 
         // Allocate a second cell
-        let cell2_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new().build(),
-        )
-        .await;
+        let cell2_name = client
+            .allocate(CellServiceAllocateRequestBuilder::new().build())
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Start a second executable
         let exe2_name = format!("ae-e2e-{}", uuid::Uuid::new_v4());
-        let pid2 = start_in_cell(
-            &client,
-            CellServiceStartRequestBuilder::new()
-                .cell_name(cell2_name.clone())
-                .executable_name(exe2_name.clone())
-                .build(),
-        )
-        .await;
+        let pid2 = client
+            .start(
+                CellServiceStartRequestBuilder::new()
+                    .cell_name(cell2_name.clone())
+                    .executable_name(exe2_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .pid;
 
         // Start intercepting signals for the nested cell
         let intercepted_signals = intercept_posix_signals_stream(
@@ -234,34 +251,28 @@ mod tests {
         .await;
 
         // Stop executable in the first cell
-        stop_in_cell(
-            &client,
-            CellServiceStopRequest {
+        _ = client
+            .stop(CellServiceStopRequest {
                 cell_name: Some(cell1_name.clone()),
                 executable_name: exe1_name.clone(),
-            },
-        )
-        .await;
+            })
+            .await;
 
         // Stop executable in the nested cell
-        stop_in_cell(
-            &client,
-            CellServiceStopRequest {
+        _ = client
+            .stop(CellServiceStopRequest {
                 cell_name: Some(nested_cell_name.clone()),
                 executable_name: nested_exe_name.clone(),
-            },
-        )
-        .await;
+            })
+            .await;
 
         // Stop executable in the second cell
-        stop_in_cell(
-            &client,
-            CellServiceStopRequest {
+        _ = client
+            .stop(CellServiceStopRequest {
                 cell_name: Some(cell2_name.clone()),
                 executable_name: exe2_name.clone(),
-            },
-        )
-        .await;
+            })
+            .await;
 
         // Wait for a little for the signals to arrive
         tokio::time::sleep(Duration::from_millis(500)).await;
@@ -295,22 +306,30 @@ mod tests {
         let client = client.expect("failed to initialize aurae-client");
 
         // Allocate a cell and unshare the PID namespace
-        let cell_name = allocate_cell(
-            &client,
-            CellServiceAllocateRequestBuilder::new().isolate_process().build(),
-        )
-        .await;
+        let cell_name = client
+            .allocate(
+                CellServiceAllocateRequestBuilder::new()
+                    .isolate_process()
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .cell_name;
 
         // Start an executable
         let exe_name = format!("ae-e2e-{}", uuid::Uuid::new_v4());
-        let nspid = start_in_cell(
-            &client,
-            CellServiceStartRequestBuilder::new()
-                .cell_name(cell_name.clone())
-                .executable_name(exe_name.clone())
-                .build(),
-        )
-        .await;
+        let nspid = client
+            .start(
+                CellServiceStartRequestBuilder::new()
+                    .cell_name(cell_name.clone())
+                    .executable_name(exe_name.clone())
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .into_inner()
+            .pid;
 
         // Start intercepting POSIX signals for the host
         let intercepted_signals = intercept_posix_signals_stream(
@@ -320,14 +339,12 @@ mod tests {
         .await;
 
         // Stop the executable (should trigger SIGKILL)
-        stop_in_cell(
-            &client,
-            CellServiceStopRequest {
+        _ = client
+            .stop(CellServiceStopRequest {
                 cell_name: Some(cell_name.clone()),
                 executable_name: exe_name.clone(),
-            },
-        )
-        .await;
+            })
+            .await;
 
         // Wait for a little for the signal to arrive
         tokio::time::sleep(Duration::from_millis(500)).await;

@@ -1,38 +1,13 @@
 use std::sync::Arc;
 
 use client::observe::observe_service::ObserveServiceClient;
-use client::{cells::cell_service::CellServiceClient, Client as AuraeClient};
-use proto::cells::{
-    CellServiceAllocateRequest, CellServiceStartRequest, CellServiceStopRequest,
-};
+use client::Client;
+
 use proto::observe::{GetPosixSignalsStreamRequest, Signal};
 use tokio::sync::Mutex;
 
-pub async fn allocate_cell(
-    client: &AuraeClient,
-    req: CellServiceAllocateRequest,
-) -> String {
-    let res = client.allocate(req).await;
-    assert!(res.is_ok());
-    res.expect("CellServiceAllocateResponse").into_inner().cell_name
-}
-
-pub async fn start_in_cell(
-    client: &AuraeClient,
-    req: CellServiceStartRequest,
-) -> i32 {
-    let res = client.start(req).await;
-    assert!(res.is_ok());
-    res.expect("CellServiceStartResponse").into_inner().pid
-}
-
-pub async fn stop_in_cell(client: &AuraeClient, req: CellServiceStopRequest) {
-    let res = client.stop(req).await;
-    assert!(res.is_ok());
-}
-
 pub async fn intercept_posix_signals_stream(
-    client: &AuraeClient,
+    client: &Client,
     req: GetPosixSignalsStreamRequest,
 ) -> Arc<Mutex<Vec<Signal>>> {
     let res = client.get_posix_signals_stream(req).await;
