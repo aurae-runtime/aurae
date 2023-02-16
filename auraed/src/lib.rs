@@ -223,7 +223,14 @@ pub async fn run(
         let (mut health_reporter, health_service) =
             tonic_health::server::health_reporter();
 
-        let cell_service = CellService::new();
+        let observe_service = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("TODO"))),
+            signals,
+        );
+        let observe_service_server =
+            ObserveServiceServer::new(observe_service.clone());
+
+        let cell_service = CellService::new(observe_service.clone());
         let cell_service_server = CellServiceServer::new(cell_service.clone());
         health_reporter.set_serving::<CellServiceServer<CellService>>().await;
 
@@ -234,11 +241,6 @@ pub async fn run(
             .set_serving::<DiscoveryServiceServer<DiscoveryService>>()
             .await;
 
-        let observe_service = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("TODO"))),
-            signals,
-        );
-        let observe_service_server = ObserveServiceServer::new(observe_service);
         health_reporter
             .set_serving::<ObserveServiceServer<ObserveService>>()
             .await;

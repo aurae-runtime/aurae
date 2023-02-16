@@ -62,7 +62,7 @@ mod tests {
 
         // Assert we intercepted the signal
         let guard = intercepted_signals.lock().await;
-        let expected = Signal { process_id: pid as i64, signal: 9 };
+        let expected = Signal { process_id: pid, signal: 9 };
         assert!(
             guard.contains(&expected),
             "signal not found\nexpected: {:#?}\nintercepted: {:#?}",
@@ -148,7 +148,7 @@ mod tests {
         let guard = intercepted_signals.lock().await;
 
         // Assert we intercepted the signal for the executable in the first cell
-        let expected = Signal { process_id: pid1 as i64, signal: 9 };
+        let expected = Signal { process_id: pid1, signal: 9 };
         assert!(
             guard.contains(&expected),
             "signal not found\nexpected: {:#?}\nintercepted: {:#?}",
@@ -157,7 +157,7 @@ mod tests {
         );
         // Assert we did NOT intercept the signal for the executable in the second cell
         assert!(
-            !guard.contains(&Signal { process_id: pid2 as i64, signal: 9 }),
+            !guard.contains(&Signal { process_id: pid2, signal: 9 }),
             "unexpected signal intercepted"
         );
     }
@@ -269,7 +269,7 @@ mod tests {
         let guard = intercepted_signals.lock().await;
 
         // Assert we intercepted the signal for the executable in the nested cell
-        let expected = Signal { process_id: nested_pid as i64, signal: 9 };
+        let expected = Signal { process_id: nested_pid, signal: 9 };
         assert!(
             guard.contains(&expected),
             "signal not found\nexpected: {:#?}\nintercepted: {:#?}",
@@ -278,12 +278,12 @@ mod tests {
         );
         // Assert we did NOT intercept the signal for the executable in the first (parent) cell
         assert!(
-            !guard.contains(&Signal { process_id: pid1 as i64, signal: 9 }),
+            !guard.contains(&Signal { process_id: pid1, signal: 9 }),
             "unexpected signal intercepted"
         );
         // Assert we did NOT intercept the signal for the executable in the second cell
         assert!(
-            !guard.contains(&Signal { process_id: pid2 as i64, signal: 9 }),
+            !guard.contains(&Signal { process_id: pid2, signal: 9 }),
             "unexpected signal intercepted"
         );
     }
@@ -334,7 +334,7 @@ mod tests {
 
         // Assert we intercepted the signal
         let guard = intercepted_signals.lock().await;
-        let expected = Signal { process_id: nspid as i64, signal: 9 };
+        let expected = Signal { process_id: nspid, signal: 9 };
         assert!(
             guard.contains(&expected),
             "signal not found\nexpected: {:#?}\nintercepted: {:#?}",

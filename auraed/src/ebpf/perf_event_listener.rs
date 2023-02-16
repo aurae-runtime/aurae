@@ -30,6 +30,7 @@
 
 use tokio::sync::broadcast::{Receiver, Sender};
 
+#[derive(Debug, Clone)]
 pub struct PerfEventListener<T> {
     tx: Sender<T>,
 }

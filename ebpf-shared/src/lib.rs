@@ -5,5 +5,5 @@
 pub struct Signal {
     pub cgroup_id: u64,
     pub signum: i32,
-    pub pid: u32,
+    pub pid: i32,
 }

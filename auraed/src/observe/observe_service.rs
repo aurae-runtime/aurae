@@ -41,8 +41,10 @@ use proto::observe::{
     observe_service_server, GetAuraeDaemonLogStreamRequest,
     GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
     GetPosixSignalsStreamResponse, GetSubProcessStreamRequest,
-    GetSubProcessStreamResponse, LogItem, Signal as PosixSignal, WorkloadType,
+    GetSubProcessStreamResponse, LogChannelType, LogItem,
+    Signal as PosixSignal, WorkloadType,
 };
+use std::collections::HashMap;
 use std::{ffi::OsString, sync::Arc};
 use tokio::sync::mpsc;
 use tokio::sync::{broadcast::Receiver, Mutex};
@@ -51,12 +53,15 @@ use tonic::{Request, Response, Status};
 use tracing::info;
 
 use super::cgroup_cache;
+use super::error::ObserveServiceError;
 
+#[derive(Debug, Clone)]
 pub struct ObserveService {
     aurae_logger: Arc<LogChannel>,
     cgroup_cache: Arc<Mutex<CgroupCache>>,
     posix_signals: Option<PerfEventListener<Signal>>,
-    sub_process_consumer_list: Vec<Receiver<LogItem>>,
+    sub_process_consumer_list:
+        Arc<Mutex<HashMap<i32, HashMap<LogChannelType, LogChannel>>>>,
 }
 
 impl ObserveService {
@@ -70,13 +75,57 @@ impl ObserveService {
                 OsString::from("/sys/fs/cgroup"),
             ))),
             posix_signals,
-            sub_process_consumer_list: Vec::<Receiver<LogItem>>::new(),
+            sub_process_consumer_list: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
-    pub fn register_channel(&mut self, consumer: Receiver<LogItem>) {
-        info!("Added new channel");
-        self.sub_process_consumer_list.push(consumer);
+    pub async fn register_sub_process_channel(
+        &self,
+        pid: i32,
+        channel_type: LogChannelType,
+        channel: LogChannel,
+    ) -> Result<(), ObserveServiceError> {
+        info!("Registering channel for pid {pid} {channel_type:?}");
+        let mut consumer_list = self.sub_process_consumer_list.lock().await;
+        if consumer_list.get(&pid).is_none() {
+            let _ = consumer_list.insert(pid, HashMap::new());
+        }
+        if consumer_list
+            .get(&pid)
+            .expect("pid channels")
+            .get(&channel_type)
+            .is_some()
+        {
+            return Err(ObserveServiceError::ChannelAlreadyRegistered {
+                pid,
+                channel_type,
+            });
+        }
+        let _ = consumer_list
+            .get_mut(&pid)
+            .expect("pid channels")
+            .insert(channel_type, channel);
+        Ok(())
+    }
+
+    pub async fn unregister_sub_process_channel(
+        &self,
+        pid: i32,
+        channel_type: LogChannelType,
+    ) -> Result<(), ObserveServiceError> {
+        info!("Unregistering for pid {pid} {channel_type:?}");
+        let mut consumer_list = self.sub_process_consumer_list.lock().await;
+        if let Some(channels) = consumer_list.get_mut(&pid) {
+            if channels.remove(&channel_type).is_none() {
+                return Err(ObserveServiceError::ChannelNotRegistered {
+                    pid,
+                    channel_type,
+                });
+            }
+        } else {
+            return Err(ObserveServiceError::NoChannelsForPid { pid });
+        }
+        Ok(())
     }
 
     fn get_aurae_daemon_log_stream(&self) -> Receiver<LogItem> {
@@ -117,7 +166,7 @@ impl ObserveService {
                     let resp = GetPosixSignalsStreamResponse {
                         signal: Some(PosixSignal {
                             signal: signal.signum,
-                            process_id: i64::from(signal.pid),
+                            process_id: signal.pid,
                         }),
                     };
                     if tx.send(Ok(resp)).await.is_err() {
@@ -171,14 +220,46 @@ impl observe_service_server::ObserveService for ObserveService {
         &self,
         request: Request<GetSubProcessStreamRequest>,
     ) -> Result<Response<Self::GetSubProcessStreamStream>, Status> {
-        let requested_channel = request.get_ref().channel_type;
-        let requested_pid = request.get_ref().process_id;
+        let channel = LogChannelType::from_i32(request.get_ref().channel_type)
+            .ok_or(ObserveServiceError::InvalidLogChannelType {
+                channel_type: request.get_ref().channel_type,
+            })?;
+        let pid: i32 = request.get_ref().process_id;
 
-        println!("Requested Channel {requested_channel}");
-        println!("Requested Process ID {requested_pid}");
+        println!("Requested Channel {channel:?}");
+        println!("Requested Process ID {pid}");
 
-        let (_tx, rx) =
+        let mut log_consumer = {
+            let mut consumer_list = self.sub_process_consumer_list.lock().await;
+            consumer_list
+                .get_mut(&pid)
+                .ok_or(ObserveServiceError::NoChannelsForPid { pid })?
+                .get_mut(&channel)
+                .ok_or(ObserveServiceError::ChannelNotRegistered {
+                    pid,
+                    channel_type: channel,
+                })?
+                .clone()
+        }
+        .subscribe();
+
+        let (tx, rx) =
             mpsc::channel::<Result<GetSubProcessStreamResponse, Status>>(4);
+
+        // TODO: error handling. Warning: recursively logging if error message is also send to this grpc api endpoint
+        //  .. thus disabled logging here.
+        let _ignored = tokio::spawn(async move {
+            // Log consumer will error if:
+            //  the producer is closed (no more logs)
+            //  the receiver is lagging
+            while let Ok(log_item) = log_consumer.recv().await {
+                let resp = GetSubProcessStreamResponse { item: Some(log_item) };
+                if tx.send(Ok(resp)).await.is_err() {
+                    // receiver is gone
+                    break;
+                }
+            }
+        });
 
         Ok(Response::new(ReceiverStream::new(rx)))
     }
@@ -203,5 +284,118 @@ impl observe_service_server::ObserveService for ObserveService {
             )
             .await,
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use proto::observe::LogChannelType;
+
+    use crate::logging::log_channel::LogChannel;
+
+    use super::ObserveService;
+
+    #[tokio::test]
+    async fn test_register_sub_process_channel_success() {
+        let svc = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("auraed"))),
+            None,
+        );
+        assert!(svc
+            .register_sub_process_channel(
+                42,
+                LogChannelType::Stdout,
+                LogChannel::new(String::from("foo"))
+            )
+            .await
+            .is_ok());
+
+        svc.sub_process_consumer_list.lock().await.clear();
+    }
+
+    #[tokio::test]
+    async fn test_register_sub_process_channel_duplicate_error() {
+        let svc = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("auraed"))),
+            None,
+        );
+        assert!(svc
+            .register_sub_process_channel(
+                42,
+                LogChannelType::Stdout,
+                LogChannel::new(String::from("foo"))
+            )
+            .await
+            .is_ok());
+        assert!(svc
+            .register_sub_process_channel(
+                42,
+                LogChannelType::Stdout,
+                LogChannel::new(String::from("bar"))
+            )
+            .await
+            .is_err());
+
+        svc.sub_process_consumer_list.lock().await.clear();
+    }
+
+    #[tokio::test]
+    async fn test_unregister_sub_process_channel_success() {
+        let svc = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("auraed"))),
+            None,
+        );
+        assert!(svc
+            .register_sub_process_channel(
+                42,
+                LogChannelType::Stdout,
+                LogChannel::new(String::from("foo"))
+            )
+            .await
+            .is_ok());
+        assert!(svc
+            .unregister_sub_process_channel(42, LogChannelType::Stdout)
+            .await
+            .is_ok());
+
+        svc.sub_process_consumer_list.lock().await.clear();
+    }
+
+    #[tokio::test]
+    async fn test_unregister_sub_process_channel_no_pid_error() {
+        let svc = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("auraed"))),
+            None,
+        );
+        assert!(svc
+            .unregister_sub_process_channel(42, LogChannelType::Stdout)
+            .await
+            .is_err());
+
+        svc.sub_process_consumer_list.lock().await.clear();
+    }
+
+    #[tokio::test]
+    async fn test_unregister_sub_process_channel_no_channel_type_error() {
+        let svc = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("auraed"))),
+            None,
+        );
+        assert!(svc
+            .register_sub_process_channel(
+                42,
+                LogChannelType::Stdout,
+                LogChannel::new(String::from("foo"))
+            )
+            .await
+            .is_ok());
+        assert!(svc
+            .unregister_sub_process_channel(42, LogChannelType::Stderr)
+            .await
+            .is_err());
+
+        svc.sub_process_consumer_list.lock().await.clear();
     }
 }
