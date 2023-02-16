@@ -215,15 +215,17 @@ pub async fn run(
             info!("Loading eBPF probes");
 
             let mut bpf_handle = match BpfHandle::load() {
-                Ok(bpf) => Some(bpf),
+                Ok(bpf_handle) => Some(bpf_handle),
                 Err(e) => {
                     warn!("eBPF: Cannot load probes: {e}");
                     None
                 }
             };
 
-            let posix_signals_listener = if let Some(bpf) = &mut bpf {
-                let posix_signals_listener = match bpf.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, _>() {
+            let posix_signals_listener = if let Some(bpf_handle) =
+                &mut bpf_handle
+            {
+                let posix_signals_listener = match bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, _>() {
                     Ok(x) => Some(x),
                     Err(e) => {
                         warn!("eBPF: Skipping SignalSignalGenerateTracepointProgram due to {e}");
