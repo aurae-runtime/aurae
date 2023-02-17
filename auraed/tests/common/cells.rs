@@ -79,7 +79,7 @@ impl ExecutableBuilder {
     pub fn new() -> Self {
         Self {
             name: format!("ae-sleeper-{}", uuid::Uuid::new_v4()),
-            command: "sleep 400".to_string(),
+            command: "sleep 5".to_string(),
             description: String::from("description"),
         }
     }

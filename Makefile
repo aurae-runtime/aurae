@@ -190,7 +190,7 @@ $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
 
 .PHONY: $(1)-test-watch
 $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
-	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored
+	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
 $(1)-build: musl $(GEN_RS) $(GEN_TS)
