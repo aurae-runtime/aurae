@@ -28,7 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-#![warn(clippy::unwrap_used)]
 // Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
 #![warn(future_incompatible, nonstandard_style, unused)]
 #![warn(
@@ -39,15 +38,16 @@
     unused_comparisons,
     while_true
 )]
-#![warn(missing_debug_implementations,
+#![warn(
+    missing_debug_implementations,
     // TODO: missing_docs,
     trivial_casts,
     trivial_numeric_casts,
     unused_extern_crates,
     unused_import_braces,
-    unused_qualifications,
     unused_results
 )]
+#![warn(clippy::unwrap_used)]
 
 use auraed::{prep_oci_spec_for_spawn, run, AuraedRuntime};
 use clap::{Parser, Subcommand};
@@ -146,31 +146,39 @@ async fn handle_default(options: AuraedOptions) -> i32 {
     info!("Starting Aurae Daemon Runtime");
     info!("Aurae Daemon is pid {}", std::process::id());
 
-    let mut runtime = AuraedRuntime::default();
+    let AuraedOptions {
+        server_crt,
+        server_key,
+        ca_crt,
+        socket,
+        runtime_dir,
+        library_dir,
+        verbose,
+        nested,
+        subcmd: _,
+    } = options;
 
-    if let Some(ca_cert) = options.ca_crt {
-        runtime.ca_crt = PathBuf::from(ca_cert);
-    }
+    let AuraedRuntime {
+        ca_crt: default_ca_crt,
+        server_crt: default_server_crt,
+        server_key: default_server_key,
+        runtime_dir: default_runtime_dir,
+        library_dir: default_library_dir,
+    } = AuraedRuntime::default();
 
-    if let Some(server_crt) = options.server_crt {
-        runtime.server_crt = PathBuf::from(server_crt);
-    }
+    let runtime = AuraedRuntime {
+        ca_crt: ca_crt.map(PathBuf::from).unwrap_or(default_ca_crt),
+        server_crt: server_crt.map(PathBuf::from).unwrap_or(default_server_crt),
+        server_key: server_key.map(PathBuf::from).unwrap_or(default_server_key),
+        runtime_dir: runtime_dir
+            .map(PathBuf::from)
+            .unwrap_or(default_runtime_dir),
+        library_dir: library_dir
+            .map(PathBuf::from)
+            .unwrap_or(default_library_dir),
+    };
 
-    if let Some(server_key) = options.server_key {
-        runtime.server_key = PathBuf::from(server_key);
-    }
-
-    if let Some(runtime_dir) = options.runtime_dir {
-        runtime.runtime_dir = PathBuf::from(runtime_dir);
-    }
-
-    if let Some(library_dir) = options.library_dir {
-        runtime.library_dir = PathBuf::from(library_dir);
-    }
-
-    if let Err(e) =
-        run(runtime, options.socket, options.verbose, options.nested).await
-    {
+    if let Err(e) = run(runtime, socket, verbose, nested).await {
         error!("{:?}", e);
         EXIT_ERROR
     } else {
