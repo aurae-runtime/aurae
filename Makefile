@@ -197,7 +197,7 @@ $(1)-build: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1)
 
 .PHONY: $(1)-build-release
-$(1)-build-release: musl ebpf-release $(GEN_RS) $(GEN_TS)
+$(1)-build-release: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1) --release
 
 .PHONY: $(1)-debug
