@@ -149,6 +149,7 @@ dependencies = [
  "clone3",
  "fancy-regex",
  "futures",
+ "futures-util",
  "ipnetwork",
  "iter_tools",
  "lazy_static",
@@ -161,6 +162,7 @@ dependencies = [
  "nix 0.25.1",
  "oci-spec 0.5.8",
  "once_cell",
+ "pretty_assertions",
  "procfs",
  "proto",
  "rtnetlink",
@@ -910,19 +912,6 @@ dependencies = [
  "swc_ecma_ast",
  "swc_ecma_parser",
  "text_lines",
-]
-
-[[package]]
-name = "e2e-tests"
-version = "0.0.0"
-dependencies = [
- "client",
- "futures-util",
- "pretty_assertions",
- "proto",
- "tokio",
- "tonic",
- "uuid",
 ]
 
 [[package]]
