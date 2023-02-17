@@ -65,7 +65,7 @@ fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
         }
     };
 
-    let pid: u32 = unsafe {
+    let pid: i32 = unsafe {
         match ctx.read_at(PID_OFFSET) {
             Ok(s) => s,
             Err(errn) => return Err(errn as u32),
