@@ -153,19 +153,19 @@ async fn handle_default(options: AuraedOptions) -> i32 {
     }
 
     if let Some(server_crt) = options.server_crt {
-        runtime.ca_crt = PathBuf::from(server_crt);
+        runtime.server_crt = PathBuf::from(server_crt);
     }
 
     if let Some(server_key) = options.server_key {
-        runtime.ca_crt = PathBuf::from(server_key);
+        runtime.server_key = PathBuf::from(server_key);
     }
 
     if let Some(runtime_dir) = options.runtime_dir {
-        runtime.ca_crt = PathBuf::from(runtime_dir);
+        runtime.runtime_dir = PathBuf::from(runtime_dir);
     }
 
     if let Some(library_dir) = options.library_dir {
-        runtime.ca_crt = PathBuf::from(library_dir);
+        runtime.library_dir = PathBuf::from(library_dir);
     }
 
     if let Err(e) =
