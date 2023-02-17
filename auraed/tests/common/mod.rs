@@ -56,7 +56,6 @@ async fn run_auraed() -> Client {
 
     // TODO: using "~/.aurae/pki/ca.crt" errors with file not found (confirmed it exists)
     //   even though that is the default in default.config.toml in auraescript.
-    //   This may have been fixed in #414
     let client_config = AuraeConfig {
         auth: AuthConfig {
             ca_crt: "/etc/aurae/pki/ca.crt".to_string(),
