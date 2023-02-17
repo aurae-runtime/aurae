@@ -90,11 +90,13 @@ prcheck: build lint test-all docs docs-lint ## Meant to mimic the GHA checks (in
 # Setup Commands
 
 .PHONY: pki
-pki: certs ## Alias for certs
+pki: install-certs ## Alias for install-certs
 .PHONY: certs
 certs: clean-certs ## Generate x509 mTLS certs in /pki directory
 	mkdir -p pki
 	./hack/certgen
+.PHONY: install-certs
+install-certs: certs ## Install certs in /etc/aurae
 ifeq ($(uid), 0)
 	mkdir -p /etc/aurae/pki
 	cp -v pki/* /etc/aurae/pki
@@ -105,7 +107,7 @@ endif
 	@echo "Install PKI Auth Material [/etc/aurae]"
 
 .PHONY: config
-config: ## Set up default config
+config: certs ## Set up default config
 	mkdir -p $(HOME)/.aurae
 	cp -v auraescript/default.config.toml $(HOME)/.aurae/config
 	sed -i 's|~|$(HOME)|g' $(HOME)/.aurae/config
