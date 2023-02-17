@@ -322,11 +322,11 @@ spawn: ## Spawn the current auraed binary and start it in a container
 	./hack/spawn
 
 .PHONY: busybox
-busybox: ## Creat a "busybox" OCI bundle in target
+busybox: ## Create a "busybox" OCI bundle in target
 	./hack/oci-busybox
 
 .PHONY: alpine
-alpine: ## Creat an "alpine" OCI bundle in target
+alpine: ## Create an "alpine" OCI bundle in target
 	./hack/oci-alpine
 
 #------------------------------------------------------------------------------#
