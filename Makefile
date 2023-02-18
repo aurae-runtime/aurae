@@ -188,9 +188,13 @@ $(1)-test: musl $(GEN_RS) $(GEN_TS)
 $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
 	sudo -E $(cargo) test $(2) -p $(1) -- --include-ignored
 
+.PHONY: $(1)-test-integration
+$(1)-test-integration: musl $(GEN_RS) $(GEN_TS)
+	sudo -E $(cargo) test $(2) -p $(1) --test '*' -- --include-ignored
+
 .PHONY: $(1)-test-watch
 $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
-	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored
+	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
 $(1)-build: musl $(GEN_RS) $(GEN_TS)
@@ -240,20 +244,6 @@ libs-test-all: $(GEN_RS) $(GEN_TS)
 .PHONY: ebpf
 ebpf:
 	cd ebpf && make release install
-
-.PHONY: e2e-test
-e2e-test: ## Run the end-to-end tests for auraed
-	sudo -E auraed &
-	sleep 5
-	$(cargo) test --package e2e-tests --lib -- --exact --nocapture --test-threads=1
-	sudo pkill -9 auraed
-
-.PHONY: e2e-test-all
-e2e-test-all: ## Run all end-to-end tests for auraed (includes ignored tests)
-	sudo -E auraed &
-	sleep 5
-	$(cargo) test --package e2e-tests --lib -- --exact --nocapture --test-threads=1 --include-ignored
-	sudo pkill -9 auraed
 
 #------------------------------------------------------------------------------#
 

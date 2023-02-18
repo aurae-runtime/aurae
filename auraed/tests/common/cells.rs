@@ -1,9 +1,16 @@
-use proto::{
-    cells::{
-        Cell, CellServiceAllocateRequest, CellServiceStartRequest, Executable,
-    },
-    observe::{GetPosixSignalsStreamRequest, Workload, WorkloadType},
+#![allow(unused)]
+
+use proto::cells::{
+    Cell, CellServiceAllocateRequest, CellServiceStartRequest, Executable,
 };
+
+fn generate_cell_name(parent_name: Option<&str>) -> String {
+    if let Some(parent_name) = parent_name {
+        format!("{parent_name}/ae-e2e-{}", uuid::Uuid::new_v4())
+    } else {
+        format!("ae-e2e-{}", uuid::Uuid::new_v4())
+    }
+}
 
 struct CellBuilder {
     parent: Option<String>,
@@ -15,25 +22,18 @@ impl CellBuilder {
         Self { parent: None, isolate_process: false }
     }
 
-    pub fn parent_cell_name(
-        &mut self,
-        parent_cell_name: String,
-    ) -> &CellBuilder {
+    pub fn parent_cell_name(&mut self, parent_cell_name: String) -> &mut Self {
         self.parent = Some(parent_cell_name);
         self
     }
 
-    pub fn isolate_process(&mut self) -> &CellBuilder {
+    pub fn isolate_process(&mut self) -> &mut Self {
         self.isolate_process = true;
         self
     }
 
     pub fn build(&self) -> Cell {
-        let cell_name = if let Some(parent) = &self.parent {
-            format!("{}/ae-e2e-{}", parent, uuid::Uuid::new_v4())
-        } else {
-            format!("ae-e2e-{}", uuid::Uuid::new_v4())
-        };
+        let cell_name = generate_cell_name(self.parent.as_deref());
         Cell {
             name: cell_name,
             cpu: None,
@@ -45,7 +45,7 @@ impl CellBuilder {
     }
 }
 
-pub(crate) struct CellServiceAllocateRequestBuilder {
+pub struct CellServiceAllocateRequestBuilder {
     cell_builder: CellBuilder,
 }
 
@@ -54,16 +54,13 @@ impl CellServiceAllocateRequestBuilder {
         Self { cell_builder: CellBuilder::new() }
     }
 
-    pub fn parent_cell_name(
-        &mut self,
-        parent_cell_name: String,
-    ) -> &CellServiceAllocateRequestBuilder {
-        _ = self.cell_builder.parent_cell_name(parent_cell_name);
+    pub fn parent_cell_name(&mut self, parent_cell_name: String) -> &mut Self {
+        let _ = self.cell_builder.parent_cell_name(parent_cell_name);
         self
     }
 
-    pub fn isolate_process(&mut self) -> &CellServiceAllocateRequestBuilder {
-        _ = self.cell_builder.isolate_process();
+    pub fn isolate_process(&mut self) -> &mut Self {
+        let _ = self.cell_builder.isolate_process();
         self
     }
 
@@ -87,7 +84,7 @@ impl ExecutableBuilder {
         }
     }
 
-    pub fn executable_name(&mut self, name: String) -> &Self {
+    pub fn executable_name(&mut self, name: String) -> &mut Self {
         self.name = name;
         self
     }
@@ -117,7 +114,7 @@ impl CellServiceStartRequestBuilder {
     }
 
     pub fn executable_name(&mut self, name: String) -> &mut Self {
-        _ = self.executable_builder.executable_name(name);
+        let _ = self.executable_builder.executable_name(name);
         self
     }
 
@@ -127,30 +124,5 @@ impl CellServiceStartRequestBuilder {
             cell_name: self.cell_name.clone(),
             executable: Some(self.executable_builder.build()),
         }
-    }
-}
-
-pub(crate) struct GetPosixSignalsStreamRequestBuilder {
-    workload: Option<Workload>,
-}
-
-impl GetPosixSignalsStreamRequestBuilder {
-    pub fn new() -> Self {
-        Self { workload: None }
-    }
-
-    pub fn cell_workload(
-        &mut self,
-        name: String,
-    ) -> &GetPosixSignalsStreamRequestBuilder {
-        self.workload = Some(Workload {
-            workload_type: WorkloadType::Cell.into(),
-            id: name,
-        });
-        self
-    }
-
-    pub fn build(&self) -> GetPosixSignalsStreamRequest {
-        GetPosixSignalsStreamRequest { workload: self.workload.clone() }
     }
 }
