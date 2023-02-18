@@ -250,7 +250,7 @@ pub struct ValidatedCellServiceStopRequest {
 
 impl CellServiceStopRequestTypeValidator for CellServiceStopRequestValidator {}
 
-#[derive(ValidatedType, Debug)]
+#[derive(ValidatedType, Debug, PartialEq, Eq)]
 pub struct ValidatedExecutable {
     #[field_type(String)]
     #[validate(create)]
@@ -292,5 +292,106 @@ impl From<ValidatedExecutable> for super::executables::ExecutableSpec {
         assert_eq!(c.as_std().get_args().len(), 2);
 
         Self { name, command: c, description }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cell_type_empty_cpu_valid() {
+        let validated =
+            CellValidator::validate_cpu(None, "field", Some("parent"));
+        assert!(validated.is_ok());
+        assert!(validated.unwrap().is_none());
+    }
+
+    #[test]
+    fn test_cell_type_cpu_valid() {
+        let validated = CellValidator::validate_cpu(
+            Some(CpuController { weight: Some(1000), max: None }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_ok());
+        let inner = validated.unwrap();
+        assert!(inner.is_some());
+        let controller = inner.unwrap();
+        assert_eq!(controller.weight, Some(Weight::new(1000)));
+        assert_eq!(controller.max, None);
+    }
+
+    #[test]
+    fn test_cell_type_cpuset_valid() {}
+
+    #[test]
+    fn test_cell_type_memory_valid() {}
+
+    #[test]
+    fn test_cell_service_start_request_empty_executable() {
+        let validated = CellServiceStartRequestValidator::validate_executable(
+            None,
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
+
+    #[test]
+    fn test_cell_service_start_request_empty_command() {
+        let validated = CellServiceStartRequestValidator::validate_executable(
+            Some(Executable {
+                command: String::from(""),
+                name: String::from("name"),
+                description: String::from("description"),
+            }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
+
+    #[test]
+    fn test_cell_service_start_request_valid() {
+        let validated = CellServiceStartRequestValidator::validate_executable(
+            Some(Executable {
+                command: String::from("command"),
+                name: String::from("name"),
+                description: String::from("description"),
+            }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_ok());
+        assert_eq!(
+            validated.unwrap(),
+            ValidatedExecutable {
+                name: ExecutableName::new(String::from("name")),
+                description: String::from("description"),
+                command: OsString::from("command"),
+            },
+        );
+    }
+
+    #[test]
+    fn test_executable_empty_command() {
+        assert!(ExecutableValidator::validate_command(
+            String::from(""),
+            "field",
+            Some("parent")
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn test_executable_valid() {
+        let validated = ExecutableValidator::validate_command(
+            String::from("command"),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_ok());
+        assert_eq!(validated.unwrap(), OsString::from("command"));
     }
 }
