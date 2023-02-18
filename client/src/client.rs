@@ -92,14 +92,12 @@ impl Client {
         // connect as a UNIX socket (assume it's a file path).
         let channel = if let Ok(sockaddr) = system.socket.parse::<SocketAddr>()
         {
-            println!("connecting to {sockaddr:?}");
             endpoint
                 .connect_with_connector(service_fn(move |_: Uri| {
                     TcpStream::connect(sockaddr)
                 }))
                 .await
         } else {
-            println!("connecting to {}", &system.socket);
             endpoint
                 .connect_with_connector(service_fn(move |_: Uri| {
                     UnixStream::connect(system.socket.clone())
