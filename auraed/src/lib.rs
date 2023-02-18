@@ -61,21 +61,19 @@
 )]
 #![warn(clippy::unwrap_used)]
 
+use crate::ebpf::{
+    BpfHandle, SchedProcessForkTracepointProgram,
+    SignalSignalGenerateTracepointProgram,
+};
 use crate::{
-    cells::CellService,
-    cri::oci::AuraeOCIBuilder,
-    cri::runtime_service::RuntimeService,
-    discovery::DiscoveryService,
-    ebpf::{
-        tracepoint_programs::SignalSignalGenerateTracepointProgram, BpfHandle,
-    },
-    init::Context as AuraeContext,
-    init::SocketStream,
-    logging::log_channel::LogChannel,
-    observe::ObserveService,
+    cells::CellService, cri::oci::AuraeOCIBuilder,
+    cri::runtime_service::RuntimeService, discovery::DiscoveryService,
+    init::Context as AuraeContext, init::SocketStream,
+    logging::log_channel::LogChannel, observe::ObserveService,
     spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
+use aurae_ebpf_shared::{ForkedProcess, Signal};
 use once_cell::sync::OnceCell;
 use proto::{
     cells::cell_service_server::CellServiceServer,
@@ -205,39 +203,25 @@ pub async fn run(
         })?;
 
         // Install eBPF probes in the host Aurae daemon
-        let (_bpf_handle, posix_signals_listener) = if context
-            == AuraeContext::Cell
-            || context == AuraeContext::Container
-        {
-            (None, None)
-        } else {
-            // TODO: Add flags/options to "opt-out" of the various BPF probes
-            info!("Loading eBPF probes");
-
-            let mut bpf_handle = match BpfHandle::load() {
-                Ok(bpf_handle) => Some(bpf_handle),
-                Err(e) => {
-                    warn!("eBPF: Cannot load probes: {e}");
-                    None
-                }
-            };
-
-            let posix_signals_listener = if let Some(bpf_handle) =
-                &mut bpf_handle
+        let (_bpf_handle, posix_signals_listener, _process_fork_listener) =
+            if context == AuraeContext::Cell
+                || context == AuraeContext::Container
             {
-                match bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, _>() {
-                    Ok(x) => Some(x),
-                    Err(e) => {
-                        warn!("eBPF: Skipping SignalSignalGenerateTracepointProgram due to {e}");
-                        None
-                    }
-                }
+                (None, None, None)
             } else {
-                None
-            };
+                // TODO: Add flags/options to "opt-out" of the various BPF probes
+                info!("Loading eBPF probes");
 
-            (bpf_handle, posix_signals_listener)
-        };
+                let mut bpf_handle = BpfHandle::new();
+                let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok();
+                let process_fork_listener = bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>()?;
+
+                (
+                    Some(bpf_handle),
+                    posix_signals_listener,
+                    Some(process_fork_listener),
+                )
+            };
 
         // Build gRPC Services
         let (mut health_reporter, health_service) =

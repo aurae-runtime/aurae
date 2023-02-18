@@ -192,7 +192,7 @@ $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
 
 .PHONY: $(1)-test-integration
 $(1)-test-integration: musl $(GEN_RS) $(GEN_TS)
-	sudo -E $(cargo) test $(2) -p $(1) --test '*' -- --include-ignored
+	sudo -E $(cargo) test $(2) -p $(1) --test '*' -- --include-ignored --test-threads=1
 
 .PHONY: $(1)-test-watch
 $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)

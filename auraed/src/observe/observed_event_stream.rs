@@ -31,13 +31,12 @@ use proto::observe::WorkloadType;
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+use crate::ebpf::tracepoint::PerfEventBroadcast;
 use tokio::sync::{
     mpsc::{self, Receiver},
     Mutex,
 };
 use tonic::Status;
-
-use crate::ebpf::tracepoint_programs::PerfEventBroadcast;
 
 use super::cgroup_cache::CgroupCache;
 

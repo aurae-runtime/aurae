@@ -29,38 +29,44 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    tracepoint_programs::{PerfEventBroadcast, TracepointProgram},
+    tracepoint::{PerfEventBroadcast, TracepointProgram},
     BpfFile,
 };
 use aya::Bpf;
+use tracing::warn;
 
 // This is critical to maintain the memory presence of the
 // loaded bpf object.
 // This specific BPF object needs to persist up to lib.rs such that
 // the rest of the program can access this scope.
-pub struct BpfHandle(Bpf);
+pub struct BpfHandle(Vec<Bpf>);
 
 impl BpfHandle {
-    pub fn load() -> Result<Self, anyhow::Error> {
-        let bpf = InstrumentTracepointSignalSignalGenerate::load()?;
-        Ok(Self(bpf))
+    pub fn new() -> Self {
+        Self(Vec::new())
     }
 
     pub fn load_and_attach_tracepoint_program<TProgram, TEvent>(
         &mut self,
     ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
     where
-        TProgram: TracepointProgram<TEvent>,
+        TProgram: BpfFile + TracepointProgram<TEvent>,
         TEvent: Clone + Send + 'static,
     {
-        TProgram::load_and_attach(&mut self.0)
+        match TProgram::load() {
+            Ok(mut bpf_handle) => {
+                let perf_events = TProgram::load_and_attach(&mut bpf_handle);
+                self.0.push(bpf_handle);
+                perf_events
+            }
+            Err(e) => {
+                warn!(
+                    "Error loading tracepoint program {}: {}",
+                    TProgram::PROGRAM_NAME,
+                    e
+                );
+                Err(e.into())
+            }
+        }
     }
-}
-
-struct InstrumentTracepointSignalSignalGenerate;
-impl BpfFile for InstrumentTracepointSignalSignalGenerate {
-    /// Definition of the Aurae eBPF probe to capture all generated (and valid)
-    /// kernel signals at runtime.
-    const OBJ_NAME: &'static str =
-        "instrument-tracepoint-signal-signal-generate";
 }

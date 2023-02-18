@@ -30,7 +30,9 @@
 
 use bpf_file::BpfFile;
 pub use bpf_handle::BpfHandle;
+pub use tracepoint::SchedProcessForkTracepointProgram;
+pub use tracepoint::SignalSignalGenerateTracepointProgram;
 
 mod bpf_file;
 mod bpf_handle;
-pub mod tracepoint_programs;
+pub(crate) mod tracepoint;

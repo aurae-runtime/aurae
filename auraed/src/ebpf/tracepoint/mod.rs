@@ -28,9 +28,11 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_ebpf_shared::Signal;
+use aurae_ebpf_shared::{ForkedProcess, Signal};
 pub use perf_event_broadcast::PerfEventBroadcast;
 pub use tracepoint_program::TracepointProgram;
+
+use super::bpf_file::BpfFile;
 
 mod perf_event_broadcast;
 mod tracepoint_program;
@@ -41,4 +43,26 @@ impl TracepointProgram<Signal> for SignalSignalGenerateTracepointProgram {
     const CATEGORY: &'static str = "signal";
     const EVENT: &'static str = "signal_generate";
     const PERF_BUFFER: &'static str = "SIGNALS";
+}
+
+pub struct SchedProcessForkTracepointProgram;
+impl TracepointProgram<ForkedProcess> for SchedProcessForkTracepointProgram {
+    const PROGRAM_NAME: &'static str = "sched_process_fork";
+    const CATEGORY: &'static str = "sched";
+    const EVENT: &'static str = "sched_process_fork";
+    const PERF_BUFFER: &'static str = "FORKED_PROCESSES";
+}
+
+impl BpfFile for SignalSignalGenerateTracepointProgram {
+    /// Definition of the Aurae eBPF probe to capture all generated (and valid)
+    /// kernel signals at runtime.
+    const OBJ_NAME: &'static str =
+        "instrument-tracepoint-signal-signal-generate";
+}
+
+impl BpfFile for SchedProcessForkTracepointProgram {
+    /// Definition of the Aurae eBPF probe to capture all generated (and valid)
+    /// kernel signals at runtime.
+    const OBJ_NAME: &'static str =
+        "instrument-tracepoint-sched-sched-process-fork";
 }

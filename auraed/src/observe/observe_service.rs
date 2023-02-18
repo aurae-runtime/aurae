@@ -34,10 +34,8 @@
 use super::cgroup_cache;
 use super::error::ObserveServiceError;
 use super::observed_event_stream::ObservedEventStream;
-use crate::{
-    ebpf::tracepoint_programs::PerfEventBroadcast,
-    logging::log_channel::LogChannel,
-};
+use crate::ebpf::tracepoint::PerfEventBroadcast;
+use crate::logging::log_channel::LogChannel;
 use aurae_ebpf_shared::Signal;
 use cgroup_cache::CgroupCache;
 use proto::observe::{
