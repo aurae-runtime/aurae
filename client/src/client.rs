@@ -33,10 +33,11 @@
 //! Manages authenticating with remote Aurae instances, as well as searching
 //! the local filesystem for configuration and authentication material.
 
+use std::net::SocketAddr;
+
 use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
-use std::str::FromStr;
 use thiserror::Error;
-use tokio::net::UnixStream;
+use tokio::net::{TcpStream, UnixStream};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};
 use tower::service_fn;
 
@@ -79,25 +80,32 @@ impl Client {
             cert_material;
 
         let tls_config = ClientTlsConfig::new()
-            .domain_name("server.unsafe.aurae.io") // TODO: Does this need to be configurable?
+            // TODO: get this from the config or the cert information somehow
+            .domain_name("server.unsafe.aurae.io")
             .ca_certificate(Certificate::from_pem(server_root_ca_cert))
             .identity(Identity::from_pem(client_cert, client_key));
 
-        // If the system socket looks like a URI, bind to it directly.  Otherwise, connect as a
-        // UNIX socket (assume it's a file path).
-        let channel = if let Ok(uri) = url::Url::parse(&system.socket) {
-            let uri = Uri::from_str(uri.as_str()).expect("valid uri");
-            Channel::builder(uri).tls_config(tls_config)?.connect().await
-        } else {
-            let socket = system.socket.clone();
-            Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
-                .tls_config(tls_config)?
+        let endpoint = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
+            .tls_config(tls_config)?;
+
+        // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
+        // connect as a UNIX socket (assume it's a file path).
+        let channel = if let Ok(sockaddr) = system.socket.parse::<SocketAddr>()
+        {
+            println!("connecting to {sockaddr:?}");
+            endpoint
                 .connect_with_connector(service_fn(move |_: Uri| {
-                    UnixStream::connect(socket.clone())
+                    TcpStream::connect(sockaddr)
+                }))
+                .await
+        } else {
+            println!("connecting to {}", &system.socket);
+            endpoint
+                .connect_with_connector(service_fn(move |_: Uri| {
+                    UnixStream::connect(system.socket.clone())
                 }))
                 .await
         }?;
-
         Ok(Self { channel, client_cert_details })
     }
 }
