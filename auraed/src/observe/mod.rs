@@ -33,5 +33,5 @@ pub(crate) use observe_service::ObserveService;
 
 mod cgroup_cache;
 mod error;
-mod nspid_cache;
 mod observe_service;
+mod proc_cache;

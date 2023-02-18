@@ -157,7 +157,7 @@ impl ObserveService {
         let _ignored = tokio::spawn(async move {
             while let Ok(signal) = posix_signals.recv().await {
                 if signal.signum == 9 {
-                    let p = Process::new(signal.pid as i32);
+                    let p = Process::new(signal.pid);
                     match p {
                         Ok(pr) => {
                             info!(

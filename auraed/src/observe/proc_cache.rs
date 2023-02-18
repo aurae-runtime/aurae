@@ -91,13 +91,10 @@ impl ProcCache {
         let cache_for_fork_event_processing = res.cache.clone();
         let _ignored = tokio::spawn(async move {
             while let Ok(e) = process_fork_rx.recv().await {
-                match proc_info.get_nspid(e.child_pid) {
-                    Some(nspid) => {
-                        let mut guard =
-                            cache_for_fork_event_processing.lock().await;
-                        _ = guard.insert(e.child_pid, nspid);
-                    }
-                    None => {}
+                if let Some(nspid) = proc_info.get_nspid(e.child_pid) {
+                    let mut guard =
+                        cache_for_fork_event_processing.lock().await;
+                    let _ = guard.insert(e.child_pid, nspid);
                 }
             }
         });
@@ -109,11 +106,6 @@ impl ProcCache {
             while let Ok(pid) = process_exit_rx.recv().await {
                 let mut guard =
                     eviction_queue_for_exit_event_processing.lock().await;
-                println!(
-                    "evicting\nnow{:?}\nevict_after{:?}",
-                    now(),
-                    evict_after
-                );
                 guard.push_back(Eviction {
                     pid,
                     evict_at: now().checked_add(evict_after).unwrap(),
@@ -135,10 +127,10 @@ impl ProcCache {
         let now = now();
         let mut queue_guard = self.eviction_queue.lock().await;
         let mut evict = Vec::with_capacity(64);
-        while let Some(v) = queue_guard.front().filter(|v| v.evict_at <= now) {
+        while let Some(_v) = queue_guard.front().filter(|v| v.evict_at <= now) {
             evict.push(queue_guard.pop_front().unwrap())
         }
-        drop(&queue_guard);
+        drop(queue_guard);
         let mut cache_guard = self.cache.lock().await;
         for e in evict {
             _ = cache_guard.remove(&e.pid);
@@ -157,7 +149,8 @@ impl ProcCache {
 mod test {
     use super::*;
     use crate::ebpf::tracepoint_programs::PerfEventBroadcast;
-    use crate::observe::nspid_cache::ForkedProcess;
+    use crate::observe::proc_cache::ForkedProcess;
+    use serial_test::serial;
     use tokio::sync::broadcast::{channel, Sender};
 
     struct TestProcessInfo {
@@ -188,6 +181,7 @@ mod test {
     }
 
     #[tokio::test]
+    #[serial]
     async fn must_create_cache_entry_for_a_new_processes() {
         let (cache, fork_tx, _) =
             cache_for_testing(Duration::from_secs(5), vec![(42, 2)]);
@@ -203,7 +197,9 @@ mod test {
     }
 
     #[tokio::test]
+    #[serial]
     async fn must_mark_entry_for_eviction_when_a_process_exits() {
+        mock_time::reset();
         let (cache, fork_tx, exit_tx) = cache_for_testing(
             Duration::from_secs(5),
             vec![(42, 2), (43, 3), (44, 4)],
@@ -235,7 +231,9 @@ mod test {
     }
 
     #[tokio::test]
+    #[serial]
     async fn must_evict_expired_entries_from_cache_on_get() {
+        mock_time::reset();
         let (cache, fork_tx, exit_tx) = cache_for_testing(
             Duration::from_secs(5),
             vec![(42, 2), (43, 3), (44, 4), (45, 5)],
@@ -326,5 +324,13 @@ mod mock_time {
             .lock()
             .unwrap();
         *guard = guard.checked_add(d).unwrap();
+    }
+
+    pub fn reset() {
+        let mut guard = TIME
+            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
+            .lock()
+            .unwrap();
+        *guard = SystemTime::UNIX_EPOCH;
     }
 }
