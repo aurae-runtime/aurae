@@ -33,13 +33,13 @@
 
 use super::cgroup_cache;
 use super::error::ObserveServiceError;
+use super::observed_event_stream::ObservedEventStream;
 use crate::{
     ebpf::tracepoint_programs::PerfEventBroadcast,
     logging::log_channel::LogChannel,
 };
 use aurae_ebpf_shared::Signal;
 use cgroup_cache::CgroupCache;
-use procfs::process::Process;
 use proto::observe::{
     observe_service_server, GetAuraeDaemonLogStreamRequest,
     GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
@@ -136,65 +136,25 @@ impl ObserveService {
         &self,
         filter: Option<(WorkloadType, String)>,
     ) -> ReceiverStream<Result<GetPosixSignalsStreamResponse, Status>> {
-        let (tx, rx) =
-            mpsc::channel::<Result<GetPosixSignalsStreamResponse, Status>>(4);
+        //TODO map err -> gRPC error status
+        let events = ObservedEventStream::new(
+            self.posix_signals.as_ref().expect("signals"),
+        )
+        .filter_by_workload(filter)
+        .subscribe(map_get_posix_signals_stream_response);
 
-        // TODO: this panics if eBPF program hasn't been loaded
-        let mut posix_signals = self
-            .posix_signals
-            .as_ref()
-            .expect("posix signal perf event listener")
-            .subscribe();
+        ReceiverStream::new(events)
+    }
+}
 
-        let (match_cgroup_path, cgroup_path) = match filter {
-            Some((WorkloadType::Cell, id)) => {
-                (true, format!("/sys/fs/cgroup/{id}/_"))
-            }
-            _ => (false, String::new()),
-        };
-
-        let thread_cache = self.cgroup_cache.clone();
-        let _ignored = tokio::spawn(async move {
-            while let Ok(signal) = posix_signals.recv().await {
-                if signal.signum == 9 {
-                    let p = Process::new(signal.pid);
-                    match p {
-                        Ok(pr) => {
-                            info!(
-                                "pid: {}, nspid {:#?}",
-                                pr.pid,
-                                pr.status().expect("status").nspid
-                            );
-                        }
-                        Err(_) => {
-                            info!("PROCESS NOT FOUND {}", signal.pid);
-                        }
-                    }
-                }
-
-                let accept = !match_cgroup_path || {
-                    let mut cache = thread_cache.lock().await;
-                    cache
-                        .get(signal.cgroup_id)
-                        .map(|path| path.eq_ignore_ascii_case(&cgroup_path))
-                        .unwrap_or(false)
-                };
-                if accept {
-                    let resp = GetPosixSignalsStreamResponse {
-                        signal: Some(PosixSignal {
-                            signal: signal.signum,
-                            process_id: signal.pid,
-                        }),
-                    };
-                    if tx.send(Ok(resp)).await.is_err() {
-                        // receiver is gone
-                        break;
-                    }
-                }
-            }
-        });
-
-        ReceiverStream::new(rx)
+fn map_get_posix_signals_stream_response(
+    signal: Signal,
+) -> GetPosixSignalsStreamResponse {
+    GetPosixSignalsStreamResponse {
+        signal: Some(PosixSignal {
+            signal: signal.signum,
+            process_id: signal.pid,
+        }),
     }
 }
 
