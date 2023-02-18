@@ -32,12 +32,14 @@
 #![allow(dead_code)]
 
 use super::cgroup_cache;
+use super::error::ObserveServiceError;
 use crate::{
     ebpf::tracepoint_programs::PerfEventBroadcast,
     logging::log_channel::LogChannel,
 };
 use aurae_ebpf_shared::Signal;
 use cgroup_cache::CgroupCache;
+use procfs::process::Process;
 use proto::observe::{
     observe_service_server, GetAuraeDaemonLogStreamRequest,
     GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
@@ -52,9 +54,6 @@ use tokio::sync::{broadcast::Receiver, Mutex};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 use tracing::info;
-use super::cgroup_cache;
-use super::error::ObserveServiceError;
-use procfs::process::Process;
 
 #[derive(Debug, Clone)]
 pub struct ObserveService {
@@ -307,13 +306,10 @@ impl observe_service_server::ObserveService for ObserveService {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
-    use proto::observe::LogChannelType;
-
-    use crate::logging::log_channel::LogChannel;
-
     use super::ObserveService;
+    use crate::logging::log_channel::LogChannel;
+    use proto::observe::LogChannelType;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn test_register_sub_process_channel_success() {

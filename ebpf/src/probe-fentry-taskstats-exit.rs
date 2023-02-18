@@ -47,7 +47,6 @@ pub fn fentry_taskstats_exit(ctx: TracePointContext) -> u32 {
     unsafe {
         PROCESS_EXITS.output(&ctx, pid, 0);
     }
-
     0
 }
 
