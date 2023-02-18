@@ -7,9 +7,9 @@ use test_helpers::*;
 mod common;
 
 #[test_helpers_macros::shared_runtime_test]
-async fn cells_list_must_list_allocated_cells_recursively() {
-    skip_if_not_root!("test_list");
-    skip_if_seccomp!("test_list");
+async fn cells_list_must_list_deeply_nested_cells_recursively() {
+    skip_if_not_root!("cells_list_must_list_deeply_nested_cells_recursively");
+    skip_if_seccomp!("cells_list_must_list_deeply_nested_cells_recursively");
 
     let client = common::auraed_client().await;
 
