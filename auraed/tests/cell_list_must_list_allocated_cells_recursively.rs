@@ -51,7 +51,7 @@ async fn cells_list_must_list_allocated_cells_recursively() {
         .into_inner();
 
     // The expected response
-    let expected = CellServiceListResponse {
+    let mut expected = CellServiceListResponse {
         cells: vec![
             CellGraphNode {
                 cell: Some(Cell {
@@ -89,5 +89,9 @@ async fn cells_list_must_list_allocated_cells_recursively() {
     };
 
     // Assert that the actual response matches the expected
-    assert_eq!(list_response, expected);
+    if !list_response.eq(&expected) {
+        // HACK: since we only have 2 children, and they may come in any order, swap if needed.
+        expected.cells.swap(0, 1);
+        assert_eq!(list_response, expected);
+    }
 }
