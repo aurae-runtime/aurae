@@ -76,12 +76,18 @@ impl AuraeConfig {
         ];
 
         for path in search_paths {
-            if let Ok(config) = Self::parse_from_file(path) {
-                return Ok(config);
+            match Self::parse_from_file(path) {
+                Ok(config) => {
+                    return Ok(config);
+                }
+                Err(e) => {
+                    println!("warning: failed to parse config at {path}: {e}");
+                    continue;
+                }
             }
         }
 
-        Err(anyhow!("unable to find config file"))
+        Err(anyhow!("unable to find valid config file"))
     }
 
     /// Attempt to parse a config file into memory.
