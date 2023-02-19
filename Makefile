@@ -116,8 +116,8 @@ config: certs ## Set up default config
 
 .PHONY: musl
 musl: ## Add target for musl
-	rustup target list | grep -qc '$(uname_m)-unknown-linux-musl' || \
-	rustup target add $(uname_m)-unknow-linux-muslknown-linux-musl
+	rustup target list | grep -qc '$(uname_m)-unknown-linux-musl (installed)' || \
+	rustup target add $(uname_m)-unknow-linux-musl
 
 #------------------------------------------------------------------------------#
 
