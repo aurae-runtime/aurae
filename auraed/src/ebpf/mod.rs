@@ -37,6 +37,6 @@ pub use tracepoint::SignalSignalGenerateTracepointProgram;
 mod bpf_file;
 mod bpf_handle;
 pub(crate) mod kprobe;
+pub(crate) mod perf_buffer_reader;
 pub(crate) mod perf_event_broadcast;
-pub(crate) mod perf_event_reader;
 pub(crate) mod tracepoint;

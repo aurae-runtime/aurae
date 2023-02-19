@@ -29,8 +29,8 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    kprobe::KProbeProgram, perf_event_broadcast::PerfEventBroadcast,
-    perf_event_reader::PerfBufferReader, tracepoint::TracepointProgram,
+    kprobe::KProbeProgram, perf_buffer_reader::PerfBufferReader,
+    perf_event_broadcast::PerfEventBroadcast, tracepoint::TracepointProgram,
     BpfFile,
 };
 
@@ -59,8 +59,10 @@ impl BpfContext {
         match TProgram::load() {
             Ok(mut bpf_handle) => {
                 TProgram::load_and_attach(&mut bpf_handle)?;
-                let perf_events =
-                    TProgram::read(&mut bpf_handle, TProgram::PERF_BUFFER);
+                let perf_events = TProgram::read_from_perf_buffer(
+                    &mut bpf_handle,
+                    TProgram::PERF_BUFFER,
+                );
                 self.0.push(bpf_handle);
                 perf_events
             }
@@ -79,12 +81,16 @@ impl BpfContext {
         &mut self,
     ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
     where
-        TProgram: BpfFile + KProbeProgram<TEvent>,
+        TProgram: BpfFile + KProbeProgram<TEvent> + PerfBufferReader<TEvent>,
         TEvent: Clone + Send + 'static + std::fmt::Debug,
     {
         match TProgram::load() {
             Ok(mut bpf_handle) => {
-                let perf_events = TProgram::load_and_attach(&mut bpf_handle);
+                TProgram::load_and_attach(&mut bpf_handle)?;
+                let perf_events = TProgram::read_from_perf_buffer(
+                    &mut bpf_handle,
+                    TProgram::PERF_BUFFER,
+                );
                 self.0.push(bpf_handle);
                 perf_events
             }

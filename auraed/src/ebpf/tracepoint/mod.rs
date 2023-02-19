@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::bpf_file::BpfFile;
-use super::perf_event_reader::PerfBufferReader;
+use super::perf_buffer_reader::PerfBufferReader;
 pub use crate::ebpf::perf_event_broadcast::PerfEventBroadcast;
 use aurae_ebpf_shared::{ForkedProcess, Signal};
 pub use tracepoint_program::TracepointProgram;

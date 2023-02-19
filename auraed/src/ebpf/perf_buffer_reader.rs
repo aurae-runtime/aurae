@@ -45,7 +45,7 @@ use super::perf_event_broadcast::PerfEventBroadcast;
 const PER_CPU_BUFFER_SIZE_IN_PAGES: usize = 2;
 
 pub trait PerfBufferReader<T: Clone + Send + 'static> {
-    fn read(
+    fn read_from_perf_buffer(
         bpf: &mut Bpf,
         perf_buffer: &'static str,
     ) -> Result<PerfEventBroadcast<T>, anyhow::Error> {
@@ -123,7 +123,6 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
                     //   but this chooses performance over that possibility.
                     if per_cpu_tx.receiver_count() > 0 {
                         for buf in buffers.iter_mut().take(events.read) {
-                            error!("event intercepted");
                             let ptr = buf.as_ptr() as *const T;
                             let signal = unsafe { ptr.read_unaligned() };
                             // send only errors if there are no receivers,
@@ -138,8 +137,6 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
                 }
             });
         }
-
-        error!("created perf buffer reader!");
 
         Ok(PerfEventBroadcast::new(tx))
     }

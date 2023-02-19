@@ -214,14 +214,14 @@ pub async fn run(
             let mut bpf_handle = BpfContext::new();
             let process_fork_listener = bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>().ok();
             let process_exit_listener = bpf_handle.load_and_attach_kprobe_program::<TaskstatsExitKProbeProgram, ProcessExit>().ok();
-            let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>()?;
+            let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok();
 
             (
                 Some(bpf_handle),
                 (
                     process_fork_listener,
                     process_exit_listener,
-                    Some(posix_signals_listener),
+                    posix_signals_listener,
                 ),
             )
         };
