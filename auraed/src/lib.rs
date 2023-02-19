@@ -62,8 +62,8 @@
 #![warn(clippy::unwrap_used)]
 
 use crate::ebpf::{
-    BpfHandle, SchedProcessForkTracepointProgram,
-    SignalSignalGenerateTracepointProgram,
+    BpfContext, SchedProcessForkTracepointProgram,
+    SignalSignalGenerateTracepointProgram, TaskstatsExitFEntryProgram,
 };
 use crate::{
     cells::CellService, cri::oci::AuraeOCIBuilder,
@@ -73,7 +73,7 @@ use crate::{
     spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
-use aurae_ebpf_shared::{ForkedProcess, Signal};
+use aurae_ebpf_shared::{ForkedProcess, ProcessExit, Signal};
 use once_cell::sync::OnceCell;
 use proto::{
     cells::cell_service_server::CellServiceServer,
@@ -203,25 +203,31 @@ pub async fn run(
         })?;
 
         // Install eBPF probes in the host Aurae daemon
-        let (_bpf_handle, posix_signals_listener, _process_fork_listener) =
-            if context == AuraeContext::Cell
-                || context == AuraeContext::Container
-            {
-                (None, None, None)
-            } else {
-                // TODO: Add flags/options to "opt-out" of the various BPF probes
-                info!("Loading eBPF probes");
+        let (
+            _bpf_handle,
+            posix_signals_listener,
+            _process_fork_listener,
+            _process_exit_listener,
+        ) = if context == AuraeContext::Cell
+            || context == AuraeContext::Container
+        {
+            (None, None, None, None)
+        } else {
+            // TODO: Add flags/options to "opt-out" of the various BPF probes
+            info!("Loading eBPF probes");
 
-                let mut bpf_handle = BpfHandle::new();
-                let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok();
-                let process_fork_listener = bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>()?;
+            let mut bpf_handle = BpfContext::new();
+            let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok();
+            let process_fork_listener = bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>().ok();
+            let process_exit_listener = bpf_handle.load_and_attach_fentry_program::<TaskstatsExitFEntryProgram, ProcessExit>().ok();
 
-                (
-                    Some(bpf_handle),
-                    posix_signals_listener,
-                    Some(process_fork_listener),
-                )
-            };
+            (
+                Some(bpf_handle),
+                posix_signals_listener,
+                process_fork_listener,
+                process_exit_listener,
+            )
+        };
 
         // Build gRPC Services
         let (mut health_reporter, health_service) =

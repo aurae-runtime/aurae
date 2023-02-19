@@ -103,3 +103,5 @@ impl<'a, T: CgroupId + Clone + Send + 'static> ObservedEventStream<'a, T> {
         rx
     }
 }
+
+//TODO (jeroensoeters)  tests?!?!?

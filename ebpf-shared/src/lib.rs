@@ -24,3 +24,9 @@ pub struct ForkedProcess {
     pub parent_pid: u32,
     pub child_pid: u32,
 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ProcessExit {
+    pub pid: u32,
+}

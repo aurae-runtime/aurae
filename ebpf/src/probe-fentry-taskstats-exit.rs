@@ -22,30 +22,29 @@
 #![no_std]
 #![no_main]
 
-use aurae_ebpf_shared::ForkedProcess;
+use aurae_ebpf_shared::ProcessExit;
 use aya_bpf::helpers;
-use aya_bpf::macros::fentry;
+use aya_bpf::macros::kprobe;
 use aya_bpf::macros::map;
 use aya_bpf::maps::PerfEventArray;
-use aya_bpf::programs::TracePointContext;
+use aya_bpf::programs::ProbeContext;
 
 #[link_section = "license"]
 #[used]
 pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 
 #[map(name = "PROCESS_EXITS")]
-static mut PROCESS_EXITS: PerfEventArray<u32> =
-    PerfEventArray::<u32>::with_max_entries(1024, 0);
+static mut PROCESS_EXITS: PerfEventArray<ProcessExit> =
+    PerfEventArray::<ProcessExit>::with_max_entries(1024, 0);
 
-const PARENT_PID_OFFSET: usize = 8;
-const CHILD_PID_OFFSET: usize = 28;
-
-#[fentry(name = "fentry_taskstats_exit")]
-pub fn fentry_taskstats_exit(ctx: TracePointContext) -> u32 {
-    let pid = helpers::bpf_get_current_pid_tgid();
+#[kprobe(name = "fentry_taskstats_exit")]
+pub fn fentry_taskstats_exit(ctx: ProbeContext) -> u32 {
+    //let mut pid: u32 = 0;
+    let pid = helpers::bpf_get_current_pid_tgid() as u32;
+    let e = ProcessExit { pid };
 
     unsafe {
-        PROCESS_EXITS.output(&ctx, pid, 0);
+        PROCESS_EXITS.output(&ctx, &e, 0);
     }
     0
 }

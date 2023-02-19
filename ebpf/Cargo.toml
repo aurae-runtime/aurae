@@ -17,6 +17,10 @@ path = "src/probe-tracepoint-signal-signal-generate.rs"
 name = "instrument-tracepoint-sched-sched-process-fork"
 path = "src/probe-tracepoint-sched-sched-process-fork.rs"
 
+[[bin]]
+name = "instrument-fentry-taskstats-exit"
+path = "src/probe-fentry-taskstats-exit.rs"
+
 [profile.dev]
 opt-level = 3
 debug = false

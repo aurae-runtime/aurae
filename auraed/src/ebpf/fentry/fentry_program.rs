@@ -27,11 +27,12 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-use super::PerfEventBroadcast;
+use crate::ebpf::tracepoint::PerfEventBroadcast;
+
 use aya::programs::ProgramError;
 use aya::{
     maps::perf::AsyncPerfEventArray,
-    programs::TracePoint,
+    programs::kprobe::KProbe,
     util::{nr_cpus, online_cpus},
     Bpf,
 };
@@ -45,10 +46,9 @@ use tracing::{error, warn};
 /// Size (in pages) for the circular per-CPU buffers that BPF perfbuf creates.
 const PER_CPU_BUFFER_SIZE_IN_PAGES: usize = 2;
 
-pub trait TracepointProgram<T: Clone + Send + 'static> {
+pub trait FEntryProgram<T: Clone + Send + 'static + std::fmt::Debug> {
     const PROGRAM_NAME: &'static str;
-    const CATEGORY: &'static str;
-    const EVENT: &'static str;
+    const FUNCTION_NAME: &'static str;
     const PERF_BUFFER: &'static str;
 
     fn load_and_attach(
@@ -57,7 +57,7 @@ pub trait TracepointProgram<T: Clone + Send + 'static> {
         trace!("Loading eBPF program: {}", Self::PROGRAM_NAME);
 
         // Load the eBPF TracePoint program
-        let program: &mut TracePoint = bpf
+        let program: &mut KProbe = bpf
             .program_mut(Self::PROGRAM_NAME)
             .ok_or_else(|| anyhow::anyhow!("failed to get eBPF program"))?
             .try_into()?;
@@ -70,6 +70,16 @@ pub trait TracepointProgram<T: Clone + Send + 'static> {
                 Ok(())
             }
             other => other,
+        }?;
+
+        // Attach to kernel trace event
+        match program.attach(Self::FUNCTION_NAME, 0) {
+            Ok(_) => Ok(()),
+            Err(ProgramError::AlreadyAttached) => {
+                warn!("Already attached eBPF program {}", Self::PROGRAM_NAME);
+                Ok(())
+            }
+            Err(e) => Err(e),
         }?;
 
         // Query the number of CPUs on the host
@@ -90,16 +100,6 @@ pub trait TracepointProgram<T: Clone + Send + 'static> {
         // Set the capacity of the channel to the combined capacity of all the
         // per-CPU buffers
         let channel_capacity = per_cpu_buffer_capacity * num_cpus;
-
-        // Attach to kernel trace event
-        match program.attach(Self::CATEGORY, Self::EVENT) {
-            Ok(_) => Ok(()),
-            Err(ProgramError::AlreadyAttached) => {
-                warn!("Already attached eBPF program {}", Self::PROGRAM_NAME);
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }?;
 
         // Create the channel for broadcasting the events
         let (tx, _) = broadcast::channel(channel_capacity);
@@ -161,6 +161,7 @@ pub trait TracepointProgram<T: Clone + Send + 'static> {
                             // send only errors if there are no receivers,
                             // so the return can be safely ignored;
                             // future sends may succeed
+                            warn!("exit detected: {:?}", signal);
                             let _ = per_cpu_tx.send(signal);
                             // We don't clear buf for performance reasons (though it should be fast).
                             // Since we call `.take(events.read)` above, we shouldn't be re-reading old data

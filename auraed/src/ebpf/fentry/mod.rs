@@ -27,71 +27,21 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+use super::bpf_file::BpfFile;
+use aurae_ebpf_shared::ProcessExit;
+pub use fentry_program::FEntryProgram;
 
-use super::{
-    fentry::FEntryProgram,
-    tracepoint::{PerfEventBroadcast, TracepointProgram},
-    BpfFile,
-};
-use aya::Bpf;
-use tracing::warn;
+mod fentry_program;
 
-// This is critical to maintain the memory presence of the
-// loaded bpf object.
-// This specific BPF object needs to persist up to lib.rs such that
-// the rest of the program can access this scope.
-pub struct BpfContext(Vec<Bpf>);
+pub struct TaskstatsExitFEntryProgram;
+impl FEntryProgram<ProcessExit> for TaskstatsExitFEntryProgram {
+    const PROGRAM_NAME: &'static str = "fentry_taskstats_exit";
+    const FUNCTION_NAME: &'static str = "taskstats_exit";
+    const PERF_BUFFER: &'static str = "PROCESS_EXITS";
+}
 
-impl BpfContext {
-    pub fn new() -> Self {
-        Self(Vec::new())
-    }
-
-    pub fn load_and_attach_tracepoint_program<TProgram, TEvent>(
-        &mut self,
-    ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
-    where
-        TProgram: BpfFile + TracepointProgram<TEvent>,
-        TEvent: Clone + Send + 'static,
-    {
-        match TProgram::load() {
-            Ok(mut bpf_handle) => {
-                let perf_events = TProgram::load_and_attach(&mut bpf_handle);
-                self.0.push(bpf_handle);
-                perf_events
-            }
-            Err(e) => {
-                warn!(
-                    "Error loading tracepoint program {}: {}",
-                    TProgram::PROGRAM_NAME,
-                    e
-                );
-                Err(e.into())
-            }
-        }
-    }
-
-    pub fn load_and_attach_fentry_program<TProgram, TEvent>(
-        &mut self,
-    ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
-    where
-        TProgram: BpfFile + FEntryProgram<TEvent>,
-        TEvent: Clone + Send + 'static + std::fmt::Debug,
-    {
-        match TProgram::load() {
-            Ok(mut bpf_handle) => {
-                let perf_events = TProgram::load_and_attach(&mut bpf_handle);
-                self.0.push(bpf_handle);
-                perf_events
-            }
-            Err(e) => {
-                warn!(
-                    "Error loading fentry program {}: {}",
-                    TProgram::PROGRAM_NAME,
-                    e
-                );
-                Err(e.into())
-            }
-        }
-    }
+impl BpfFile for TaskstatsExitFEntryProgram {
+    /// Definition of the Aurae eBPF probe to capture all generated (and valid)
+    /// kernel signals at runtime.
+    const OBJ_NAME: &'static str = "instrument-fentry-taskstats-exit";
 }
