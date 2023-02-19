@@ -116,7 +116,8 @@ config: certs ## Set up default config
 
 .PHONY: musl
 musl: ## Add target for musl
-	rustup target add $(uname_m)-unknown-linux-musl
+	rustup target list | grep -qc $(uname_m)-unknown-linux-musl || \
+	rustup target install $(uname_m)-unknow-linux-muslknown-linux-musl
 
 #------------------------------------------------------------------------------#
 
@@ -215,8 +216,6 @@ $(1)-release: musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and in
 endef
 
 MUSL_TARGET=--target $(uname_m)-unknown-linux-musl
-$(musl) | grep -qc 'x86_64-unknown-linux-musl' || \
-		target musl install $(uname_m)-x86_64-unknown-linux-musl 2>&1 || (echo "Warning: musl is not installed! Please install the target 'musl' dependencies compiler: https://doc.rust-lang.org/rustc/platform-support.html"; exit 1)
 
 $(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,$(p)),$(MUSL_TARGET),))))
 
