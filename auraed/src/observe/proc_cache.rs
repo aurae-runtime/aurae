@@ -49,6 +49,8 @@ pub fn now() -> SystemTime {
     mock_time::now()
 }
 
+const PID_MAX: usize = 4194304;
+
 pub trait ProcessInfo {
     fn get_nspid(&self, pid: i32) -> Option<i32>;
 }
@@ -71,14 +73,17 @@ struct Eviction {
     evict_at: SystemTime,
 }
 
+/// Cache that allows for accessomg process info (right now only namespace PIDs)
+/// beyond the lifetime of a process.
+///
+/// mention eBPF events
+/// mention eviction strategy
 #[derive(Debug)]
 pub struct ProcCache {
     cache: Arc<Mutex<HashMap<i32, i32>>>,
     evict_after: Duration,
     eviction_queue: Arc<Mutex<VecDeque<Eviction>>>,
 }
-
-static PID_MAX: usize = 4194304;
 
 impl ProcCache {
     pub fn new(

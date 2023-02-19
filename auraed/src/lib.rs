@@ -212,16 +212,16 @@ pub async fn run(
             info!("Loading eBPF probes");
 
             let mut bpf_handle = BpfContext::new();
-            let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok();
             let process_fork_listener = bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>().ok();
             let process_exit_listener = bpf_handle.load_and_attach_kprobe_program::<TaskstatsExitKProbeProgram, ProcessExit>().ok();
+            let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>()?;
 
             (
                 Some(bpf_handle),
                 (
                     process_fork_listener,
                     process_exit_listener,
-                    posix_signals_listener,
+                    Some(posix_signals_listener),
                 ),
             )
         };

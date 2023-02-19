@@ -29,10 +29,11 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    kprobe::KProbeProgram,
-    tracepoint::{PerfEventBroadcast, TracepointProgram},
+    kprobe::KProbeProgram, perf_event_broadcast::PerfEventBroadcast,
+    perf_event_reader::PerfBufferReader, tracepoint::TracepointProgram,
     BpfFile,
 };
+
 use aya::Bpf;
 use tracing::warn;
 
@@ -51,12 +52,15 @@ impl BpfContext {
         &mut self,
     ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
     where
-        TProgram: BpfFile + TracepointProgram<TEvent>,
+        TProgram:
+            BpfFile + TracepointProgram<TEvent> + PerfBufferReader<TEvent>,
         TEvent: Clone + Send + 'static,
     {
         match TProgram::load() {
             Ok(mut bpf_handle) => {
-                let perf_events = TProgram::load_and_attach(&mut bpf_handle);
+                TProgram::load_and_attach(&mut bpf_handle)?;
+                let perf_events =
+                    TProgram::read(&mut bpf_handle, TProgram::PERF_BUFFER);
                 self.0.push(bpf_handle);
                 perf_events
             }
