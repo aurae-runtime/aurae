@@ -39,7 +39,7 @@ mod tracepoint_program;
 pub struct SignalSignalGenerateTracepointProgram;
 
 impl TracepointProgram<Signal> for SignalSignalGenerateTracepointProgram {
-    const PROGRAM_NAME: &'static str = "signals";
+    const PROGRAM_NAME: &'static str = "signal_signal_generate";
     const CATEGORY: &'static str = "signal";
     const EVENT: &'static str = "signal_generate";
     const PERF_BUFFER: &'static str = "SIGNALS";

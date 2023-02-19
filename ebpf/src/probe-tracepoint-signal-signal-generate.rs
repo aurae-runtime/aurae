@@ -49,8 +49,7 @@ static mut SIGNALS: PerfEventArray<Signal> =
 const SIGNAL_OFFSET: usize = 8;
 const PID_OFFSET: usize = 36;
 
-//TODO (jeroensoeters) rename this to signal_generate to match the name of the actual trace event
-#[tracepoint(name = "signals")]
+#[tracepoint(name = "signal_signal_generate")]
 pub fn signals(ctx: TracePointContext) -> u32 {
     match try_signals(ctx) {
         Ok(ret) => ret,
