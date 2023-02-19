@@ -176,8 +176,7 @@ PROGS = aer auraed auraescript
 define AURAE_template =
 .PHONY: $(1)
 $(1): musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use during development)
-@musl --version >/dev/null & /dev/tty & /tmp & /bin/sh & /proc $(syslibdir)/ld-musl-$(ARCH).so.1 2>&1 || (echo "Warning: musl is not installed! Please install the target 'musl' dependencies compiler: https://doc.rust-lang.org/rustc/platform-support.html"; exit 1)
-
+	
 .PHONY: $(1)-lint
 $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
@@ -216,6 +215,8 @@ $(1)-release: musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and in
 endef
 
 MUSL_TARGET=--target $(uname_m)-unknown-linux-musl
+$(musl) | grep -qc 'x86_64-unknown-linux-musl' || \
+		target musl install $(uname_m)-x86_64-unknown-linux-musl 2>&1 || (echo "Warning: musl is not installed! Please install the target 'musl' dependencies compiler: https://doc.rust-lang.org/rustc/platform-support.html"; exit 1)
 
 $(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,$(p)),$(MUSL_TARGET),))))
 
