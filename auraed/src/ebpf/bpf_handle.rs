@@ -29,7 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    fentry::FEntryProgram,
+    kprobe::KProbeProgram,
     tracepoint::{PerfEventBroadcast, TracepointProgram},
     BpfFile,
 };
@@ -71,11 +71,11 @@ impl BpfContext {
         }
     }
 
-    pub fn load_and_attach_fentry_program<TProgram, TEvent>(
+    pub fn load_and_attach_kprobe_program<TProgram, TEvent>(
         &mut self,
     ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
     where
-        TProgram: BpfFile + FEntryProgram<TEvent>,
+        TProgram: BpfFile + KProbeProgram<TEvent>,
         TEvent: Clone + Send + 'static + std::fmt::Debug,
     {
         match TProgram::load() {
@@ -86,7 +86,7 @@ impl BpfContext {
             }
             Err(e) => {
                 warn!(
-                    "Error loading fentry program {}: {}",
+                    "Error loading kprobe program {}: {}",
                     TProgram::PROGRAM_NAME,
                     e
                 );

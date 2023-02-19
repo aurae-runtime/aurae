@@ -46,7 +46,7 @@ use tracing::{error, warn};
 /// Size (in pages) for the circular per-CPU buffers that BPF perfbuf creates.
 const PER_CPU_BUFFER_SIZE_IN_PAGES: usize = 2;
 
-pub trait FEntryProgram<T: Clone + Send + 'static + std::fmt::Debug> {
+pub trait KProbeProgram<T: Clone + Send + 'static> {
     const PROGRAM_NAME: &'static str;
     const FUNCTION_NAME: &'static str;
     const PERF_BUFFER: &'static str;
@@ -161,7 +161,6 @@ pub trait FEntryProgram<T: Clone + Send + 'static + std::fmt::Debug> {
                             // send only errors if there are no receivers,
                             // so the return can be safely ignored;
                             // future sends may succeed
-                            warn!("exit detected: {:?}", signal);
                             let _ = per_cpu_tx.send(signal);
                             // We don't clear buf for performance reasons (though it should be fast).
                             // Since we call `.take(events.read)` above, we shouldn't be re-reading old data

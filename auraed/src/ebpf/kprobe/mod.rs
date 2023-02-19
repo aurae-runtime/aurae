@@ -29,19 +29,19 @@
 \* -------------------------------------------------------------------------- */
 use super::bpf_file::BpfFile;
 use aurae_ebpf_shared::ProcessExit;
-pub use fentry_program::FEntryProgram;
+pub use kprobe_program::KProbeProgram;
 
-mod fentry_program;
+mod kprobe_program;
 
-pub struct TaskstatsExitFEntryProgram;
-impl FEntryProgram<ProcessExit> for TaskstatsExitFEntryProgram {
-    const PROGRAM_NAME: &'static str = "fentry_taskstats_exit";
+pub struct TaskstatsExitKProbeProgram;
+impl KProbeProgram<ProcessExit> for TaskstatsExitKProbeProgram {
+    const PROGRAM_NAME: &'static str = "kprobe_taskstats_exit";
     const FUNCTION_NAME: &'static str = "taskstats_exit";
     const PERF_BUFFER: &'static str = "PROCESS_EXITS";
 }
 
-impl BpfFile for TaskstatsExitFEntryProgram {
+impl BpfFile for TaskstatsExitKProbeProgram {
     /// Definition of the Aurae eBPF probe to capture all generated (and valid)
     /// kernel signals at runtime.
-    const OBJ_NAME: &'static str = "instrument-fentry-taskstats-exit";
+    const OBJ_NAME: &'static str = "instrument-kprobe-taskstats-exit";
 }

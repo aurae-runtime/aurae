@@ -1,7 +1,3 @@
-use std::{ffi::OsString, sync::Arc};
-
-use aurae_ebpf_shared::CgroupId;
-use proto::observe::WorkloadType;
 /* -------------------------------------------------------------------------- *\
  *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
@@ -31,30 +27,36 @@ use proto::observe::WorkloadType;
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+use super::{cgroup_cache::CgroupCache, proc_cache::ProcCache};
 use crate::ebpf::tracepoint::PerfEventBroadcast;
+use aurae_ebpf_shared::{HasCgroup, HasHostPid};
+use proto::observe::WorkloadType;
+use std::{ffi::OsString, sync::Arc};
 use tokio::sync::{
     mpsc::{self, Receiver},
     Mutex,
 };
 use tonic::Status;
 
-use super::cgroup_cache::CgroupCache;
-
 const CGROUPFS_ROOT: &str = "/sys/fs/cgroup";
 
+/// Wrapper around `PerfEventBroadvast<T>` that allows for filtering by
+/// Aurae workloads and optionally maps host PIDs to namespace PIDs.
 pub struct ObservedEventStream<'a, T> {
     source: &'a PerfEventBroadcast<T>,
     workload_filter: Option<(WorkloadType, String)>,
-    //map_pids: bool,
+    proc_cache: Option<Arc<Mutex<ProcCache>>>,
     cgroup_cache: Arc<Mutex<CgroupCache>>,
 }
 
-impl<'a, T: CgroupId + Clone + Send + 'static> ObservedEventStream<'a, T> {
+impl<'a, T: HasCgroup + HasHostPid + Clone + Send + Sync + 'static>
+    ObservedEventStream<'a, T>
+{
     pub fn new(source: &'a PerfEventBroadcast<T>) -> Self {
         Self {
             source,
             workload_filter: None,
-            //map_pids: false,
+            proc_cache: None,
             cgroup_cache: Arc::new(Mutex::new(CgroupCache::new(
                 OsString::from(CGROUPFS_ROOT),
             ))),
@@ -69,9 +71,14 @@ impl<'a, T: CgroupId + Clone + Send + 'static> ObservedEventStream<'a, T> {
         self
     }
 
-    pub fn subscribe<E: Send + 'static>(
+    pub fn map_pids(&mut self, proc_cache: Arc<Mutex<ProcCache>>) -> &mut Self {
+        self.proc_cache = Some(proc_cache);
+        self
+    }
+
+    pub fn subscribe<E: Send + Sync + 'static>(
         &self,
-        map_response: fn(T) -> E,
+        map_response: fn(T, i32) -> E,
     ) -> Receiver<Result<E, Status>> {
         let (tx, rx) = mpsc::channel(4);
 
@@ -83,19 +90,32 @@ impl<'a, T: CgroupId + Clone + Send + 'static> ObservedEventStream<'a, T> {
         };
         let mut events = self.source.subscribe();
 
-        let thread_cache = self.cgroup_cache.clone();
+        let cgroup_thread_cache = self.cgroup_cache.clone();
+        let proc_thread_cache = self.proc_cache.as_ref().cloned();
         let _ignored = tokio::spawn(async move {
             while let Ok(event) = events.recv().await {
                 let accept = !match_cgroup_path || {
-                    let mut cache = thread_cache.lock().await;
+                    let mut cache = cgroup_thread_cache.lock().await;
                     cache
                         .get(event.cgroup_id())
                         .map(|path| path.eq_ignore_ascii_case(&cgroup_path))
                         .unwrap_or(false)
                 };
-                if accept && tx.send(Ok(map_response(event))).await.is_err() {
-                    // receiver is gone
-                    break;
+                if accept {
+                    let pid = if let Some(ref proc_cache) = proc_thread_cache {
+                        let guard = proc_cache.lock().await;
+                        guard
+                            .get(event.pid())
+                            .await
+                            .unwrap_or_else(|| event.pid())
+                    } else {
+                        event.pid()
+                    };
+
+                    if tx.send(Ok(map_response(event, pid))).await.is_err() {
+                        // receiver is gone
+                        break;
+                    }
                 }
             }
         });
@@ -103,5 +123,3 @@ impl<'a, T: CgroupId + Clone + Send + 'static> ObservedEventStream<'a, T> {
         rx
     }
 }
-
-//TODO (jeroensoeters)  tests?!?!?

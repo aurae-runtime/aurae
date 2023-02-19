@@ -36,29 +36,29 @@ pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 static mut FORKED_PROCESSES: PerfEventArray<ForkedProcess> =
     PerfEventArray::<ForkedProcess>::with_max_entries(1024, 0);
 
-const PARENT_PID_OFFSET: usize = 8;
-const CHILD_PID_OFFSET: usize = 28;
+const PARENT_PID_OFFSET: usize = 24;
+const CHILD_PID_OFFSET: usize = 44;
 
 #[tracepoint(name = "sched_process_fork")]
-pub fn sched_process_fork(ctx: TracePointContext) -> u32 {
+pub fn sched_process_fork(ctx: TracePointContext) -> i32 {
     match try_forked_process(ctx) {
         Ok(ret) => ret,
         Err(ret) => ret,
     }
 }
 
-fn try_forked_process(ctx: TracePointContext) -> Result<u32, u32> {
-    let parent_pid: u32 = unsafe {
+fn try_forked_process(ctx: TracePointContext) -> Result<i32, i32> {
+    let parent_pid: i32 = unsafe {
         match ctx.read_at(PARENT_PID_OFFSET) {
             Ok(s) => s,
-            Err(errn) => return Err(errn as u32),
+            Err(errn) => return Err(errn as i32),
         }
     };
 
-    let child_pid: u32 = unsafe {
+    let child_pid: i32 = unsafe {
         match ctx.read_at(CHILD_PID_OFFSET) {
             Ok(s) => s,
-            Err(errn) => return Err(errn as u32),
+            Err(errn) => return Err(errn as i32),
         }
     };
 

@@ -326,7 +326,7 @@ async fn must_get_posix_signals_for_a_nested_cell() {
 }
 
 #[test_helpers_macros::shared_runtime_test]
-#[ignore = "placeholder test for a follow-up pid mapping issue"]
+//#[ignore = "placeholder test for a follow-up pid mapping issue"]
 async fn must_map_host_pids_to_namespace_pids() {
     skip_if_not_root!("must_map_host_pids_to_namespace_pids");
     skip_if_seccomp!("must_map_host_pids_to_namespace_pids");

@@ -63,7 +63,7 @@
 
 use crate::ebpf::{
     BpfContext, SchedProcessForkTracepointProgram,
-    SignalSignalGenerateTracepointProgram, TaskstatsExitFEntryProgram,
+    SignalSignalGenerateTracepointProgram, TaskstatsExitKProbeProgram,
 };
 use crate::{
     cells::CellService, cri::oci::AuraeOCIBuilder,
@@ -203,15 +203,10 @@ pub async fn run(
         })?;
 
         // Install eBPF probes in the host Aurae daemon
-        let (
-            _bpf_handle,
-            posix_signals_listener,
-            _process_fork_listener,
-            _process_exit_listener,
-        ) = if context == AuraeContext::Cell
+        let (_bpf_handle, perf_events) = if context == AuraeContext::Cell
             || context == AuraeContext::Container
         {
-            (None, None, None, None)
+            (None, (None, None, None))
         } else {
             // TODO: Add flags/options to "opt-out" of the various BPF probes
             info!("Loading eBPF probes");
@@ -219,13 +214,15 @@ pub async fn run(
             let mut bpf_handle = BpfContext::new();
             let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok();
             let process_fork_listener = bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>().ok();
-            let process_exit_listener = bpf_handle.load_and_attach_fentry_program::<TaskstatsExitFEntryProgram, ProcessExit>().ok();
+            let process_exit_listener = bpf_handle.load_and_attach_kprobe_program::<TaskstatsExitKProbeProgram, ProcessExit>().ok();
 
             (
                 Some(bpf_handle),
-                posix_signals_listener,
-                process_fork_listener,
-                process_exit_listener,
+                (
+                    process_fork_listener,
+                    process_exit_listener,
+                    posix_signals_listener,
+                ),
             )
         };
 
@@ -235,7 +232,7 @@ pub async fn run(
 
         let observe_service = ObserveService::new(
             Arc::new(LogChannel::new(String::from("TODO"))),
-            posix_signals_listener,
+            perf_events,
         );
         let observe_service_server =
             ObserveServiceServer::new(observe_service.clone());

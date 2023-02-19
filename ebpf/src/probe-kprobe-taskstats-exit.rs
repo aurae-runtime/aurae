@@ -37,10 +37,9 @@ pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 static mut PROCESS_EXITS: PerfEventArray<ProcessExit> =
     PerfEventArray::<ProcessExit>::with_max_entries(1024, 0);
 
-#[kprobe(name = "fentry_taskstats_exit")]
-pub fn fentry_taskstats_exit(ctx: ProbeContext) -> u32 {
-    //let mut pid: u32 = 0;
-    let pid = helpers::bpf_get_current_pid_tgid() as u32;
+#[kprobe(name = "kprobe_taskstats_exit")]
+pub fn kprobe_taskstats_exit(ctx: ProbeContext) -> u32 {
+    let pid = helpers::bpf_get_current_pid_tgid() as i32;
     let e = ProcessExit { pid };
 
     unsafe {

@@ -33,7 +33,7 @@ use tracing::warn;
 use walkdir::DirEntryExt;
 use walkdir::WalkDir;
 
-/// Used for looking up cgroup paths by inode number
+/// Cache that is used for looking up cgroup paths by inode number.
 ///
 /// TODO (jeroensoeters) maybe change this to an LRU cache in the future? Also
 /// we should think if inode wraparound is a potential issue. We could look at

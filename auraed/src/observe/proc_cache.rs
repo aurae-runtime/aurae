@@ -31,7 +31,7 @@
 #![allow(dead_code)]
 
 use crate::ebpf::tracepoint::PerfEventBroadcast;
-use aurae_ebpf_shared::ForkedProcess;
+use aurae_ebpf_shared::{ForkedProcess, ProcessExit};
 use std::time::SystemTime;
 use std::{
     collections::{HashMap, VecDeque},
@@ -49,26 +49,31 @@ pub fn now() -> SystemTime {
     mock_time::now()
 }
 
-trait ProcessInfo {
-    fn get_nspid(&self, pid: u32) -> Option<u32>;
+pub trait ProcessInfo {
+    fn get_nspid(&self, pid: i32) -> Option<i32>;
 }
 
-struct ProcfsProcessInfo {}
+pub(crate) struct ProcfsProcessInfo {}
 
 impl ProcessInfo for ProcfsProcessInfo {
-    fn get_nspid(&self, _pid: u32) -> Option<u32> {
-        todo!()
+    fn get_nspid(&self, pid: i32) -> Option<i32> {
+        procfs::process::Process::new(pid)
+            .and_then(|p| p.status())
+            .ok()
+            .and_then(|s| s.nspid)
+            .and_then(|nspid| nspid.last().copied())
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Eviction {
-    pid: u32,
+    pid: i32,
     evict_at: SystemTime,
 }
 
-struct ProcCache {
-    cache: Arc<Mutex<HashMap<u32, u32>>>,
+#[derive(Debug)]
+pub struct ProcCache {
+    cache: Arc<Mutex<HashMap<i32, i32>>>,
     evict_after: Duration,
     eviction_queue: Arc<Mutex<VecDeque<Eviction>>>,
 }
@@ -76,10 +81,10 @@ struct ProcCache {
 static PID_MAX: usize = 4194304;
 
 impl ProcCache {
-    fn new(
+    pub fn new(
         evict_after: Duration,
         process_fork_events: PerfEventBroadcast<ForkedProcess>,
-        process_exit_events: PerfEventBroadcast<u32>,
+        process_exit_events: PerfEventBroadcast<ProcessExit>,
         proc_info: impl ProcessInfo + Send + 'static + Sync,
     ) -> Self {
         let res = Self {
@@ -106,11 +111,11 @@ impl ProcCache {
         let eviction_queue_for_exit_event_processing =
             res.eviction_queue.clone();
         let _ignored = tokio::spawn(async move {
-            while let Ok(pid) = process_exit_rx.recv().await {
+            while let Ok(e) = process_exit_rx.recv().await {
                 let mut guard =
                     eviction_queue_for_exit_event_processing.lock().await;
                 guard.push_back(Eviction {
-                    pid,
+                    pid: e.pid,
                     evict_at: now().checked_add(evict_after).expect(
                         "SystemTime overflow, something has gone very wrong!",
                     ),
@@ -121,7 +126,7 @@ impl ProcCache {
         res
     }
 
-    pub async fn get(&self, pid: u32) -> Option<u32> {
+    pub async fn get(&self, pid: i32) -> Option<i32> {
         self.evict_expired().await;
 
         let guard = self.cache.lock().await;
@@ -145,7 +150,7 @@ impl ProcCache {
     }
 
     #[cfg(test)]
-    pub async fn eviction_queue(&self) -> VecDeque<Eviction> {
+    async fn eviction_queue(&self) -> VecDeque<Eviction> {
         //let mut queue = VecDeqe::new();
         let guard = self.eviction_queue.lock().await;
         guard.clone()
@@ -161,11 +166,11 @@ mod test {
     use tokio::sync::broadcast::{channel, Sender};
 
     struct TestProcessInfo {
-        nspid_lookup: HashMap<u32, u32>,
+        nspid_lookup: HashMap<i32, i32>,
     }
 
     impl TestProcessInfo {
-        fn new(test_data: Vec<(u32, u32)>) -> Self {
+        fn new(test_data: Vec<(i32, i32)>) -> Self {
             let mut nspid_lookup = HashMap::new();
             for (pid, nspid) in test_data {
                 _ = nspid_lookup.insert(pid, nspid);
@@ -175,7 +180,7 @@ mod test {
     }
 
     impl ProcessInfo for TestProcessInfo {
-        fn get_nspid(&self, pid: u32) -> Option<u32> {
+        fn get_nspid(&self, pid: i32) -> Option<i32> {
             self.nspid_lookup.get(&pid).copied()
         }
     }
@@ -216,14 +221,14 @@ mod test {
         _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 43 });
         _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 44 });
 
-        _ = exit_tx.send(42);
+        _ = exit_tx.send(ProcessExit { pid: 42 });
 
         // TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         mock_time::advance_time(Duration::from_secs(5));
 
-        _ = exit_tx.send(44);
+        _ = exit_tx.send(ProcessExit { pid: 44 });
 
         //TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -251,21 +256,21 @@ mod test {
         _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 44 });
         _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 45 });
 
-        _ = exit_tx.send(42);
+        _ = exit_tx.send(ProcessExit { pid: 42 });
 
         //TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         mock_time::advance_time(Duration::from_secs(2));
 
-        _ = exit_tx.send(44);
+        _ = exit_tx.send(ProcessExit { pid: 44 });
 
         //TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         mock_time::advance_time(Duration::from_secs(5));
 
-        _ = exit_tx.send(45);
+        _ = exit_tx.send(ProcessExit { pid: 45 });
 
         //TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -293,11 +298,11 @@ mod test {
 
     fn cache_for_testing(
         expire_after: Duration,
-        test_data: Vec<(u32, u32)>,
-    ) -> (ProcCache, Sender<ForkedProcess>, Sender<u32>) {
-        let (fork_tx, fork_rx) = channel(4);
+        test_data: Vec<(i32, i32)>,
+    ) -> (ProcCache, Sender<ForkedProcess>, Sender<ProcessExit>) {
+        let (fork_tx, _fork_rx) = channel(4);
         let fork_broadcaster = PerfEventBroadcast::new(fork_tx.clone());
-        let (exit_tx, exit_rx) = channel::<u32>(4);
+        let (exit_tx, _exit_rx) = channel::<ProcessExit>(4);
         let exit_broadcaster = PerfEventBroadcast::new(exit_tx.clone());
 
         let test_proc_info = TestProcessInfo::new(test_data);

@@ -18,8 +18,8 @@ name = "instrument-tracepoint-sched-sched-process-fork"
 path = "src/probe-tracepoint-sched-sched-process-fork.rs"
 
 [[bin]]
-name = "instrument-fentry-taskstats-exit"
-path = "src/probe-fentry-taskstats-exit.rs"
+name = "instrument-kprobe-taskstats-exit"
+path = "src/probe-kprobe-taskstats-exit.rs"
 
 [profile.dev]
 opt-level = 3

@@ -30,11 +30,11 @@
 
 use bpf_file::BpfFile;
 pub use bpf_handle::BpfContext;
-pub use fentry::TaskstatsExitFEntryProgram;
+pub use kprobe::TaskstatsExitKProbeProgram;
 pub use tracepoint::SchedProcessForkTracepointProgram;
 pub use tracepoint::SignalSignalGenerateTracepointProgram;
 
 mod bpf_file;
 mod bpf_handle;
-pub(crate) mod fentry;
+pub(crate) mod kprobe;
 pub(crate) mod tracepoint;

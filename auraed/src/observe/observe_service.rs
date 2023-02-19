@@ -30,13 +30,16 @@
 
 // @todo @krisnova remove this once logging is further along
 #![allow(dead_code)]
+//TODO(jeroen) this warning comes from the `perf_events` arument in ObserveService::new()
+#![allow(clippy::type_complexity)]
 
 use super::cgroup_cache;
 use super::error::ObserveServiceError;
 use super::observed_event_stream::ObservedEventStream;
+use super::proc_cache::{ProcCache, ProcfsProcessInfo};
 use crate::ebpf::tracepoint::PerfEventBroadcast;
 use crate::logging::log_channel::LogChannel;
-use aurae_ebpf_shared::Signal;
+use aurae_ebpf_shared::{ForkedProcess, ProcessExit, Signal};
 use cgroup_cache::CgroupCache;
 use proto::observe::{
     observe_service_server, GetAuraeDaemonLogStreamRequest,
@@ -46,6 +49,7 @@ use proto::observe::{
     Signal as PosixSignal, WorkloadType,
 };
 use std::collections::HashMap;
+use std::time::Duration;
 use std::{ffi::OsString, sync::Arc};
 use tokio::sync::mpsc;
 use tokio::sync::{broadcast::Receiver, Mutex};
@@ -57,6 +61,7 @@ use tracing::info;
 pub struct ObserveService {
     aurae_logger: Arc<LogChannel>,
     cgroup_cache: Arc<Mutex<CgroupCache>>,
+    proc_cache: Option<Arc<Mutex<ProcCache>>>,
     posix_signals: Option<PerfEventBroadcast<Signal>>,
     sub_process_consumer_list:
         Arc<Mutex<HashMap<i32, HashMap<LogChannelType, LogChannel>>>>,
@@ -65,14 +70,30 @@ pub struct ObserveService {
 impl ObserveService {
     pub fn new(
         aurae_logger: Arc<LogChannel>,
-        posix_signals: Option<PerfEventBroadcast<Signal>>,
+        perf_events: (
+            Option<PerfEventBroadcast<ForkedProcess>>,
+            Option<PerfEventBroadcast<ProcessExit>>,
+            Option<PerfEventBroadcast<Signal>>,
+        ),
     ) -> Self {
+        let proc_cache = match perf_events {
+            (Some(f), Some(e), _) => {
+                Some(Arc::new(Mutex::new(ProcCache::new(
+                    Duration::from_secs(10),
+                    f,
+                    e,
+                    ProcfsProcessInfo {},
+                ))))
+            }
+            _ => None,
+        };
         Self {
             aurae_logger,
             cgroup_cache: Arc::new(Mutex::new(CgroupCache::new(
                 OsString::from("/sys/fs/cgroup"),
             ))),
-            posix_signals,
+            proc_cache,
+            posix_signals: perf_events.2,
             sub_process_consumer_list: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -139,6 +160,7 @@ impl ObserveService {
             self.posix_signals.as_ref().expect("signals"),
         )
         .filter_by_workload(filter)
+        .map_pids(self.proc_cache.as_ref().expect("proc_cache").clone())
         .subscribe(map_get_posix_signals_stream_response);
 
         ReceiverStream::new(events)
@@ -147,12 +169,10 @@ impl ObserveService {
 
 fn map_get_posix_signals_stream_response(
     signal: Signal,
+    pid: i32,
 ) -> GetPosixSignalsStreamResponse {
     GetPosixSignalsStreamResponse {
-        signal: Some(PosixSignal {
-            signal: signal.signum,
-            process_id: signal.pid,
-        }),
+        signal: Some(PosixSignal { signal: signal.signum, process_id: pid }),
     }
 }
 
@@ -273,7 +293,7 @@ mod tests {
     async fn test_register_sub_process_channel_success() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
-            None,
+            (None, None, None),
         );
         assert!(svc
             .register_sub_process_channel(
@@ -291,7 +311,7 @@ mod tests {
     async fn test_register_sub_process_channel_duplicate_error() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
-            None,
+            (None, None, None),
         );
         assert!(svc
             .register_sub_process_channel(
@@ -317,7 +337,7 @@ mod tests {
     async fn test_unregister_sub_process_channel_success() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
-            None,
+            (None, None, None),
         );
         assert!(svc
             .register_sub_process_channel(
@@ -339,7 +359,7 @@ mod tests {
     async fn test_unregister_sub_process_channel_no_pid_error() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
-            None,
+            (None, None, None),
         );
         assert!(svc
             .unregister_sub_process_channel(42, LogChannelType::Stdout)
@@ -353,7 +373,7 @@ mod tests {
     async fn test_unregister_sub_process_channel_no_channel_type_error() {
         let svc = ObserveService::new(
             Arc::new(LogChannel::new(String::from("auraed"))),
-            None,
+            (None, None, None),
         );
         assert!(svc
             .register_sub_process_channel(
