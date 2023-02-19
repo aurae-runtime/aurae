@@ -177,7 +177,7 @@ PROGS = aer auraed auraescript
 define AURAE_template =
 .PHONY: $(1)
 $(1): musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use during development)
-	
+
 .PHONY: $(1)-lint
 $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
