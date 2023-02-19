@@ -225,15 +225,13 @@ pub async fn run(
             let posix_signals_listener = if let Some(bpf_handle) =
                 &mut bpf_handle
             {
-                let posix_signals_listener = match bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, _>() {
+                match bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, _>() {
                     Ok(x) => Some(x),
                     Err(e) => {
                         warn!("eBPF: Skipping SignalSignalGenerateTracepointProgram due to {e}");
                         None
                     }
-                };
-
-                posix_signals_listener
+                }
             } else {
                 None
             };
