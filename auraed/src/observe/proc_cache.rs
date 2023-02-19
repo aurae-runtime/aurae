@@ -46,6 +46,8 @@ pub fn now() -> SystemTime {
 }
 #[cfg(test)]
 pub fn now() -> SystemTime {
+    use test_helpers::mock_time;
+
     mock_time::now()
 }
 
@@ -168,6 +170,7 @@ mod test {
     use crate::ebpf::tracepoint::PerfEventBroadcast;
     use crate::observe::proc_cache::ForkedProcess;
     use serial_test::serial;
+    use test_helpers::mock_time;
     use tokio::sync::broadcast::{channel, Sender};
 
     struct TestProcessInfo {
@@ -320,34 +323,5 @@ mod test {
         );
 
         (cache, fork_tx, exit_tx)
-    }
-}
-
-#[cfg(test)]
-mod mock_time {
-    use once_cell::sync::OnceCell;
-    use std::sync::Mutex;
-    use std::time::{Duration, SystemTime};
-
-    pub static TIME: OnceCell<Mutex<SystemTime>> = OnceCell::new();
-
-    pub fn now() -> SystemTime {
-        *TIME.get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH)).lock().unwrap()
-    }
-
-    pub fn advance_time(d: Duration) {
-        let mut guard = TIME
-            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
-            .lock()
-            .unwrap();
-        *guard = guard.checked_add(d).unwrap();
-    }
-
-    pub fn reset() {
-        let mut guard = TIME
-            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
-            .lock()
-            .unwrap();
-        *guard = SystemTime::UNIX_EPOCH;
     }
 }

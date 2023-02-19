@@ -3268,6 +3268,7 @@ name = "test-helpers"
 version = "0.0.0"
 dependencies = [
  "nix 0.25.1",
+ "once_cell",
 ]
 
 [[package]]

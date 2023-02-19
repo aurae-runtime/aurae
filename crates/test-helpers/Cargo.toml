@@ -8,3 +8,4 @@ license = "Apache-2.0"
 
 [dependencies]
 nix = { workspace = true }
+once_cell = "1"
