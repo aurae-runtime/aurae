@@ -14,6 +14,7 @@ use test_helpers::*;
 mod common;
 
 #[test_helpers_macros::shared_runtime_test]
+#[ignore = "we can not run eBPF tests in Github actions"]
 async fn must_map_host_pids_to_namespace_pids() {
     skip_if_not_root!("must_map_host_pids_to_namespace_pids");
     skip_if_seccomp!("must_map_host_pids_to_namespace_pids");
