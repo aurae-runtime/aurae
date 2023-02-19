@@ -116,8 +116,8 @@ config: certs ## Set up default config
 
 .PHONY: musl
 musl: ## Add target for musl
-	rustup target list | grep -qc $(uname_m)-unknown-linux-musl || \
-	rustup target install $(uname_m)-unknow-linux-muslknown-linux-musl
+	rustup target list | grep -qc '$(uname_m)-unknown-linux-musl' || \
+	rustup target add $(uname_m)-unknow-linux-muslknown-linux-musl
 
 #------------------------------------------------------------------------------#
 
@@ -264,7 +264,6 @@ else
 docs-stdlib: $(GEN_TS) $(GEN_RS)
 	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0/discovery -I api/v0/observe -I api/v0/cells -I api/v0/vms --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*/*.proto --experimental_allow_proto3_optional
 endif
-
 
 .PHONY: docs-crates
 docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
