@@ -79,7 +79,8 @@ impl ObserveService {
         let proc_cache = match perf_events {
             (Some(f), Some(e), _) => {
                 Some(Arc::new(Mutex::new(ProcCache::new(
-                    Duration::from_secs(10),
+                    Duration::from_secs(60),
+                    Duration::from_secs(60),
                     f,
                     e,
                     ProcfsProcessInfo {},

@@ -84,12 +84,15 @@ struct Eviction {
 pub struct ProcCache {
     cache: Arc<Mutex<HashMap<i32, i32>>>,
     evict_after: Duration,
+    evict_every: Duration,
     eviction_queue: Arc<Mutex<VecDeque<Eviction>>>,
+    last_eviction: SystemTime,
 }
 
 impl ProcCache {
     pub fn new(
         evict_after: Duration,
+        evict_every: Duration,
         process_fork_events: PerfEventBroadcast<ForkedProcess>,
         process_exit_events: PerfEventBroadcast<ProcessExit>,
         proc_info: impl ProcessInfo + Send + 'static + Sync,
@@ -97,9 +100,11 @@ impl ProcCache {
         let res = Self {
             cache: Arc::new(Mutex::new(HashMap::with_capacity(PID_MAX))),
             evict_after,
+            evict_every,
             eviction_queue: Arc::new(Mutex::new(VecDeque::with_capacity(
                 PID_MAX,
             ))),
+            last_eviction: SystemTime::UNIX_EPOCH,
         };
 
         let mut process_fork_rx = process_fork_events.subscribe();
@@ -123,9 +128,9 @@ impl ProcCache {
                     eviction_queue_for_exit_event_processing.lock().await;
                 guard.push_back(Eviction {
                     pid: e.pid,
-                    evict_at: now().checked_add(evict_after).expect(
-                        "SystemTime overflow, something has gone very wrong!",
-                    ),
+                    evict_at: now()
+                        .checked_add(evict_after)
+                        .expect("SystemTime overflow"),
                 })
             }
         });
@@ -134,7 +139,14 @@ impl ProcCache {
     }
 
     pub async fn get(&self, pid: i32) -> Option<i32> {
-        self.evict_expired().await;
+        if self
+            .last_eviction
+            .checked_add(self.evict_every)
+            .expect("SystemTime overflow")
+            <= now()
+        {
+            self.evict_expired().await;
+        }
 
         let guard = self.cache.lock().await;
         guard.get(&pid).copied()
@@ -158,7 +170,6 @@ impl ProcCache {
 
     #[cfg(test)]
     async fn eviction_queue(&self) -> VecDeque<Eviction> {
-        //let mut queue = VecDeqe::new();
         let guard = self.eviction_queue.lock().await;
         guard.clone()
     }
@@ -195,7 +206,11 @@ mod test {
 
     #[tokio::test]
     async fn must_returm_none_for_non_existing_process() {
-        let (cache, _, _) = cache_for_testing(Duration::from_secs(5), vec![]);
+        let (cache, _, _) = cache_for_testing(
+            Duration::from_secs(5),
+            Duration::from_secs(5),
+            vec![],
+        );
 
         assert_eq!(cache.get(123).await, None);
     }
@@ -203,8 +218,11 @@ mod test {
     #[tokio::test]
     #[serial] // Needs to run in isolation because of the mocked `SystemTime`
     async fn must_create_cache_entry_for_a_new_processes() {
-        let (cache, fork_tx, _) =
-            cache_for_testing(Duration::from_secs(5), vec![(42, 2)]);
+        let (cache, fork_tx, _) = cache_for_testing(
+            Duration::from_secs(5),
+            Duration::from_secs(5),
+            vec![(42, 2)],
+        );
 
         _ = fork_tx
             .send(ForkedProcess { parent_pid: 1, child_pid: 42 })
@@ -221,6 +239,7 @@ mod test {
     async fn must_mark_entry_for_eviction_when_a_process_exits() {
         mock_time::reset();
         let (cache, fork_tx, exit_tx) = cache_for_testing(
+            Duration::from_secs(5),
             Duration::from_secs(5),
             vec![(42, 2), (43, 3), (44, 4)],
         );
@@ -255,6 +274,7 @@ mod test {
     async fn must_evict_expired_entries_from_cache_on_get() {
         mock_time::reset();
         let (cache, fork_tx, exit_tx) = cache_for_testing(
+            Duration::from_secs(5),
             Duration::from_secs(5),
             vec![(42, 2), (43, 3), (44, 4), (45, 5)],
         );
@@ -298,6 +318,33 @@ mod test {
         assert_eq!(cache.get(45).await, Some(5)); // still queued for eviction
     }
 
+    #[tokio::test]
+    #[serial] // Needs to run in isolation because of the mocked `SystemTime`
+    async fn must_honor_eviction_interval() {
+        mock_time::reset();
+        let (cache, fork_tx, exit_tx) = cache_for_testing(
+            Duration::from_secs(5),
+            Duration::from_secs(60),
+            vec![(42, 2), (43, 3), (44, 4), (45, 5)],
+        );
+
+        let _ = cache.get(1).await; // trigger eviction
+        let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 42 }); // register process
+        let _ = exit_tx.send(ProcessExit { pid: 42 }); // schedule for eviction
+
+        //TODO (jeroensoeters) change to polling
+        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        mock_time::advance_time(Duration::from_secs(6)); // advance time beyond eviction time
+
+        let _ = cache.get(1).await; // trigger eviction
+
+        assert_eq!(
+            cache.eviction_queue().await,
+            vec![Eviction { pid: 42, evict_at: seconds_after_unix_epoch(5) }]
+        ); // assert that eviction didn't happen yet
+    }
+
     fn seconds_after_unix_epoch(seconds: u64) -> SystemTime {
         SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(seconds))
@@ -306,6 +353,7 @@ mod test {
 
     fn cache_for_testing(
         expire_after: Duration,
+        evict_every: Duration,
         test_data: Vec<(i32, i32)>,
     ) -> (ProcCache, Sender<ForkedProcess>, Sender<ProcessExit>) {
         let (fork_tx, _fork_rx) = channel(4);
@@ -317,11 +365,41 @@ mod test {
 
         let cache = ProcCache::new(
             expire_after,
+            evict_every,
             fork_broadcaster,
             exit_broadcaster,
             test_proc_info,
         );
 
         (cache, fork_tx, exit_tx)
+    }
+}
+
+#[cfg(test)]
+mod mock_time {
+    use once_cell::sync::OnceCell;
+    use std::sync::Mutex;
+    use std::time::{Duration, SystemTime};
+
+    pub static TIME: OnceCell<Mutex<SystemTime>> = OnceCell::new();
+
+    pub fn now() -> SystemTime {
+        *TIME.get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH)).lock().unwrap()
+    }
+
+    pub fn advance_time(d: Duration) {
+        let mut guard = TIME
+            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
+            .lock()
+            .unwrap();
+        *guard = guard.checked_add(d).unwrap();
+    }
+
+    pub fn reset() {
+        let mut guard = TIME
+            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
+            .lock()
+            .unwrap();
+        *guard = SystemTime::UNIX_EPOCH;
     }
 }
