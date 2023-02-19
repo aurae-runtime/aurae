@@ -476,7 +476,6 @@ dependencies = [
  "toml",
  "tonic",
  "tower",
- "url",
  "x509-certificate",
 ]
 
