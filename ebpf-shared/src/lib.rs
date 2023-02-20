@@ -5,7 +5,7 @@ pub trait HasCgroup {
 }
 
 pub trait HasHostPid {
-    fn pid(&self) -> i32;
+    fn host_pid(&self) -> i32;
 }
 
 #[repr(C)]
@@ -23,7 +23,7 @@ impl HasCgroup for Signal {
 }
 
 impl HasHostPid for Signal {
-    fn pid(&self) -> i32 {
+    fn host_pid(&self) -> i32 {
         self.pid
     }
 }

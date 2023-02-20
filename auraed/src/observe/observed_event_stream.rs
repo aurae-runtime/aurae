@@ -105,11 +105,11 @@ impl<'a, T: HasCgroup + HasHostPid + Clone + Send + Sync + 'static>
                     let pid = if let Some(ref proc_cache) = proc_thread_cache {
                         let guard = proc_cache.lock().await;
                         guard
-                            .get(event.pid())
+                            .get(event.host_pid())
                             .await
-                            .unwrap_or_else(|| event.pid())
+                            .unwrap_or_else(|| event.host_pid())
                     } else {
-                        event.pid()
+                        event.host_pid()
                     };
 
                     if tx.send(Ok(map_response(event, pid))).await.is_err() {
