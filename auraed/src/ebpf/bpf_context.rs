@@ -82,7 +82,7 @@ impl BpfContext {
     ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
     where
         TProgram: BpfFile + KProbeProgram<TEvent> + PerfBufferReader<TEvent>,
-        TEvent: Clone + Send + 'static + std::fmt::Debug,
+        TEvent: Clone + Send + 'static,
     {
         match TProgram::load() {
             Ok(mut bpf_handle) => {
