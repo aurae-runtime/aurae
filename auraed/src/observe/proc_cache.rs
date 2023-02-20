@@ -27,8 +27,6 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-// TODO(jeroen) remove once this is fully integrated
-#![allow(dead_code)]
 
 use crate::ebpf::tracepoint::PerfEventBroadcast;
 use aurae_ebpf_shared::{ForkedProcess, ProcessExit};
@@ -83,7 +81,6 @@ struct Eviction {
 #[derive(Debug)]
 pub struct ProcCache {
     cache: Arc<Mutex<HashMap<i32, i32>>>,
-    evict_after: Duration,
     evict_every: Duration,
     eviction_queue: Arc<Mutex<VecDeque<Eviction>>>,
     last_eviction: SystemTime,
@@ -99,7 +96,6 @@ impl ProcCache {
     ) -> Self {
         let res = Self {
             cache: Arc::new(Mutex::new(HashMap::with_capacity(PID_MAX))),
-            evict_after,
             evict_every,
             eviction_queue: Arc::new(Mutex::new(VecDeque::with_capacity(
                 PID_MAX,
@@ -217,14 +213,14 @@ mod test {
 
     #[tokio::test]
     #[serial] // Needs to run in isolation because of the mocked `SystemTime`
-    async fn must_create_cache_entry_for_a_new_processes() {
+    async fn must_create_cache_entry_for_a_new_process() {
         let (cache, fork_tx, _) = cache_for_testing(
             Duration::from_secs(5),
             Duration::from_secs(5),
             vec![(42, 2)],
         );
 
-        _ = fork_tx
+        let _ = fork_tx
             .send(ForkedProcess { parent_pid: 1, child_pid: 42 })
             .expect("error sending msg");
 
@@ -244,18 +240,18 @@ mod test {
             vec![(42, 2), (43, 3), (44, 4)],
         );
 
-        _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 42 });
-        _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 43 });
-        _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 44 });
+        let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 42 });
+        let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 43 });
+        let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 44 });
 
-        _ = exit_tx.send(ProcessExit { pid: 42 });
+        let _ = exit_tx.send(ProcessExit { pid: 42 });
 
         // TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         mock_time::advance_time(Duration::from_secs(5));
 
-        _ = exit_tx.send(ProcessExit { pid: 44 });
+        let _ = exit_tx.send(ProcessExit { pid: 44 });
 
         //TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -279,26 +275,26 @@ mod test {
             vec![(42, 2), (43, 3), (44, 4), (45, 5)],
         );
 
-        _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 42 });
-        _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 43 });
-        _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 44 });
-        _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 45 });
+        let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 42 });
+        let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 43 });
+        let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 44 });
+        let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 45 });
 
-        _ = exit_tx.send(ProcessExit { pid: 42 });
+        let _ = exit_tx.send(ProcessExit { pid: 42 });
 
         //TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         mock_time::advance_time(Duration::from_secs(2));
 
-        _ = exit_tx.send(ProcessExit { pid: 44 });
+        let _ = exit_tx.send(ProcessExit { pid: 44 });
 
         //TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         mock_time::advance_time(Duration::from_secs(5));
 
-        _ = exit_tx.send(ProcessExit { pid: 45 });
+        let _ = exit_tx.send(ProcessExit { pid: 45 });
 
         //TODO (jeroensoeters) change to polling
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -372,34 +368,5 @@ mod test {
         );
 
         (cache, fork_tx, exit_tx)
-    }
-}
-
-#[cfg(test)]
-mod mock_time {
-    use once_cell::sync::OnceCell;
-    use std::sync::Mutex;
-    use std::time::{Duration, SystemTime};
-
-    pub static TIME: OnceCell<Mutex<SystemTime>> = OnceCell::new();
-
-    pub fn now() -> SystemTime {
-        *TIME.get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH)).lock().unwrap()
-    }
-
-    pub fn advance_time(d: Duration) {
-        let mut guard = TIME
-            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
-            .lock()
-            .unwrap();
-        *guard = guard.checked_add(d).unwrap();
-    }
-
-    pub fn reset() {
-        let mut guard = TIME
-            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
-            .lock()
-            .unwrap();
-        *guard = SystemTime::UNIX_EPOCH;
     }
 }
