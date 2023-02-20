@@ -45,6 +45,7 @@ jobs:
           credentials:
             username:  ${{ github.actor }}
             password:  ${{ secrets.GITHUB_TOKEN }}
+          options: --security-opt seccomp=unconfined
         permissions:
           contents: write
           packages: write
