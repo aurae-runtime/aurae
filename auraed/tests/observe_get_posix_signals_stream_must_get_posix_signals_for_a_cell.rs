@@ -15,7 +15,7 @@ mod common;
 
 #[test_helpers_macros::shared_runtime_test]
 #[ignore = "we can not run eBPF tests in Github actions"]
-async fn must_get_posix_signals_for_a_cell() {
+async fn observe_get_posix_signal_stream_must_get_posix_signals_for_a_cell() {
     skip_if_not_root!("must_get_posix_signals_for_a_cell");
     skip_if_seccomp!("must_get_posix_signals_for_a_cell");
 
