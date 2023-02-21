@@ -323,10 +323,130 @@ mod tests {
     }
 
     #[test]
-    fn test_cell_type_cpuset_valid() {}
+    fn test_cell_type_cpu_weight_too_small() {
+        let validated = CellValidator::validate_cpu(
+            Some(CpuController { weight: Some(0), max: None }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
 
     #[test]
-    fn test_cell_type_memory_valid() {}
+    fn test_cell_type_cpu_weight_too_large() {
+        let validated = CellValidator::validate_cpu(
+            Some(CpuController { weight: Some(20000), max: None }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
+
+    #[test]
+    fn test_cell_type_cpu_max_too_small() {
+        let validated = CellValidator::validate_cpu(
+            Some(CpuController { weight: Some(1000), max: Some(-1) }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
+
+    #[test]
+    fn test_cell_type_cpuset_valid() {
+        let validated = CellValidator::validate_cpuset(
+            Some(CpusetController {
+                cpus: Some(String::from("1,2-4")),
+                mems: Some(String::from("1-4")),
+            }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_ok());
+        let inner = validated.unwrap();
+        assert!(inner.is_some());
+        let controller = inner.unwrap();
+        assert_eq!(controller.cpus, Some(Cpus::new(String::from("1,2-4"))));
+        assert_eq!(controller.mems, Some(Mems::new(String::from("1-4"))));
+    }
+
+    #[test]
+    fn test_cell_type_cpuset_invalid_cpus() {
+        let validated = CellValidator::validate_cpuset(
+            Some(CpusetController {
+                cpus: Some(String::from("foo")),
+                mems: Some(String::from("1-4")),
+            }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
+
+    #[test]
+    fn test_cell_type_cpuset_invalid_mems() {
+        let validated = CellValidator::validate_cpuset(
+            Some(CpusetController {
+                cpus: Some(String::from("1,2-4")),
+                mems: Some(String::from("1..4")),
+            }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
+
+    #[test]
+    fn test_cell_type_memory_valid() {
+        let validated = CellValidator::validate_memory(
+            Some(MemoryController {
+                min: None,
+                low: Some(1000),
+                high: None,
+                max: Some(10000),
+            }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_ok());
+        let inner = validated.unwrap();
+        assert!(inner.is_some());
+        let controller = inner.unwrap();
+        assert_eq!(controller.min, None);
+        assert_eq!(controller.low, Some(Protection::new(1000)));
+        assert_eq!(controller.high, None);
+        assert_eq!(controller.max, Some(Limit::new(10000)));
+    }
+
+    #[test]
+    fn test_cell_type_memory_low_too_small() {
+        let validated = CellValidator::validate_memory(
+            Some(MemoryController {
+                min: None,
+                low: Some(-1),
+                high: None,
+                max: Some(10000),
+            }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
+
+    #[test]
+    fn test_cell_type_memory_max_too_small() {
+        let validated = CellValidator::validate_memory(
+            Some(MemoryController {
+                min: None,
+                low: Some(1000),
+                high: None,
+                max: Some(-1),
+            }),
+            "field",
+            Some("parent"),
+        );
+        assert!(validated.is_err());
+    }
 
     #[test]
     fn test_cell_service_start_request_empty_executable() {
