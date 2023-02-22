@@ -44,6 +44,8 @@ use std::{
 };
 use tracing::{error, info, trace};
 
+const PROC_SELF_EXE: &str = "/proc/self/exe";
+
 #[derive(Debug)]
 pub struct NestedAuraed {
     process: procfs::process::Process,
@@ -74,7 +76,8 @@ impl NestedAuraed {
                 .to_string_lossy()
         );
 
-        let mut command = Command::new("auraed");
+        // Here we read /proc/self/exe which will be a symbolic link to our binary.
+        let mut command = Command::new(std::fs::read_link(PROC_SELF_EXE)?);
         let _ = command.current_dir("/").args([
             "--socket",
             &client_config.system.socket,
