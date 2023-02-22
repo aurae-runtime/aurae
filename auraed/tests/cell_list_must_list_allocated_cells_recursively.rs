@@ -37,6 +37,20 @@ async fn cells_list_must_list_allocated_cells_recursively() {
     .into_inner()
     .cell_name;
 
+    // Allocate a double nested cell
+    let double_nested_cell_name = retry!(
+        client
+            .allocate(
+                CellServiceAllocateRequestBuilder::new()
+                    .parent_cell_name(nested_cell_name.clone())
+                    .build(),
+            )
+            .await
+    )
+    .unwrap()
+    .into_inner()
+    .cell_name;
+
     // Allocate another non-nested cell
     let cell2_name = retry!(
         client.allocate(CellServiceAllocateRequestBuilder::new().build()).await
@@ -82,7 +96,17 @@ async fn cells_list_must_list_allocated_cells_recursively() {
                         isolate_process: false,
                         isolate_network: false,
                     }),
-                    children: vec![],
+                    children: vec![CellGraphNode {
+                        cell: Some(Cell {
+                            name: double_nested_cell_name,
+                            cpu: None,
+                            cpuset: None,
+                            memory: None,
+                            isolate_process: false,
+                            isolate_network: false,
+                        }),
+                        children: vec![],
+                    }],
                 }],
             },
         ],

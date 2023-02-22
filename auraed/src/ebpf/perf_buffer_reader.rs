@@ -1,48 +1,54 @@
-use super::PerfEventBroadcast;
-use aya::programs::ProgramError;
+/* -------------------------------------------------------------------------- *\
+ *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *                                                                            *
+ *                +--------------------------------------------+              *
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ *                                                                            *
+ * -------------------------------------------------------------------------- *
+ *                                                                            *
+ *   Licensed under the Apache License, Version 2.0 (the "License");          *
+ *   you may not use this file except in compliance with the License.         *
+ *   You may obtain a copy of the License at                                  *
+ *                                                                            *
+ *       http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                            *
+ *   Unless required by applicable law or agreed to in writing, software      *
+ *   distributed under the License is distributed on an "AS IS" BASIS,        *
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *   See the License for the specific language governing permissions and      *
+ *   limitations under the License.                                           *
+ *                                                                            *
+\* -------------------------------------------------------------------------- */
+
 use aya::{
     maps::perf::AsyncPerfEventArray,
-    programs::TracePoint,
     util::{nr_cpus, online_cpus},
     Bpf,
 };
 use bytes::BytesMut;
-use log::trace;
 use procfs::page_size;
 use std::mem::size_of;
 use tokio::sync::broadcast;
-use tracing::{error, warn};
+use tracing::{error, trace};
+
+use super::perf_event_broadcast::PerfEventBroadcast;
 
 /// Size (in pages) for the circular per-CPU buffers that BPF perfbuf creates.
 const PER_CPU_BUFFER_SIZE_IN_PAGES: usize = 2;
 
-pub trait TracepointProgram<T: Clone + Send + 'static> {
-    const PROGRAM_NAME: &'static str;
-    const CATEGORY: &'static str;
-    const EVENT: &'static str;
-    const PERF_BUFFER: &'static str;
-
-    fn load_and_attach(
+pub trait PerfBufferReader<T: Clone + Send + 'static> {
+    fn read_from_perf_buffer(
         bpf: &mut Bpf,
+        perf_buffer: &'static str,
     ) -> Result<PerfEventBroadcast<T>, anyhow::Error> {
-        trace!("Loading eBPF program: {}", Self::PROGRAM_NAME);
-
-        // Load the eBPF TracePoint program
-        let program: &mut TracePoint = bpf
-            .program_mut(Self::PROGRAM_NAME)
-            .ok_or_else(|| anyhow::anyhow!("failed to get eBPF program"))?
-            .try_into()?;
-
-        // Load the program
-        match program.load() {
-            Ok(_) => Ok(()),
-            Err(ProgramError::AlreadyLoaded) => {
-                warn!("Already loaded eBPF program {}", Self::PROGRAM_NAME);
-                Ok(())
-            }
-            other => other,
-        }?;
-
         // Query the number of CPUs on the host
         let num_cpus = nr_cpus()?;
 
@@ -62,16 +68,6 @@ pub trait TracepointProgram<T: Clone + Send + 'static> {
         // per-CPU buffers
         let channel_capacity = per_cpu_buffer_capacity * num_cpus;
 
-        // Attach to kernel trace event
-        match program.attach(Self::CATEGORY, Self::EVENT) {
-            Ok(_) => Ok(()),
-            Err(ProgramError::AlreadyAttached) => {
-                warn!("Already attached eBPF program {}", Self::PROGRAM_NAME);
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }?;
-
         // Create the channel for broadcasting the events
         let (tx, _) = broadcast::channel(channel_capacity);
 
@@ -80,7 +76,7 @@ pub trait TracepointProgram<T: Clone + Send + 'static> {
         // indexed by CPU id.
         // https://libbpf.readthedocs.io/en/latest/api.html
         let mut perf_array =
-            AsyncPerfEventArray::try_from(bpf.map_mut(Self::PERF_BUFFER)?)?;
+            AsyncPerfEventArray::try_from(bpf.map_mut(perf_buffer)?)?;
 
         // Spawn a thread per CPU to listen for events from the kernel.
         for cpu_id in online_cpus()? {

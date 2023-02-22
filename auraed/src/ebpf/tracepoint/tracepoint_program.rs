@@ -28,15 +28,45 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use bpf_context::BpfContext;
-use bpf_file::BpfFile;
-pub use kprobe::TaskstatsExitKProbeProgram;
-pub use tracepoint::SchedProcessForkTracepointProgram;
-pub use tracepoint::SignalSignalGenerateTracepointProgram;
+use aya::programs::{ProgramError, TracePoint};
+use aya::Bpf;
+use tracing::{trace, warn};
 
-mod bpf_context;
-mod bpf_file;
-pub(crate) mod kprobe;
-pub(crate) mod perf_buffer_reader;
-pub(crate) mod perf_event_broadcast;
-pub(crate) mod tracepoint;
+pub trait TracepointProgram<T: Clone + Send + 'static> {
+    const PROGRAM_NAME: &'static str;
+    const CATEGORY: &'static str;
+    const EVENT: &'static str;
+    const PERF_BUFFER: &'static str;
+
+    fn load_and_attach(bpf: &mut Bpf) -> Result<(), anyhow::Error> {
+        trace!("Loading eBPF program: {}", Self::PROGRAM_NAME);
+
+        // Load the eBPF TracePoint program
+        let program: &mut TracePoint = bpf
+            .program_mut(Self::PROGRAM_NAME)
+            .ok_or_else(|| anyhow::anyhow!("failed to get eBPF program"))?
+            .try_into()?;
+
+        // Load the program
+        match program.load() {
+            Ok(_) => Ok(()),
+            Err(ProgramError::AlreadyLoaded) => {
+                warn!("Already loaded eBPF program {}", Self::PROGRAM_NAME);
+                Ok(())
+            }
+            other => other,
+        }?;
+
+        // Attach to kernel trace event
+        match program.attach(Self::CATEGORY, Self::EVENT) {
+            Ok(_) => Ok(()),
+            Err(ProgramError::AlreadyAttached) => {
+                warn!("Already attached eBPF program {}", Self::PROGRAM_NAME);
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }?;
+
+        Ok(())
+    }
+}

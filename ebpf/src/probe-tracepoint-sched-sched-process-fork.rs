@@ -22,8 +22,7 @@
 #![no_std]
 #![no_main]
 
-use aurae_ebpf_shared::Signal;
-use aya_bpf::helpers;
+use aurae_ebpf_shared::ForkedProcess;
 use aya_bpf::macros::map;
 use aya_bpf::macros::tracepoint;
 use aya_bpf::maps::PerfEventArray;
@@ -33,50 +32,39 @@ use aya_bpf::programs::TracePointContext;
 #[used]
 pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 
-#[map(name = "SIGNALS")]
-static mut SIGNALS: PerfEventArray<Signal> =
-    PerfEventArray::<Signal>::with_max_entries(1024, 0);
+#[map(name = "FORKED_PROCESSES")]
+static mut FORKED_PROCESSES: PerfEventArray<ForkedProcess> =
+    PerfEventArray::<ForkedProcess>::with_max_entries(1024, 0);
 
-// TODO (jeroensoeters): figure out how stable these offsets are and if we want
-//    to read from /sys/kernel/debug/tracing/events/signal/signal_generate/format
-//
-// @krisnova Checked going back to kernel version 5.0 these offsets remain unchanged:
-//    <linux>/include/trace/events/signal.h
-//      - 6.1  https://github.com/torvalds/linux/blob/v6.1/include/trace/events/signal.h
-//      - 5.18 https://github.com/torvalds/linux/blob/v5.18/include/trace/events/signal.h
-//      - 5.4  https://github.com/torvalds/linux/blob/v5.4/include/trace/events/signal.h
-//      - 5.0  https://github.com/torvalds/linux/blob/v5.0/include/trace/events/signal.h
-const SIGNAL_OFFSET: usize = 8;
-const PID_OFFSET: usize = 36;
+const PARENT_PID_OFFSET: usize = 24;
+const CHILD_PID_OFFSET: usize = 44;
 
-#[tracepoint(name = "signal_signal_generate")]
-pub fn signals(ctx: TracePointContext) -> u32 {
-    match try_signals(ctx) {
+#[tracepoint(name = "sched_process_fork")]
+pub fn sched_process_fork(ctx: TracePointContext) -> i32 {
+    match try_forked_process(ctx) {
         Ok(ret) => ret,
         Err(ret) => ret,
     }
 }
 
-fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
-    let signum: i32 = unsafe {
-        match ctx.read_at(SIGNAL_OFFSET) {
+fn try_forked_process(ctx: TracePointContext) -> Result<i32, i32> {
+    let parent_pid: i32 = unsafe {
+        match ctx.read_at(PARENT_PID_OFFSET) {
             Ok(s) => s,
-            Err(errn) => return Err(errn as u32),
+            Err(errn) => return Err(errn as i32),
         }
     };
 
-    let pid: i32 = unsafe {
-        match ctx.read_at(PID_OFFSET) {
+    let child_pid: i32 = unsafe {
+        match ctx.read_at(CHILD_PID_OFFSET) {
             Ok(s) => s,
-            Err(errn) => return Err(errn as u32),
+            Err(errn) => return Err(errn as i32),
         }
     };
 
-    let cgroup_id = unsafe { helpers::bpf_get_current_cgroup_id() };
-
-    let s = Signal { cgroup_id, signum, pid };
+    let s = ForkedProcess { parent_pid, child_pid };
     unsafe {
-        SIGNALS.output(&ctx, &s, 0);
+        FORKED_PROCESSES.output(&ctx, &s, 0);
     }
     Ok(0)
 }

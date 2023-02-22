@@ -1,5 +1,6 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *                      SPDX-License-Identifier: GPL-2.0                      *
+ *                      SPDX-License-Identifier: MIT                          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -13,30 +14,41 @@
  *                         Distributed Systems Runtime                        *
  *                                                                            *
  * -------------------------------------------------------------------------- *
- *                                                                            *
- *   Licensed under the Apache License, Version 2.0 (the "License");          *
- *   you may not use this file except in compliance with the License.         *
- *   You may obtain a copy of the License at                                  *
- *                                                                            *
- *       http://www.apache.org/licenses/LICENSE-2.0                           *
- *                                                                            *
- *   Unless required by applicable law or agreed to in writing, software      *
- *   distributed under the License is distributed on an "AS IS" BASIS,        *
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
- *   See the License for the specific language governing permissions and      *
- *   limitations under the License.                                           *
- *                                                                            *
+ * Dual Licensed: GNU GENERAL PUBLIC LICENSE 2.0                              *
+ * Dual Licensed: MIT License                                                 *
+ * Copyright 2023 The Aurae Authors (The Nivenly Foundation)                  *
 \* -------------------------------------------------------------------------- */
 
-pub use bpf_context::BpfContext;
-use bpf_file::BpfFile;
-pub use kprobe::TaskstatsExitKProbeProgram;
-pub use tracepoint::SchedProcessForkTracepointProgram;
-pub use tracepoint::SignalSignalGenerateTracepointProgram;
+#![no_std]
+#![no_main]
 
-mod bpf_context;
-mod bpf_file;
-pub(crate) mod kprobe;
-pub(crate) mod perf_buffer_reader;
-pub(crate) mod perf_event_broadcast;
-pub(crate) mod tracepoint;
+use aurae_ebpf_shared::ProcessExit;
+use aya_bpf::helpers;
+use aya_bpf::macros::kprobe;
+use aya_bpf::macros::map;
+use aya_bpf::maps::PerfEventArray;
+use aya_bpf::programs::ProbeContext;
+
+#[link_section = "license"]
+#[used]
+pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
+
+#[map(name = "PROCESS_EXITS")]
+static mut PROCESS_EXITS: PerfEventArray<ProcessExit> =
+    PerfEventArray::<ProcessExit>::with_max_entries(1024, 0);
+
+#[kprobe(name = "kprobe_taskstats_exit")]
+pub fn kprobe_taskstats_exit(ctx: ProbeContext) -> u32 {
+    let pid = helpers::bpf_get_current_pid_tgid() as i32;
+    let e = ProcessExit { pid };
+
+    unsafe {
+        PROCESS_EXITS.output(&ctx, &e, 0);
+    }
+    0
+}
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    unsafe { core::hint::unreachable_unchecked() }
+}

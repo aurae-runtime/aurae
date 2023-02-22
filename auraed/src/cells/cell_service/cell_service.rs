@@ -498,7 +498,7 @@ mod tests {
 
         let service = CellService::new(ObserveService::new(
             Arc::new(LogChannel::new(String::from("test"))),
-            None,
+            (None, None, None),
         ));
 
         let parent_cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());

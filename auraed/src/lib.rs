@@ -61,21 +61,19 @@
 )]
 #![warn(clippy::unwrap_used)]
 
+use crate::ebpf::{
+    BpfContext, SchedProcessForkTracepointProgram,
+    SignalSignalGenerateTracepointProgram, TaskstatsExitKProbeProgram,
+};
 use crate::{
-    cells::CellService,
-    cri::oci::AuraeOCIBuilder,
-    cri::runtime_service::RuntimeService,
-    discovery::DiscoveryService,
-    ebpf::{
-        tracepoint_programs::SignalSignalGenerateTracepointProgram, BpfHandle,
-    },
-    init::Context as AuraeContext,
-    init::SocketStream,
-    logging::log_channel::LogChannel,
-    observe::ObserveService,
+    cells::CellService, cri::oci::AuraeOCIBuilder,
+    cri::runtime_service::RuntimeService, discovery::DiscoveryService,
+    init::Context as AuraeContext, init::SocketStream,
+    logging::log_channel::LogChannel, observe::ObserveService,
     spawn::spawn_auraed_oci_to,
 };
 use anyhow::Context;
+use aurae_ebpf_shared::{ForkedProcess, ProcessExit, Signal};
 use once_cell::sync::OnceCell;
 use proto::{
     cells::cell_service_server::CellServiceServer,
@@ -205,38 +203,27 @@ pub async fn run(
         })?;
 
         // Install eBPF probes in the host Aurae daemon
-        let (_bpf_handle, posix_signals_listener) = if context
-            == AuraeContext::Cell
+        let (_bpf_handle, perf_events) = if context == AuraeContext::Cell
             || context == AuraeContext::Container
         {
-            (None, None)
+            (None, (None, None, None))
         } else {
             // TODO: Add flags/options to "opt-out" of the various BPF probes
             info!("Loading eBPF probes");
 
-            let mut bpf_handle = match BpfHandle::load() {
-                Ok(bpf_handle) => Some(bpf_handle),
-                Err(e) => {
-                    warn!("eBPF: Cannot load probes: {e}");
-                    None
-                }
-            };
+            let mut bpf_handle = BpfContext::new();
+            let process_fork_listener = bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>().ok();
+            let process_exit_listener = bpf_handle.load_and_attach_kprobe_program::<TaskstatsExitKProbeProgram, ProcessExit>().ok();
+            let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok();
 
-            let posix_signals_listener = if let Some(bpf_handle) =
-                &mut bpf_handle
-            {
-                match bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, _>() {
-                    Ok(x) => Some(x),
-                    Err(e) => {
-                        warn!("eBPF: Skipping SignalSignalGenerateTracepointProgram due to {e}");
-                        None
-                    }
-                }
-            } else {
-                None
-            };
-
-            (bpf_handle, posix_signals_listener)
+            (
+                Some(bpf_handle),
+                (
+                    process_fork_listener,
+                    process_exit_listener,
+                    posix_signals_listener,
+                ),
+            )
         };
 
         // Build gRPC Services
@@ -245,7 +232,7 @@ pub async fn run(
 
         let observe_service = ObserveService::new(
             Arc::new(LogChannel::new(String::from("TODO"))),
-            posix_signals_listener,
+            perf_events,
         );
         let observe_service_server =
             ObserveServiceServer::new(observe_service.clone());

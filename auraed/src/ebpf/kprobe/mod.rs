@@ -27,40 +27,24 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+use super::{bpf_file::BpfFile, perf_buffer_reader::PerfBufferReader};
+use aurae_ebpf_shared::ProcessExit;
+pub use kprobe_program::KProbeProgram;
 
-use super::{
-    tracepoint_programs::{PerfEventBroadcast, TracepointProgram},
-    BpfFile,
-};
-use aya::Bpf;
+mod kprobe_program;
 
-// This is critical to maintain the memory presence of the
-// loaded bpf object.
-// This specific BPF object needs to persist up to lib.rs such that
-// the rest of the program can access this scope.
-pub struct BpfHandle(Bpf);
+pub struct TaskstatsExitKProbeProgram;
 
-impl BpfHandle {
-    pub fn load() -> Result<Self, anyhow::Error> {
-        let bpf = InstrumentTracepointSignalSignalGenerate::load()?;
-        Ok(Self(bpf))
-    }
-
-    pub fn load_and_attach_tracepoint_program<TProgram, TEvent>(
-        &mut self,
-    ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
-    where
-        TProgram: TracepointProgram<TEvent>,
-        TEvent: Clone + Send + 'static,
-    {
-        TProgram::load_and_attach(&mut self.0)
-    }
+impl KProbeProgram<ProcessExit> for TaskstatsExitKProbeProgram {
+    const PROGRAM_NAME: &'static str = "kprobe_taskstats_exit";
+    const FUNCTION_NAME: &'static str = "taskstats_exit";
+    const PERF_BUFFER: &'static str = "PROCESS_EXITS";
 }
 
-struct InstrumentTracepointSignalSignalGenerate;
-impl BpfFile for InstrumentTracepointSignalSignalGenerate {
+impl BpfFile for TaskstatsExitKProbeProgram {
     /// Definition of the Aurae eBPF probe to capture all generated (and valid)
     /// kernel signals at runtime.
-    const OBJ_NAME: &'static str =
-        "instrument-tracepoint-signal-signal-generate";
+    const OBJ_NAME: &'static str = "instrument-kprobe-taskstats-exit";
 }
+
+impl PerfBufferReader<ProcessExit> for TaskstatsExitKProbeProgram {}

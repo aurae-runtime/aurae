@@ -28,17 +28,80 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use aurae_ebpf_shared::Signal;
-pub use perf_event_broadcast::PerfEventBroadcast;
-pub use tracepoint_program::TracepointProgram;
+use super::{
+    kprobe::KProbeProgram, perf_buffer_reader::PerfBufferReader,
+    perf_event_broadcast::PerfEventBroadcast, tracepoint::TracepointProgram,
+    BpfFile,
+};
 
-mod perf_event_broadcast;
-mod tracepoint_program;
+use aya::Bpf;
+use tracing::warn;
 
-pub struct SignalSignalGenerateTracepointProgram;
-impl TracepointProgram<Signal> for SignalSignalGenerateTracepointProgram {
-    const PROGRAM_NAME: &'static str = "signals";
-    const CATEGORY: &'static str = "signal";
-    const EVENT: &'static str = "signal_generate";
-    const PERF_BUFFER: &'static str = "SIGNALS";
+// This is critical to maintain the memory presence of the
+// loaded bpf object.
+// This specific BPF object needs to persist up to lib.rs such that
+// the rest of the program can access this scope.
+pub struct BpfContext(Vec<Bpf>);
+
+impl BpfContext {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn load_and_attach_tracepoint_program<TProgram, TEvent>(
+        &mut self,
+    ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
+    where
+        TProgram:
+            BpfFile + TracepointProgram<TEvent> + PerfBufferReader<TEvent>,
+        TEvent: Clone + Send + 'static,
+    {
+        match TProgram::load() {
+            Ok(mut bpf_handle) => {
+                TProgram::load_and_attach(&mut bpf_handle)?;
+                let perf_events = TProgram::read_from_perf_buffer(
+                    &mut bpf_handle,
+                    TProgram::PERF_BUFFER,
+                );
+                self.0.push(bpf_handle);
+                perf_events
+            }
+            Err(e) => {
+                warn!(
+                    "Error loading tracepoint program {}: {}",
+                    TProgram::PROGRAM_NAME,
+                    e
+                );
+                Err(e.into())
+            }
+        }
+    }
+
+    pub fn load_and_attach_kprobe_program<TProgram, TEvent>(
+        &mut self,
+    ) -> Result<PerfEventBroadcast<TEvent>, anyhow::Error>
+    where
+        TProgram: BpfFile + KProbeProgram<TEvent> + PerfBufferReader<TEvent>,
+        TEvent: Clone + Send + 'static,
+    {
+        match TProgram::load() {
+            Ok(mut bpf_handle) => {
+                TProgram::load_and_attach(&mut bpf_handle)?;
+                let perf_events = TProgram::read_from_perf_buffer(
+                    &mut bpf_handle,
+                    TProgram::PERF_BUFFER,
+                );
+                self.0.push(bpf_handle);
+                perf_events
+            }
+            Err(e) => {
+                warn!(
+                    "Error loading kprobe program {}: {}",
+                    TProgram::PROGRAM_NAME,
+                    e
+                );
+                Err(e.into())
+            }
+        }
+    }
 }
