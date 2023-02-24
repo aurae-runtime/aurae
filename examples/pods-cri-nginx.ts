@@ -40,11 +40,6 @@ let pod = await runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
         logDirectory: "/var/log",
         portMappings: cri.PortMapping[{}],
         linux: cri.LinuxPodSandboxConfig.fromPartial({
-             cgroupParent: "",
-            // overhead: undefined,
-            // resources: undefined,
-            // securityContext: undefined,
-            // sysctls: undefined
         }),
         metadata: cri.PodSandboxMetadata.fromPartial({
             name: "aurae-nginx",
@@ -53,16 +48,28 @@ let pod = await runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
 })
 helpers.print(pod)
 
-let container = runtime.createContainer(<cri.CreateContainerRequest>{
-    podSandboxId: pod.podSandboxId,
-    config: cri.ContainerConfig.fromPartial({
-        tty: false,
-        image: "nginx",
-        metadata: cri.ContainerMetadata.fromPartial({
-            name: "nginx",
-        })
-    }),
+// let container = runtime.createContainer(<cri.CreateContainerRequest>{
+//     podSandboxId: pod.podSandboxId,
+//     config: cri.ContainerConfig.fromPartial({
+//         tty: false,
+//         image: "nginx",
+//         metadata: cri.ContainerMetadata.fromPartial({
+//             name: "nginx",
+//         })
+//     }),
+//
+// })
+// helpers.print(container)
 
+
+let spod = await runtime.stopPodSandbox(<cri.RemovePodSandboxRequest>{
+    podSandboxId: "aurae-nginx",
 })
-helpers.print(container)
+helpers.print(spod)
+
+
+let rpod = await runtime.removePodSandbox(<cri.RemovePodSandboxRequest>{
+    podSandboxId: "aurae-nginx",
+})
+helpers.print(rpod)
 
