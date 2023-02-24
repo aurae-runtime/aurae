@@ -72,7 +72,7 @@ use crate::{
     logging::log_channel::LogChannel, observe::ObserveService,
     spawn::spawn_auraed_oci_to,
 };
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use aurae_ebpf_shared::{ForkedProcess, ProcessExit, Signal};
 use once_cell::sync::OnceCell;
 use proto::{
@@ -85,6 +85,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
+use tokio::task::JoinHandle;
 use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace, warn};
@@ -276,7 +277,8 @@ pub async fn run(
         // TODO: pass a known-good path to CellService to store any runtime data.
         let server_handle = tokio::spawn(async move {
             Server::builder()
-                .tls_config(tls)?
+                .tls_config(tls)
+                .with_context(|| "gRPC server failed to configure tls")?
                 .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)
@@ -289,22 +291,35 @@ pub async fn run(
                     let _ = graceful_shutdown_signal.changed().await;
                     info!("gRPC server received shutdown signal...");
                 })
-                .await?;
+                .await
+                .with_context(|| "gRPC server exited with error")?;
 
             info!("gRPC server exited successfully");
 
-            Ok::<_, tonic::transport::Error>(())
+            Ok(())
         });
 
         // Event loop
-        let graceful_shutdown_handle =
-            tokio::spawn(async { graceful_shutdown.wait().await });
+        let graceful_shutdown_handle = tokio::spawn(async {
+            graceful_shutdown.wait().await;
+            Ok(())
+        });
 
-        let (server_result, _) =
-            tokio::try_join!(server_handle, graceful_shutdown_handle)?;
+        // Flatten function adapted from `try_join` docs.
+        async fn flatten<T>(
+            handle: JoinHandle<Result<T, anyhow::Error>>,
+        ) -> Result<T, anyhow::Error> {
+            match handle.await {
+                Ok(x) => Ok(x?),
+                Err(e) => Err(anyhow!("failed to join task: {e:?}")),
+            }
+        }
 
-        if let Err(e) = server_result {
-            error!("gRPC server exited with error: {e}");
+        if let Err(e) = tokio::try_join!(
+            flatten(server_handle),
+            flatten(graceful_shutdown_handle)
+        ) {
+            error!("exiting due to error: {e:?}");
         }
 
         Ok(())
