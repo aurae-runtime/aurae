@@ -27,19 +27,24 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+use super::{bpf_file::BpfFile, perf_buffer_reader::PerfBufferReader};
+use aurae_ebpf_shared::ProcessExit;
+pub use kprobe_program::KProbeProgram;
 
-use tokio::sync::broadcast::{Receiver, Sender};
+mod kprobe_program;
 
-pub struct PerfEventListener<T> {
-    tx: Sender<T>,
+pub struct TaskstatsExitKProbeProgram;
+
+impl KProbeProgram<ProcessExit> for TaskstatsExitKProbeProgram {
+    const PROGRAM_NAME: &'static str = "kprobe_taskstats_exit";
+    const FUNCTION_NAME: &'static str = "taskstats_exit";
+    const PERF_BUFFER: &'static str = "PROCESS_EXITS";
 }
 
-impl<T> PerfEventListener<T> {
-    pub fn new(tx: Sender<T>) -> Self {
-        Self { tx }
-    }
-
-    pub fn subscribe(&self) -> Receiver<T> {
-        self.tx.subscribe()
-    }
+impl BpfFile for TaskstatsExitKProbeProgram {
+    /// Definition of the Aurae eBPF probe to capture all generated (and valid)
+    /// kernel signals at runtime.
+    const OBJ_NAME: &'static str = "instrument-kprobe-taskstats-exit";
 }
+
+impl PerfBufferReader<ProcessExit> for TaskstatsExitKProbeProgram {}

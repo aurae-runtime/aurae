@@ -38,22 +38,27 @@ use super::{
     },
     Result,
 };
-use crate::cells::cell_service::cells::CellsError;
+use crate::{cells::cell_service::cells::CellsError, observe::ObserveService};
 use ::validation::ValidatedType;
 use backoff::backoff::Backoff;
 use client::{cells::cell_service::CellServiceClient, Client, ClientError};
-use proto::cells::{
-    cell_service_server, Cell, CellGraphNode, CellServiceAllocateRequest,
-    CellServiceAllocateResponse, CellServiceFreeRequest,
-    CellServiceFreeResponse, CellServiceListRequest, CellServiceListResponse,
-    CellServiceStartRequest, CellServiceStartResponse, CellServiceStopRequest,
-    CellServiceStopResponse, CpuController, CpusetController, MemoryController,
+use proto::{
+    cells::{
+        cell_service_server, Cell, CellGraphNode, CellServiceAllocateRequest,
+        CellServiceAllocateResponse, CellServiceFreeRequest,
+        CellServiceFreeResponse, CellServiceListRequest,
+        CellServiceListResponse, CellServiceStartRequest,
+        CellServiceStartResponse, CellServiceStopRequest,
+        CellServiceStopResponse, CpuController, CpusetController,
+        MemoryController,
+    },
+    observe::LogChannelType,
 };
-use std::sync::Arc;
 use std::time::Duration;
+use std::{process::ExitStatus, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Code, Request, Response, Status};
-use tracing::{info, trace};
+use tracing::{info, trace, warn};
 
 macro_rules! do_in_cell {
     ($self:ident, $cell_name:ident, $function:ident, $request:ident) => {{
@@ -108,13 +113,15 @@ macro_rules! do_in_cell {
 pub struct CellService {
     cells: Arc<Mutex<Cells>>,
     executables: Arc<Mutex<Executables>>,
+    observe_service: ObserveService,
 }
 
 impl CellService {
-    pub fn new() -> Self {
+    pub fn new(observe_service: ObserveService) -> Self {
         CellService {
             cells: Default::default(),
             executables: Default::default(),
+            observe_service,
         }
     }
 
@@ -187,8 +194,29 @@ impl CellService {
             .expect("pid")
             .as_raw();
 
-        // TODO: either tell the [ObserveService] about this executable's log channels, or
-        // provide a way for the observe service to extract the log channels from here.
+        // Ensure the observe service is aware of the executable's logs.
+        if let Err(e) = self
+            .observe_service
+            .register_sub_process_channel(
+                pid,
+                LogChannelType::Stdout,
+                executable.stdout.clone(),
+            )
+            .await
+        {
+            warn!("failed to register stdout channel for pid {pid}: {e}");
+        }
+        if let Err(e) = self
+            .observe_service
+            .register_sub_process_channel(
+                pid,
+                LogChannelType::Stderr,
+                executable.stderr.clone(),
+            )
+            .await
+        {
+            warn!("failed to register stderr channel for pid {pid}: {e}");
+        }
 
         Ok(Response::new(CellServiceStartResponse { pid }))
     }
@@ -214,10 +242,35 @@ impl CellService {
         info!("CellService: stop() executable_name={:?}", executable_name,);
 
         let mut executables = self.executables.lock().await;
-        let _exit_status = executables
+
+        let pid = executables
+            .get(&executable_name)
+            .map_err(CellsServiceError::ExecutablesError)?
+            .pid()
+            .map_err(CellsServiceError::Io)?
+            .expect("pid")
+            .as_raw();
+
+        let _: ExitStatus = executables
             .stop(&executable_name)
             .await
             .map_err(CellsServiceError::ExecutablesError)?;
+
+        // Remove the executable logs from the observe service.
+        if let Err(e) = self
+            .observe_service
+            .unregister_sub_process_channel(pid, LogChannelType::Stdout)
+            .await
+        {
+            warn!("failed to unregister stdout channel for pid {pid}: {e}");
+        }
+        if let Err(e) = self
+            .observe_service
+            .unregister_sub_process_channel(pid, LogChannelType::Stderr)
+            .await
+        {
+            warn!("failed to unregister stderr channel for pid {pid}: {e}");
+        }
 
         Ok(Response::new(CellServiceStopResponse::default()))
     }
@@ -425,10 +478,14 @@ impl cell_service_server::CellService for CellService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cells::cell_service::validation::{
-        ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
-        ValidatedMemoryController,
+    use crate::{
+        cells::cell_service::validation::{
+            ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
+            ValidatedMemoryController,
+        },
+        logging::log_channel::LogChannel,
     };
+    use crate::{AuraedRuntime, AURAED_RUNTIME};
     use iter_tools::Itertools;
     use test_helpers::*;
 
@@ -437,7 +494,12 @@ mod tests {
         skip_if_not_root!("test_list");
         skip_if_seccomp!("test_list");
 
-        let service = CellService::new();
+        let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
+
+        let service = CellService::new(ObserveService::new(
+            Arc::new(LogChannel::new(String::from("test"))),
+            (None, None, None),
+        ));
 
         let parent_cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());
         assert!(service

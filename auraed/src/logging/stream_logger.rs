@@ -41,6 +41,7 @@ pub struct StreamLogger {
 }
 
 impl StreamLogger {
+    #[allow(unused)]
     /// Constructor requires channel between api and logger
     pub fn new(producer: Sender<LogItem>) -> StreamLogger {
         StreamLogger { producer }

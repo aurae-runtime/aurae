@@ -82,3 +82,21 @@ impl discovery_service_server::DiscoveryService for DiscoveryService {
         Ok(Response::new(self.discover(request)?))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use proto::discovery::DiscoverRequest;
+
+    use crate::discovery::{DiscoveryService, VERSION};
+
+    #[test]
+    fn test_discover() {
+        let resp = DiscoveryService::new().discover(DiscoverRequest {});
+        assert!(resp.is_ok());
+
+        let resp = resp.unwrap();
+
+        assert!(resp.healthy);
+        assert_eq!(resp.version, VERSION.expect("valid version"));
+    }
+}

@@ -34,27 +34,27 @@
 #![allow(clippy::match_single_binding)]
 
 pub mod cells {
-    include!("gen/aurae.cells.v0.rs");
+    include!("../gen/aurae.cells.v0.rs");
 }
 
 pub mod discovery {
-    include!("gen/aurae.discovery.v0.rs");
+    include!("../gen/aurae.discovery.v0.rs");
 }
 
 pub mod grpc {
     pub mod health {
-        include!("gen/grpc.health.v1.rs");
+        include!("../gen/grpc.health.v1.rs");
     }
 }
 
 pub mod cri {
-    include!("gen/runtime.v1.rs");
+    include!("../gen/runtime.v1.rs");
 }
 
 pub mod observe {
-    include!("gen/aurae.observe.v0.rs");
+    include!("../gen/aurae.observe.v0.rs");
 }
 
 pub mod vms {
-    include!("gen/aurae.vms.v0.rs");
+    include!("../gen/aurae.vms.v0.rs");
 }

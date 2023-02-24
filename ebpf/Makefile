@@ -21,8 +21,9 @@
 dir := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(dir)../hack/_common.mk
 
-cargo         =  cargo
 aurae_ebpf    =  /var/lib/aurae/ebpf
+cargo         =  cargo
+uname_m       =  $(shell uname -m)
 
 default: all ## Build all eBPF probes (debug)
 
@@ -42,13 +43,15 @@ release: nightly bpf-linker
 
 .PHONY: nightly
 nightly: ## Add nightly toolchain (needed for eBPF)
-	rustup toolchain list | grep -qc 'nightly-x86_64-unknown-linux-gnu' || \
-		rustup toolchain install nightly-x86_64-unknown-linux-gnu --component rust-src
+	rustup toolchain list | grep -qc 'nightly-$(uname_m)-unknown-linux-gnu' || \
+		rustup toolchain install nightly-$(uname_m)-unknown-linux-gnu --component rust-src
 
 .PHONY: bpf-linker
 bpf-linker: ## Install bpf-linker (needed for eBPF)
-	cargo install --list | grep -qc 'bpf-linker' || \
-		cargo install bpf-linker
+	$(cargo) install --list | grep -qc 'bpf-linker' || \
+	if [ '$(uname_m)' = 'aarch64' ]; \
+	then $(cargo) install --git https://github.com/aya-rs/bpf-linker  --tag v0.9.5 --no-default-features --features system-llvm -- bpf-linker; \
+	else $(cargo) install bpf-linker; fi
 
 clean: ## Clean the target artifacts
 	cargo clean

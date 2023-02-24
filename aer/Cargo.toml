@@ -13,7 +13,7 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 client = { workspace = true }
 clap = { workspace = true }
-futures-util = "0.3.25"
+futures-util = { workspace = true }
 macros = { package = "aer-macros", path = "macros" }
 proto = { workspace = true }
 serde = { workspace = true }

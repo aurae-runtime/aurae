@@ -28,78 +28,27 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use crate::ebpf::perf_event_listener::PerfEventListener;
-use crate::AURAE_LIBRARY_DIR;
-use aurae_ebpf_shared::Signal;
-use aya::util::nr_cpus;
 use aya::{
-    maps::perf::AsyncPerfEventArray, programs::TracePoint, util::online_cpus,
+    maps::perf::AsyncPerfEventArray,
+    util::{nr_cpus, online_cpus},
     Bpf,
 };
 use bytes::BytesMut;
-use log::trace;
 use procfs::page_size;
 use std::mem::size_of;
 use tokio::sync::broadcast;
-use tracing::error;
+use tracing::{error, trace};
 
-pub struct BpfLoader {
-    // The "bpf_scope" is critical to maintain the memory presence of the
-    // loaded bpf object.
-    // This specific BPF object needs to persist up to lib.rs such that
-    // the rest of the program can access this scope.
-    bpf_scopes: Vec<Bpf>,
-}
-
-/// Definition of the Aurae eBPF probe to capture all generated (and valid)
-/// kernel signals at runtime.
-const INSTRUMENT_TRACEPOINT_SIGNAL_SIGNAL_GENERATE: &str =
-    "instrument-tracepoint-signal-signal-generate";
+use super::perf_event_broadcast::PerfEventBroadcast;
 
 /// Size (in pages) for the circular per-CPU buffers that BPF perfbuf creates.
 const PER_CPU_BUFFER_SIZE_IN_PAGES: usize = 2;
 
-impl BpfLoader {
-    pub fn new() -> Self {
-        Self { bpf_scopes: vec![] }
-    }
-
-    pub fn read_and_load_tracepoint_signal_signal_generate(
-        &mut self,
-    ) -> Result<PerfEventListener<Signal>, anyhow::Error> {
-        self.load_perf_event_program::<Signal>(
-            INSTRUMENT_TRACEPOINT_SIGNAL_SIGNAL_GENERATE,
-            "signals",
-            "signal",
-            "signal_generate",
-            "SIGNALS",
-        )
-    }
-
-    /// Load a "PerfEvent" BPF program at runtime given an ELF object and
-    /// program configuration.
-    fn load_perf_event_program<T: Clone + Send + 'static>(
-        &mut self,
-        aurae_obj_name: &str,
-        prog_name: &str,
-        category: &str,
-        event: &str,
-        perf_buffer: &str,
-    ) -> Result<PerfEventListener<T>, anyhow::Error> {
-        trace!("Loading eBPF program: {}", aurae_obj_name);
-        let mut bpf_object = Bpf::load_file(format!(
-            "{AURAE_LIBRARY_DIR}/ebpf/{aurae_obj_name}",
-        ))?;
-
-        // Load the eBPF Tracepoint program
-        let program: &mut TracePoint = bpf_object
-            .program_mut(prog_name)
-            .expect("failed to load tracepoint")
-            .try_into()?;
-
-        // Load the program
-        program.load()?;
-
+pub trait PerfBufferReader<T: Clone + Send + 'static> {
+    fn read_from_perf_buffer(
+        bpf: &mut Bpf,
+        perf_buffer: &'static str,
+    ) -> Result<PerfEventBroadcast<T>, anyhow::Error> {
         // Query the number of CPUs on the host
         let num_cpus = nr_cpus()?;
 
@@ -119,10 +68,7 @@ impl BpfLoader {
         // per-CPU buffers
         let channel_capacity = per_cpu_buffer_capacity * num_cpus;
 
-        // Attach to kernel trace event
-        let _ = program.attach(category, event)?;
-
-        // Create the channel for braodcasting the events
+        // Create the channel for broadcasting the events
         let (tx, _) = broadcast::channel(channel_capacity);
 
         // Open the BPF_PERF_EVENT_ARRAY BPF map that is used to send data from
@@ -130,11 +76,11 @@ impl BpfLoader {
         // indexed by CPU id.
         // https://libbpf.readthedocs.io/en/latest/api.html
         let mut perf_array =
-            AsyncPerfEventArray::try_from(bpf_object.map_mut(perf_buffer)?)?;
+            AsyncPerfEventArray::try_from(bpf.map_mut(perf_buffer)?)?;
 
         // Spawn a thread per CPU to listen for events from the kernel.
         for cpu_id in online_cpus()? {
-            trace!("spawning task for cpu {}", cpu_id);
+            trace!("spawning task for cpu {cpu_id}");
             // Open the per-CPU buffer for the current CPU id
             let mut per_cpu_buffer =
                 perf_array.open(cpu_id, Some(PER_CPU_BUFFER_SIZE_IN_PAGES))?;
@@ -144,9 +90,10 @@ impl BpfLoader {
 
             // Spawn the thread to listen on the per-CPU buffer
             let _ignored = tokio::spawn(async move {
-                trace!("task for cpu awaiting for events {}", cpu_id);
+                trace!("task for cpu {cpu_id} awaiting for events");
 
                 // Allocate enough memory to drain the entire buffer
+                // Note: using `vec!` macro will not result in a correct `Vec`
                 let mut buffers = (0..per_cpu_buffer_capacity)
                     .map(|_| BytesMut::with_capacity(event_struct_size))
                     .collect::<Vec<_>>();
@@ -159,7 +106,7 @@ impl BpfLoader {
                     {
                         Ok(events) => events,
                         Err(error) => {
-                            error!("fail to read events from per-cpu perf buffer, bailing out: {}", error);
+                            error!("fail to read events from per-cpu perf buffer, bailing out: {error}");
                             return;
                         }
                     };
@@ -171,31 +118,26 @@ impl BpfLoader {
                         );
                     }
 
-                    for buf in buffers.iter_mut().take(events.read) {
-                        let ptr = buf.as_ptr() as *const T;
-                        let signal = unsafe { ptr.read_unaligned() };
-                        match per_cpu_tx.send(signal) {
-                            Ok(_) => continue,
-                            Err(err) => {
-                                // if no one is listening the error returned. XXX find a
-                                // better way of handling this.
-                                let errstr = format!("{err}");
-                                if !errstr.contains("channel closed") {
-                                    error!(
-                                        "failed to broadcast perf event: {}",
-                                        err
-                                    );
-                                }
-                            }
+                    // If we don't have any receivers, there is no reason to send the signals to the channels.
+                    // There is the possibility that a receiver subscribes while we are in the loop,
+                    //   but this chooses performance over that possibility.
+                    if per_cpu_tx.receiver_count() > 0 {
+                        for buf in buffers.iter_mut().take(events.read) {
+                            let ptr = buf.as_ptr() as *const T;
+                            let signal = unsafe { ptr.read_unaligned() };
+                            // send only errors if there are no receivers,
+                            // so the return can be safely ignored;
+                            // future sends may succeed
+                            let _ = per_cpu_tx.send(signal);
+                            // We don't clear buf for performance reasons (though it should be fast).
+                            // Since we call `.take(events.read)` above, we shouldn't be re-reading old data
+                            // buf.clear();
                         }
                     }
                 }
             });
         }
 
-        // Append to bpf_scopes
-        self.bpf_scopes.push(bpf_object);
-
-        Ok(PerfEventListener::new(tx))
+        Ok(PerfEventBroadcast::new(tx))
     }
 }

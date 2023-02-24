@@ -52,7 +52,23 @@ service ObserveService {
   rpc GetPosixSignalsStream(GetPosixSignalsStreamRequest) returns (stream GetPosixSignalsStreamResponse) {}
 }
 
-message GetPosixSignalsStreamRequest { 
+/// Request a stream of POSIX signals
+message GetPosixSignalsStreamRequest {
+  /// The workload to which te response will be scoped. If no workload is
+  /// specified, a stream of all POSIX signals on the host will be returned.
+  Workload workload = 1;
+}
+
+enum WorkloadType {
+  WORKLOAD_TYPE_UNSPECIFIED = 0;
+  WORKLOAD_TYPE_CELL = 1;
+  WORKLOAD_TYPE_POD_SANDBOX = 2;
+  WORKLOAD_TYPE_VM = 3;
+}
+
+message Workload {
+  WorkloadType workload_type = 1;
+  string id = 2;
 }
 
 message GetPosixSignalsStreamResponse {
@@ -61,7 +77,7 @@ message GetPosixSignalsStreamResponse {
 
 message Signal {
   int32 signal = 1;
-  int64 process_id = 2;
+  int32 process_id = 2;
 }
 
 message GetAuraeDaemonLogStreamRequest {
@@ -70,7 +86,7 @@ message GetAuraeDaemonLogStreamRequest {
 // TODO: not implemented
 message GetSubProcessStreamRequest {
   LogChannelType channel_type = 1;
-  int64 process_id = 2;
+  int32 process_id = 2;
 }
 
 message LogItem {

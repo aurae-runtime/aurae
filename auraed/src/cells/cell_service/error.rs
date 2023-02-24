@@ -29,6 +29,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{cells::CellsError, executables::ExecutablesError};
+use crate::observe::ObserveServiceError;
 use client::ClientError;
 use thiserror::Error;
 use tonic::Status;
@@ -46,6 +47,8 @@ pub(crate) enum CellsServiceError {
     Io(#[from] std::io::Error),
     #[error(transparent)]
     ClientError(#[from] ClientError),
+    #[error(transparent)]
+    ObserveServiceError(#[from] ObserveServiceError),
 }
 
 impl From<CellsServiceError> for Status {
@@ -88,6 +91,7 @@ impl From<CellsServiceError> for Status {
                 ClientError::ConnectionError(_) => Status::unavailable(msg),
                 ClientError::Other(_) => Status::unknown(msg),
             },
+            CellsServiceError::ObserveServiceError(e) => e.into(),
         }
     }
 }

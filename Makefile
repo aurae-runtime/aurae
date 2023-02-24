@@ -90,11 +90,13 @@ prcheck: build lint test-all docs docs-lint ## Meant to mimic the GHA checks (in
 # Setup Commands
 
 .PHONY: pki
-pki: certs ## Alias for certs
+pki: install-certs ## Alias for install-certs
 .PHONY: certs
 certs: clean-certs ## Generate x509 mTLS certs in /pki directory
 	mkdir -p pki
 	./hack/certgen
+.PHONY: install-certs
+install-certs: certs ## Install certs in /etc/aurae
 ifeq ($(uid), 0)
 	mkdir -p /etc/aurae/pki
 	cp -v pki/* /etc/aurae/pki
@@ -105,7 +107,7 @@ endif
 	@echo "Install PKI Auth Material [/etc/aurae]"
 
 .PHONY: config
-config: ## Set up default config
+config: certs ## Set up default config
 	mkdir -p $(HOME)/.aurae
 	cp -v auraescript/default.config.toml $(HOME)/.aurae/config
 	sed -i 's|~|$(HOME)|g' $(HOME)/.aurae/config
@@ -114,6 +116,7 @@ config: ## Set up default config
 
 .PHONY: musl
 musl: ## Add target for musl
+	rustup target list | grep -qc '$(uname_m)-unknown-linux-musl (installed)' || \
 	rustup target add $(uname_m)-unknown-linux-musl
 
 #------------------------------------------------------------------------------#
@@ -130,7 +133,7 @@ clean-certs: ## Clean the cert material
 
 .PHONY: clean-gen
 clean-gens: ## Clean gen directories
-	rm -rf proto/src/gen/*
+	rm -rf proto/gen/*
 	rm -rf auraescript/gen/*
 
 #------------------------------------------------------------------------------#
@@ -138,9 +141,9 @@ clean-gens: ## Clean gen directories
 # Protobuf Commands
 
 GEN_TS_PATTERN = auraescript/gen/v0/%.ts
-GEN_RS_PATTERN = proto/src/gen/aurae.%.v0.rs
-GEN_SERDE_RS_PATTERN = proto/src/gen/aurae.%.v0.serde.rs
-GEN_TONIC_RS_PATTERN = proto/src/gen/aurae.%.v0.tonic.rs
+GEN_RS_PATTERN = proto/gen/aurae.%.v0.rs
+GEN_SERDE_RS_PATTERN = proto/gen/aurae.%.v0.serde.rs
+GEN_TONIC_RS_PATTERN = proto/gen/aurae.%.v0.tonic.rs
 
 PROTOS = $(wildcard api/v0/*/*.proto)
 PROTO_DIRS = $(filter-out api/v0/README.md, $(wildcard api/v0/*))
@@ -152,6 +155,7 @@ GEN_RS += $(patsubst api/v0/%,$(GEN_TONIC_RS_PATTERN),$(PROTO_DIRS))
 GEN_TS = $(patsubst api/v0/%.proto,$(GEN_TS_PATTERN),$(PROTOS))
 
 $(GEN_TS_PATTERN) $(GEN_RS_PATTERN) $(GEN_SERDE_RS_PATTERN) $(GEN_TONIC_RS_PATTERN): $(PROTOS)
+	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
 	buf lint api
 	buf generate -v api
 
@@ -180,22 +184,26 @@ $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 
 .PHONY: $(1)-test
 $(1)-test: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) test $(2) -p auraed
+	$(cargo) test $(2) -p $(1)
 
 .PHONY: $(1)-test-all
 $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
 	sudo -E $(cargo) test $(2) -p $(1) -- --include-ignored
 
+.PHONY: $(1)-test-integration
+$(1)-test-integration: musl $(GEN_RS) $(GEN_TS)
+	sudo -E $(cargo) test $(2) -p $(1) --test '*' -- --include-ignored
+
 .PHONY: $(1)-test-watch
 $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
-	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored
+	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
 $(1)-build: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1)
 
 .PHONY: $(1)-build-release
-$(1)-build-release: musl ebpf-release $(GEN_RS) $(GEN_TS)
+$(1)-build-release: musl $(GEN_RS) $(GEN_TS)
 	$(cargo) build $(2) -p $(1) --release
 
 .PHONY: $(1)-debug
@@ -256,7 +264,6 @@ else
 docs-stdlib: $(GEN_TS) $(GEN_RS)
 	protoc --plugin=/usr/local/bin/protoc-gen-doc -I api/v0/discovery -I api/v0/observe -I api/v0/cells -I api/v0/vms --doc_out=docs/stdlib/v0 --doc_opt=markdown,index.md:Ignore* api/v0/*/*.proto --experimental_allow_proto3_optional
 endif
-
 
 .PHONY: docs-crates
 docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
@@ -327,11 +334,11 @@ spawn: ## Spawn the current auraed binary and start it in a container
 	./hack/spawn
 
 .PHONY: busybox
-busybox: ## Creat a "busybox" OCI bundle in target
+busybox: ## Create a "busybox" OCI bundle in target
 	./hack/oci-busybox
 
 .PHONY: alpine
-alpine: ## Creat an "alpine" OCI bundle in target
+alpine: ## Create an "alpine" OCI bundle in target
 	./hack/oci-alpine
 
 #------------------------------------------------------------------------------#

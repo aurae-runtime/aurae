@@ -94,3 +94,36 @@ macro_rules! skip_if_seccomp {
         }
     };
 }
+
+pub mod mock_time {
+    use once_cell::sync::OnceCell;
+    use std::sync::Mutex;
+    use std::time::{Duration, SystemTime};
+
+    pub static TIME: OnceCell<Mutex<SystemTime>> = OnceCell::new();
+
+    pub fn now() -> SystemTime {
+        *TIME
+            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
+            .lock()
+            .expect("mock_time failed to initialize the system time")
+    }
+
+    pub fn advance_time(d: Duration) {
+        let mut guard = TIME
+            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
+            .lock()
+            .expect("mock_time failed to get the system time");
+        *guard = guard
+            .checked_add(d)
+            .expect("mock_time failed to advance the system time");
+    }
+
+    pub fn reset() {
+        let mut guard = TIME
+            .get_or_init(|| Mutex::new(SystemTime::UNIX_EPOCH))
+            .lock()
+            .expect("mock_time failed to reset the system time");
+        *guard = SystemTime::UNIX_EPOCH;
+    }
+}

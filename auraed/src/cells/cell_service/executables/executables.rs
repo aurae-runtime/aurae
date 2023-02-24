@@ -31,8 +31,7 @@
 use super::{
     Executable, ExecutableName, ExecutableSpec, ExecutablesError, Result,
 };
-use std::collections::HashMap;
-use std::process::ExitStatus;
+use std::{collections::HashMap, process::ExitStatus};
 
 type Cache = HashMap<ExecutableName, Executable>;
 
@@ -73,6 +72,13 @@ impl Executables {
             }
         })?;
 
+        Ok(executable)
+    }
+
+    pub fn get(&self, executable_name: &ExecutableName) -> Result<&Executable> {
+        let Some(executable) = self.cache.get(executable_name) else {
+            return Err(ExecutablesError::ExecutableNotFound { executable_name: executable_name.clone() });
+        };
         Ok(executable)
     }
 

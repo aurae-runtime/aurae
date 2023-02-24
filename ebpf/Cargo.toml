@@ -13,6 +13,14 @@ aya-log-ebpf = { git = "https://github.com/aya-rs/aya", branch = "main" }
 name = "instrument-tracepoint-signal-signal-generate"
 path = "src/probe-tracepoint-signal-signal-generate.rs"
 
+[[bin]]
+name = "instrument-tracepoint-sched-sched-process-fork"
+path = "src/probe-tracepoint-sched-sched-process-fork.rs"
+
+[[bin]]
+name = "instrument-kprobe-taskstats-exit"
+path = "src/probe-kprobe-taskstats-exit.rs"
+
 [profile.dev]
 opt-level = 3
 debug = false
