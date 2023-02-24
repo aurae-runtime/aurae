@@ -28,10 +28,12 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
 import * as runtime from "../auraescript/gen/cells.ts";
 
-let cells = new runtime.CellServiceClient();
+
+let client = await auraescript_client("./pki/ca.crt", "./pki/_signed.client.nova.crt", "./pki/client.nova.key", "127.0.0.1:8080");
+// helpers.print(client)
+let cells = new runtime.CellServiceClient(client);
 let cellName = "ae-echo-cell";
 
 // [ Allocate ]

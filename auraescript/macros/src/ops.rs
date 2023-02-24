@@ -78,17 +78,25 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
                     let output_type = Ident::new(output_type, file_path_span);
                     let name = Ident::new(&m.name().to_snake_case(), file_path_span);
 
+                    // Magic OpState from deno (https://github.com/denoland/deno/blob/b6ac54815c1bcfa44a45b3f2c1c982829482477f/ops/lib.rs#L295)
                     quote! {
                         #[::deno_core::op]
                         pub(crate) async fn #op_ident(
-                            req: ::proto::#module::#input_type
+                            opstate: Rc<RefCell<OpState>>, // Auto filled by deno macro, call from typescript ignoring this parameter
+                            client: ::deno_core::ResourceId,
+                            req: ::proto::#module::#input_type,
                         ) -> std::result::Result<
                             ::proto::#module::#output_type,
                             ::anyhow::Error
                         > {
-                            let client = ::client::Client::default().await?;
+                            let asclient = {
+                                let opstate = &opstate.borrow();
+                                let rt = &opstate.resource_table; // get `ResourceTable` from JsRuntime `OpState`
+                                rt.get::<crate::builtin::auraescript_client::AuraeScriptClient>(client)?.clone() // get `Client` from its rid
+                            };
+                            let client = ::deno_core::RcRef::map(asclient, |v| &v.0);
                             let res = ::client::#module::#service_name_in_snake_case::#client_ident::#name(
-                                &client,
+                                &(*client),
                                 req
                             ).await?;
 
@@ -113,6 +121,9 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
     let op_decls = output.iter().map(|x| &x.1);
 
     let expanded = quote! {
+        use ::std::{rc::Rc, cell::RefCell};
+        use ::deno_core::OpState;
+
         #(#(#op_functions)*)*
 
         pub(crate) fn op_decls() -> Vec<::deno_core::OpDecl> {
@@ -209,7 +220,14 @@ fn typescript_service_generator(
 ) -> String {
     let service_name = service.name();
     let mut ts_funcs: String = format!(
-        "export class {service_name}Client implements {service_name} {{"
+        r#"
+export class {service_name}Client implements {service_name} {{
+    client: u32
+
+    constructor(client: u32) {{
+        this.client = client;
+    }}
+"#
     );
 
     service.method.iter().for_each(|m| {
@@ -225,7 +243,7 @@ fn typescript_service_generator(
             r#"
 {fn_name}(request: {input_type}): Promise<{output_type}> {{
     // @ts-ignore
-    return Deno.core.ops.{op_name}(request);
+    return Deno.core.ops.{op_name}(this.client, request);
 }}
         "#
         ));

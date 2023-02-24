@@ -35,7 +35,9 @@
 
 use std::net::SocketAddr;
 
-use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
+use crate::config::{
+    AuraeConfig, AuthConfig, CertMaterial, ClientCertDetails, SystemConfig,
+};
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};
@@ -65,6 +67,33 @@ pub struct Client {
 impl Client {
     pub async fn default() -> Result<Self> {
         Self::new(AuraeConfig::try_default()?).await
+    }
+
+    /// Create a new Client from given options
+    ///
+    /// # Arguments
+    ///
+    /// * `ca_crt` - Path to ca cert
+    /// * `client_crt` - Path to client cert
+    /// * `client_key` - Path to client key
+    /// * `socket` - Address to auraed
+    ///
+    /// Note: A new client is required for every independent execution of this process.
+    pub async fn from_options<S: Into<String>>(
+        ca_crt: S,
+        client_crt: S,
+        client_key: S,
+        socket: S,
+    ) -> Result<Self> {
+        let (ca_crt, client_crt, client_key, socket) = (
+            ca_crt.into(),
+            client_crt.into(),
+            client_key.into(),
+            socket.into(),
+        );
+        let auth = AuthConfig { ca_crt, client_crt, client_key };
+        let system = SystemConfig { socket };
+        Self::new(AuraeConfig { auth, system }).await
     }
 
     /// Create a new Client.
