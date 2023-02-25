@@ -68,7 +68,7 @@ mod tests {
     fn test_validation_success(input: &str) {
         let input: Mems = Mems::new(input.into());
         assert!(
-            Mems::validate(Some(input.into_inner()), "cpu_cpus", None).is_ok()
+            Mems::validate(Some(input.to_string()), "cpu_cpus", None).is_ok()
         );
     }
 
@@ -80,7 +80,7 @@ mod tests {
     fn test_validation_failure(input: &str) {
         let input: Mems = Mems::new(input.into());
         assert!(
-            Mems::validate(Some(input.into_inner()), "cpu_cpus", None).is_err()
+            Mems::validate(Some(input.to_string()), "cpu_cpus", None).is_err()
         );
     }
 }

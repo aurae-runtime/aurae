@@ -335,7 +335,7 @@ mod tests {
     #[test]
     fn test_cell_type_cpu_weight_too_large() {
         let validated = CellValidator::validate_cpu(
-            Some(CpuController { weight: Some(20000), max: None }),
+            Some(CpuController { weight: Some(10001), max: None }),
             "field",
             Some("parent"),
         );

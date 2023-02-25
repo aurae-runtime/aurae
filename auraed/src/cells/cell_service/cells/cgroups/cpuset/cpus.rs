@@ -68,7 +68,7 @@ mod tests {
     fn test_validation_success(input: &str) {
         let input: Cpus = Cpus::new(input.into());
         assert!(
-            Cpus::validate(Some(input.into_inner()), "cpu_cpus", None).is_ok()
+            Cpus::validate(Some(input.to_string()), "cpu_cpus", None).is_ok()
         );
     }
 
@@ -80,7 +80,7 @@ mod tests {
     fn test_validation_failure(input: &str) {
         let input: Cpus = Cpus::new(input.into());
         assert!(
-            Cpus::validate(Some(input.into_inner()), "cpu_cpus", None).is_err()
+            Cpus::validate(Some(input.to_string()), "cpu_cpus", None).is_err()
         );
     }
 }
