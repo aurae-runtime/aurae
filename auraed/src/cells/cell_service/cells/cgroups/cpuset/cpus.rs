@@ -28,15 +28,6 @@ impl ValidatedField<String> for Cpus {
         parent_name: Option<&str>,
     ) -> Result<Self, ValidationError> {
         let input = validation::required(input, field_name, parent_name)?;
-        Ok(Self(input))
-    }
-
-    fn validate_for_creation(
-        input: Option<String>,
-        field_name: &str,
-        parent_name: Option<&str>,
-    ) -> Result<Self, ValidationError> {
-        let input = Self::validate(input, field_name, parent_name)?;
 
         // TODO: maybe lazy_static this
         // input should be a comma seperated list of numbers with optional -s
@@ -45,7 +36,7 @@ impl ValidatedField<String> for Cpus {
             Regex::new(r"^(\d(-\d)?,?)*$").expect("regex construction");
         validation::allow_regex(&input, &pattern, field_name, parent_name)?;
 
-        Ok(input)
+        Ok(Self(input))
     }
 }
 
@@ -76,12 +67,9 @@ mod tests {
     #[test]
     fn test_validation_success(input: &str) {
         let input: Cpus = Cpus::new(input.into());
-        assert!(Cpus::validate_for_creation(
-            Some(input.into_inner()),
-            "cpu_cpus",
-            None
-        )
-        .is_ok());
+        assert!(
+            Cpus::validate(Some(input.to_string()), "cpu_cpus", None).is_ok()
+        );
     }
 
     #[test_case("foo"; "text")]
@@ -91,11 +79,8 @@ mod tests {
     #[test]
     fn test_validation_failure(input: &str) {
         let input: Cpus = Cpus::new(input.into());
-        assert!(Cpus::validate_for_creation(
-            Some(input.into_inner()),
-            "cpu_cpus",
-            None
-        )
-        .is_err());
+        assert!(
+            Cpus::validate(Some(input.to_string()), "cpu_cpus", None).is_err()
+        );
     }
 }
