@@ -61,24 +61,22 @@ mod tests {
 
     #[test_case(""; "empty string")]
     #[test_case("0"; "just one cpu")]
-    #[test_case("1,2"; "comma seperation")]
+    #[test_case("1,2"; "comma separation")]
     #[test_case("1-3"; "a range")]
     #[test_case("1,2-5,6"; "combo")]
     #[test]
     fn test_validation_success(input: &str) {
-        let input: Cpus = Cpus::new(input.into());
         assert!(
             Cpus::validate(Some(input.to_string()), "cpu_cpus", None).is_ok()
         );
     }
 
     #[test_case("foo"; "text")]
-    #[test_case("1:2"; "colon seperation")]
+    #[test_case("1:2"; "colon separation")]
     #[test_case("1..3"; "not a range")]
     #[test_case("1,foo;5"; "bad combo")]
     #[test]
     fn test_validation_failure(input: &str) {
-        let input: Cpus = Cpus::new(input.into());
         assert!(
             Cpus::validate(Some(input.to_string()), "cpu_cpus", None).is_err()
         );

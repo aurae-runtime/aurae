@@ -66,7 +66,6 @@ mod tests {
     #[test_case("1,2-5,6"; "combo")]
     #[test]
     fn test_validation_success(input: &str) {
-        let input: Mems = Mems::new(input.into());
         assert!(
             Mems::validate(Some(input.to_string()), "cpu_cpus", None).is_ok()
         );
@@ -78,7 +77,6 @@ mod tests {
     #[test_case("1,foo;5"; "bad combo")]
     #[test]
     fn test_validation_failure(input: &str) {
-        let input: Mems = Mems::new(input.into());
         assert!(
             Mems::validate(Some(input.to_string()), "cpu_cpus", None).is_err()
         );
