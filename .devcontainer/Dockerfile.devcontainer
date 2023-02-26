@@ -35,6 +35,7 @@ ARG PROTOC_VERSION=1.5.1
 ARG VALE_VERSION=2.21.3
 ARG LLVM_VERSION=15
 
+# Need these due to an error building Ring on aarch64: https://github.com/briansmith/ring/issues/1414#issuecomment-1055177218
 ENV CC_aarch64_unknown_linux_musl=clang
 ENV AR_aarch64_unknown_linux_musl=llvm-ar
 ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-Clink-self-contained=yes -Clinker=rust-lld"
