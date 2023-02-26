@@ -6,6 +6,13 @@ use validation::{ValidatedField, ValidationError};
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct ExecutableName(String);
 
+impl ExecutableName {
+    #[cfg(test)]
+    pub(crate) fn new(name: String) -> Self {
+        Self(name)
+    }
+}
+
 impl ValidatedField<String> for ExecutableName {
     fn validate(
         input: Option<String>,
