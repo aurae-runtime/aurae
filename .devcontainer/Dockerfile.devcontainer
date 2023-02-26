@@ -1,0 +1,88 @@
+# ---------------------------------------------------------------------------- #
+#        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors            #
+#                                                                              #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#   Licensed under the Apache License, Version 2.0 (the "License");            #
+#   you may not use this file except in compliance with the License.           #
+#   You may obtain a copy of the License at                                    #
+#                                                                              #
+#       http://www.apache.org/licenses/LICENSE-2.0                             #
+#                                                                              #
+#   Unless required by applicable law or agreed to in writing, software        #
+#   distributed under the License is distributed on an "AS IS" BASIS,          #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+#   See the License for the specific language governing permissions and        #
+#   limitations under the License.                                             #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+FROM mcr.microsoft.com/devcontainers/rust:1-bullseye
+
+ARG BUF_VERSION=1.14.0
+ARG PROTOC_VERSION=1.5.1
+ARG VALE_VERSION=2.21.3
+ARG LLVM_VERSION=15
+
+ENV CC_aarch64_unknown_linux_musl=clang
+ENV AR_aarch64_unknown_linux_musl=llvm-ar
+ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-Clink-self-contained=yes -Clinker=rust-lld"
+
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 15CF4D18AF4F7421
+
+RUN echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye main" >> /etc/apt/sources.list
+RUN echo "deb-src http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye main" >> /etc/apt/sources.list
+RUN echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-15 main" >> /etc/apt/sources.list
+RUN echo "deb-src http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-15 main" >> /etc/apt/sources.list
+RUN echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-16 main" >> /etc/apt/sources.list
+RUN echo "deb-src http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-16 main" >> /etc/apt/sources.list
+
+RUN apt-get update
+RUN apt-get install -y protobuf-compiler
+RUN apt-get install -y musl-tools
+RUN apt-get install -y build-essential
+RUN apt-get install -y llvm-${LLVM_VERSION}-dev
+RUN apt-get install -y libclang-${LLVM_VERSION}-dev
+RUN apt-get install -y libpolly-${LLVM_VERSION}-dev
+RUN apt-get install -y clang
+RUN apt-get install -y llvm
+
+## Setup Rust
+RUN rustup target add $(uname -m)-unknown-linux-musl
+RUN rustup +nightly target add $(uname -m)-unknown-linux-musl
+
+## Setup protoc-gen-doc
+RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
+    tar -xzf protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
+    chmod +x protoc-gen-doc && \
+    mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
+    rm protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz
+
+## Setup Buf
+RUN curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(uname -s)-$(uname -m)" \
+    -o "/usr/local/bin/buf" && \
+    chmod +x "/usr/local/bin/buf"
+
+## Setup Vale
+RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+    -o vale.tar.gz && \
+    tar -xvzf vale.tar.gz -C bin && \
+    mv bin/vale /usr/local/bin/vale && \
+    rm vale.tar.gz
+
+## Setup cargo-udeps
+RUN cargo install --git https://github.com/aya-rs/bpf-linker  --tag v0.9.5 --no-default-features --features system-llvm -- bpf-linker
+RUN cargo install cargo-watch
+# RUN cargo install cargo-udeps
