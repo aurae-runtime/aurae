@@ -47,9 +47,19 @@ export GIT_PAGER = cat
 
 # Aliases
 
+# This section is not intended for "custom target content" and is only intended
+# as alias targets for existing targets. Do not add a "body" to any targets here
+# as it will introduce a bespoke build process. You MUST call existing targets.
+# If you do not like the existing targets, you are welcome to try to change them
+# following the normal contribution workflows.
+
 # Keep all as the first command to have it be the default as per convention
 .PHONY: all
 all: install ## alias for install
+
+# ⚠️ DO NOT REMOVE ⚠️
+nova: auraed aer auraescript ## The official Kris Nóva alias for her workflow that only exists in her head.
+# ⚠️ DO NOT REMOVE ⚠️
 
 #------------------------------------------------------------------------------#
 
