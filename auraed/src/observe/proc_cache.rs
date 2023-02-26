@@ -177,6 +177,7 @@ mod test {
     use crate::ebpf::tracepoint::PerfEventBroadcast;
     use crate::observe::proc_cache::ForkedProcess;
     use serial_test::serial;
+    use test_helpers::assert_eventually_eq;
     use test_helpers::mock_time;
     use tokio::sync::broadcast::{channel, Sender};
 
@@ -224,10 +225,7 @@ mod test {
             .send(ForkedProcess { parent_pid: 1, child_pid: 42 })
             .expect("error sending msg");
 
-        //TODO (jeroensoeters) change to polling
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        assert_eq!(cache.get(42).await, Some(2));
+        assert_eventually_eq!(cache.get(42).await, Some(2));
     }
 
     #[tokio::test]
@@ -245,18 +243,14 @@ mod test {
         let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 44 });
 
         let _ = exit_tx.send(ProcessExit { pid: 42 });
-
-        // TODO (jeroensoeters) change to polling
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        // Wait for process to be cached
+        assert_eventually_eq!(cache.get(42).await, Some(2));
 
         mock_time::advance_time(Duration::from_secs(5));
 
         let _ = exit_tx.send(ProcessExit { pid: 44 });
 
-        //TODO (jeroensoeters) change to polling
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        assert_eq!(
+        assert_eventually_eq!(
             cache.eviction_queue().await,
             vec![
                 Eviction { pid: 42, evict_at: seconds_after_unix_epoch(5) },
@@ -281,25 +275,27 @@ mod test {
         let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 45 });
 
         let _ = exit_tx.send(ProcessExit { pid: 42 });
-
-        //TODO (jeroensoeters) change to polling
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        assert_eventually_eq!(
+            cache.eviction_queue().await,
+            vec![Eviction { pid: 42, evict_at: seconds_after_unix_epoch(5) }],
+        );
 
         mock_time::advance_time(Duration::from_secs(2));
 
         let _ = exit_tx.send(ProcessExit { pid: 44 });
-
-        //TODO (jeroensoeters) change to polling
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        assert_eventually_eq!(
+            cache.eviction_queue().await,
+            vec![
+                Eviction { pid: 42, evict_at: seconds_after_unix_epoch(5) }, // T(event) = 0 -> T(evict) = 5
+                Eviction { pid: 44, evict_at: seconds_after_unix_epoch(7) }, // T(event) = 2 -> T(evict) = 7
+            ],
+        );
 
         mock_time::advance_time(Duration::from_secs(5));
 
         let _ = exit_tx.send(ProcessExit { pid: 45 });
 
-        //TODO (jeroensoeters) change to polling
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        assert_eq!(
+        assert_eventually_eq!(
             cache.eviction_queue().await,
             vec![
                 Eviction { pid: 42, evict_at: seconds_after_unix_epoch(5) }, // T(event) = 0 -> T(evict) = 5
@@ -320,7 +316,7 @@ mod test {
         mock_time::reset();
         let (cache, fork_tx, exit_tx) = cache_for_testing(
             Duration::from_secs(5),
-            Duration::from_secs(60),
+            Duration::from_secs(60), // set evict interval to minute
             vec![(42, 2), (43, 3), (44, 4), (45, 5)],
         );
 
@@ -328,14 +324,16 @@ mod test {
         let _ = fork_tx.send(ForkedProcess { parent_pid: 1, child_pid: 42 }); // register process
         let _ = exit_tx.send(ProcessExit { pid: 42 }); // schedule for eviction
 
-        //TODO (jeroensoeters) change to polling
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        assert_eventually_eq!(
+            cache.eviction_queue().await,
+            vec![Eviction { pid: 42, evict_at: seconds_after_unix_epoch(5) }],
+        );
 
-        mock_time::advance_time(Duration::from_secs(6)); // advance time beyond eviction time
+        mock_time::advance_time(Duration::from_secs(6)); // advance time beyond eviction time but within the evict interval
 
-        let _ = cache.get(1).await; // trigger eviction
+        let _ = cache.get(1).await; // trigger a second eviction withiin the evict interval
 
-        assert_eq!(
+        assert_eventually_eq!(
             cache.eviction_queue().await,
             vec![Eviction { pid: 42, evict_at: seconds_after_unix_epoch(5) }]
         ); // assert that eviction didn't happen yet
