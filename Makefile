@@ -198,15 +198,27 @@ $(1)-test: musl $(GEN_RS) $(GEN_TS)
 
 .PHONY: $(1)-test-all
 $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
+ifeq ($(uid), 0)
+	$(cargo) test $(2) -p $(1) -- --include-ignored
+else
 	sudo -E $(cargo) test $(2) -p $(1) -- --include-ignored
+endif
 
 .PHONY: $(1)-test-integration
 $(1)-test-integration: musl $(GEN_RS) $(GEN_TS)
+ifeq ($(uid), 0)
+	$(cargo) test $(2) -p $(1) --test '*' -- --include-ignored
+else
 	sudo -E $(cargo) test $(2) -p $(1) --test '*' -- --include-ignored
+endif
 
 .PHONY: $(1)-test-watch
 $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
+ifeq ($(uid), 0)
+	$(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
+else
 	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
+endif
 
 .PHONY: $(1)-build
 $(1)-build: musl $(GEN_RS) $(GEN_TS)
@@ -235,7 +247,11 @@ $(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,
 
 .PHONY: auraed-start
 auraed-start: ## Starts the installed auraed executable
+ifeq ($(uid), 0)
+	$(HOME)/.cargo/bin/auraed
+else
 	sudo -E $(HOME)/.cargo/bin/auraed
+endif
 
 #------------------------------------------------------------------------------#
 
@@ -290,7 +306,11 @@ docs-other:
 
 .PHONY: docs-serve
 docs-serve: docs ## Run the aurae.io static website locally
+ifeq ($(uid), 0)
+	./hack/serve.sh
+else
 	sudo -E ./hack/serve.sh
+endif
 
 #------------------------------------------------------------------------------#
 
