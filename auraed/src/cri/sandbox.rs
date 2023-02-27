@@ -30,6 +30,7 @@
 #![allow(dead_code)]
 
 use libcontainer::container::Container;
+use hypervisor::Vmm;
 
 #[derive(Debug, Clone, Default)]
 pub struct Sandbox {
@@ -37,6 +38,8 @@ pub struct Sandbox {
     name: String,
     pub(crate) init: Container,
     pub(crate) tenants: Vec<Container>,
+
+    pub(crate) _vinit: hypervisor::Vmm,
 }
 
 pub struct SandboxBuilder {

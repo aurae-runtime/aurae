@@ -50,7 +50,6 @@ clap = { version = "4.1.1", features = ["derive"] }
 fancy-regex = "0.10.0"
 futures-util = "0.3.26"
 heck = "0.4.0"
-hypervisor = { path = "./crates/hypervisor" }
 lazy_static = "1.4.0"
 nix = "0.25" # upgrade to 0.26 blocked by libcgroups as of v0.0.4
 proc-macro2 = "1.0"

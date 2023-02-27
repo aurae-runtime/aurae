@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "test_name": "vm-vcpu_coverage",
+      "command": "cd src/vm-vcpu-ref/ && pytest rust-vmm-ci/integration_tests/test_coverage.py --test-scope crate",
+      "platform": [
+        "x86_64"
+      ]
+    }
+  ]
+}

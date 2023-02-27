@@ -1,23 +1,25 @@
 [package]
-name = "vmm"
+name = "vmm-reference"
 version = "0.1.0"
 authors = ["rust-vmm AWS maintainers <rust-vmm-maintainers@amazon.com>"]
 edition = "2018"
+license = "Apache-2.0 OR BSD-3-Clause"
 
 [dependencies]
-event-manager = "0.2.1"
-kvm-bindings = { version = "0.5.0", features = ["fam-wrappers"] }
-kvm-ioctls = "0.11.0"
-libc = "0.2.91"
-linux-loader = { version = "0.4.0", features = ["bzimage", "elf"] }
-vm-allocator = "0.1.0"
-vm-memory = { version = "0.7.0", features = ["backend-mmap"] }
-vm-superio = "0.5.0"
-vmm-sys-util = "0.8.0"
-vm-device = "0.1.0"
+vmm = { path = "src/vmm" }
+api = { path = "src/api" }
 
-devices = { path = "../devices" }
-vm-vcpu = { path = "../vm-vcpu" }
-vm-vcpu-ref = { path = "../vm-vcpu-ref" }
-utils = { path = "../utils" }
-arch = { path = "../arch" }
+[workspace]
+members = ["src/vm-vcpu-ref"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+codegen-units = 1
+lto = true
+panic = "abort"
+
+[patch.crates-io]
+# TODO: Using this patch until a version > 4.0 gets published.
+linux-loader = { git = "https://github.com/rust-vmm/linux-loader.git", rev = "9a9f071" }

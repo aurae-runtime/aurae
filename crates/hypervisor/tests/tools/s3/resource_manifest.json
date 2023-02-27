@@ -1,0 +1,366 @@
+{
+  "v1": [
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox-halt",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox-halt",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-focal",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": false,
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-focal",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": false,
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "disk",
+      "resource_name": "ubuntu-focal-rootfs.ext4",
+      "relative_path": "disk/",
+      "distro": "Ubuntu",
+      "compatible_kernels": "v1/kernel/bzimage/bzimage-focal|v1/kernel/elf/vmlinux-focal"
+    }
+  ],
+  "v2": [
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox-halt",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox-halt",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "pe-hello-busybox",
+      "relative_path": "kernel/pe",
+      "image_format": "pe",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-focal",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": false,
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-focal",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": false,
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "disk",
+      "resource_name": "ubuntu-focal-rootfs.ext4",
+      "relative_path": "disk/",
+      "distro": "Ubuntu",
+      "compatible_kernels": "v1/kernel/bzimage/bzimage-focal|v1/kernel/elf/vmlinux-focal|v2/kernel/bzimage/bzimage-focal|v2/kernel/elf/vmlinux-focal"
+    }
+  ],
+  "v3": [
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox-halt",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox-halt",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "pe-hello-busybox-halt",
+      "relative_path": "kernel/pe",
+      "image_format": "pe",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "pe-hello-busybox",
+      "relative_path": "kernel/pe",
+      "image_format": "pe",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-focal",
+      "relative_path": "kernel/bzimage",
+      "image_format": "bzimage",
+      "halt_after_boot": false,
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-focal",
+      "relative_path": "kernel/elf",
+      "image_format": "elf",
+      "halt_after_boot": false,
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "disk",
+      "resource_name": "ubuntu-focal-rootfs.ext4",
+      "relative_path": "disk/",
+      "distro": "Ubuntu",
+      "compatible_kernels": "v1/kernel/bzimage/bzimage-focal|v1/kernel/elf/vmlinux-focal|v2/kernel/bzimage/bzimage-focal|v2/kernel/elf/vmlinux-focal|v3/kernel/bzimage/bzimage-focal|v3/kernel/elf/vmlinux-focal"
+    },
+    {
+      "resource_type": "initrd",
+      "resource_name": "aarch64-initramfs.cpio",
+      "relative_path": "kernel/pe"
+    }
+  ],
+  "v4": [
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox-halt",
+      "relative_path": "kernel/",
+      "image_format": "bzimage",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox-halt",
+      "relative_path": "kernel/",
+      "image_format": "elf",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "pe-hello-busybox-halt",
+      "relative_path": "kernel/",
+      "image_format": "pe",
+      "halt_after_boot": true
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox",
+      "relative_path": "kernel/",
+      "image_format": "elf",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox",
+      "relative_path": "kernel/",
+      "image_format": "bzimage",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "pe-hello-busybox",
+      "relative_path": "kernel/",
+      "image_format": "pe",
+      "halt_after_boot": false
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-focal",
+      "relative_path": "kernel/",
+      "image_format": "bzimage",
+      "halt_after_boot": false,
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-focal",
+      "relative_path": "kernel/",
+      "image_format": "elf",
+      "halt_after_boot": false,
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "disk",
+      "resource_name": "ubuntu-focal-rootfs.ext4",
+      "relative_path": "disk/",
+      "distro": "Ubuntu",
+      "compatible_kernels": "v4/kernel/bzimage-focal|v4/kernel/vmlinux-focal"
+    },
+    {
+      "resource_type": "initrd",
+      "resource_name": "aarch64-initramfs.cpio",
+      "relative_path": "kernel/"
+    }
+  ],
+  "v5": [
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox-halt",
+      "relative_path": "kernel/",
+      "image_format": "bzimage",
+      "halt_after_boot": true,
+      "with_disk": false,
+      "platform_type": "x86_64"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox-halt",
+      "relative_path": "kernel/",
+      "image_format": "elf",
+      "halt_after_boot": true,
+      "with_disk": false,
+      "platform_type": "x86_64"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "pe-hello-busybox-halt",
+      "relative_path": "kernel/",
+      "image_format": "pe",
+      "halt_after_boot": true,
+      "with_disk": false,
+      "platform_type": "aarch64"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-hello-busybox",
+      "relative_path": "kernel/",
+      "image_format": "elf",
+      "halt_after_boot": false,
+      "with_disk": false,
+      "platform_type": "x86_64"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-hello-busybox",
+      "relative_path": "kernel/",
+      "image_format": "bzimage",
+      "halt_after_boot": false,
+      "with_disk": false,
+      "platform_type": "x86_64"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "pe-hello-busybox",
+      "relative_path": "kernel/",
+      "image_format": "pe",
+      "halt_after_boot": false,
+      "with_disk": false,
+      "platform_type": "aarch64"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "bzimage-focal",
+      "relative_path": "kernel/",
+      "image_format": "bzimage",
+      "halt_after_boot": false,
+      "with_disk": true,
+      "platform_type": "x86_64",
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "vmlinux-focal",
+      "relative_path": "kernel/",
+      "image_format": "elf",
+      "halt_after_boot": false,
+      "with_disk": true,
+      "platform_type": "x86_64",
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "kernel",
+      "resource_name": "pe-focal",
+      "relative_path": "kernel/",
+      "image_format": "pe",
+      "halt_after_boot": false,
+      "with_disk": true,
+      "platform_type": "aarch64",
+      "distro": "Ubuntu"
+    },
+    {
+      "resource_type": "disk",
+      "resource_name": "ubuntu-focal-rootfs-aarch64.ext4",
+      "relative_path": "disk/",
+      "distro": "Ubuntu",
+      "platform_type": "aarch64",
+      "compatible_kernels": "v5/kernel/pe-focal|v5/kernel/pe-focal-halt"
+    },
+    {
+      "resource_type": "disk",
+      "resource_name": "ubuntu-focal-rootfs-x86_64.ext4",
+      "relative_path": "disk/",
+      "distro": "Ubuntu",
+      "platform_type": "x86_64",
+      "compatible_kernels": "v5/kernel/bzimage-focal|v4/kernel/vmlinux-focal"
+    },
+    {
+      "resource_type": "initrd",
+      "resource_name": "aarch64-initramfs.cpio",
+      "relative_path": "kernel/"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+[package]
+name = "api"
+version = "0.1.0"
+authors = ["rust-vmm AWS maintainers <rust-vmm-maintainers@amazon.com>"]
+edition = "2018"
+
+[dependencies]
+clap = "3.2.17"
+
+vmm = { path = "../vmm" }
+
+[dev-dependencies]
+linux-loader = "0.4.0"
