@@ -65,8 +65,8 @@ fn main() -> anyhow::Result<()> {
 
     let _ = js_runtime.execute_script("", "Deno.core.initializeAsyncOps();")?;
 
-    // include helper.ts
-    let _ = js_runtime.execute_script("", include_str!("../../helpers.js"))?;
+    // include aurae.ts
+    // let _ = js_runtime.execute_script("", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/gen/aurae.ts")))?;
 
     let main_module = resolve_path(&args[1].clone())?;
 

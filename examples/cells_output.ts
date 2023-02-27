@@ -29,9 +29,10 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 import * as runtime from "../auraescript/gen/cells.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
 
 
-let client = await auraescript_client("./pki/ca.crt", "./pki/_signed.client.nova.crt", "./pki/client.nova.key", "127.0.0.1:8080");
+let client = await aurae.createClient("./pki/ca.crt", "./pki/_signed.client.nova.crt", "./pki/client.nova.key", "127.0.0.1:8080");
 // helpers.print(client)
 let cells = new runtime.CellServiceClient(client);
 let cellName = "ae-echo-cell";
