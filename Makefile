@@ -39,6 +39,11 @@ ociopts       =  DOCKER_BUILDKIT=1
 uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
+ifeq ($(uid), 0)
+root_cargo    = cargo
+else
+root_cargo    = sudo -E cargo
+endif
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -198,27 +203,15 @@ $(1)-test: musl $(GEN_RS) $(GEN_TS)
 
 .PHONY: $(1)-test-all
 $(1)-test-all: musl $(GEN_RS) $(GEN_TS)
-ifeq ($(uid), 0)
-	$(cargo) test $(2) -p $(1) -- --include-ignored
-else
-	sudo -E $(cargo) test $(2) -p $(1) -- --include-ignored
-endif
+	$(root_cargo) test $(2) -p $(1) -- --include-ignored
 
 .PHONY: $(1)-test-integration
 $(1)-test-integration: musl $(GEN_RS) $(GEN_TS)
-ifeq ($(uid), 0)
-	$(cargo) test $(2) -p $(1) --test '*' -- --include-ignored
-else
-	sudo -E $(cargo) test $(2) -p $(1) --test '*' -- --include-ignored
-endif
+	$(root_cargo) test $(2) -p $(1) --test '*' -- --include-ignored
 
 .PHONY: $(1)-test-watch
 $(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
-ifeq ($(uid), 0)
-	$(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
-else
-	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
-endif
+	$(root_cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
 $(1)-build: musl $(GEN_RS) $(GEN_TS)
