@@ -13,8 +13,11 @@ nav:
   - Getting Started:
     - Building from Source: /build
     - Quick Start: /quickstart
-    - M1 Development: /m1
     #- Examples: /examples
+  - Development Environments:
+    - Overview: /development-environments
+    - Dev Container: /development-environments/dev-container
+    - Apple Silicon: /development-environments/apple-silicon
   - Signals: /signals
   - Certificates: /certs
   - Community:

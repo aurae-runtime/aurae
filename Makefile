@@ -296,6 +296,7 @@ docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
 docs-other:
 	cp -rv README.md docs/index.md # Special copy for the main README
 	cp -rv api/README.md docs/stdlib/index.md # Special copy for the main README
+	cp -rv .devcontainer/README.md docs/development-environments/dev-container/index.md
 
 .PHONY: docs-serve
 docs-serve: docs ## Run the aurae.io static website locally
