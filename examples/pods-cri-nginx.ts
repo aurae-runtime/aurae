@@ -48,18 +48,18 @@ let pod = await runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
 })
 helpers.print(pod)
 
-// let container = runtime.createContainer(<cri.CreateContainerRequest>{
-//     podSandboxId: pod.podSandboxId,
-//     config: cri.ContainerConfig.fromPartial({
-//         tty: false,
-//         image: "nginx",
-//         metadata: cri.ContainerMetadata.fromPartial({
-//             name: "nginx",
-//         })
-//     }),
-//
-// })
-// helpers.print(container)
+let container = runtime.createContainer(<cri.CreateContainerRequest>{
+    podSandboxId: pod.podSandboxId,
+    config: cri.ContainerConfig.fromPartial({
+        tty: false,
+        image: "nginx",
+        metadata: cri.ContainerMetadata.fromPartial({
+            name: "nginx",
+        })
+    }),
+
+})
+helpers.print(container)
 
 
 let spod = await runtime.stopPodSandbox(<cri.RemovePodSandboxRequest>{

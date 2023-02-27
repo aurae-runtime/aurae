@@ -256,8 +256,32 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         // // Metadata
         // let metadata = config.metadata.expect("metadata from config");
         //
-        // // TODO: Pull sandbox from cache
-        // // TODO schedule as tenant container
+        // let sandbox_id = request.into_inner().pod_sandbox_id;
+        // let mut sandboxes = self.sandboxes.lock().await;
+        // let sandbox = sandboxes.get(&sandbox_id)?;
+        //
+        // let scoped_syscall = create_syscall();
+        // // Initialize a new container builder with the AURAE_SELF_IDENTIFIER name as the "init" container running a recursive Auraed
+        // let container_builder = ContainerBuilder::new(
+        //     "test-123".to_string(),
+        //     scoped_syscall.as_ref(),
+        // );
+        //
+        // let container_path = crate::AURAED_RUNTIME
+        //     .get()
+        //     .expect("runtime")
+        //     .pods_dir()
+        //     .join(sandbox_id.clone());
+        //
+        // // Define the init container startup environment
+        //
+        // let tenant_container = container_builder
+        //     .with_root_path(container_path).expect("setting pods directory")
+        //     .as_tenant().build().expect("to add a tenant container");
+        //
+        //
+        // tenant_container.start().expect("starting container");
+        //
 
         todo!()
     }
