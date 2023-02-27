@@ -28,16 +28,17 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/cells.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
+import * as cells from "../auraescript/gen/cells.ts";
 
-let cells = new runtime.CellServiceClient();
+let client = await aurae.createClient();
+let cellService = new cells.CellServiceClient(client);
 const cellName = "ae-1";
 
 // [ Allocate Shared NS ]
-let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
-    cell: runtime.Cell.fromPartial({
-        cpu: runtime.CpuController.fromPartial({
+let s_allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
+    cell: cells.Cell.fromPartial({
+        cpu: cells.CpuController.fromPartial({
             weight: 2
         }),
         name: cellName,
@@ -45,30 +46,30 @@ let s_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
         isolateProcess: true,
     })
 });
-helpers.print(s_allocated)
+aurae.print(s_allocated)
 
 // [ Start ]
-let s_started = await cells.start(<runtime.CellServiceStartRequest>{
+let s_started = await cellService.start(<cells.CellServiceStartRequest>{
     cellName: cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "ls /proc",
         description: "List processes",
         name: "ps-aux"
     })
 })
-helpers.print(s_started)
+aurae.print(s_started)
 
-let host_started = await cells.start(<runtime.CellServiceStartRequest>{
+let host_started = await cellService.start(<cells.CellServiceStartRequest>{
     cellName: cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "hostname",
         description: "Show hostname",
         name: "show-hostname"
     })
 })
-helpers.print(host_started)
+aurae.print(host_started)
 
 // [ Free ]
-await cells.free(<runtime.CellServiceFreeRequest>{
+await cellService.free(<cells.CellServiceFreeRequest>{
     cellName: cellName
 });

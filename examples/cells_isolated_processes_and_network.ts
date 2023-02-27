@@ -28,16 +28,17 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/cells.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
+import * as cells from "../auraescript/gen/cells.ts";
 
-let cells = new runtime.CellServiceClient();
+let client = await aurae.createClient();
+let cellService = new cells.CellServiceClient(client);
 const cellName = "ae-net-proc-isolated-1";
 
 // [ Allocate Shared NS ]
-let net_proc_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
-    cell: runtime.Cell.fromPartial({
-        cpu: runtime.CpuController.fromPartial({
+let net_proc_allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
+    cell: cells.Cell.fromPartial({
+        cpu: cells.CpuController.fromPartial({
             weight: 2
         }),
         name: cellName,
@@ -45,41 +46,41 @@ let net_proc_allocated = await cells.allocate(<runtime.CellServiceAllocateReques
         isolateProcess: true,
     })
 });
-helpers.print(net_proc_allocated)
+aurae.print(net_proc_allocated)
 
 // [ Start ]
-let net_proc_started1 = await cells.start(<runtime.CellServiceStartRequest>{
+let net_proc_started1 = await cellService.start(<cells.CellServiceStartRequest>{
     cellName: cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "ls /proc",
         description: "List processes",
         name: "ps-aux"
     })
 })
-helpers.print(net_proc_started1)
+aurae.print(net_proc_started1)
 
 // [ Start ]
-let net_proc_started2 = await cells.start(<runtime.CellServiceStartRequest>{
+let net_proc_started2 = await cellService.start(<cells.CellServiceStartRequest>{
     cellName: cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "ifconfig && ip a && route",
         description: "Show network info",
         name: "net-info"
     })
 })
-helpers.print(net_proc_started2)
+aurae.print(net_proc_started2)
 
-let host_started = await cells.start(<runtime.CellServiceStartRequest>{
+let host_started = await cellService.start(<cells.CellServiceStartRequest>{
     cellName: cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "hostname",
         description: "Show hostname",
         name: "show-hostname"
     })
 })
-helpers.print(host_started)
+aurae.print(host_started)
 
 // [ Free ]
-await cells.free(<runtime.CellServiceFreeRequest>{
+await cellService.free(<cells.CellServiceFreeRequest>{
     cellName: cellName
 });
