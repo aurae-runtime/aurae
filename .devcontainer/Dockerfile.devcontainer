@@ -35,6 +35,8 @@ ARG PROTOC_VERSION=1.5.1
 ARG VALE_VERSION=2.21.3
 ARG LLVM_VERSION=15
 
+ENV HOME=/usr/local
+
 # Need these due to an error building Ring on aarch64: https://github.com/briansmith/ring/issues/1414#issuecomment-1055177218
 ENV CC_aarch64_unknown_linux_musl=clang
 ENV AR_aarch64_unknown_linux_musl=llvm-ar
@@ -62,6 +64,7 @@ RUN apt-get install -y llvm
 ## Setup Rust
 RUN rustup target add $(uname -m)-unknown-linux-musl
 RUN rustup +nightly target add $(uname -m)-unknown-linux-musl
+RUN rustup component add rust-src --toolchain nightly-$(uname -m)-unknown-linux-gnu
 
 ## Setup protoc-gen-doc
 RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
@@ -86,4 +89,4 @@ RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE
 ## Setup cargo-udeps
 RUN cargo install --git https://github.com/aya-rs/bpf-linker  --tag v0.9.5 --no-default-features --features system-llvm -- bpf-linker
 RUN cargo install cargo-watch
-# RUN cargo install cargo-udeps
+RUN cargo install cargo-udeps
