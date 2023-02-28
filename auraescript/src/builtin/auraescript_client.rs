@@ -5,7 +5,7 @@ use std::{cell::RefCell, rc::Rc};
 
 // `AuraeConfig` `try_default`
 #[deno_core::op]
-pub(crate) async fn as__aurae__config__try_default(
+pub(crate) async fn as__aurae_config__try_default(
     opstate: Rc<RefCell<OpState>>
 ) -> Result<ResourceId> {
     let config = AuraeConfig::try_default()?;
@@ -16,7 +16,7 @@ pub(crate) async fn as__aurae__config__try_default(
 
 // `AuraeConfig` `from_options`
 #[deno_core::op]
-pub(crate) async fn as__aurae__config__from_options(
+pub(crate) async fn as__aurae_config__from_options(
     opstate: Rc<RefCell<OpState>>,
     ca_crt: String,
     client_crt: String,
@@ -30,7 +30,7 @@ pub(crate) async fn as__aurae__config__from_options(
 
 // `AuraeConfig` `parse_from_file`
 #[deno_core::op]
-pub(crate) async fn as__aurae__config__parse_from_file(
+pub(crate) async fn as__aurae_config__parse_from_file(
     opstate: Rc<RefCell<OpState>>,
     path: String,
 ) -> Result<ResourceId> {
@@ -68,9 +68,9 @@ pub(crate) async fn as__client_new(
 
 pub(crate) fn op_decls() -> Vec<::deno_core::OpDecl> {
     vec![
-        as__aurae__config__try_default::decl(),
-        as__aurae__config__from_options::decl(),
-        as__aurae__config__parse_from_file::decl(),
+        as__aurae_config__try_default::decl(),
+        as__aurae_config__from_options::decl(),
+        as__aurae_config__parse_from_file::decl(),
         as__client_new::decl(),
     ]
 }
