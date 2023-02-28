@@ -83,18 +83,23 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
                         #[::deno_core::op]
                         pub(crate) async fn #op_ident(
                             opstate: Rc<RefCell<OpState>>, // Auto filled by deno macro, call from typescript ignoring this parameter
-                            client: ::deno_core::ResourceId,
+                            client_rid: Option<::deno_core::ResourceId>,
                             req: ::proto::#module::#input_type,
                         ) -> std::result::Result<
                             ::proto::#module::#output_type,
                             ::anyhow::Error
                         > {
-                            let asclient = {
-                                let opstate = &opstate.borrow();
-                                let rt = &opstate.resource_table; // get `ResourceTable` from JsRuntime `OpState`
-                                rt.get::<crate::builtin::auraescript_client::AuraeScriptClient>(client)?.clone() // get `Client` from its rid
+                            let client = match client_rid {
+                                None => ::deno_core::RcRef::new(::client::Client::default().await?),
+                                Some(client_rid) => {
+                                    let asclient = {
+                                        let opstate = &opstate.borrow();
+                                        let rt = &opstate.resource_table; // get `ResourceTable` from JsRuntime `OpState`
+                                        rt.get::<crate::builtin::auraescript_client::AuraeScriptClient>(client_rid)?.clone() // get `Client` from its rid
+                                    };
+                                    ::deno_core::RcRef::map(asclient, |v| &v.0)
+                                }
                             };
-                            let client = ::deno_core::RcRef::map(asclient, |v| &v.0);
                             let res = ::client::#module::#service_name_in_snake_case::#client_ident::#name(
                                 &(*client),
                                 req
@@ -224,6 +229,7 @@ fn typescript_service_generator(
 export class {service_name}Client implements {service_name} {{
     client: u32
 
+    constructor();
     constructor(client: u32) {{
         this.client = client;
     }}
