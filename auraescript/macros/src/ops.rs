@@ -227,10 +227,9 @@ fn typescript_service_generator(
     let mut ts_funcs: String = format!(
         r#"
 export class {service_name}Client implements {service_name} {{
-    client: u32
+    client: number | undefined
 
-    constructor();
-    constructor(client: u32) {{
+    constructor(client?: number) {{
         this.client = client;
     }}
 "#
