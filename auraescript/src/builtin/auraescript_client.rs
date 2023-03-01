@@ -6,37 +6,37 @@ use std::{cell::RefCell, rc::Rc};
 // `AuraeConfig` `try_default`
 #[deno_core::op]
 pub(crate) async fn as__aurae_config__try_default(
-    opstate: Rc<RefCell<OpState>>
+    op_state: Rc<RefCell<OpState>>
 ) -> Result<ResourceId> {
     let config = AuraeConfig::try_default()?;
-    let mut opstate = opstate.borrow_mut();
-    let rid = opstate.resource_table.add(AuraeScriptConfig(config));
+    let mut op_state = op_state.borrow_mut();
+    let rid = op_state.resource_table.add(AuraeScriptConfig(config));
     Ok(rid)
 }
 
 // `AuraeConfig` `from_options`
 #[deno_core::op]
 pub(crate) async fn as__aurae_config__from_options(
-    opstate: Rc<RefCell<OpState>>,
+    op_state: Rc<RefCell<OpState>>,
     ca_crt: String,
     client_crt: String,
     client_key: String,
     socket: String,
 ) -> ResourceId {
     let config = AuraeConfig::from_options(ca_crt, client_crt, client_key, socket);
-    let mut opstate = opstate.borrow_mut();
-    opstate.resource_table.add(AuraeScriptConfig(config))
+    let mut op_state = op_state.borrow_mut();
+    op_state.resource_table.add(AuraeScriptConfig(config))
 }
 
 // `AuraeConfig` `parse_from_file`
 #[deno_core::op]
 pub(crate) async fn as__aurae_config__parse_from_file(
-    opstate: Rc<RefCell<OpState>>,
+    op_state: Rc<RefCell<OpState>>,
     path: String,
 ) -> Result<ResourceId> {
     let config = AuraeConfig::parse_from_file(path)?;
-    let mut opstate = opstate.borrow_mut();
-    let rid = opstate.resource_table.add(AuraeScriptConfig(config));
+    let mut op_state = op_state.borrow_mut();
+    let rid = op_state.resource_table.add(AuraeScriptConfig(config));
     Ok(rid)
 }
 
@@ -52,17 +52,17 @@ impl Resource for AuraeScriptConfig {} // Blank impl
 // Create a `Client` with given `AuraeConfig`
 #[deno_core::op]
 pub(crate) async fn as__client_new(
-    opstate: Rc<RefCell<OpState>>,
+    op_state: Rc<RefCell<OpState>>,
     config: ResourceId,
 ) -> Result<ResourceId> {
     let config = {
-        let opstate = &opstate.borrow();
-        let rt = &opstate.resource_table; // get `ResourceTable` from JsRuntime `OpState`
+        let op_state = &op_state.borrow();
+        let rt = &op_state.resource_table; // get `ResourceTable` from JsRuntime `OpState`
         rt.get::<AuraeScriptConfig>(config)?.0.clone() // get `Config` from its rid
     };
     let client = Client::new(config).await?;
-    let mut opstate = opstate.borrow_mut();
-    let rid = opstate.resource_table.add(AuraeScriptClient(client));
+    let mut op_state = op_state.borrow_mut();
+    let rid = op_state.resource_table.add(AuraeScriptClient(client));
     Ok(rid)
 }
 
