@@ -56,8 +56,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        # - advisories
-        - bans licenses sources
+        checks:
+#          - advisories
+          - bans licenses sources
     # Prevent sudden announcement of a new advisory from failing ci:
     continue-on-error: ${{ matrix.checks == 'advisories' }}
     steps:
