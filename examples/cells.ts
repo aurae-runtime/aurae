@@ -33,8 +33,8 @@ import * as cells from "../auraescript/gen/cells.ts";
 
 let client = await aurae.createClient();
 let cellService = new cells.CellServiceClient(client);
-const cellName = "ae-sleeper-cell2";
 const nestedCellName = "ae-sleeper-cell/nested-sleeper"
+const cellName = "ae-sleeper-cell";
 
 // [ Allocate ]
 let allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
