@@ -27,65 +27,52 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-#
-# The primary Aurae test container, used to cache and support the GitHub
-# builds.
-#
-# This container image is NOT intended to run Aurae in production.
-# For internal builds of auraed use Dockerfile.build
-#
-# syntax = docker/dockerfile:1.4
-FROM rust:1-slim-bullseye as main
-LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
 
-## Define ARGs
-ARG CACHE_VERSION=v0
-ARG BUF_VERSION=1.11.0
-ARG VALE_VERSION=2.21.3
-ARG PROTOC_VERSION=1.5.1
+# https://github.com/marketplace/actions/cargo-deny
 
-## Install packages
-RUN  apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    make \
-    musl-tools \
-    protobuf-compiler \
-    git \
-    python3-pip \
-    libssl-dev \
-    openssl \
-    pkg-config
-RUN rm -rf /var/lib/apt/lists/*
+name: "Check deny (206) [aurae-builder:tester-latest]"
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
 
-## Setup Rust
-RUN rustup component add clippy
-RUN rustup +nightly target add x86_64-unknown-linux-musl
-RUN rustup target add x86_64-unknown-linux-musl
-
-## Setup protoc-gen-doc
-RUN curl  -O -J -L https://github.com/pseudomuto/protoc-gen-doc/releases/download/v${PROTOC_VERSION}/protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
-    tar -xzf protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz && \
-    chmod +x protoc-gen-doc && \
-    mv protoc-gen-doc /usr/local/bin/protoc-gen-doc && \
-    rm protoc-gen-doc_${PROTOC_VERSION}_linux_amd64.tar.gz
-
-## Setup Buf
-RUN curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(uname -s)-$(uname -m)" \
-    -o "/usr/local/bin/buf" && \
-    chmod +x "/usr/local/bin/buf"
-
-## Setup Vale
-RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
-    -o vale.tar.gz && \
-    tar -xvzf vale.tar.gz -C bin && \
-    mv bin/vale /usr/local/bin/vale && \
-    rm vale.tar.gz
-
-
-## Setup cargo-udeps
-RUN cargo install cargo-udeps
-RUN cargo install cargo-deny
-
-WORKDIR /aurae
+permissions:
+  contents: read
+  packages: write
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  build-container:
+    uses: ./.github/workflows/200-aurae-builder-image-docker-build-tester.yml
+  check-deny:
+    name: Check deny
+    runs-on: ubuntu-latest
+    needs: build-container
+    container:
+      image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        checks:
+          - advisories
+          - bans licenses sources
+    # Prevent sudden announcement of a new advisory from failing ci:
+    continue-on-error: ${{ matrix.checks == 'advisories' }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        id: cargo-cache
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: 200-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: EmbarkStudios/cargo-deny-action@v1
+        with:
+          command: check ${{ matrix.checks }}

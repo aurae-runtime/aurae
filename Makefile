@@ -392,7 +392,11 @@ headers-write: ## Fix any problematic files blindly.
 
 .PHONY: check-deps
 check-deps: musl $(GEN_TS) $(GEN_RS) ## Check if there are any unused dependencies in Cargo.toml
-	cargo +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
-	cargo +nightly udeps --package auraescript
-	cargo +nightly udeps --package client
-	cargo +nightly udeps --package aer
+	$(cargo) +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
+	$(cargo) +nightly udeps --package auraescript
+	$(cargo) +nightly udeps --package client
+	$(cargo) +nightly udeps --package aer
+
+.PHONY: check-deny
+check-deny: musl $(GEN_TS) $(GEN_RS) ## Run cargo-deny
+	$(cargo) deny check
