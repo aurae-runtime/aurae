@@ -28,34 +28,35 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/cells.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
+import * as cells from "../auraescript/gen/cells.ts";
 
-let cells = new runtime.CellServiceClient();
+let client = await aurae.createClient();
+let cellService = new cells.CellServiceClient(client);
 let cellName = "ae-sleeper-cell";
 
 // [ Allocate ]
-let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
-    cell: runtime.Cell.fromPartial({
-        memory: runtime.MemoryController.fromPartial({
+let allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
+    cell: cells.Cell.fromPartial({
+        memory: cells.MemoryController.fromPartial({
             high: 50000, // 50k
             max: 100000, // 100k
         }),
         name: cellName,
     })
 });
-helpers.print(allocated)
+aurae.print(allocated)
 
 // [ Start ]
-let started = await cells.start(<runtime.CellServiceStartRequest>{
+let started = await cellService.start(<cells.CellServiceStartRequest>{
     cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "/usr/bin/sleep 2",
         description: "Sleep for 2 seconds",
         name: "sleep-2"
     })
 })
-helpers.print(started)
+aurae.print(started)
 
 // wait for sleep to complete
 const sleep = async (waitTime: number) =>
@@ -65,14 +66,14 @@ const sleep = async (waitTime: number) =>
 sleep(3000);
 
 // [ Stop ]
-let stopped = await cells.stop(<runtime.CellServiceStopRequest>{
+let stopped = await cellService.stop(<cells.CellServiceStopRequest>{
     cellName,
     executableName: "sleep-2",
 })
-helpers.print(stopped)
+aurae.print(stopped)
 
 // [ Free ]
-let freed = await cells.free(<runtime.CellServiceFreeRequest>{
+let freed = await cellService.free(<cells.CellServiceFreeRequest>{
     cellName
 });
-helpers.print(freed)
+aurae.print(freed)

@@ -35,7 +35,9 @@
 
 use std::net::SocketAddr;
 
-use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
+use crate::config::{
+    AuraeConfig, CertMaterial, ClientCertDetails,
+};
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};

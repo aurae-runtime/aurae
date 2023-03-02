@@ -3,15 +3,15 @@ use std::io::Write;
 use std::path::PathBuf;
 
 fn main() {
-    generate_helpers_ts();
+    generate_aurae_ts();
 }
 
-fn generate_helpers_ts() {
+fn generate_aurae_ts() {
     // Currently nothing is generated.
     // We are only copying the contents of helpers.ts to the gen directory.
     // If we do generate code in the future, we won't need to change all the imports.
 
-    let helpers = include_str!("./helpers.ts");
+    let aurae = include_str!("./aurae.ts");
 
     let gen_dir = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(out_dir) => {
@@ -24,7 +24,7 @@ fn generate_helpers_ts() {
 
     let ts_path = {
         let mut out_dir = gen_dir;
-        out_dir.push("helpers.ts");
+        out_dir.push("aurae.ts");
         out_dir
     };
 
@@ -37,6 +37,6 @@ fn generate_helpers_ts() {
             panic!("Failed to create or overwrite {ts_path:?}")
         });
 
-    write!(ts, "{helpers}")
+    write!(ts, "{aurae}")
         .unwrap_or_else(|_| panic!("Could not write to {ts_path:?}"));
 }
