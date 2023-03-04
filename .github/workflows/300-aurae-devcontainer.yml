@@ -54,10 +54,10 @@ jobs:
           username:  ${{ github.actor }}
           password:  ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create DevContainer Image
+      - name: Pre-build dev container image
         uses: devcontainers/ci@v0.3
-        timeout-minutes: 30
+        timeout-minutes: 20
         with:
           imageName: ghcr.io/${{ github.repository }}/aurae-devcontainer
-          runCmd: |
-            echo "cache"
+          cacheFrom: ghcr.io/${{ github.repository }}/aurae-devcontainer
+          push: always
