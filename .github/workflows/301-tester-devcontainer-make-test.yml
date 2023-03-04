@@ -54,6 +54,7 @@ jobs:
         uses: devcontainers/ci@v0.3
         timeout-minutes: 35
         with:
+          imageName: ghcr.io/${{ github.repository }}/aurae-devcontainer
           # This should remain the only command we execute as this matches the title of the file.
           # The goal is for this to be easy to find from the GitHub dashboard.
           # Instead of adding more commands here, consider another make target or a new YAML file
