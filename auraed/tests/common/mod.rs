@@ -66,7 +66,7 @@ async fn run_auraed() -> Client {
 
     let _ = tokio::spawn(async move {
         let mut runtime = AuraedRuntime::default();
-        runtime.auraed = Some("auraed".into());
+        runtime.auraed = "auraed".into();
 
         auraed::run(runtime, Some(socket), false, false).await.unwrap()
     });

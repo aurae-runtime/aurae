@@ -101,6 +101,9 @@ mod observe;
 mod spawn;
 mod vms;
 
+#[cfg(not(test))]
+const PROC_SELF_EXE: &str = "/proc/self/exe";
+
 static AURAED_RUNTIME: OnceCell<AuraedRuntime> = OnceCell::new();
 
 /// Each instance of Aurae holds internal state in memory. Below are the
@@ -111,8 +114,8 @@ static AURAED_RUNTIME: OnceCell<AuraedRuntime> = OnceCell::new();
 /// filesystem at runtime in order to authenticate.
 #[derive(Debug)]
 pub struct AuraedRuntime {
-    /// Path to the auraed binary. Set as `None` to use the symbolic link from /proc/self/exe.
-    pub auraed: Option<PathBuf>,
+    /// Path to the auraed binary. Defaults to the symbolic link from /proc/self/exe.
+    pub auraed: PathBuf,
     /// Certificate Authority for an organization or mesh of Aurae instances.
     pub ca_crt: PathBuf,
     /// The signed server X509 certificate for this unique instance.
@@ -145,11 +148,12 @@ impl Default for AuraedRuntime {
     fn default() -> Self {
         let auraed = {
             #[cfg(not(test))]
-            let auraed = None;
+            let auraed = std::fs::read_link(PROC_SELF_EXE)
+                .expect("failed read auraed symbolic link from /proc/self/exe");
 
             // In unit tests, we cannot use /proc/self/exe since main.rs is not part of the test binary.
             #[cfg(test)]
-            let auraed = Some("auraed".into());
+            let auraed = "auraed".into();
 
             auraed
         };
