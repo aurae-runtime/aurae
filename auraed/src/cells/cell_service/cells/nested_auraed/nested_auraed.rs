@@ -44,8 +44,6 @@ use std::{
 };
 use tracing::{error, info, trace};
 
-const PROC_SELF_EXE: &str = "/proc/self/exe";
-
 #[derive(Debug)]
 pub struct NestedAuraed {
     process: procfs::process::Process,
@@ -62,22 +60,19 @@ impl NestedAuraed {
         // which is used our way of "hooking" into the newly created
         // aurae isolation zone.
 
-        let random = uuid::Uuid::new_v4();
+        let auraed_runtime = AURAED_RUNTIME.get().expect("runtime");
 
         // TODO: handle expect
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
         client_config.system.socket = format!(
-            "{}/aurae-{random}.sock",
-            AURAED_RUNTIME
-                .get()
-                .expect("runtime")
-                .runtime_dir
-                .to_string_lossy()
+            "{}/aurae-{}.sock",
+            auraed_runtime.runtime_dir.to_string_lossy(),
+            uuid::Uuid::new_v4(),
         );
 
-        // Here we read /proc/self/exe which will be a symbolic link to our binary.
-        let mut command = Command::new(std::fs::read_link(PROC_SELF_EXE)?);
+        let mut command = Command::new(&auraed_runtime.auraed);
+
         let _ = command.current_dir("/").args([
             "--socket",
             &client_config.system.socket,

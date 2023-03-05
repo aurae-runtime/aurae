@@ -198,19 +198,19 @@ $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
-$(1)-test: musl $(GEN_RS) $(GEN_TS)
+$(1)-test: musl $(GEN_RS) $(GEN_TS) $(1)
 	$(cargo) test $(2) -p $(1)
 
 .PHONY: $(1)-test-all
-$(1)-test-all: musl $(GEN_RS) $(GEN_TS)
+$(1)-test-all: musl $(GEN_RS) $(GEN_TS) $(1)
 	$(root_cargo) test $(2) -p $(1) -- --include-ignored
 
 .PHONY: $(1)-test-integration
-$(1)-test-integration: musl $(GEN_RS) $(GEN_TS)
+$(1)-test-integration: musl $(GEN_RS) $(GEN_TS) $(1)
 	$(root_cargo) test $(2) -p $(1) --test '*' -- --include-ignored
 
 .PHONY: $(1)-test-watch
-$(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
+$(1)-test-watch: musl $(GEN_RS) $(GEN_TS) $(1) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
 	$(root_cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
