@@ -159,6 +159,7 @@ async fn handle_default(options: AuraedOptions) -> i32 {
     } = options;
 
     let AuraedRuntime {
+        auraed: default_auraed,
         ca_crt: default_ca_crt,
         server_crt: default_server_crt,
         server_key: default_server_key,
@@ -167,6 +168,7 @@ async fn handle_default(options: AuraedOptions) -> i32 {
     } = AuraedRuntime::default();
 
     let runtime = AuraedRuntime {
+        auraed: default_auraed,
         ca_crt: ca_crt.map(PathBuf::from).unwrap_or(default_ca_crt),
         server_crt: server_crt.map(PathBuf::from).unwrap_or(default_server_crt),
         server_key: server_key.map(PathBuf::from).unwrap_or(default_server_key),

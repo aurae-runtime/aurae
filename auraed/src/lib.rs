@@ -111,6 +111,8 @@ static AURAED_RUNTIME: OnceCell<AuraedRuntime> = OnceCell::new();
 /// filesystem at runtime in order to authenticate.
 #[derive(Debug)]
 pub struct AuraedRuntime {
+    /// Path to the auraed binary. Set as `None` to use the symbolic link from /proc/self/exe.
+    pub auraed: Option<PathBuf>,
     /// Certificate Authority for an organization or mesh of Aurae instances.
     pub ca_crt: PathBuf,
     /// The signed server X509 certificate for this unique instance.
@@ -141,8 +143,20 @@ impl AuraedRuntime {
 
 impl Default for AuraedRuntime {
     fn default() -> Self {
+        let auraed = {
+            #[cfg(not(test))]
+            let auraed = None;
+
+            // In unit tests, we cannot use /proc/self/exe since main.rs is not part of the test binary.
+            #[cfg(test)]
+            let auraed = Some("auraed".into());
+
+            auraed
+        };
+
         // In order to prevent their use from other areas, do not make these values into constants.
         AuraedRuntime {
+            auraed,
             ca_crt: PathBuf::from("/etc/aurae/pki/ca.crt"),
             server_crt: PathBuf::from("/etc/aurae/pki/_signed.server.crt"),
             server_key: PathBuf::from("/etc/aurae/pki/server.key"),
