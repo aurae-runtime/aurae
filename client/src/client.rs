@@ -36,7 +36,7 @@
 use std::net::SocketAddr;
 
 use crate::config::{
-    AuraeConfig, CertMaterial, ClientCertDetails,
+    AuraeConfig, SystemConfig, CertMaterial, ClientCertDetails,
 };
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};
@@ -61,7 +61,7 @@ pub struct Client {
     /// The channel used for gRPC connections before encryption is handled.
     pub(crate) channel: Channel,
     #[allow(unused)]
-    client_cert_details: ClientCertDetails,
+    client_cert_details: Option<ClientCertDetails>,
 }
 
 impl Client {
@@ -76,7 +76,7 @@ impl Client {
         AuraeConfig { auth, system }: AuraeConfig,
     ) -> Result<Self> {
         let cert_material = auth.to_cert_material().await?;
-        let client_cert_details = cert_material.get_client_cert_details()?;
+        let client_cert_details = Some(cert_material.get_client_cert_details()?);
 
         let CertMaterial { server_root_ca_cert, client_cert, client_key } =
             cert_material;
@@ -106,6 +106,34 @@ impl Client {
                 }))
                 .await
         }?;
+        Ok(Self { channel, client_cert_details })
+    }
+
+    /// Create a new Client.
+    ///
+    /// Note: A new client is required for every independent execution of this process.
+    pub async fn new_no_auth(
+        system: SystemConfig,
+    ) -> Result<Self> {
+        let endpoint = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR);
+
+        // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
+        // connect as a UNIX socket (assume it's a file path).
+        let channel = if let Ok(sockaddr) = system.socket.parse::<SocketAddr>()
+        {
+            endpoint
+                .connect_with_connector(service_fn(move |_: Uri| {
+                    TcpStream::connect(sockaddr)
+                }))
+                .await
+        } else {
+            endpoint
+                .connect_with_connector(service_fn(move |_: Uri| {
+                    UnixStream::connect(system.socket.clone())
+                }))
+                .await
+        }?;
+        let client_cert_details = None;
         Ok(Self { channel, client_cert_details })
     }
 }
