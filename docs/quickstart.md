@@ -18,20 +18,29 @@ Take the following example code which will create a new cell called `sleeper-cel
 
 ```typescript
 // create-cell.ts
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/runtime.ts";
-let cells = new runtime.CellServiceClient();
-let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
-    cell: runtime.Cell.fromPartial({
-        cpuQuota: 400 * (10 ** 3), // 0.4 seconds in microseconds
-        cpuShares: 2, // Percentage of CPUs
+import * as aurae from "../auraescript/gen/aurae.ts";
+import * as cells from "../auraescript/gen/cells.ts";
+
+let client = await aurae.createClient();
+let cellService = new cells.CellServiceClient(client);
+
+let allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
+    cell: cells.Cell.fromPartial({
         name: "sleeper-cell",
+        cpu: cells.CpuController.fromPartial({
+            weight: 2, // Percentage of CPUs
+            max: 400 * (10 ** 3), // 0.4 seconds in microseconds
+        }),
     })
 });
-helpers.print(allocated)
+aurae.print('Allocated:', allocated)
 ```
 
-The script can be executed locally against a running `auraed` daemon as long as you have [certificates](/certs) installed and configured properly. 
+The script can be executed locally against a running `auraed` daemon as long as you have [certificates](/certs) installed and configured properly. You do so by using `auraescript`:
+
+```bash
+auraescript ./create-cell.ts
+```
 
 Once a cell is allocated it will continue to reserve the required resources and persist until the system is rebooted or until another action destroys the cell. 
 
@@ -39,19 +48,30 @@ Once a cell is created, any amount of nested executables can be executed directl
 
 ```typescript
 // run-sleep-in-cell.ts
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/runtime.ts";
-let cells = new runtime.CellServiceClient();
-let started = await cells.start(<runtime.StartExecutableRequest>{
-    cellName: "sleeper-cell", // Same name must map back to cell!
-    executable: runtime.Executable.fromPartial({
+import * as aurae from "../auraescript/gen/aurae.ts";
+import * as cells from "../auraescript/gen/cells.ts";
+
+let client = await aurae.createClient();
+let cellService = new cells.CellServiceClient(client);
+
+let started = await cellService.start(<cells.CellServiceStartRequest>{
+    cellName: "ae-sleeper-cell",
+    executable: cells.Executable.fromPartial({
         command: "/usr/bin/sleep",
         args: ["42"],
         description: "Sleep for 42 seconds",
         name: "sleep-42"
     })
 })
-helpers.print(started)
+aurae.print('Started:', started)
+```
+
+Execute the script again with
+
+```bash
+auraescript ./run-sleep-in-cell.ts
 ```
 
 Note that in this example the command tries to sleep for longer than the quota allows, and thus is terminated by the kernel.
+
+Think this was fun? You can find more examples in the example directory of [github.com/aurae-runtime/aurae/](https://github.com/aurae-runtime/aurae/tree/main/examples).
