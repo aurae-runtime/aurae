@@ -36,6 +36,7 @@
 	"containerUser": "root",
 	"remoteUser": "root",
 	"privileged": true,
+	"postStartCommand": "mount -t debugfs none /sys/kernel/debug",
 	"runArgs": [
 		"--cgroupns=host"
 	]
