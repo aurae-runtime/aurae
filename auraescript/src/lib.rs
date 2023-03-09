@@ -90,6 +90,7 @@ pub fn init() -> JsRuntime {
 ///
 fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
+    ops.extend(builtin::auraescript_client::op_decls());
     ops.extend(cells::op_decls());
     ops.extend(cri::op_decls());
     ops.extend(discovery::op_decls());

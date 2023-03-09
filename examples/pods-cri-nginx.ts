@@ -28,13 +28,14 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/helpers.ts";
+import * as aurae from "../auraescript/aurae.ts";
 import * as cri from "../auraescript/gen/cri.ts";
 
 // Start working on pods_service with CRI
-let runtime = new cri.RuntimeServiceClient();
+let client = await aurae.createClient();
+let cells = new cri.RuntimeServiceClient(client);
 
-let pod = await runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
+let pod = await cells.runPodSandbox(<cri.RunPodSandboxRequest>{
     config: cri.PodSandboxConfig.fromPartial({
         hostname: "nova",
         logDirectory: "/var/log",
@@ -51,9 +52,9 @@ let pod = await runtime.runPodSandbox(<cri.RunPodSandboxRequest>{
         }),
     })
 })
-helpers.print(pod)
+aurae.print(pod)
 
-let container = runtime.createContainer(<cri.CreateContainerRequest>{
+let container = cells.createContainer(<cri.CreateContainerRequest>{
     podSandboxId: pod.podSandboxId,
     config: cri.ContainerConfig.fromPartial({
         tty: false,
@@ -64,5 +65,5 @@ let container = runtime.createContainer(<cri.CreateContainerRequest>{
     }),
 
 })
-helpers.print(container)
+aurae.print(container)
 

@@ -28,16 +28,17 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/cells.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
+import * as cells from "../auraescript/gen/cells.ts";
 
-let cells = new runtime.CellServiceClient();
+let client = await aurae.createClient();
+let cellService = new cells.CellServiceClient(client);
 const cellName = "ae-net-1";
 
 // [ Allocate Shared NS ]
-let net_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
-    cell: runtime.Cell.fromPartial({
-        cpu: runtime.CpuController.fromPartial({
+let net_allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
+    cell: cells.Cell.fromPartial({
+        cpu: cells.CpuController.fromPartial({
             weight: 2
         }),
         name: cellName,
@@ -45,20 +46,20 @@ let net_allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
         isolateProcess: false,
     })
 });
-helpers.print(net_allocated)
+aurae.print(net_allocated)
 
 // [ Start ]
-let net_started = await cells.start(<runtime.CellServiceStartRequest>{
+let net_started = await cellService.start(<cells.CellServiceStartRequest>{
     cellName: cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "ifconfig && ip a && route",
         description: "Show network info",
         name: "net-info"
     })
 })
-helpers.print(net_started)
+aurae.print(net_started)
 
 // [ Free ]
-await cells.free(<runtime.CellServiceFreeRequest>{
+await cellService.free(<cells.CellServiceFreeRequest>{
     cellName: cellName
 });

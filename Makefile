@@ -39,6 +39,11 @@ ociopts       =  DOCKER_BUILDKIT=1
 uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
+ifeq ($(uid), 0)
+root_cargo    = cargo
+else
+root_cargo    = sudo -E cargo
+endif
 
 # Configuration Options
 export GIT_PAGER = cat
@@ -193,20 +198,20 @@ $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
-$(1)-test: musl $(GEN_RS) $(GEN_TS)
+$(1)-test: musl $(GEN_RS) $(GEN_TS) $(1)
 	$(cargo) test $(2) -p $(1)
 
 .PHONY: $(1)-test-all
-$(1)-test-all: musl $(GEN_RS) $(GEN_TS)
-	sudo -E $(cargo) test $(2) -p $(1) -- --include-ignored
+$(1)-test-all: musl $(GEN_RS) $(GEN_TS) $(1)
+	$(root_cargo) test $(2) -p $(1) -- --include-ignored
 
 .PHONY: $(1)-test-integration
-$(1)-test-integration: musl $(GEN_RS) $(GEN_TS)
-	sudo -E $(cargo) test $(2) -p $(1) --test '*' -- --include-ignored
+$(1)-test-integration: musl $(GEN_RS) $(GEN_TS) $(1)
+	$(root_cargo) test $(2) -p $(1) --test '*' -- --include-ignored
 
 .PHONY: $(1)-test-watch
-$(1)-test-watch: musl $(GEN_RS) $(GEN_TS) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
-	sudo -E $(cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
+$(1)-test-watch: musl $(GEN_RS) $(GEN_TS) $(1) # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
+	$(root_cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
 $(1)-build: musl $(GEN_RS) $(GEN_TS)
@@ -235,7 +240,11 @@ $(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,
 
 .PHONY: auraed-start
 auraed-start: ## Starts the installed auraed executable
+ifeq ($(uid), 0)
+	$(HOME)/.cargo/bin/auraed
+else
 	sudo -E $(HOME)/.cargo/bin/auraed
+endif
 
 #------------------------------------------------------------------------------#
 
@@ -290,7 +299,11 @@ docs-other:
 
 .PHONY: docs-serve
 docs-serve: docs ## Run the aurae.io static website locally
+ifeq ($(uid), 0)
+	./hack/serve.sh
+else
 	sudo -E ./hack/serve.sh
+endif
 
 #------------------------------------------------------------------------------#
 
@@ -379,7 +392,11 @@ headers-write: ## Fix any problematic files blindly.
 
 .PHONY: check-deps
 check-deps: musl $(GEN_TS) $(GEN_RS) ## Check if there are any unused dependencies in Cargo.toml
-	cargo +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
-	cargo +nightly udeps --package auraescript
-	cargo +nightly udeps --package client
-	cargo +nightly udeps --package aer
+	$(cargo) +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
+	$(cargo) +nightly udeps --package auraescript
+	$(cargo) +nightly udeps --package client
+	$(cargo) +nightly udeps --package aer
+
+.PHONY: check-deny
+check-deny: musl $(GEN_TS) $(GEN_RS) ## Run cargo-deny
+	$(cargo) deny check

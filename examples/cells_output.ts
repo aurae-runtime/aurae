@@ -28,39 +28,42 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
-import * as runtime from "../auraescript/gen/cells.ts";
+import * as cells from "../auraescript/gen/cells.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
 
-let cells = new runtime.CellServiceClient();
+
+let client = await aurae.createClient();
+
+let cellService = new cells.CellServiceClient(client);
 let cellName = "ae-echo-cell";
 
 // [ Allocate ]
-let allocated = await cells.allocate(<runtime.CellServiceAllocateRequest>{
-    cell: runtime.Cell.fromPartial({
-        cpu: runtime.CpuController.fromPartial({
+let allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
+    cell: cells.Cell.fromPartial({
+        cpu: cells.CpuController.fromPartial({
             weight: 2, // Percentage of CPUs
             max: 400 * (10 ** 3), // 0.4 seconds in microseconds
         }),
         name: cellName,
     })
 });
-//helpers.print(allocated)
+//aurae.print(allocated)
 
 // [ Start ]
-let started_out = await cells.start(<runtime.CellServiceStartRequest>{
+let started_out = await cellService.start(<cells.CellServiceStartRequest>{
     cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "/usr/bin/echo 'hello world'",
         description: "outputs a message to stdout",
         name: "echo-stdout"
     })
 })
-//helpers.print(started_out)
+//aurae.print(started_out)
 
 // [ Start ]
-let started_err = await cells.start(<runtime.CellServiceStartRequest>{
+let started_err = await cellService.start(<cells.CellServiceStartRequest>{
     cellName,
-    executable: runtime.Executable.fromPartial({
+    executable: cells.Executable.fromPartial({
         command: "/usr/bin/echo 'hello world' 1>&2",
         description: "outputs a message to stderr",
         name: "echo-stderr"
@@ -68,19 +71,19 @@ let started_err = await cells.start(<runtime.CellServiceStartRequest>{
 })
 
 // [ Stop ]
-let stopped_out = await cells.stop(<runtime.CellServiceStopRequest>{
+let stopped_out = await cellService.stop(<cells.CellServiceStopRequest>{
     cellName,
     executableName: "echo-stdout",
 })
 // [ Stop ]
-let stopped_err = await cells.stop(<runtime.CellServiceStopRequest>{
+let stopped_err = await cellService.stop(<cells.CellServiceStopRequest>{
     cellName,
     executableName: "echo-stderr",
 })
-//helpers.print(stopped)
+//aurae.print(stopped)
 
 // [ Free ]
-let freed = await cells.free(<runtime.CellServiceFreeRequest>{
+let freed = await cellService.free(<cells.CellServiceFreeRequest>{
     cellName
 });
-//helpers.print(freed)
+//aurae.print(freed)
