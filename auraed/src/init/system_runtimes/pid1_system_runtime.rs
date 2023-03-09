@@ -87,9 +87,6 @@ impl SystemRuntime for Pid1SystemRuntime {
         // TODO We likely to do not need to mount these filesystems.
         // TODO Do we want to have a way to "try" these mounts and continue without erroring?
 
-        MountSpec { source: None, target: "/dev", fstype: Some("devtmpfs") }
-            .mount()?;
-
         MountSpec { source: None, target: "/sys", fstype: Some("sysfs") }
             .mount()?;
 
@@ -100,8 +97,15 @@ impl SystemRuntime for Pid1SystemRuntime {
         }
         .mount()?;
 
-        trace!("configure network");
-        //show_dir("/sys/class/net/", false); // Show available network interfaces
+        MountSpec {
+            source: Some("debugfs"),
+            target: "/sys/kernel/debug",
+            fstype: Some("debugfs"),
+        }
+        .mount()?;
+
+        trace!("Configure network");
+        // show_dir("/sys/class/net/", false); // Show available network interfaces
         let network = network::Network::connect()?;
         network.init().await?;
         network.show_network_info().await;
