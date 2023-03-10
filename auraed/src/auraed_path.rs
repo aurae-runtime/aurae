@@ -3,10 +3,12 @@ use std::path::PathBuf;
 
 const PROC_SELF_EXE: &str = "/proc/self/exe";
 
+/// Helper type to locate the auraed exe path.
 #[derive(Debug, Clone)]
 pub struct AuraedPath(Option<PathBuf>);
 
 impl AuraedPath {
+    /// Set an explicit path to the auraed exe
     pub fn from_path<P: Into<PathBuf>>(path: P) -> Self {
         Self(Some(path.into()))
     }

@@ -61,7 +61,7 @@
 )]
 #![warn(clippy::unwrap_used)]
 
-use crate::auraed_path::AuraedPath;
+pub use crate::auraed_path::AuraedPath;
 use crate::ebpf::{
     BpfContext, SchedProcessForkTracepointProgram,
     SignalSignalGenerateTracepointProgram, TaskstatsExitKProbeProgram,
