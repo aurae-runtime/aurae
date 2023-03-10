@@ -1,4 +1,4 @@
-use auraed::AuraedRuntime;
+use auraed::{AuraedPath, AuraedRuntime};
 use backoff::{
     backoff::Backoff, exponential::ExponentialBackoff,
     ExponentialBackoffBuilder, SystemClock,
@@ -66,7 +66,7 @@ async fn run_auraed() -> Client {
 
     let _ = tokio::spawn(async move {
         let mut runtime = AuraedRuntime::default();
-        runtime.auraed = "auraed".into();
+        runtime.auraed = AuraedPath::from_path("auraed");
 
         auraed::run(runtime, Some(socket), false, false).await.unwrap()
     });
