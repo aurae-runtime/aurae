@@ -39,6 +39,7 @@ ociopts       =  DOCKER_BUILDKIT=1
 uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
+clh_version   = 30.0
 ifeq ($(uid), 0)
 root_cargo    = cargo
 else
@@ -344,6 +345,18 @@ busybox: ## Create a "busybox" OCI bundle in target
 .PHONY: alpine
 alpine: ## Create an "alpine" OCI bundle in target
 	./hack/oci-alpine
+
+#------------------------------------------------------------------------------#
+
+# Hypervisor commands
+
+/opt/aurae/cloud-hypervisor/cloud-hypervisor:
+	mkdir -p /opt/aurae/cloud-hypervisor
+	curl -LI https://github.com/cloud-hypervisor/cloud-hypervisor/releases/download/v$(clh_version)/cloud-hypervisor-static -o /opt/aurae/cloud-hypervisor/cloud-hypervisor
+	chmod +x /opt/aurae/cloud-hypervisor/cloud-hypervisor
+
+.PHONY: clh-static
+clh-static: /opt/aurae/cloud-hypervisor/cloud-hypervisor
 
 #------------------------------------------------------------------------------#
 
