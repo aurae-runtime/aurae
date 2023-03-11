@@ -1,6 +1,6 @@
-# Developing on an M1
+# Developing on Apple silicon with CLion and Parallels Desktop
 
-This is a development environment setup guide that may be helpful for those on an Apple M1. There are likely
+This is a development environment setup guide that may be helpful for those on Apple silicon. There are likely
 improvements to be made, but the steps are purposefully overly "hand hold-y" and detailed to be useful to a wider
 audience.
 

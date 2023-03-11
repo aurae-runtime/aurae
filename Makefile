@@ -140,7 +140,7 @@ musl: ## Add target for musl
 
 .PHONY: clean-crates
 clean-crates: ## Clean target directory
-	cargo clean
+	$(cargo) clean
 
 .PHONY: clean-certs
 clean-certs: ## Clean the cert material
