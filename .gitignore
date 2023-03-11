@@ -5,4 +5,4 @@ auraescript/lib*
 auraescript/node_modules*
 pki*
 **/gen/
-hypervisors/cloud-hypervisor/static-build/cloud-hypervisor-static
+hypervisor/guest-kernel/linux-cloud-hypervisor
