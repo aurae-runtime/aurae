@@ -145,26 +145,6 @@ impl AuraedRuntime {
 
 impl Default for AuraedRuntime {
     fn default() -> Self {
-        let auraed = {
-            #[cfg(not(test))]
-            let auraed = if std::process::id() == 1 {
-                // If auraed is running as true PID 1 /proc wouldn't be mounted
-                // at this point. For VMs, as long as we control the disk image
-                // this shouldn't be a problem.
-                "/lib/auraed/auraed".into()
-            } else {
-                std::fs::read_link(PROC_SELF_EXE).expect(
-                    "failed read auraed symbolic link from /proc/self/exe",
-                )
-            };
-
-            // In unit tests, we cannot use /proc/self/exe since main.rs is not part of the test binary.
-            #[cfg(test)]
-            let auraed = "auraed".into();
-
-            auraed
-        };
-
         // In order to prevent their use from other areas, do not make these values into constants.
         AuraedRuntime {
             auraed: AuraedPath::default(),
