@@ -84,6 +84,7 @@
 
           buildInputs = with pkgs; [
             buf
+            libseccomp
             protobuf
             rustup
           ];
