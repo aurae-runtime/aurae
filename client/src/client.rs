@@ -35,9 +35,7 @@
 
 use std::net::SocketAddr;
 
-use crate::config::{
-    AuraeConfig, SystemConfig, CertMaterial, ClientCertDetails,
-};
+use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};
@@ -87,39 +85,31 @@ impl Client {
             .ca_certificate(Certificate::from_pem(server_root_ca_cert))
             .identity(Identity::from_pem(client_cert, client_key));
 
-        let endpoint = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
-            .tls_config(tls_config)?;
-
-        // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
-        // connect as a UNIX socket (assume it's a file path).
-        let channel = if let Ok(sockaddr) = system.socket.parse::<SocketAddr>()
-        {
-            endpoint
-                .connect_with_connector(service_fn(move |_: Uri| {
-                    TcpStream::connect(sockaddr)
-                }))
-                .await
-        } else {
-            endpoint
-                .connect_with_connector(service_fn(move |_: Uri| {
-                    UnixStream::connect(system.socket.clone())
-                }))
-                .await
-        }?;
+        let channel = Self::connect_chan(system.socket.clone(), Some(tls_config)).await?;
         Ok(Self { channel, client_cert_details })
     }
 
-    /// Create a new Client.
+    /// Create a new Client without TLS, remote server should also expect no TLS.
     ///
     /// Note: A new client is required for every independent execution of this process.
-    pub async fn new_no_auth(
-        system: SystemConfig,
+    pub async fn new_no_tls(
+        socket: String,
     ) -> Result<Self> {
+        let channel = Self::connect_chan(socket, None).await?;
+        let client_cert_details = None;
+        Ok(Self { channel, client_cert_details })
+    }
+
+    async fn connect_chan(socket: String, tls_config: Option<ClientTlsConfig>) -> Result<Channel> {
         let endpoint = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR);
+        let endpoint = match tls_config {
+            None => endpoint,
+            Some(tls_config) => endpoint.tls_config(tls_config)?,
+        };
 
         // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
         // connect as a UNIX socket (assume it's a file path).
-        let channel = if let Ok(sockaddr) = system.socket.parse::<SocketAddr>()
+        let channel = if let Ok(sockaddr) = socket.parse::<SocketAddr>()
         {
             endpoint
                 .connect_with_connector(service_fn(move |_: Uri| {
@@ -129,11 +119,10 @@ impl Client {
         } else {
             endpoint
                 .connect_with_connector(service_fn(move |_: Uri| {
-                    UnixStream::connect(system.socket.clone())
+                    UnixStream::connect(socket.clone())
                 }))
                 .await
         }?;
-        let client_cert_details = None;
-        Ok(Self { channel, client_cert_details })
+        Ok(channel)
     }
 }
