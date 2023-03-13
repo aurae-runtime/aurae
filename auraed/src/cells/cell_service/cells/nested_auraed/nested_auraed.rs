@@ -30,7 +30,6 @@
 
 use super::isolation_controls::{Isolation, IsolationControls};
 use crate::AURAED_RUNTIME;
-use client::SystemConfig;
 use clone3::Flags;
 use nix::{
     libc::SIGCHLD,
@@ -52,7 +51,7 @@ pub struct NestedAuraed {
     pidfd: i32,
     #[allow(unused)]
     iso_ctl: IsolationControls,
-    pub client_system_config: SystemConfig,
+    pub client_socket: String,
 }
 
 impl NestedAuraed {
@@ -63,7 +62,7 @@ impl NestedAuraed {
 
         let auraed_runtime = AURAED_RUNTIME.get().expect("runtime");
 
-        let socket = format!(
+        let client_socket = format!(
             "{}/aurae-{}.sock",
             auraed_runtime.runtime_dir.to_string_lossy(),
             uuid::Uuid::new_v4(),
@@ -75,7 +74,7 @@ impl NestedAuraed {
         let mut command = Command::new(auraed_path);
         let _ = command.args([
             "--socket",
-            &socket,
+            &client_socket,
             "--nested", // NOTE: for now, the nested flag only signals for the code in the init module to not trigger (i.e., don't run the pid 1 code, run the non pid 1 code)
             "--server-crt",
             &auraed_runtime.server_crt.to_string_lossy(),
@@ -174,10 +173,7 @@ impl NestedAuraed {
                 let process = procfs::process::Process::new(pid)
                     .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-                let client_system_config = SystemConfig {
-                    socket
-                };
-                Ok(Self { process, pidfd, iso_ctl, client_system_config })
+                Ok(Self { process, pidfd, iso_ctl, client_socket })
             }
         }
     }
