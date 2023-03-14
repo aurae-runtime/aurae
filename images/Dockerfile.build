@@ -68,7 +68,7 @@ RUN  apt-get update && \
     git \
     make \
     musl-tools \
-    protobuf-compiler 
+    protobuf-compiler
 RUN rm -rf /var/lib/apt/lists/*
 
 ## Setup Rust
@@ -96,3 +96,15 @@ RUN curl -sSL \
     rm "/tmp/gh_${GH_CLI_VERSION}_linux_amd64.deb"
 
 WORKDIR /aurae
+
+FROM main AS planner
+RUN cargo install cargo-chef
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+RUN cargo chef cook --recipe-path recipe.json
+RUN cargo chef cook --recipe-path recipe.json --target x86_64-unknown-linux-musl -p auraed
+
+FROM main as builder
+COPY --from=planner /usr/local/cargo/bin /usr/local/cargo/bin
+COPY --from=planner /usr/local/cargo/registry/index/ /usr/local/cargo/registry/index/
+COPY --from=planner /usr/local/cargo/registry/cache/ /usr/local/cargo/registry/cache/
