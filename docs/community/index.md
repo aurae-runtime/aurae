@@ -11,7 +11,7 @@ If you would like to get involved with Aurae development.
  - Join our [discord](https://discord.gg/aTe2Rjg5rq).
  - Read the [Code of Conduct](/community/code-of-conduct).
  - Read the [Contribution Guidelines](/community/contribution-guidelines).
- - Sign the [CLA](https://cla.aurae.io/) to begin contributing as an individual contributor. 
+ - Sign the [CLA](https://cla.nivenly.org/) to begin contributing as an individual contributor. 
 
 # What is Aurae? 
 
