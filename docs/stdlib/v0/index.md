@@ -38,27 +38,29 @@
     - [GetSubProcessStreamResponse](#aurae-observe-v0-GetSubProcessStreamResponse)
     - [LogItem](#aurae-observe-v0-LogItem)
     - [Signal](#aurae-observe-v0-Signal)
+    - [Workload](#aurae-observe-v0-Workload)
   
     - [LogChannelType](#aurae-observe-v0-LogChannelType)
+    - [WorkloadType](#aurae-observe-v0-WorkloadType)
   
     - [ObserveService](#aurae-observe-v0-ObserveService)
   
-- [virtual_machines.proto](#virtual_machines-proto)
-    - [DriveMount](#aurae-virtual_machines-v0-DriveMount)
-    - [IPConfiguration](#aurae-virtual_machines-v0-IPConfiguration)
-    - [NetworkInterface](#aurae-virtual_machines-v0-NetworkInterface)
-    - [RootDrive](#aurae-virtual_machines-v0-RootDrive)
-    - [VirtualMachine](#aurae-virtual_machines-v0-VirtualMachine)
-    - [VmServiceAllocateRequest](#aurae-virtual_machines-v0-VmServiceAllocateRequest)
-    - [VmServiceAllocateResponse](#aurae-virtual_machines-v0-VmServiceAllocateResponse)
-    - [VmServiceFreeRequest](#aurae-virtual_machines-v0-VmServiceFreeRequest)
-    - [VmServiceFreeResponse](#aurae-virtual_machines-v0-VmServiceFreeResponse)
-    - [VmServiceStartRequest](#aurae-virtual_machines-v0-VmServiceStartRequest)
-    - [VmServiceStartResponse](#aurae-virtual_machines-v0-VmServiceStartResponse)
-    - [VmServiceStopRequest](#aurae-virtual_machines-v0-VmServiceStopRequest)
-    - [VmServiceStopResponse](#aurae-virtual_machines-v0-VmServiceStopResponse)
+- [vms.proto](#vms-proto)
+    - [DriveMount](#aurae-vms-v0-DriveMount)
+    - [IPConfiguration](#aurae-vms-v0-IPConfiguration)
+    - [NetworkInterface](#aurae-vms-v0-NetworkInterface)
+    - [RootDrive](#aurae-vms-v0-RootDrive)
+    - [VirtualMachine](#aurae-vms-v0-VirtualMachine)
+    - [VmServiceAllocateRequest](#aurae-vms-v0-VmServiceAllocateRequest)
+    - [VmServiceAllocateResponse](#aurae-vms-v0-VmServiceAllocateResponse)
+    - [VmServiceFreeRequest](#aurae-vms-v0-VmServiceFreeRequest)
+    - [VmServiceFreeResponse](#aurae-vms-v0-VmServiceFreeResponse)
+    - [VmServiceStartRequest](#aurae-vms-v0-VmServiceStartRequest)
+    - [VmServiceStartResponse](#aurae-vms-v0-VmServiceStartResponse)
+    - [VmServiceStopRequest](#aurae-vms-v0-VmServiceStopRequest)
+    - [VmServiceStopResponse](#aurae-vms-v0-VmServiceStopResponse)
   
-    - [VmService](#aurae-virtual_machines-v0-VmService)
+    - [VmService](#aurae-vms-v0-VmService)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -75,17 +77,21 @@
 
 ### Cell
 An isolation resource used to divide a system into smaller resource
-/ boundaries.
+boundaries.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | Resource parameters for control groups (cgroups) / Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) / crate. See / [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs) |
+| name | [string](#string) |  | Resource parameters for control groups (cgroups) Build on the [cgroups-rs](https://github.com/kata-containers/cgroups-rs) crate. See [examples](https://github.com/kata-containers/cgroups-rs/blob/main/tests/builder.rs) |
 | cpu | [CpuController](#aurae-cells-v0-CpuController) |  |  |
 | cpuset | [CpusetController](#aurae-cells-v0-CpusetController) |  |  |
 | memory | [MemoryController](#aurae-cells-v0-MemoryController) |  |  |
-| isolate_process | [bool](#bool) |  | Will isolate the process (and proc filesystem) from the host. / Will unshare the pid, ipc, uts, and mount namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
-| isolate_network | [bool](#bool) |  | Will isolate the network from the host. / Will unshare the net namespaces. / The cgroup namespace is always unshared with the host. / / Default: false |
+| isolate_process | [bool](#bool) |  | Will isolate the process (and proc filesystem) from the host. Will unshare the pid, ipc, uts, and mount namespaces. The cgroup namespace is always unshared with the host.
+
+Default: false |
+| isolate_network | [bool](#bool) |  | Will isolate the network from the host. Will unshare the net namespaces. The cgroup namespace is always unshared with the host.
+
+Default: false |
 
 
 
@@ -112,11 +118,11 @@ An isolation resource used to divide a system into smaller resource
 
 ### CellServiceAllocateRequest
 An Aurae cell is a name given to Linux control groups (cgroups) that also
-/ includes a name, and special pre-exec functionality that is executed from
-/ within the same context as any executables scheduled.
-/
-/ A cell must be allocated for every executable scheduled. A cell defines the
-/ resource constraints of the system to allocate for an arbitrary use case.
+includes a name, and special pre-exec functionality that is executed from
+within the same context as any executables scheduled.
+
+A cell must be allocated for every executable scheduled. A cell defines the
+resource constraints of the system to allocate for an arbitrary use case.
 
 
 | Field | Type | Label | Description |
@@ -137,7 +143,7 @@ The response after a cell has been allocated.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | cell_name | [string](#string) |  |  |
-| cgroup_v2 | [bool](#bool) |  | A bool that will be set to true if the cgroup was created with / cgroup v2 controller. |
+| cgroup_v2 | [bool](#bool) |  | A bool that will be set to true if the cgroup was created with cgroup v2 controller. |
 
 
 
@@ -198,10 +204,10 @@ Response after removing or freeing a cell.
 
 ### CellServiceStartRequest
 A request for starting an executable inside of a Cell.
-/
-/ This is the lowest level of raw executive functionality.
-/ Here you can define shell commands, and meta information about the command.
-/ An executable is started synchronously.
+
+This is the lowest level of raw executive functionality.
+Here you can define shell commands, and meta information about the command.
+An executable is started synchronously.
 
 
 | Field | Type | Label | Description |
@@ -222,7 +228,7 @@ The response after starting an executable within a Cell.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| pid | [int32](#int32) |  | Return a pid as an int32 based on the pid_t type / in various libc libraries. |
+| pid | [int32](#int32) |  | Return a pid as an int32 based on the pid_t type in various libc libraries. |
 
 
 
@@ -339,18 +345,18 @@ https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files
 
 ### CellService
 Cells is the most fundamental isolation boundary for Aurae.
-/ A cell is an isolate set of resources of the system which can be
-/ used to run workloads.
-/
-/ A cell is composed of a unique cgroup namespace, and unshared kernel
-/ namespaces.
+A cell is an isolate set of resources of the system which can be
+used to run workloads.
+
+A cell is composed of a unique cgroup namespace, and unshared kernel
+namespaces.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Allocate | [CellServiceAllocateRequest](#aurae-cells-v0-CellServiceAllocateRequest) | [CellServiceAllocateResponse](#aurae-cells-v0-CellServiceAllocateResponse) | Reserve requested system resources for a new cell. / For cells specifically this will allocate and reserve cgroup resources / only. |
+| Allocate | [CellServiceAllocateRequest](#aurae-cells-v0-CellServiceAllocateRequest) | [CellServiceAllocateResponse](#aurae-cells-v0-CellServiceAllocateResponse) | Reserve requested system resources for a new cell. For cells specifically this will allocate and reserve cgroup resources only. |
 | Free | [CellServiceFreeRequest](#aurae-cells-v0-CellServiceFreeRequest) | [CellServiceFreeResponse](#aurae-cells-v0-CellServiceFreeResponse) | Free up previously requested resources for an existing cell |
-| Start | [CellServiceStartRequest](#aurae-cells-v0-CellServiceStartRequest) | [CellServiceStartResponse](#aurae-cells-v0-CellServiceStartResponse) | Start a new Executable inside of an existing cell. Can be called / in serial to start more than one executable in the same cell. |
-| Stop | [CellServiceStopRequest](#aurae-cells-v0-CellServiceStopRequest) | [CellServiceStopResponse](#aurae-cells-v0-CellServiceStopResponse) | Stop one or more Executables inside of an existing cell. / Can be called in serial to stop/retry more than one executable. |
+| Start | [CellServiceStartRequest](#aurae-cells-v0-CellServiceStartRequest) | [CellServiceStartResponse](#aurae-cells-v0-CellServiceStartResponse) | Start a new Executable inside of an existing cell. Can be called in serial to start more than one executable in the same cell. |
+| Stop | [CellServiceStopRequest](#aurae-cells-v0-CellServiceStopRequest) | [CellServiceStopResponse](#aurae-cells-v0-CellServiceStopResponse) | Stop one or more Executables inside of an existing cell. Can be called in serial to stop/retry more than one executable. |
 | List | [CellServiceListRequest](#aurae-cells-v0-CellServiceListRequest) | [CellServiceListResponse](#aurae-cells-v0-CellServiceListResponse) |  |
 
  
@@ -403,7 +409,7 @@ Cells is the most fundamental isolation boundary for Aurae.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Discover | [DiscoverRequest](#aurae-discovery-v0-DiscoverRequest) | [DiscoverResponse](#aurae-discovery-v0-DiscoverResponse) | Used to confirm that the host is running Aurae and to get some / information including the version of Aurae that is running. |
+| Discover | [DiscoverRequest](#aurae-discovery-v0-DiscoverRequest) | [DiscoverResponse](#aurae-discovery-v0-DiscoverResponse) | Used to confirm that the host is running Aurae and to get some information including the version of Aurae that is running. |
 
  
 
@@ -444,7 +450,12 @@ Cells is the most fundamental isolation boundary for Aurae.
 <a name="aurae-observe-v0-GetPosixSignalsStreamRequest"></a>
 
 ### GetPosixSignalsStreamRequest
+Request a stream of POSIX signals
 
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| workload | [Workload](#aurae-observe-v0-Workload) |  | The workload to which te response will be scoped. If no workload is / specified, a stream of all POSIX signals on the host will be returned. |
 
 
 
@@ -475,7 +486,7 @@ TODO: not implemented
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | channel_type | [LogChannelType](#aurae-observe-v0-LogChannelType) |  |  |
-| process_id | [int64](#int64) |  |  |
+| process_id | [int32](#int32) |  |  |
 
 
 
@@ -523,7 +534,23 @@ TODO: not implemented
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | signal | [int32](#int32) |  |  |
-| process_id | [int64](#int64) |  |  |
+| process_id | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="aurae-observe-v0-Workload"></a>
+
+### Workload
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| workload_type | [WorkloadType](#aurae-observe-v0-WorkloadType) |  |  |
+| id | [string](#string) |  |  |
 
 
 
@@ -542,6 +569,20 @@ TODO: not implemented
 | LOG_CHANNEL_TYPE_UNSPECIFIED | 0 |  |
 | LOG_CHANNEL_TYPE_STDOUT | 1 |  |
 | LOG_CHANNEL_TYPE_STDERR | 2 |  |
+
+
+
+<a name="aurae-observe-v0-WorkloadType"></a>
+
+### WorkloadType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| WORKLOAD_TYPE_UNSPECIFIED | 0 |  |
+| WORKLOAD_TYPE_CELL | 1 |  |
+| WORKLOAD_TYPE_POD_SANDBOX | 2 |  |
+| WORKLOAD_TYPE_VM | 3 |  |
 
 
  
@@ -564,14 +605,14 @@ TODO: not implemented
 
 
 
-<a name="virtual_machines-proto"></a>
+<a name="vms-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## virtual_machines.proto
+## vms.proto
 
 
 
-<a name="aurae-virtual_machines-v0-DriveMount"></a>
+<a name="aurae-vms-v0-DriveMount"></a>
 
 ### DriveMount
 
@@ -589,7 +630,7 @@ TODO: not implemented
 
 
 
-<a name="aurae-virtual_machines-v0-IPConfiguration"></a>
+<a name="aurae-vms-v0-IPConfiguration"></a>
 
 ### IPConfiguration
 Static IP configuration for a VM network interface
@@ -606,7 +647,7 @@ Static IP configuration for a VM network interface
 
 
 
-<a name="aurae-virtual_machines-v0-NetworkInterface"></a>
+<a name="aurae-vms-v0-NetworkInterface"></a>
 
 ### NetworkInterface
 Network config for a VM
@@ -616,14 +657,14 @@ Network config for a VM
 | ----- | ---- | ----- | ----------- |
 | mac_address | [string](#string) |  | The mac address for the device |
 | host_dev_name | [string](#string) |  | The name of the tap device on the host |
-| ipconfig | [IPConfiguration](#aurae-virtual_machines-v0-IPConfiguration) | optional | Optional static IP configuration |
+| ipconfig | [IPConfiguration](#aurae-vms-v0-IPConfiguration) | optional | Optional static IP configuration |
 
 
 
 
 
 
-<a name="aurae-virtual_machines-v0-RootDrive"></a>
+<a name="aurae-vms-v0-RootDrive"></a>
 
 ### RootDrive
 Message to specify the block device config for a  VM
@@ -639,7 +680,7 @@ Message to specify the block device config for a  VM
 
 
 
-<a name="aurae-virtual_machines-v0-VirtualMachine"></a>
+<a name="aurae-vms-v0-VirtualMachine"></a>
 
 ### VirtualMachine
 An Aurae virtual machine
@@ -652,16 +693,16 @@ An Aurae virtual machine
 | vcpu_count | [uint32](#uint32) |  | The number of vCPUs for the VM |
 | kernel_img_path | [string](#string) |  | The path to the VM kernel image |
 | kernel_args | [string](#string) | repeated | Arguments to pass to the kernel |
-| root_drive | [RootDrive](#aurae-virtual_machines-v0-RootDrive) |  | Root drive config |
-| drive_mounts | [DriveMount](#aurae-virtual_machines-v0-DriveMount) | repeated | Additional drive mount configs |
-| network_interfaces | [NetworkInterface](#aurae-virtual_machines-v0-NetworkInterface) | repeated | Network interface configs |
+| root_drive | [RootDrive](#aurae-vms-v0-RootDrive) |  | Root drive config |
+| drive_mounts | [DriveMount](#aurae-vms-v0-DriveMount) | repeated | Additional drive mount configs |
+| network_interfaces | [NetworkInterface](#aurae-vms-v0-NetworkInterface) | repeated | Network interface configs |
 
 
 
 
 
 
-<a name="aurae-virtual_machines-v0-VmServiceAllocateRequest"></a>
+<a name="aurae-vms-v0-VmServiceAllocateRequest"></a>
 
 ### VmServiceAllocateRequest
 
@@ -669,14 +710,14 @@ An Aurae virtual machine
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| machine | [VirtualMachine](#aurae-virtual_machines-v0-VirtualMachine) |  |  |
+| machine | [VirtualMachine](#aurae-vms-v0-VirtualMachine) |  |  |
 
 
 
 
 
 
-<a name="aurae-virtual_machines-v0-VmServiceAllocateResponse"></a>
+<a name="aurae-vms-v0-VmServiceAllocateResponse"></a>
 
 ### VmServiceAllocateResponse
 
@@ -691,7 +732,7 @@ An Aurae virtual machine
 
 
 
-<a name="aurae-virtual_machines-v0-VmServiceFreeRequest"></a>
+<a name="aurae-vms-v0-VmServiceFreeRequest"></a>
 
 ### VmServiceFreeRequest
 
@@ -701,7 +742,7 @@ An Aurae virtual machine
 
 
 
-<a name="aurae-virtual_machines-v0-VmServiceFreeResponse"></a>
+<a name="aurae-vms-v0-VmServiceFreeResponse"></a>
 
 ### VmServiceFreeResponse
 
@@ -716,7 +757,7 @@ An Aurae virtual machine
 
 
 
-<a name="aurae-virtual_machines-v0-VmServiceStartRequest"></a>
+<a name="aurae-vms-v0-VmServiceStartRequest"></a>
 
 ### VmServiceStartRequest
 
@@ -732,7 +773,7 @@ An Aurae virtual machine
 
 
 
-<a name="aurae-virtual_machines-v0-VmServiceStartResponse"></a>
+<a name="aurae-vms-v0-VmServiceStartResponse"></a>
 
 ### VmServiceStartResponse
 
@@ -742,7 +783,7 @@ An Aurae virtual machine
 
 
 
-<a name="aurae-virtual_machines-v0-VmServiceStopRequest"></a>
+<a name="aurae-vms-v0-VmServiceStopRequest"></a>
 
 ### VmServiceStopRequest
 
@@ -757,7 +798,7 @@ An Aurae virtual machine
 
 
 
-<a name="aurae-virtual_machines-v0-VmServiceStopResponse"></a>
+<a name="aurae-vms-v0-VmServiceStopResponse"></a>
 
 ### VmServiceStopResponse
 
@@ -773,17 +814,17 @@ An Aurae virtual machine
  
 
 
-<a name="aurae-virtual_machines-v0-VmService"></a>
+<a name="aurae-vms-v0-VmService"></a>
 
 ### VmService
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Allocate | [VmServiceAllocateRequest](#aurae-virtual_machines-v0-VmServiceAllocateRequest) | [VmServiceAllocateResponse](#aurae-virtual_machines-v0-VmServiceAllocateResponse) | Reserve requested system resources for a new VM. |
-| Free | [VmServiceFreeRequest](#aurae-virtual_machines-v0-VmServiceFreeRequest) | [VmServiceFreeResponse](#aurae-virtual_machines-v0-VmServiceFreeResponse) | Free up previously requested resources for an existing VM |
-| Start | [VmServiceStartRequest](#aurae-virtual_machines-v0-VmServiceStartRequest) | [VmServiceStartResponse](#aurae-virtual_machines-v0-VmServiceStartResponse) | Start a new VM. |
-| Stop | [VmServiceStopRequest](#aurae-virtual_machines-v0-VmServiceStopRequest) | [VmServiceStopResponse](#aurae-virtual_machines-v0-VmServiceStopResponse) | Stop one or more VMs. |
+| Allocate | [VmServiceAllocateRequest](#aurae-vms-v0-VmServiceAllocateRequest) | [VmServiceAllocateResponse](#aurae-vms-v0-VmServiceAllocateResponse) | Reserve requested system resources for a new VM. |
+| Free | [VmServiceFreeRequest](#aurae-vms-v0-VmServiceFreeRequest) | [VmServiceFreeResponse](#aurae-vms-v0-VmServiceFreeResponse) | Free up previously requested resources for an existing VM |
+| Start | [VmServiceStartRequest](#aurae-vms-v0-VmServiceStartRequest) | [VmServiceStartResponse](#aurae-vms-v0-VmServiceStartResponse) | Start a new VM. |
+| Stop | [VmServiceStopRequest](#aurae-vms-v0-VmServiceStopRequest) | [VmServiceStopResponse](#aurae-vms-v0-VmServiceStopResponse) | Stop one or more VMs. |
 
  
 
