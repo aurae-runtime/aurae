@@ -33,9 +33,10 @@
 //! Manages authenticating with remote Aurae instances, as well as searching
 //! the local filesystem for configuration and authentication material.
 
-use std::net::SocketAddr;
-
-use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
+use std::net::SocketAddrV6;
+use crate::config::{
+    AuraeConfig, AuraeSocket, CertMaterial, ClientCertDetails,
+};
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};
@@ -109,6 +110,7 @@ impl Client {
 
         // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
         // connect as a UNIX socket (assume it's a file path).
+<<<<<<< HEAD
         let channel = if let Ok(sockaddr) = socket.parse::<SocketAddr>()
         {
             endpoint
@@ -124,5 +126,28 @@ impl Client {
                 .await
         }?;
         Ok(channel)
+=======
+        let channel = match system.socket {
+            AuraeSocket::Path(path) => {
+                endpoint
+                    .connect_with_connector(service_fn(move |_: Uri| {
+                        UnixStream::connect(path.clone())
+                    }))
+                    .await
+            }
+            AuraeSocket::IPv6 { ip, scope_id } => {
+                let mut socket =
+                    ip.parse::<SocketAddrV6>().expect("invalid ip address");
+                socket.set_scope_id(scope_id);
+                endpoint
+                    .connect_with_connector(service_fn(move |_: Uri| {
+                        TcpStream::connect(socket)
+                    }))
+                    .await
+            }
+        }?;
+
+        Ok(Self { channel, client_cert_details })
+>>>>>>> 8695a7a (Added integration test for the VM service. Implemented scope_id in the client for connecting over IPv6 link-local addresses.)
     }
 }
