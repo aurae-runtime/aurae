@@ -38,7 +38,7 @@ use tonic::async_trait;
 use tracing::{error, info, trace};
 
 const POWER_BUTTON_DEVICE: &str = "/dev/input/event0";
-const DEFAULT_NETWORK_SOCKET_ADDR: &str = "[::1]:8080";
+const DEFAULT_NETWORK_SOCKET_ADDR: &str = "[::]:8080";
 
 pub(crate) struct Pid1SystemRuntime;
 
