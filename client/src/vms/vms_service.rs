@@ -28,19 +28,4 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum AuraeSocket {
-    Path(String),
-    IPv6 { ip: String, scope_id: u32 },
-}
-
-/// The system configuration for AuraeScript.
-///
-/// Used to define settings for AuraeScript at runtime.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SystemConfig {
-    /// Socket to connect the client to.  Can be a path (unix socket) or a network socket address.
-    pub socket: AuraeSocket,
-}
+macros::service!("../api/v0/vms/vms.proto", vms, VmService);

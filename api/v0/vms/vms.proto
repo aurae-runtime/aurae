@@ -36,7 +36,7 @@ option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/vms;vmsv0";
 
 service VmService {
   // Reserve requested system resources for a new VM.
-  rpc Allocate(VmServiceAllocateRequest) returns (VmServiceAllocateResponse) {}
+  rpc Create(VmServiceCreateRequest) returns (VmServiceCreateResponse) {}
 
   // Free up previously requested resources for an existing VM
   rpc Free(VmServiceFreeRequest) returns (VmServiceFreeResponse) {}
@@ -48,11 +48,11 @@ service VmService {
   rpc Stop(VmServiceStopRequest) returns (VmServiceStopResponse) {}
 }
 
-message VmServiceAllocateRequest{
+message VmServiceCreateRequest{
   VirtualMachine machine = 1;
 }
 
-message VmServiceAllocateResponse{
+message VmServiceCreateResponse{
   string vm_id = 1;
 }
 
@@ -63,7 +63,6 @@ message VmServiceFreeResponse{
 
 message VmServiceStartRequest{
   string vm_id = 1;
-  string executable = 2;
 }
 message VmServiceStartResponse{}
 
@@ -95,21 +94,6 @@ message VirtualMachine {
 
   // Additional drive mount configs
   repeated DriveMount drive_mounts = 7;
-
-  // Network interface configs
-  repeated NetworkInterface network_interfaces = 8;
-}
-
-// Network config for a VM
-message NetworkInterface {
-  // The mac address for the device
-  string mac_address = 1;
-
-  // The name of the tap device on the host
-  string host_dev_name = 2;
-
-  // Optional static IP configuration
-  optional IPConfiguration ipconfig = 3;
 }
 
 // Static IP configuration for a VM network interface

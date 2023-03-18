@@ -30,7 +30,7 @@
 
 use super::isolation_controls::{Isolation, IsolationControls};
 use crate::AURAED_RUNTIME;
-use client::AuraeConfig;
+use client::{AuraeConfig, AuraeSocket};
 use clone3::Flags;
 use nix::{
     libc::SIGCHLD,
@@ -65,17 +65,18 @@ impl NestedAuraed {
         // TODO: handle expect
         let mut client_config =
             AuraeConfig::try_default().expect("file based config");
-        client_config.system.socket = format!(
+        let socket_path = format!(
             "{}/aurae-{}.sock",
             auraed_runtime.runtime_dir.to_string_lossy(),
             uuid::Uuid::new_v4(),
         );
+        client_config.system.socket = AuraeSocket::Path(socket_path.clone());
 
         let mut command = Command::new(&auraed_runtime.auraed);
 
         let _ = command.current_dir("/").args([
             "--socket",
-            &client_config.system.socket,
+            &socket_path,
             "--nested", // NOTE: for now, the nested flag only signals for the code in the init module to not trigger (i.e., don't run the pid 1 code, run the non pid 1 code)
         ]);
 

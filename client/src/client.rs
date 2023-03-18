@@ -33,10 +33,10 @@
 //! Manages authenticating with remote Aurae instances, as well as searching
 //! the local filesystem for configuration and authentication material.
 
-use std::net::SocketAddr;
+use std::net::SocketAddrV6;
 
 use crate::config::{
-    AuraeConfig, CertMaterial, ClientCertDetails,
+    AuraeConfig, AuraeSocket, CertMaterial, ClientCertDetails,
 };
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};
@@ -92,20 +92,26 @@ impl Client {
 
         // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
         // connect as a UNIX socket (assume it's a file path).
-        let channel = if let Ok(sockaddr) = system.socket.parse::<SocketAddr>()
-        {
-            endpoint
-                .connect_with_connector(service_fn(move |_: Uri| {
-                    TcpStream::connect(sockaddr)
-                }))
-                .await
-        } else {
-            endpoint
-                .connect_with_connector(service_fn(move |_: Uri| {
-                    UnixStream::connect(system.socket.clone())
-                }))
-                .await
+        let channel = match system.socket {
+            AuraeSocket::Path(path) => {
+                endpoint
+                    .connect_with_connector(service_fn(move |_: Uri| {
+                        UnixStream::connect(path.clone())
+                    }))
+                    .await
+            }
+            AuraeSocket::IPv6 { ip, scope_id } => {
+                let mut socket =
+                    ip.parse::<SocketAddrV6>().expect("invalid ip address");
+                socket.set_scope_id(scope_id);
+                endpoint
+                    .connect_with_connector(service_fn(move |_: Uri| {
+                        TcpStream::connect(socket)
+                    }))
+                    .await
+            }
         }?;
+
         Ok(Self { channel, client_cert_details })
     }
 }
