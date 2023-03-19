@@ -54,17 +54,6 @@
 //! sudo -E auraed
 //! ```
 //!
-//!
-//! ## Building from source
-//!
-//! We suggest using the [aurae](https://github.com/aurae-runtime/aurae) repository for building all parts of the project.
-//!
-//! It is possible to build `auraed` by itself. Check out this repository and use the Makefile.
-//!
-//! ```bash
-//! make auraed
-//! ```
-//!
 //! See [`The Aurae Standard Library`] for API reference.
 //!
 //! [`The Aurae Standard Library`]: https://aurae.io/stdlib
@@ -204,29 +193,6 @@ pub async fn run(
     {
         trace!("{:#?}", runtime);
 
-        let server_crt =
-            tokio::fs::read(&runtime.server_crt).await.with_context(|| {
-                format!(
-                    "Aurae requires a signed TLS certificate to run as a server, but failed to
-                    load: '{}'. Please see https://aurae.io/certs/ for information on best
-                    practices to quickly generate one.",
-                    runtime.server_crt.display()
-                )
-            })?;
-        let server_key = tokio::fs::read(&runtime.server_key).await?;
-        let server_identity = Identity::from_pem(server_crt, server_key);
-        info!("Register Server SSL Identity");
-
-        let ca_crt = tokio::fs::read(&runtime.ca_crt).await?;
-        let ca_crt_pem = Certificate::from_pem(ca_crt.clone());
-
-        let tls = ServerTlsConfig::new()
-            .identity(server_identity)
-            .client_ca_root(ca_crt_pem);
-
-        info!("Validating SSL Identity and Root Certificate Authority (CA)");
-        //let _log_collector = self.log_collector.clone();
-
         let runtime_dir = Path::new(&runtime.runtime_dir);
         // Create runtime directory
         tokio::fs::create_dir_all(runtime_dir).await.with_context(|| {
@@ -235,6 +201,40 @@ pub async fn run(
                 runtime.runtime_dir.display()
             )
         })?;
+
+        // We don't want TLS in cell context
+        let mut server = if context != AuraeContext::Cell {
+            let server_crt =
+                tokio::fs::read(&runtime.server_crt).await.with_context(|| {
+                    format!(
+                        "Aurae requires a signed TLS certificate to run as a server, but failed to
+                        load: '{}'. Please see https://aurae.io/certs/ for information on best
+                        practices to quickly generate one.",
+                        runtime.server_crt.display()
+                    )
+                })?;
+            let server_key = tokio::fs::read(&runtime.server_key).await?;
+            let server_identity = Identity::from_pem(server_crt, server_key);
+            info!("Register Server SSL Identity");
+
+            let ca_crt = tokio::fs::read(&runtime.ca_crt).await?;
+            let ca_crt_pem = Certificate::from_pem(ca_crt);
+
+            let tls = ServerTlsConfig::new()
+                .identity(server_identity)
+                .client_ca_root(ca_crt_pem);
+
+            info!(
+                "Validating SSL Identity and Root Certificate Authority (CA)"
+            );
+            //let _log_collector = self.log_collector.clone();
+
+            Server::builder()
+                .tls_config(tls)
+                .with_context(|| "gRPC server failed to configure tls")?
+        } else {
+            Server::builder()
+        };
 
         // Install eBPF probes in the host Aurae daemon
         let (_bpf_handle, perf_events) = if context == AuraeContext::Cell
@@ -309,9 +309,7 @@ pub async fn run(
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.
         let server_handle = tokio::spawn(async move {
-            Server::builder()
-                .tls_config(tls)
-                .with_context(|| "gRPC server failed to configure tls")?
+            server
                 .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)

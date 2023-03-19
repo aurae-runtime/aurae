@@ -30,7 +30,6 @@
 
 use super::isolation_controls::{Isolation, IsolationControls};
 use crate::AURAED_RUNTIME;
-use client::AuraeConfig;
 use clone3::Flags;
 use nix::{
     libc::SIGCHLD,
@@ -52,7 +51,7 @@ pub struct NestedAuraed {
     pidfd: i32,
     #[allow(unused)]
     iso_ctl: IsolationControls,
-    pub client_config: AuraeConfig,
+    pub client_socket: String,
 }
 
 impl NestedAuraed {
@@ -63,16 +62,11 @@ impl NestedAuraed {
 
         let auraed_runtime = AURAED_RUNTIME.get().expect("runtime");
 
-        // TODO: handle expect
-        let mut client_config =
-            AuraeConfig::try_default().expect("file based config");
         let client_socket = format!(
             "{}/aurae-{}.sock",
             auraed_runtime.runtime_dir.to_string_lossy(),
             uuid::Uuid::new_v4(),
         );
-
-        client_config.system.socket = client_socket.clone();
 
         let auraed_path: PathBuf =
             auraed_runtime.auraed.clone().try_into().expect("path to auraed");
@@ -179,7 +173,7 @@ impl NestedAuraed {
                 let process = procfs::process::Process::new(pid)
                     .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-                Ok(Self { process, pidfd, iso_ctl, client_config })
+                Ok(Self { process, pidfd, iso_ctl, client_socket })
             }
         }
     }
