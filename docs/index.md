@@ -1,203 +1,181 @@
-# protoc-gen-doc
+<!-- THE DOCUMENT -->
 
-[![CI Status][ci-svg]][ci-url]
-[![codecov][codecov-svg]][codecov-url]
-[![GoDoc][godoc-svg]][godoc-url]
-[![Go Report Card][goreport-svg]][goreport-url]
+![Workflow in progress: deploy] ![Workflow in progress: documentation] ![Workflow in progress: build]
 
-This is a documentation generator plugin for the Google Protocol Buffers compiler (`protoc`). The plugin can generate
-HTML, JSON, DocBook, and Markdown documentation from comments in your `.proto` files.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/aurae-runtime/aurae/main/docs/assets/logo/aurae.png" width="450">
+</p>
 
-It supports proto2 and proto3, and can handle having both in the same context (see [examples](examples/) for proof).
+# Mission
 
-## Installation
+Aurae is on a mission to be the most loved and effective way of managing
+workloads on a node. Our hope is that by bringing a better set of controls to a
+node, we can unlock brilliant higher order distributed systems in the future.
 
-There is a Docker image available (`docker pull pseudomuto/protoc-gen-doc`) that has everything you need to generate
-documentation from your protos.
+# Introduction
 
-If you'd like to install this locally, you can `go get` it.
+[Aurae] deploys a memory-safe [^memory-safe] runtime daemon, process manager,
+and PID-1 initialization system to remotely schedule processes, containers, and
+virtual machines as well as set node configurations (e.g., like networking
+storage).
 
-`go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc`
+Through system proportioning and enterprise workload isolation techniques, the
+Aurae [open-source] project can complement higher order schedulers and control
+planes (such as Kubernetes) as Aurae supports the usage of multi-tenant
+workloads and enterprise identities all the way down to the socket layer.
 
-Alternatively, you can download a pre-built release for your platform from the [releases](releases/) page.
+## FOSDEM 2023 Presentation
 
-## Invoking the Plugin
+ - Slides: [Link to presentation](https://docs.google.com/presentation/d/1GxKN5tyv4lV2aZdEOUqy3R9tVCat-vrFJyelgFX7b1A/edit#slide=id.g1eef12fba1d_6_53)
+ - Website : [Link to abstract](https://fosdem.org/2023/schedule/event/rust_aurae_a_new_pid_1_for_distributed_systems/)
+ 
+ <a href="https://www.youtube.com/watch?v=5a277u4j6fU" target="_blank"><img src="http://img.youtube.com/vi/5a277u4j6fU/hqdefault.jpg" width="480" height="360" border="10" /></a>
 
-The plugin is invoked by passing the `--doc_out`, and `--doc_opt` options to the `protoc` compiler. The option has the
-following format:
 
-    --doc_opt=<FORMAT>|<TEMPLATE_FILENAME>,<OUT_FILENAME>[,default|source_relative]
+## Project Status
 
-The format may be one of the built-in ones ( `docbook`, `html`, `markdown` or `json`)
-or the name of a file containing a custom [Go template][gotemplate].
+> **STILL IN EARLY DEVELOPMENT!**<br>
+> **The Aurae project and API can change without notice.**<br>
+> **Do not run the project in production until further notice!**
 
-If the `source_relative` flag is specified, the output file is written in the same relative directory as the input file.
+- The Aurae project welcomes contributions of all kinds and sizes.
+- Please read the "[getting involved]" documentation before contributing to the
+  project.
+- You do not have to know [Rust] to join the project.
 
-### Using the Docker Image (Recommended)
+By joining the project in its early stages, you will help to create a milestone
+contender for corporate distributed systems and automation that will remain
+accessible to anyone.
 
-The docker image has two volumes: `/out` and `/protos` which are the directory to write the documentation to and the
-directory containing your proto files.
+# **Expanded Overview**
 
-You could generate HTML docs for the examples by running the following:
+By [introducing Aurae cells] on top of a [Linux kernel] the control of each
+internal runtime process on a given node becomes possible. The auraed runtime
+maintains ownership of every process by managing everything from [PID]-1 to
+nested processes.
 
-```
-docker run --rm \
-  -v $(pwd)/examples/doc:/out \
-  -v $(pwd)/examples/proto:/protos \
-  pseudomuto/protoc-gen-doc
-```
+Maintainable and predefined [.proto]-files contribute to the core definition of
+the distributed systems runtime and the standard library. During the build
+process, these [.proto]-files can allow for greater customization possibilities.
+The [TypeScript] file format replaces static manifests (like the [YAML] file
+format) for direct interactions with a running system.
 
-By default HTML documentation is generated in `/out/index.html` for all `.proto` files in the `/protos` volume. This can
-be changed by passing the `--doc_opt` parameter to the container.
+---
 
-For example, to generate Markdown for all the examples:
+|||
+| :--- | :--- |
+| **Auraed**      | To ensure memory safety, Aurae serves the generic system's runtime daemon ([auraed]).|
+| **AuraeScript** | The [AuraeScript] (a Turing-complete scripting language built on TypeScript) library automatically generates itself from the pre-defined [.proto] files defined in the Aurae standard library.<br>It also directly embeds [Deno] source code to provide an SDK and the functionality to attach remote clients for the direct remote communication with Aurae. |
+|||
 
-```
-docker run --rm \
-  -v $(pwd)/examples/doc:/out \
-  -v $(pwd)/examples/proto:/protos \
-  pseudomuto/protoc-gen-doc --doc_opt=markdown,docs.md
-```
+```typescript
+#!/usr/bin/env auraescript
+let cells = new runtime.CellServiceClient();
 
-You can also generate documentation for a single file. This can be done by passing the file(s) to the command:
+let allocated = await cells.allocate(<runtime.AllocateCellRequest>{
+  cell: runtime.Cell.fromPartial({
+    name: "my-cell",
+    cpus: "2",
+  }),
+});
 
-```
-docker run --rm \
-  -v $(pwd)/examples/doc:/out \
-  -v $(pwd)/examples/proto:/protos \
-  pseudomuto/protoc-gen-doc --doc_opt=markdown,docs.md /protos/Booking.proto [OPTIONALLY LIST MORE FILES]
-```
-
-You can also exclude proto files that match specific path expressions. This is done by passing a second option delimited
-by `:`. For example, you can pass any number of comma separated patterns as the second option:
-
-```
-docker run --rm \
-  -v $(pwd)/examples/doc:/out \
-  -v $(pwd)/examples/proto:/protos \
-  pseudomuto/protoc-gen-doc --doc_opt=:google/*,somepath/*
-```
-
-_**Remember**_: Paths should be from within the container, not the host!
-
-> NOTE: Due to the way wildcard expansion works with docker you cannot use a wildcard path (e.g. `protos/*.proto`) in
-the file list. To get around this, if no files are passed, the container will generate docs for `protos/*.proto`, which
-can be changed by mounting different volumes.
-
-### Simple Usage
-
-For example, to generate HTML documentation for all `.proto` files in the `proto` directory into `doc/index.html`, type:
-
-    protoc --doc_out=./doc --doc_opt=html,index.html proto/*.proto
-
-The plugin executable must be in `PATH` for this to work. 
-
-### Using a precompiled binary
-
-Alternatively, you can specify a pre-built/not in `PATH` binary using the `--plugin` option.
-
-    protoc \
-      --plugin=protoc-gen-doc=./protoc-gen-doc \
-      --doc_out=./doc \
-      --doc_opt=html,index.html \
-      proto/*.proto
-
-### With a Custom Template
-
-If you'd like to use your own template, simply use the path to the template file rather than the type.
-
-    protoc --doc_out=./doc --doc_opt=/path/to/template.tmpl,index.txt proto/*.proto
-
-For information about the available template arguments and functions, see [Custom Templates][custom]. If you just want
-to customize the look of the HTML output, put your CSS in `stylesheet.css` next to the output file and it will be picked
-up.
-
-## Writing Documentation
-
-Messages, Fields, Services (and their methods), Enums (and their values), Extensions, and Files can be documented.
-Generally speaking, comments come in 2 forms: leading and trailing.
-
-**Leading comments**
-
-Leading comments can be used everywhere.
-
-```protobuf
-/**
- * This is a leading comment for a message
-*/
-message SomeMessage {
-  // this is another leading comment
-  string value = 1;
-}
+let started = await cells.start(<runtime.StartExecutableRequest>{
+  executable: runtime.Executable.fromPartial({
+    cellName: "my-cell",
+    command: "sleep 4000",
+    description: "Sleep for 4000 seconds",
+    name: "sleep-4000",
+  }),
+});
 ```
 
-> NOTE: File level comments should be leading comments on the syntax directive.
+|||
+| :--- | :--- |
+| **Authentication**               | Aurae extends [SPIFFE]/[SPIRE] (x509 mTLS)-backed identity, authentication (authn), and authorization (authz) in a distributed system down to the Unix domain socket layer. |
+| **Principle of Least Awareness** | A single Aurae instance has no awareness of higher order scheduling mechanisms such as the Kubernetes control plane.                                                        |
+| **Runtime Workloads**            | The Aurae runtime API can manage [virtual machines], [executables], [cells], [pods], and other [spawned Aurae instances].                                                   |
+| **The Aurae Standard Library**   | The Aurae project exposes its functionality as a gRPC API through the [Aurae standard library]. The [V0 API reference] contains the current library definition.             |
+|||
 
-**Trailing comments**
+---
 
-Fields, Service Methods, Enum Values and Extensions support trailing comments.
+<!--
+# **Getting Started**
+## **Building Aurae from Source**
+### **Dependencies**
+### **Prepare the Environment**
+## **Aurae Quick Start**
+### **Running the Daemon**
+### **Running your first Cell**
+## **Developing on an M1**
+### **Environment**
+### **VM Setup**
+### **CLion Setup**
+### **Back to the VM (setting up Aurae)** -->
 
-```protobuf
-enum MyEnum {
-  DEFAULT = 0; // the default value
-  OTHER   = 1; // the other value
-}
-```
+<!-- All the links!! -->
+<!-- +Footnotes
 
-**Excluding comments**
+[^cells]:
+    Additionally, with Aurae cells, the project provides various ways to partition
+    and slice up systems allowing for isolation strategies in enterprise workloads.
 
-If you want to have some comment in your proto files, but don't want them to be part of the docs, you can simply prefix
-the comment with `@exclude`. 
+[^compare]:
+    As a low-level building block, the Aurae Project works well with any
+    higher-order system by offering a thoughtful set of API calls and controls for
+    managing workloads on a single node.
 
-Example: include only the comment for the `id` field
+[^medium]:
+    Learn more from the [Medium Blog: Why fix Kubernetes and Systemd?] by
+    [Kris Nóva]).
+-->
 
-```protobuf
-/**
- * @exclude
- * This comment won't be rendered
- */
-message ExcludedMessage {
-  string id   = 1; // the id of this message.
-  string name = 2; // @exclude the name of this message
+[^memory-safe]: The reliability and effectiveness of the Rust systems language make it an excellent choice for the development of the Aurae project. [Learn more about Rust]
 
-  /* @exclude the value of this message. */
-  int32 value = 3;
-}
-```
+<!-- +Status Badges -->
 
-Check out the [example protos](examples/proto) to see all the options.
+[workflow in progress: deploy]: https://github.com/aurae-runtime/aurae/actions/workflows/291-deploy-website-documentation-aurae-builder-make-docs.yml/badge.svg?branch=main "https://github.com/aurae-runtime/aurae/actions/workflows/291-deploy-website-documentation-aurae-builder-make-docs.yml"
+[workflow in progress: documentation]: https://github.com/aurae-runtime/aurae/actions/workflows/290-check-website-documentation-aurae-builder-make-docs.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/290-check-website-documentation-aurae-builder-make-docs.yml"
+[workflow in progress: build]: https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test.yml/badge.svg "https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test.yml"
 
-## Output Example
+<!-- +aurae.io/ -->
 
-With the input `.proto` files
+[aurae cells]: https://aurae.io/blog/24-10-2022-aurae-cells/ "Learn more about Aurae cells"
+[aurae standard library]: https://aurae.io/stdlib/ "Learn more about Auraes standard library"
+[aurae]: https://aurae.io/ "Visit aurae.io"
+[cells]: https://aurae.io/stdlib/v0/#cell "Processes running in a shared cgroup namespace"
+[executables]: https://aurae.io/stdlib/v0/#executable "Basic runtime processes"
+[getting involved]: https://aurae.io/community/#getting-involved "Participate and contribute!"
+[pods]: https://aurae.io/stdlib/v0/#pod "Cells running in spawned instances"
+[spawned aurae instances]: https://aurae.io/stdlib/v0/#instance "Short lived nested virtual instances of Aurae"
+[v0 api reference]: https://aurae.io/stdlib/v0/ "Learn more about the current Aurae library definitions"
+[virtual machines]: https://aurae.io/stdlib/v0/#virtualmachine "Long-lived arbitrary virtual machines"
+[introducing aurae cells]: https://aurae.io/blog/2022-10-24-aurae-cells/#IntroducingAuraeCells "Aurae Blog: 2022-10-24"
 
-* [Booking.proto](examples/proto/Booking.proto)
-* [Customer.proto](examples/proto/Customer.proto)
-* [Vehicle.proto](examples/proto/Vehicle.proto)
+<!-- +Wiki -->
 
-the plugin gives the output
+[grpc]: https://en.wikipedia.org/wiki/GRPC "Read about gRPC"
+[mtls]: https://en.wikipedia.org/wiki/Mutual_authentication#mTLS "Read about mTLS"
+[pid]: https://en.wikipedia.org/wiki/Process_identifier "Read about PID"
 
-* [Markdown](examples/doc/example.md)
-* [HTML][html_preview]
-* [DocBook](examples/doc/example.docbook)
-* [JSON](examples/doc/example.json)
+<!-- +Github -->
 
-Check out the `examples` task in the [Makefile](Makefile) to see how these were generated.
+[auraescript]: https://github.com/aurae-runtime/aurae/tree/main/auraescript "Check out the Auraescript on Github 🌟"
+[containerd]: https://github.com/containerd/containerd "Read about containerd on GH"
+[firecracker]: https://github.com/firecracker-microvm/firecracker "Read about firecracker on Github"
+[kris nóva]: https://github.com/krisnova "Check out Kris Nóva on Github 🌟"
+[open-source]: https://github.com/aurae-runtime/aurae/blob/main/LICENSE "Apache License 2.0"
+[spiffe]: https://github.com/spiffe "Read about SPIFFE"
+[spire]: https://github.com/spiffe/spire "Read about SPIRE"
 
-[gotemplate]:
-    https://golang.org/pkg/text/template/
-    "Template - The Go Programming Language"
-[custom]:
-    https://github.com/pseudomuto/protoc-gen-doc/wiki/Custom-Templates
-    "Custom templates instructions"
-[html_preview]:
-    https://rawgit.com/pseudomuto/protoc-gen-doc/master/examples/doc/example.html
-    "HTML Example Output"
-[codecov-svg]: https://codecov.io/gh/pseudomuto/protoc-gen-doc/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/pseudomuto/protoc-gen-doc
-[godoc-svg]: https://godoc.org/github.com/pseudomuto/protoc-gen-doc?status.svg
-[godoc-url]: https://godoc.org/github.com/pseudomuto/protoc-gen-doc
-[goreport-svg]: https://goreportcard.com/badge/github.com/pseudomuto/protoc-gen-doc
-[goreport-url]: https://goreportcard.com/report/github.com/pseudomuto/protoc-gen-doc
-[ci-svg]: https://github.com/pseudomuto/protoc-gen-doc/actions/workflows/ci.yaml/badge.svg?branch=master
-[ci-url]: https://github.com/pseudomuto/protoc-gen-doc/actions/workflows/ci.yaml
+<!-- +External links -->
+
+[.proto]: https://protobuf.dev/ "Read more about Protocol Buffers"
+[deno]: https://deno.land "Read more about Deno"
+[learn more about rust]: https://doc.rust-lang.org/book/ "The book about the Rust programming language"
+[linux kernel]: https://git.kernel.org/ "Learn about the Linux kernels"
+[medium blog: why fix kubernetes and systemd?]: https://medium.com/@kris-nova/why-fix-kubernetes-and-systemd-782840e50104 "Learn more about the possibilies of Aurae"
+[rust]: https://www.rust-lang.org/ "Read and learn more about the Rust language"
+[systemd]: https://www.freedesktop.org/wiki/Software/systemd/ "Read more about Systemd"
+[typescript]: https://www.typescriptlang.org/docs/handbook/ "Read more about TypeScript"
+[yaml]: https://yaml.org/ "Read more about YAML"

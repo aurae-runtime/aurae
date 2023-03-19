@@ -81,7 +81,7 @@ impl AuraeConfig {
                     return Ok(config);
                 }
                 Err(e) => {
-                    println!("warning: failed to parse config at {path}: {e}");
+                    eprintln!("warning: failed to parse config at {path}: {e}");
                     continue;
                 }
             }

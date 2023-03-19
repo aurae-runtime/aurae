@@ -51,6 +51,7 @@
 
 use auraescript::*;
 use deno_core::resolve_path;
+use std::env::current_dir;
 
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
@@ -65,7 +66,7 @@ fn main() -> anyhow::Result<()> {
 
     let _ = js_runtime.execute_script("", "Deno.core.initializeAsyncOps();")?;
 
-    let main_module = resolve_path(&args[1].clone())?;
+    let main_module = resolve_path(&args[1].clone(), current_dir()?.as_path())?;
 
     let future = async move {
         let mod_id = js_runtime.load_main_module(&main_module, None).await?;

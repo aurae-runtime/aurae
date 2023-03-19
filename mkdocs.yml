@@ -6,21 +6,21 @@ edit_uri: "edit/main/docs/"
 nav:
   - Home: index.md
   - Auraed: /auraed
-  - AuraeScript: /auraescript
+  - AuraeScript:
+    - About: /auraescript
+    - Examples on GitHub: https://github.com/aurae-runtime/aurae/tree/main/examples
   - Aurae Standard Library:
     - Specification: /stdlib
     - V0: /stdlib/v0
   - Getting Started:
     - Building from Source: /build
     - Quick Start: /quickstart
-    - M1 Development: /m1
     #- Examples: /examples
+    - Development Environments: /development-environments
   - Signals: /signals
   - Certificates: /certs
   - Community:
     - Aurae Community: /community
-    - Code of Conduct: /community/code-of-conduct
-    - Contribution Guidelines: /community/contribution-guidelines
     - Join our Discord: https://discord.gg/aTe2Rjg5rq
   - Reference:
     - auraed: /crate/auraed
