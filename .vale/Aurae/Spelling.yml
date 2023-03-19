@@ -31,3 +31,6 @@ filters:
   - transphobia
   - untrusted
   - virtualized
+  - CLion
+  - Deno
+  - buf

@@ -32,7 +32,6 @@ use super::{
     cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec, Cells,
     CellsCache, CellsError, Result,
 };
-use client::AuraeConfig;
 use tracing::info;
 
 // TODO https://github.com/aurae-runtime/aurae/issues/199 &&
@@ -169,14 +168,14 @@ impl Cell {
 
     // NOTE: Having this function return the Client means we need to make it async,
     // or we need to make [Client::new] not async.
-    pub fn client_config(&self) -> Result<AuraeConfig> {
+    pub fn client_socket(&self) -> Result<String> {
         let CellState::Allocated { nested_auraed, .. } = &self.state else {
             return Err(CellsError::CellNotAllocated {
                 cell_name: self.cell_name.clone(),
             })
         };
 
-        Ok(nested_auraed.client_config.clone())
+        Ok(nested_auraed.client_socket.clone())
     }
 
     /// Returns the [CellName] of the [Cell]
