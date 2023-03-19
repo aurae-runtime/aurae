@@ -84,7 +84,8 @@ use deno_ast::{MediaType, ParseParams, SourceTextInfo};
 use deno_core::futures::FutureExt;
 use deno_core::{
     resolve_import, Extension, JsRuntime, ModuleLoader, ModuleSource,
-    ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, RuntimeOptions,
+    ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, ResolutionKind,
+    RuntimeOptions,
 };
 use std::pin::Pin;
 use std::rc::Rc;
@@ -97,7 +98,7 @@ mod health;
 mod observe;
 
 pub fn init() -> JsRuntime {
-    let extension = Extension::builder().ops(stdlib()).build();
+    let extension = Extension::builder("").ops(stdlib()).build();
 
     JsRuntime::new(RuntimeOptions {
         extensions: vec![extension],
@@ -135,7 +136,7 @@ impl ModuleLoader for TypescriptModuleLoader {
         &self,
         specifier: &str,
         referrer: &str,
-        _is_main: bool,
+        _is_main: ResolutionKind,
     ) -> Result<ModuleSpecifier, Error> {
         Ok(resolve_import(specifier, referrer)?)
     }
