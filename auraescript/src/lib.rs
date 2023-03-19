@@ -35,21 +35,6 @@
 //!
 //! AuraeScript is a quick way to access the core Aurae APIs and follows normal UNIX parlance. AuraeScript should feel simple and intuitive for any Go, C, Python, or Rust programmer.
 //!
-//! ## Build From Source
-//!
-//!
-//! ```
-//! git clone git@github.com:aurae-runtime/aurae.git
-//! cd aurae
-//! make pki config all
-//! ```
-//!
-//! Alternatively it is possible to build `auraescript` by itself. Check out this repository and use the Makefile.
-//!
-//! ```bash
-//! make auraescript
-//! ```
-//!
 //! ### Architecture
 //!
 //! AuraeScript follows a similar client paradigm to Kubernetes `kubectl` command. However, unlike Kubernetes this is not a command line tool like `kubectl`. AuraeScript is a fully supported programing language complete with a systems standard library. The Aurae runtime projects supports many clients, and the easiest client to get started building with is AuraeScript.
