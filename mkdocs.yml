@@ -15,8 +15,8 @@ nav:
   - Getting Started:
     - Building from Source: /build
     - Quick Start: /quickstart
-    - M1 Development: /m1
     #- Examples: /examples
+    - Development Environments: /development-environments
   - Signals: /signals
   - Certificates: /certs
   - Community:
