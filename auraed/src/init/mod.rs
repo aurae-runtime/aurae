@@ -161,28 +161,39 @@ impl Context {
 //
 // Source: https://man7.org/linux/man-pages/man7/cgroup_namespaces.7.html
 fn in_new_cgroup_namespace() -> bool {
-    let file =
-        File::open("/proc/self/cgroup").expect("opening /proc/self/cgroup");
-    let mut reader = BufReader::new(file);
-    let mut contents = String::new();
-    let _ = reader
-        .read_to_string(&mut contents)
-        .expect("reading /proc/self/cgroup");
+    let file = File::open("/proc/self/cgroup");
 
-    // Here we examine the last few bytes of /proc/self/cgroup
-    // We know if the cgroup string ends with a \n newline
-    // as well as a / as in "0::/" we are in a new (and nested)
-    // cgroup namespace.
-    //
-    // For all intents and purposes this is the closest way we
-    // can guarantee that we are in "a container".
-    //
-    // It is important to note that Aurae cells (by default)
-    // will also schedule themselves in a new cgroup namespace.
-    // Therefore we would expect Aurae cells to also match this
-    // pattern.
-    //
-    contents.to_string().ends_with("_aurae\n")
-    // TODO Use the AURAE_SELF_IDENTIFIER const as currently defined in runtime_service.rs
-    // TODO Consider moving the const to a better home :)
+    // Note: The following is a workaround for a chicken egg problem in the init
+    //       logic. We need to read from /proc to determine whether we're in a
+    //       container or whether we're running as true PID 1. But if we're
+    //       running as true PID 1, /proc wouldn't be mounted at this point as
+    //       we only mount proc when we have determined that we _are_ running as
+    //       true PID 1.
+    match file {
+        Ok(file) => {
+            let mut reader = BufReader::new(file);
+            let mut contents = String::new();
+            let _ = reader
+                .read_to_string(&mut contents)
+                .expect("reading /proc/self/cgroup");
+
+            // Here we examine the last few bytes of /proc/self/cgroup
+            // We know if the cgroup string ends with a \n newline
+            // as well as a / as in "0::/" we are in a new (and nested)
+            // cgroup namespace.
+            //
+            // For all intents and purposes this is the closest way we
+            // can guarantee that we are in "a container".
+            //
+            // It is important to note that Aurae cells (by default)
+            // will also schedule themselves in a new cgroup namespace.
+            // Therefore we would expect Aurae cells to also match this
+            // pattern.
+            //
+            contents.to_string().ends_with("_aurae\n")
+            // TODO Use the AURAE_SELF_IDENTIFIER const as currently defined in runtime_service.rs
+            // TODO Consider moving the const to a better home :)
+        }
+        Err(_) => false,
+    }
 }
