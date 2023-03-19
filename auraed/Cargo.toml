@@ -47,7 +47,7 @@ aya = { version = ">=0.11", features = ["async_tokio"] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 bytes = "1.2.1"
 clap = { workspace = true }
-chrono = "0.4.23"
+chrono = { workspace = true }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
 futures = "0.3.23"
@@ -85,7 +85,7 @@ walkdir = "2"
 futures-util = { workspace = true }
 multi_log = "0.1.2"
 pretty_assertions = "1.3.0"
-serial_test = "1.0.0"
+serial_test = { workspace = true }
 simplelog = "0.12.0"
 simple_test_case = "1.1.0"
 test-helpers = { workspace = true }

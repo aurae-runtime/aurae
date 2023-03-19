@@ -45,6 +45,7 @@ exclude = [
 
 [workspace.dependencies]
 anyhow = "1.0.66"
+chrono = { version = "0.4.23", default-features = false, features = ["clock", "std", "wasmbind"] } # default features except `oldtime`
 client = { path = "./client" }
 clap = { version = "4.1.1", features = ["derive"] }
 fancy-regex = "0.11.0"
@@ -57,6 +58,7 @@ proto = { path = "./proto" }
 protobuf = "3.2.0"
 protobuf-parse = "=3.2.0" # This crate makes no promises of stabilty, so we pin to the exact version
 quote = "1.0"
+serial_test = "1.0.0"
 serde = "1.0.94"
 serde_json = "1.0.94"
 syn = { version = "1.0", features = ["full"] } # used in macros, so full doesn't affect binary size
