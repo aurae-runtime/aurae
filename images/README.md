@@ -20,7 +20,7 @@ This image can also be used locally as a way to run tests in the same environmen
 
 1. Build the container locally. Make sure you are in the root `aurae` directory for these steps.
 
-   `make oci-image-build tag=builder ocifile=./docker/Dockerfile.test`
+   `make oci-image-build tag=builder ocifile=./images/Dockerfile.test`
 
 2. Pass in whichever `make` command you would like to run inside the container. This example runs `make docs` inside the build container.
 

@@ -12,7 +12,7 @@ proto = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
-toml = "0.5.9"
+toml = "0.7.3"
 tonic = { workspace = true, features = ["tls"] }
 tower = "0.4.13"
-x509-certificate = "0.15.0"
+x509-certificate = "0.18.0"

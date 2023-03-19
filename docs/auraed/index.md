@@ -1,14 +1,14 @@
 # Aurae Daemon
 
-The Aurae Daemon (auraed) is the main daemon that powers Aurae. 
+The Aurae Daemon (auraed) is the main daemon that powers Aurae.
 
 The Aurae Daemon runs as a gRPC server which listens over a Unix domain socket by default.
 
-``` 
+```
 /var/run/aurae/aurae.sock
 ```
 
-## Running auraed 
+## Running auraed
 
 Running as `/sbin/init` is currently under active development.
 
@@ -21,7 +21,7 @@ We suggest using the [aurae](https://github.com/aurae-runtime/aurae) repository 
 If you intend on building this repository directly you can leverage the Makefile in this repository.
 
 ```bash
-make
+make auraed
 ```
 
 or using Cargo directly
@@ -32,7 +32,7 @@ cargo install --debug --path .
 ```
 
 
-## Running auraed in a Container 
+## Running auraed in a Container
 
 It is possible to run auraed in a container as long as the following is considered:
 

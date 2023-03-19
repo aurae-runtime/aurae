@@ -27,7 +27,8 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-
+//! # Aurae Daemon
+//!
 //! Systems daemon built for higher order simple, safe, secure multi-tenant
 //! distributed systems.
 //!
@@ -36,6 +37,33 @@
 //!
 //! The Aurae Daemon (auraed) is the main server implementation of the Aurae
 //! Standard Library.
+//!
+//! The Aurae Daemon runs as a gRPC server which listens over a unix domain socket by default.
+//!
+//! ```bash
+//! /var/run/aurae/aurae.sock
+//! ```
+//!
+//! ## Running Auraed
+//!
+//! Running as `/init` is currently under active development.
+//!
+//! To run auraed as a standard library server you can run the daemon alongside your current init system.
+//!
+//! ```bash
+//! sudo -E auraed
+//! ```
+//!
+//!
+//! ## Building from source
+//!
+//! We suggest using the [aurae](https://github.com/aurae-runtime/aurae) repository for building all parts of the project.
+//!
+//! It is possible to build `auraed` by itself. Check out this repository and use the Makefile.
+//!
+//! ```bash
+//! make auraed
+//! ```
 //!
 //! See [`The Aurae Standard Library`] for API reference.
 //!
@@ -61,6 +89,7 @@
 )]
 #![warn(clippy::unwrap_used)]
 
+pub use crate::auraed_path::AuraedPath;
 use crate::ebpf::{
     BpfContext, SchedProcessForkTracepointProgram,
     SignalSignalGenerateTracepointProgram, TaskstatsExitKProbeProgram,
@@ -90,6 +119,7 @@ use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace, warn};
 
+mod auraed_path;
 mod cells;
 mod cri;
 mod discovery;
@@ -100,9 +130,6 @@ mod logging;
 mod observe;
 mod spawn;
 mod vms;
-
-#[cfg(not(test))]
-const PROC_SELF_EXE: &str = "/proc/self/exe";
 
 static AURAED_RUNTIME: OnceCell<AuraedRuntime> = OnceCell::new();
 
@@ -115,7 +142,7 @@ static AURAED_RUNTIME: OnceCell<AuraedRuntime> = OnceCell::new();
 #[derive(Debug)]
 pub struct AuraedRuntime {
     /// Path to the auraed binary. Defaults to the symbolic link from /proc/self/exe.
-    pub auraed: PathBuf,
+    pub auraed: AuraedPath,
     /// Certificate Authority for an organization or mesh of Aurae instances.
     pub ca_crt: PathBuf,
     /// The signed server X509 certificate for this unique instance.
@@ -146,21 +173,9 @@ impl AuraedRuntime {
 
 impl Default for AuraedRuntime {
     fn default() -> Self {
-        let auraed = {
-            #[cfg(not(test))]
-            let auraed = std::fs::read_link(PROC_SELF_EXE)
-                .expect("failed read auraed symbolic link from /proc/self/exe");
-
-            // In unit tests, we cannot use /proc/self/exe since main.rs is not part of the test binary.
-            #[cfg(test)]
-            let auraed = "auraed".into();
-
-            auraed
-        };
-
         // In order to prevent their use from other areas, do not make these values into constants.
         AuraedRuntime {
-            auraed,
+            auraed: AuraedPath::default(),
             ca_crt: PathBuf::from("/etc/aurae/pki/ca.crt"),
             server_crt: PathBuf::from("/etc/aurae/pki/_signed.server.crt"),
             server_key: PathBuf::from("/etc/aurae/pki/server.key"),
