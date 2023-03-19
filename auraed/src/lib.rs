@@ -27,7 +27,8 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-
+//! # Aurae Daemon
+//!
 //! Systems daemon built for higher order simple, safe, secure multi-tenant
 //! distributed systems.
 //!
@@ -36,6 +37,22 @@
 //!
 //! The Aurae Daemon (auraed) is the main server implementation of the Aurae
 //! Standard Library.
+//!
+//! The Aurae Daemon runs as a gRPC server which listens over a unix domain socket by default.
+//!
+//! ```bash
+//! /var/run/aurae/aurae.sock
+//! ```
+//!
+//! ## Running Auraed
+//!
+//! Running as `/init` is currently under active development.
+//!
+//! To run auraed as a standard library server you can run the daemon alongside your current init system.
+//!
+//! ```bash
+//! sudo -E auraed
+//! ```
 //!
 //! See [`The Aurae Standard Library`] for API reference.
 //!
@@ -176,29 +193,6 @@ pub async fn run(
     {
         trace!("{:#?}", runtime);
 
-        let server_crt =
-            tokio::fs::read(&runtime.server_crt).await.with_context(|| {
-                format!(
-                    "Aurae requires a signed TLS certificate to run as a server, but failed to
-                    load: '{}'. Please see https://aurae.io/certs/ for information on best
-                    practices to quickly generate one.",
-                    runtime.server_crt.display()
-                )
-            })?;
-        let server_key = tokio::fs::read(&runtime.server_key).await?;
-        let server_identity = Identity::from_pem(server_crt, server_key);
-        info!("Register Server SSL Identity");
-
-        let ca_crt = tokio::fs::read(&runtime.ca_crt).await?;
-        let ca_crt_pem = Certificate::from_pem(ca_crt.clone());
-
-        let tls = ServerTlsConfig::new()
-            .identity(server_identity)
-            .client_ca_root(ca_crt_pem);
-
-        info!("Validating SSL Identity and Root Certificate Authority (CA)");
-        //let _log_collector = self.log_collector.clone();
-
         let runtime_dir = Path::new(&runtime.runtime_dir);
         // Create runtime directory
         tokio::fs::create_dir_all(runtime_dir).await.with_context(|| {
@@ -207,6 +201,40 @@ pub async fn run(
                 runtime.runtime_dir.display()
             )
         })?;
+
+        // We don't want TLS in cell context
+        let mut server = if context != AuraeContext::Cell {
+            let server_crt =
+                tokio::fs::read(&runtime.server_crt).await.with_context(|| {
+                    format!(
+                        "Aurae requires a signed TLS certificate to run as a server, but failed to
+                        load: '{}'. Please see https://aurae.io/certs/ for information on best
+                        practices to quickly generate one.",
+                        runtime.server_crt.display()
+                    )
+                })?;
+            let server_key = tokio::fs::read(&runtime.server_key).await?;
+            let server_identity = Identity::from_pem(server_crt, server_key);
+            info!("Register Server SSL Identity");
+
+            let ca_crt = tokio::fs::read(&runtime.ca_crt).await?;
+            let ca_crt_pem = Certificate::from_pem(ca_crt);
+
+            let tls = ServerTlsConfig::new()
+                .identity(server_identity)
+                .client_ca_root(ca_crt_pem);
+
+            info!(
+                "Validating SSL Identity and Root Certificate Authority (CA)"
+            );
+            //let _log_collector = self.log_collector.clone();
+
+            Server::builder()
+                .tls_config(tls)
+                .with_context(|| "gRPC server failed to configure tls")?
+        } else {
+            Server::builder()
+        };
 
         // Install eBPF probes in the host Aurae daemon
         let (_bpf_handle, perf_events) = if context == AuraeContext::Cell
@@ -281,9 +309,7 @@ pub async fn run(
         // Run the server concurrently
         // TODO: pass a known-good path to CellService to store any runtime data.
         let server_handle = tokio::spawn(async move {
-            Server::builder()
-                .tls_config(tls)
-                .with_context(|| "gRPC server failed to configure tls")?
+            server
                 .add_service(health_service)
                 .add_service(cell_service_server)
                 .add_service(discovery_service_server)

@@ -144,23 +144,30 @@ async fn configure_loopback(handle: &Handle) -> Result<(), NetworkError> {
 async fn configure_nic(handle: &Handle) -> Result<(), NetworkError> {
     const DEFAULT_NET_DEV: &str = "eth0";
     const DEFAULT_NET_DEV_IPV6: &str = "fe80::2";
+    const DEFAULT_NET_DEV_IPV6_GATEWAY: &str = "fe80::1";
     const DEFAULT_NET_DEV_IPV6_SUBNET: &str = "/64";
 
     trace!("configure {DEFAULT_NET_DEV}");
 
-    let ipv6 = format!("{DEFAULT_NET_DEV_IPV6}{DEFAULT_NET_DEV_IPV6_SUBNET}")
-        .parse::<Ipv6Network>()
-        .expect("valid ipv6 address");
+    let ipv6_addr =
+        format!("{DEFAULT_NET_DEV_IPV6}{DEFAULT_NET_DEV_IPV6_SUBNET}")
+            .parse::<Ipv6Network>()
+            .expect("valid ipv6 address");
 
-    add_address(handle, DEFAULT_NET_DEV.to_owned(), ipv6).await?;
+    let gateway = DEFAULT_NET_DEV_IPV6_GATEWAY
+        .to_string()
+        .parse::<Ipv6Network>()
+        .expect("gateway");
+
+    add_address(handle, DEFAULT_NET_DEV.to_owned(), ipv6_addr).await?;
 
     set_link_up(handle, DEFAULT_NET_DEV.to_owned()).await?;
 
     add_route_v6(
         handle,
         DEFAULT_NET_DEV.to_owned(),
-        ipv6,
         "::/0".parse::<Ipv6Network>().expect("valid ipv6 address"),
+        gateway,
     )
     .await?;
 
@@ -293,9 +300,9 @@ async fn add_route_v6(
         .route()
         .add()
         .v6()
-        .destination_prefix(dest.ip(), dest.prefix())
+        .source_prefix(source.ip(), source.prefix())
+        .gateway(dest.ip())
         .output_interface(link_index)
-        .pref_source(source.ip())
         .execute()
         .await
         .map_err(|e| NetworkError::ErrorAddingRoute {

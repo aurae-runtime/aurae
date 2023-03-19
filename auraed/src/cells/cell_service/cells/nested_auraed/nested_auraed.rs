@@ -30,7 +30,6 @@
 
 use super::isolation_controls::{Isolation, IsolationControls};
 use crate::AURAED_RUNTIME;
-use client::AuraeConfig;
 use clone3::Flags;
 use nix::{
     libc::SIGCHLD,
@@ -52,7 +51,7 @@ pub struct NestedAuraed {
     pidfd: i32,
     #[allow(unused)]
     iso_ctl: IsolationControls,
-    pub client_config: AuraeConfig,
+    pub client_socket: String,
 }
 
 impl NestedAuraed {
@@ -63,10 +62,7 @@ impl NestedAuraed {
 
         let auraed_runtime = AURAED_RUNTIME.get().expect("runtime");
 
-        // TODO: handle expect
-        let mut client_config =
-            AuraeConfig::try_default().expect("file based config");
-        client_config.system.socket = format!(
+        let client_socket = format!(
             "{}/aurae-{}.sock",
             auraed_runtime.runtime_dir.to_string_lossy(),
             uuid::Uuid::new_v4(),
@@ -74,19 +70,29 @@ impl NestedAuraed {
 
         let auraed_path: PathBuf =
             auraed_runtime.auraed.clone().try_into().expect("path to auraed");
-        let mut command = Command::new(auraed_path);
 
-        let _ = command.current_dir("/").args([
+        let mut command = Command::new(auraed_path);
+        let _ = command.args([
             "--socket",
-            &client_config.system.socket,
+            &client_socket,
             "--nested", // NOTE: for now, the nested flag only signals for the code in the init module to not trigger (i.e., don't run the pid 1 code, run the non pid 1 code)
+            "--server-crt",
+            &auraed_runtime.server_crt.to_string_lossy(),
+            "--server-key",
+            &auraed_runtime.server_key.to_string_lossy(),
+            "--ca-crt",
+            &auraed_runtime.ca_crt.to_string_lossy(),
+            "--runtime-dir",
+            &auraed_runtime.runtime_dir.to_string_lossy(),
+            "--library-dir",
+            &auraed_runtime.library_dir.to_string_lossy(),
         ]);
 
         // We have a concern that the "command" API make change/break in the future and this
         // test is intended to help safeguard against that!
         // We check that the command we kept has the expected number of args following the call
         // to command.args, whose return value we ignored above.
-        assert_eq!(command.get_args().len(), 3);
+        assert_eq!(command.get_args().len(), 13);
 
         // *****************************************************************
         // ██████╗██╗      ██████╗ ███╗   ██╗███████╗██████╗
@@ -167,7 +173,7 @@ impl NestedAuraed {
                 let process = procfs::process::Process::new(pid)
                     .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
 
-                Ok(Self { process, pidfd, iso_ctl, client_config })
+                Ok(Self { process, pidfd, iso_ctl, client_socket })
             }
         }
     }

@@ -64,8 +64,8 @@ macro_rules! do_in_cell {
     ($self:ident, $cell_name:ident, $function:ident, $request:ident) => {{
         let mut cells = $self.cells.lock().await;
 
-        let client_config = cells
-            .get(&$cell_name, |cell| cell.client_config())
+        let client_socket = cells
+            .get(&$cell_name, |cell| cell.client_socket())
             .map_err(CellsServiceError::CellsError)?;
 
         let mut retry_strategy = backoff::ExponentialBackoffBuilder::new()
@@ -77,7 +77,7 @@ macro_rules! do_in_cell {
             .build();
 
         let client = loop {
-            match Client::new(client_config.clone()).await {
+            match Client::new_no_tls(client_socket.clone()).await {
                 Ok(client) => break Ok(client),
                 e @ Err(ClientError::ConnectionError(_)) => {
                     trace!("aurae client failed to connect: {e:?}");
