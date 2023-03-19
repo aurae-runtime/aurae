@@ -27,7 +27,8 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-
+//! # Aurae Daemon
+//!
 //! Systems daemon built for higher order simple, safe, secure multi-tenant
 //! distributed systems.
 //!
@@ -36,6 +37,33 @@
 //!
 //! The Aurae Daemon (auraed) is the main server implementation of the Aurae
 //! Standard Library.
+//!
+//! The Aurae Daemon runs as a gRPC server which listens over a unix domain socket by default.
+//!
+//! ```bash
+//! /var/run/aurae/aurae.sock
+//! ```
+//!
+//! ## Running Auraed
+//!
+//! Running as `/init` is currently under active development.
+//!
+//! To run auraed as a standard library server you can run the daemon alongside your current init system.
+//!
+//! ```bash
+//! sudo -E auraed
+//! ```
+//!
+//!
+//! ## Building from source
+//!
+//! We suggest using the [aurae](https://github.com/aurae-runtime/aurae) repository for building all parts of the project.
+//!
+//! It is possible to build `auraed` by itself. Check out this repository and use the Makefile.
+//!
+//! ```bash
+//! make auraed
+//! ```
 //!
 //! See [`The Aurae Standard Library`] for API reference.
 //!
