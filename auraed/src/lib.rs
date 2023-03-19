@@ -54,23 +54,6 @@
 //! sudo -E auraed
 //! ```
 //!
-//! Additional flags are listed below.
-//!
-//! ```bash
-//! USAGE:
-//!     auraed [OPTIONS]
-//!
-//! OPTIONS:
-//!         --ca-crt <CA_CRT>            [default: /etc/aurae/pki/ca.crt]
-//!     -h, --help                       Print help information
-//!     -s, --socket <SOCKET>            [default: /var/run/aurae/aurae.sock]
-//!     -r, --runtime_dir <RUNTIME_DIR>  [default: /var/run/aurae]
-//!         --server-crt <SERVER_CRT>    [default: /etc/aurae/pki/_signed.server.crt]
-//!         --server-key <SERVER_KEY>    [default: /etc/aurae/pki/server.key]
-//!     -v, --verbose
-//!     -V, --version                    Print version information
-//!
-//! ```
 //!
 //! ## Building from source
 //!
@@ -80,14 +63,6 @@
 //!
 //! ```bash
 //! make auraed
-//! ```
-//!
-//! or using Cargo directly
-//!
-//! ```bash
-//! cd auraed
-//! cargo clippy
-//! cargo install --debug --path .
 //! ```
 //!
 //! See [`The Aurae Standard Library`] for API reference.

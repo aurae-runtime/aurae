@@ -35,29 +35,8 @@
 //!
 //! AuraeScript is a quick way to access the core Aurae APIs and follows normal UNIX parlance. AuraeScript should feel simple and intuitive for any Go, C, Python, or Rust programmer.
 //!
-//! ```typescript
-//! // @ts-ignore
-//! import {AllocateCellRequest, Cell, CellServiceClient} from "../lib/runtime.ts";
-//!
-//! // @ts-ignore
-//! Deno.core.initializeAsyncOps();
-//!
-//! let cells = new CellServiceClient();
-//!
-//! cells.Allocate(<AllocateCellRequest>{
-//!     cell: Cell.fromPartial({
-//!         name: "test",
-//!         cpus: "2"
-//!     })
-//! }).then(r => {
-//!     // @ts-ignore
-//!     Deno.core.print("done")
-//! });
-//! ```
-//!
 //! ## Build From Source
 //!
-//! ⚠️ Early Active Development ⚠️
 //!
 //! ```
 //! git clone git@github.com:aurae-runtime/aurae.git
@@ -69,14 +48,6 @@
 //!
 //! ```bash
 //! make auraescript
-//! ```
-//!
-//! ...or manually using Cargo.
-//!
-//! ```bash
-//! cd auraescript
-//! cargo build
-//! cargo install --path .
 //! ```
 //!
 //! ### Architecture
