@@ -74,7 +74,6 @@ jobs:
             target/
           key: 200-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            200-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
             200-${{ runner.os }}-cargo-
       - uses: EmbarkStudios/cargo-deny-action@v1
         with:

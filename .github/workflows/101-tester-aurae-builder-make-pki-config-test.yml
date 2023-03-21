@@ -65,7 +65,6 @@ jobs:
             target/
           key: 100-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            100-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
             100-${{ runner.os }}-cargo-
       - name: Cargo Test [make pki config test]
         # This should remain the only command we execute as this matches the title of the file.
