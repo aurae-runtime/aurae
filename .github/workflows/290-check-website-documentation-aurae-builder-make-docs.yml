@@ -72,6 +72,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: 200-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            200-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            200-${{ runner.os }}-cargo-
      - name: Docs (make docs docs-lint)
        run: |
          make docs docs-lint
