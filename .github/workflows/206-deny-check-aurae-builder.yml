@@ -73,6 +73,8 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: 200-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            200-${{ runner.os }}-cargo-
       - uses: EmbarkStudios/cargo-deny-action@v1
         with:
           command: check ${{ matrix.checks }}
