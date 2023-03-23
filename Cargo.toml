@@ -67,6 +67,6 @@ tokio = "1.22.0"
 tonic = "0.8.2"
 tonic-health = "0.8.0"
 tracing = "0.1"
-uuid = { version = "1.2.2", features = ["v4"] }
+uuid = { version = "1.1.2", features = ["v4"] }
 url = "2.3.1"
 validation = { path = "./crates/validation" }

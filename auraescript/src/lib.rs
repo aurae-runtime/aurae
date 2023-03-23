@@ -54,10 +54,12 @@
 use anyhow::{anyhow, bail, Error};
 use deno_ast::{MediaType, ParseParams, SourceTextInfo};
 use deno_core::futures::FutureExt;
+use deno_core::url::Url;
 use deno_core::{
     resolve_import, Extension, JsRuntime, ModuleLoader, ModuleSource,
     ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, RuntimeOptions,
 };
+use deno_runtime::worker::MainWorker;
 use std::pin::Pin;
 use std::rc::Rc;
 
@@ -68,14 +70,61 @@ mod discovery;
 mod health;
 mod observe;
 
-pub fn init() -> JsRuntime {
-    let extension = Extension::builder().ops(stdlib()).build();
+pub fn init(main_module: Url) -> MainWorker {
+    let extension = Extension::builder("main-worker").ops(stdlib()).build();
 
-    JsRuntime::new(RuntimeOptions {
-        extensions: vec![extension],
-        module_loader: Some(Rc::new(TypescriptModuleLoader)),
-        ..Default::default()
-    })
+    let create_web_worker_cb = Arc::new(|_| {
+        todo!("Web workers are not supported yet");
+    });
+    let web_worker_event_cb = Arc::new(|_| {
+        todo!("Web workers are not supported yet");
+    });
+
+    MainWorker::bootstrap_from_options(
+        main_module,
+        PermissionsContainer::allow_all(),
+        WorkerOptions {
+            extensions: vec![extension],
+            module_loader: Some(Rc::new(TypescriptModuleLoader)),
+            bootstrap: BootstrapOptions {
+                args: vec![],
+                cpu_count: 1,
+                debug_flag: false,
+                enable_testing_features: false,
+                locale: deno_core::v8::icu::get_language_tag(),
+                location: None,
+                no_color: false,
+                is_tty: false,
+                runtime_version: "x".to_string(),
+                ts_version: "x".to_string(),
+                unstable: true,
+                user_agent: "xactdb_runtime".to_string(),
+                inspect: false,
+            },
+            extensions_with_js: vec![],
+            startup_snapshot: None,
+            unsafely_ignore_certificate_errors: None,
+            root_cert_store: None,
+            seed: None,
+            source_map_getter: None,
+            format_js_error_fn: None,
+            web_worker_preload_module_cb: web_worker_event_cb.clone(),
+            web_worker_pre_execute_module_cb: web_worker_event_cb,
+            create_web_worker_cb,
+            maybe_inspector_server: None,
+            should_break_on_first_statement: false,
+            should_wait_for_inspector_session: false,
+            npm_resolver: None,
+            get_error_class_fn: Some(&get_error_class_name),
+            cache_storage_dir: None,
+            origin_storage_dir: None,
+            blob_store: BlobStore::default(),
+            broadcast_channel: InMemoryBroadcastChannel::default(),
+            shared_array_buffer_store: None,
+            compiled_wasm_module_store: None,
+            stdio: Default::default(),
+        },
+    )
 }
 
 /// Standard Library Autogeneration Code
