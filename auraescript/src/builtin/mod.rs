@@ -36,6 +36,8 @@
 //! Most of the built-in logic that makes AuraeScript useful to an end-user
 //! lives in this module.
 
+pub(crate) mod auraescript_client;
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 

@@ -51,6 +51,7 @@
 
 use auraescript::*;
 use deno_core::resolve_path;
+use std::env::current_dir;
 
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
@@ -61,7 +62,7 @@ fn main() -> anyhow::Result<()> {
         std::process::exit(1);
     }
 
-    let main_module = resolve_path(&args[1].clone(), ".")?;
+    let main_module = resolve_path(&args[1].clone(), current_dir()?.as_path())?;
     let mut main_worker = init(main_module);
 
     let _ =

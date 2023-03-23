@@ -86,6 +86,6 @@ RUN curl -sSl -J -L "https://github.com/errata-ai/vale/releases/download/v${VALE
 
 ## Setup cargo-udeps
 RUN cargo install cargo-udeps
-
+RUN cargo install cargo-deny
 
 WORKDIR /aurae

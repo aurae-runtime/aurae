@@ -59,7 +59,7 @@ pub struct Client {
     /// The channel used for gRPC connections before encryption is handled.
     pub(crate) channel: Channel,
     #[allow(unused)]
-    client_cert_details: ClientCertDetails,
+    client_cert_details: Option<ClientCertDetails>,
 }
 
 impl Client {
@@ -74,7 +74,7 @@ impl Client {
         AuraeConfig { auth, system }: AuraeConfig,
     ) -> Result<Self> {
         let cert_material = auth.to_cert_material().await?;
-        let client_cert_details = cert_material.get_client_cert_details()?;
+        let client_cert_details = Some(cert_material.get_client_cert_details()?);
 
         let CertMaterial { server_root_ca_cert, client_cert, client_key } =
             cert_material;
@@ -85,12 +85,31 @@ impl Client {
             .ca_certificate(Certificate::from_pem(server_root_ca_cert))
             .identity(Identity::from_pem(client_cert, client_key));
 
-        let endpoint = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR)
-            .tls_config(tls_config)?;
+        let channel = Self::connect_chan(system.socket.clone(), Some(tls_config)).await?;
+        Ok(Self { channel, client_cert_details })
+    }
+
+    /// Create a new Client without TLS, remote server should also expect no TLS.
+    ///
+    /// Note: A new client is required for every independent execution of this process.
+    pub async fn new_no_tls(
+        socket: String,
+    ) -> Result<Self> {
+        let channel = Self::connect_chan(socket, None).await?;
+        let client_cert_details = None;
+        Ok(Self { channel, client_cert_details })
+    }
+
+    async fn connect_chan(socket: String, tls_config: Option<ClientTlsConfig>) -> Result<Channel> {
+        let endpoint = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR);
+        let endpoint = match tls_config {
+            None => endpoint,
+            Some(tls_config) => endpoint.tls_config(tls_config)?,
+        };
 
         // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
         // connect as a UNIX socket (assume it's a file path).
-        let channel = if let Ok(sockaddr) = system.socket.parse::<SocketAddr>()
+        let channel = if let Ok(sockaddr) = socket.parse::<SocketAddr>()
         {
             endpoint
                 .connect_with_connector(service_fn(move |_: Uri| {
@@ -100,10 +119,10 @@ impl Client {
         } else {
             endpoint
                 .connect_with_connector(service_fn(move |_: Uri| {
-                    UnixStream::connect(system.socket.clone())
+                    UnixStream::connect(socket.clone())
                 }))
                 .await
         }?;
-        Ok(Self { channel, client_cert_details })
+        Ok(channel)
     }
 }

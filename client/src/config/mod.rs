@@ -81,7 +81,7 @@ impl AuraeConfig {
                     return Ok(config);
                 }
                 Err(e) => {
-                    println!("warning: failed to parse config at {path}: {e}");
+                    eprintln!("warning: failed to parse config at {path}: {e}");
                     continue;
                 }
             }
@@ -104,5 +104,32 @@ impl AuraeConfig {
         }
 
         Ok(toml::from_str(&config_toml)?)
+    }
+
+    /// Create a new AuraeConfig from given options
+    ///
+    /// # Arguments
+    ///
+    /// * `ca_crt` - Path to ca cert
+    /// * `client_crt` - Path to client cert
+    /// * `client_key` - Path to client key
+    /// * `socket` - Address to auraed
+    ///
+    /// Note: A new client is required for every independent execution of this process.
+    pub fn from_options<S1: Into<String>, S2: Into<String>, S3: Into<String>, S4: Into<String>>(
+        ca_crt: S1,
+        client_crt: S2,
+        client_key: S3,
+        socket: S4,
+    ) -> Self {
+        let (ca_crt, client_crt, client_key, socket) = (
+            ca_crt.into(),
+            client_crt.into(),
+            client_key.into(),
+            socket.into(),
+        );
+        let auth = AuthConfig { ca_crt, client_crt, client_key };
+        let system = SystemConfig { socket };
+        Self { auth, system }
     }
 }

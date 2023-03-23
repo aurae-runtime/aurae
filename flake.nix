@@ -27,7 +27,7 @@
         # create nixpkgs that contains rustBuilder from cargo2nix overlay
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ cargo2nix.overlays.default ];
+          overlays = [ cargo2nix.overlays.default rust-overlay.overlays.default ];
         };
 
         patchedSource = pkgs.runCommand "patch-source" {} ''
@@ -74,6 +74,20 @@
           auraescript = (rustPkgs.workspace.auraescript {}).bin;
           # nix build
           default = packages.auraed; # rec
+        };
+
+        devShells.default = pkgs.mkShell {
+          shellHook = ''
+            # `make musl` requires a default toolchain.
+            rustup default stable
+          '';
+
+          buildInputs = with pkgs; [
+            buf
+            libseccomp
+            protobuf
+            rustup
+          ];
         };
       }
     );

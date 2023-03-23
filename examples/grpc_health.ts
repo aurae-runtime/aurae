@@ -28,26 +28,27 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
 import * as grpc_health from "../auraescript/gen/grpc_health.ts";
 
-let healthClient = new grpc_health.HealthClient;
+let client = await aurae.createClient();
+let healthClient = new grpc_health.HealthClient(client);
 
 // [ Grpc health ]
-helpers.print("Checking overall status")
+aurae.print("Checking overall status")
 let overall = await healthClient.check(<grpc_health.HealthCheckRequest>{
     service: ""
 });
-helpers.print(overall)
+aurae.print(overall)
 
-helpers.print("Checking CellService status")
+aurae.print("Checking CellService status")
 let single_service = await healthClient.check(<grpc_health.HealthCheckRequest>{
     service: "aurae.runtime.v0.CellService"
 });
-helpers.print(single_service)
+aurae.print(single_service)
 
-helpers.print("Checking status of unregistered service")
+aurae.print("Checking status of unregistered service")
 let unknown_service = await healthClient.check(<grpc_health.HealthCheckRequest>{
     service: "aurae.runtime.v0.UnknownService"
 });
-helpers.print(unknown_service)
+aurae.print(unknown_service)

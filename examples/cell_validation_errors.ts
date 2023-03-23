@@ -1,11 +1,13 @@
 // [ Free ]
-import * as runtime from "../auraescript/gen/cells.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
+import * as cells from "../auraescript/gen/cells.ts";
 
-const cells = new runtime.CellServiceClient();
+let client = await aurae.createClient();
+const cellService = new cells.CellServiceClient(client);
 
 //// REGEX violation
-await cells.allocate(<runtime.CellServiceAllocateRequest>{
-    cell: runtime.Cell.fromPartial({
+await cellService.allocate(<cells.CellServiceAllocateRequest>{
+    cell: cells.Cell.fromPartial({
         name: "ae-no_underscore"
     })
 });

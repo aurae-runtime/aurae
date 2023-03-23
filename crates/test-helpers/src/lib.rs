@@ -95,6 +95,28 @@ macro_rules! skip_if_seccomp {
     };
 }
 
+#[macro_export]
+macro_rules! assert_eventually_eq {
+    ($left: expr, $right: expr $(,)?) => {
+        assert_eventually_eq!($left, $right, Duration::from_millis(200), Duration::from_millis(10));
+    };
+    ($left: expr, $right: expr, $timeout: expr $(,)?) => {
+        assert_eventually_eq!($left, $right, $timeout, Duration::from_millis(10));
+    };
+    ($left: expr, $right: expr, $timeout: expr, $poll_interval: expr $(,)?) => {
+        let start = ::std::time::Instant::now();
+        let timeout = $timeout;
+        let poll_interval = $poll_interval;
+        while !($left == $right) {
+            ::tokio::time::sleep(poll_interval).await;
+            let now = ::std::time::Instant::now();
+            if now.duration_since(start) > timeout {
+                ::core::panic!("assertion failed: `(left == right)`\nleft: {:#?}\nright: {:#?}", $left, $right);
+            }
+        }
+    };
+}
+
 pub mod mock_time {
     use once_cell::sync::OnceCell;
     use std::sync::Mutex;

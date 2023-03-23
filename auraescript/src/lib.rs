@@ -27,6 +27,19 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
+//! # AuraeScript
+//!
+//! AuraeScript is a turing complete language for platform teams built on [Deno](https://deno.land).
+//!
+//! AuraeScript is a lightweight client that wraps the [Aurae Standard Library](https://aurae.io/stdlib/).
+//!
+//! AuraeScript is a quick way to access the core Aurae APIs and follows normal UNIX parlance. AuraeScript should feel simple and intuitive for any Go, C, Python, or Rust programmer.
+//!
+//! ### Architecture
+//!
+//! AuraeScript follows a similar client paradigm to Kubernetes `kubectl` command. However, unlike Kubernetes this is not a command line tool like `kubectl`. AuraeScript is a fully supported programing language complete with a systems standard library. The Aurae runtime projects supports many clients, and the easiest client to get started building with is AuraeScript.
+//!
+//! Download the static binary directly to your system, and you can begin writing AuraeScript programs directly against a running Aurae server.
 
 // Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
 #![warn(future_incompatible, nonstandard_style, unused)]
@@ -57,7 +70,8 @@ use deno_core::futures::FutureExt;
 use deno_core::url::Url;
 use deno_core::{
     resolve_import, Extension, JsRuntime, ModuleLoader, ModuleSource,
-    ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, RuntimeOptions,
+    ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, ResolutionKind,
+    RuntimeOptions,
 };
 use deno_runtime::worker::MainWorker;
 use std::pin::Pin;
@@ -71,7 +85,7 @@ mod health;
 mod observe;
 
 pub fn init(main_module: Url) -> MainWorker {
-    let extension = Extension::builder("main-worker").ops(stdlib()).build();
+    let extension = Extension::builder("").ops(stdlib()).build();
 
     let create_web_worker_cb = Arc::new(|_| {
         todo!("Web workers are not supported yet");
@@ -139,6 +153,7 @@ pub fn init(main_module: Url) -> MainWorker {
 ///
 fn stdlib() -> Vec<OpDecl> {
     let mut ops = vec![];
+    ops.extend(builtin::auraescript_client::op_decls());
     ops.extend(cells::op_decls());
     ops.extend(cri::op_decls());
     ops.extend(discovery::op_decls());
@@ -155,7 +170,7 @@ impl ModuleLoader for TypescriptModuleLoader {
         &self,
         specifier: &str,
         referrer: &str,
-        _is_main: bool,
+        _is_main: ResolutionKind,
     ) -> Result<ModuleSpecifier, Error> {
         Ok(resolve_import(specifier, referrer)?)
     }

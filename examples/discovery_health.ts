@@ -28,11 +28,12 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-import * as helpers from "../auraescript/gen/helpers.ts";
+import * as aurae from "../auraescript/gen/aurae.ts";
 import * as discovery from "../auraescript/gen/discovery.ts";
 
-let discovery_service = new discovery.DiscoveryServiceClient();
+let client = await aurae.createClient();
+let discovery_service = new discovery.DiscoveryServiceClient(client);
 
 // [ Ping ]
 let ack = await discovery_service.health(<discovery.HealthRequest>{});
-helpers.print(ack)
+aurae.print(ack)

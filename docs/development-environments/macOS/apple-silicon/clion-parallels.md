@@ -1,6 +1,6 @@
-# Developing on an M1
+# Developing on Apple silicon with CLion and Parallels Desktop
 
-This is a development environment setup guide that may be helpful for those on an Apple M1. There are likely
+This is a development environment setup guide that may be helpful for those on Apple silicon. There are likely
 improvements to be made, but the steps are purposefully overly "hand hold-y" and detailed to be useful to a wider
 audience.
 
@@ -12,14 +12,17 @@ This guide assumes you are following it from top to bottom.
 
 - **Processor**: Apple M1
 - **operating system**: macOS Ventura
-- **Virtualizer**: Parallels Desktop for Mac 18 Pro Edition
-    - *A Standard edition exists, and may be enough. Parallels offers a trial period.*
+- **Virtualizer** one of:
+    - Parallels Desktop for Mac 18 Pro Edition
+        - *A Standard edition exists, and may be enough. Parallels offers a trial period.*
+    - UTM emulator/virtualizer
+        - *Free, though its performance is not guaranteed and may take more work for you*  
 - **Virtual Machine (VM) operating system**: Ubuntu 22.04 ARM64 (available in the choice list when creating a VM in
   Parallels)
 - **IDE**: JetBrains CLion 2022.3
     - *Visual Studio Code will likely work as well, but the steps for setup are not noted in this guide as of yet.*
 
-## VM Setup
+## Parallels VM Setup
 
 1. Download and install Parallels Desktop for Mac
 2. Create a new VM (File -> New -> Download Ubuntu Linux -> Continue)
@@ -52,6 +55,26 @@ This guide assumes you are following it from top to bottom.
 13. (Optional) Now might be a good time to snapshot the VM (feel free to do it at any other step)
     1. Open Parallels Control Center (Window -> Control Center)
     2. Right click your VM -> Manage Snapshots -> New -> Set a name ("Init") -> Ok
+
+## UTM Setup
+
+**Do not do this if you're using Parallels. You only need one VM.**
+
+1. Download and install UTM from releases https://github.com/utmapp/UTM/releases
+2. Download the Ubuntu ISO and create a new VM: https://docs.getutm.app/guides/ubuntu/
+3. I never got clipboard sharing working, just decided to SSH in and rely on my host system. `ip a | grep addr` to get the address and then regular `ssh username@ip` (and whatever extras you prefer to set)
+4. Set up shared drive: follow https://docs.getutm.app/guest-support/linux/#virtfs then
+    - add this line to `/etc/fstab`:
+        ```
+        share	[mount point]	9p	trans=virtio,version=9p2000.L,rw,_netdev,nofail	0	0
+        ```
+    -  Mount share and fix permissions (does not modify the host files, just inside-VM settings. Preserved between restarts.):
+        ```
+        sudo mount /share
+        sudo chown 1000:1000 /share
+        ```
+
+Everything else should proceed the same.
 
 ## CLion Setup
 

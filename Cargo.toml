@@ -45,9 +45,10 @@ exclude = [
 
 [workspace.dependencies]
 anyhow = "1.0.66"
+chrono = { version = "0.4.23", default-features = false, features = ["clock", "std", "wasmbind"] } # default features except `oldtime`
 client = { path = "./client" }
 clap = { version = "4.1.1", features = ["derive"] }
-fancy-regex = "0.10.0"
+fancy-regex = "0.11.0"
 futures-util = "0.3.26"
 heck = "0.4.0"
 lazy_static = "1.4.0"
@@ -57,8 +58,9 @@ proto = { path = "./proto" }
 protobuf = "3.2.0"
 protobuf-parse = "=3.2.0" # This crate makes no promises of stabilty, so we pin to the exact version
 quote = "1.0"
-serde = "1.0"
-serde_json = "1.0"
+serial_test = "1.0.0"
+serde = "1.0.94"
+serde_json = "1.0.94"
 syn = { version = "1.0", features = ["full"] } # used in macros, so full doesn't affect binary size
 test-helpers = { path = "./crates/test-helpers" }
 test-helpers-macros = { path = "./crates/test-helpers-macros" }
@@ -70,3 +72,7 @@ tracing = "0.1"
 uuid = { version = "1.1.2", features = ["v4"] }
 url = "2.3.1"
 validation = { path = "./crates/validation" }
+
+#[patch.crates-io]
+#remove_dir_all = "=0.8.0"
+#time = "0.2.23"

@@ -1,4 +1,4 @@
-use auraed::AuraedRuntime;
+use auraed::{AuraedPath, AuraedRuntime};
 use backoff::{
     backoff::Backoff, exponential::ExponentialBackoff,
     ExponentialBackoffBuilder, SystemClock,
@@ -48,7 +48,6 @@ where
 }
 
 async fn run_auraed() -> Client {
-    let runtime = AuraedRuntime::default();
     let socket = std::env::temp_dir()
         .join(format!("{}.socket", uuid::Uuid::new_v4()))
         .to_string_lossy()
@@ -66,6 +65,9 @@ async fn run_auraed() -> Client {
     };
 
     let _ = tokio::spawn(async move {
+        let mut runtime = AuraedRuntime::default();
+        runtime.auraed = AuraedPath::from_path("auraed");
+
         auraed::run(runtime, Some(socket), false, false).await.unwrap()
     });
 
