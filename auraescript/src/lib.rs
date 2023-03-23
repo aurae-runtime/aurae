@@ -66,16 +66,23 @@
 
 use anyhow::{anyhow, bail, Error};
 use deno_ast::{MediaType, ParseParams, SourceTextInfo};
+use deno_core::error::AnyError;
 use deno_core::futures::FutureExt;
 use deno_core::url::Url;
 use deno_core::{
-    resolve_import, Extension, JsRuntime, ModuleLoader, ModuleSource,
+    resolve_import, Extension, ModuleCode, ModuleLoader, ModuleSource,
     ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, ResolutionKind,
-    RuntimeOptions,
 };
-use deno_runtime::worker::MainWorker;
+
+use deno_runtime::deno_broadcast_channel::InMemoryBroadcastChannel;
+use deno_runtime::deno_web::BlobStore;
+use deno_runtime::permissions::PermissionsContainer;
+use deno_runtime::worker::{MainWorker, WorkerOptions};
+use deno_runtime::BootstrapOptions;
+
 use std::pin::Pin;
 use std::rc::Rc;
+use std::sync::Arc;
 
 mod builtin;
 mod cells;
@@ -83,6 +90,10 @@ mod cri;
 mod discovery;
 mod health;
 mod observe;
+
+fn get_error_class_name(e: &AnyError) -> &'static str {
+    deno_runtime::errors::get_error_class_name(e).unwrap_or("Error")
+}
 
 pub fn init(main_module: Url) -> MainWorker {
     let extension = Extension::builder("").ops(stdlib()).build();
@@ -99,7 +110,7 @@ pub fn init(main_module: Url) -> MainWorker {
         PermissionsContainer::allow_all(),
         WorkerOptions {
             extensions: vec![extension],
-            module_loader: Some(Rc::new(TypescriptModuleLoader)),
+            module_loader: Rc::new(TypescriptModuleLoader),
             bootstrap: BootstrapOptions {
                 args: vec![],
                 cpu_count: 1,
@@ -115,7 +126,6 @@ pub fn init(main_module: Url) -> MainWorker {
                 user_agent: "xactdb_runtime".to_string(),
                 inspect: false,
             },
-            extensions_with_js: vec![],
             startup_snapshot: None,
             unsafely_ignore_certificate_errors: None,
             root_cert_store: None,
@@ -187,22 +197,23 @@ impl ModuleLoader for TypescriptModuleLoader {
                 .to_file_path()
                 .map_err(|_| anyhow!("Only file: URLs are supported."))?;
 
-            let media_type = MediaType::from(&path);
-            let (module_type, should_transpile) = match MediaType::from(&path) {
-                MediaType::JavaScript | MediaType::Mjs | MediaType::Cjs => {
-                    (ModuleType::JavaScript, false)
-                }
-                MediaType::Jsx => (ModuleType::JavaScript, true),
-                MediaType::TypeScript
-                | MediaType::Mts
-                | MediaType::Cts
-                | MediaType::Dts
-                | MediaType::Dmts
-                | MediaType::Dcts
-                | MediaType::Tsx => (ModuleType::JavaScript, true),
-                MediaType::Json => (ModuleType::Json, false),
-                _ => bail!("Unknown extension {:?}", path.extension()),
-            };
+            let media_type = MediaType::from_path(&path);
+            let (module_type, should_transpile) =
+                match MediaType::from_path(&path) {
+                    MediaType::JavaScript | MediaType::Mjs | MediaType::Cjs => {
+                        (ModuleType::JavaScript, false)
+                    }
+                    MediaType::Jsx => (ModuleType::JavaScript, true),
+                    MediaType::TypeScript
+                    | MediaType::Mts
+                    | MediaType::Cts
+                    | MediaType::Dts
+                    | MediaType::Dmts
+                    | MediaType::Dcts
+                    | MediaType::Tsx => (ModuleType::JavaScript, true),
+                    MediaType::Json => (ModuleType::Json, false),
+                    _ => bail!("Unknown extension {:?}", path.extension()),
+                };
 
             let code = std::fs::read_to_string(&path)?;
             let code = if should_transpile {
@@ -219,7 +230,7 @@ impl ModuleLoader for TypescriptModuleLoader {
                 code
             };
             let module = ModuleSource {
-                code: code.into_bytes().into_boxed_slice(),
+                code: ModuleCode::from(code.into_bytes()),
                 module_type,
                 module_url_specified: module_specifier.to_string(),
                 module_url_found: module_specifier.to_string(),
