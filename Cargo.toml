@@ -52,7 +52,7 @@ fancy-regex = "0.11.0"
 futures-util = "0.3.26"
 heck = "0.4.0"
 lazy_static = "1.4.0"
-nix = "0.25" # upgrade to 0.26 blocked by libcgroups as of v0.0.4
+nix = "0.26.2"
 proc-macro2 = "1.0"
 proto = { path = "./proto" }
 protobuf = "3.2.0"
