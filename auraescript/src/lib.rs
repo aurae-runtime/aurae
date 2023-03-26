@@ -66,14 +66,23 @@
 
 use anyhow::{anyhow, bail, Error};
 use deno_ast::{MediaType, ParseParams, SourceTextInfo};
+use deno_core::error::AnyError;
 use deno_core::futures::FutureExt;
+use deno_core::url::Url;
 use deno_core::{
-    resolve_import, Extension, JsRuntime, ModuleLoader, ModuleSource,
+    resolve_import, Extension, ModuleCode, ModuleLoader, ModuleSource,
     ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, ResolutionKind,
-    RuntimeOptions,
 };
+
+use deno_runtime::deno_broadcast_channel::InMemoryBroadcastChannel;
+use deno_runtime::deno_web::BlobStore;
+use deno_runtime::permissions::PermissionsContainer;
+use deno_runtime::worker::{MainWorker, WorkerOptions};
+use deno_runtime::BootstrapOptions;
+
 use std::pin::Pin;
 use std::rc::Rc;
+use std::sync::Arc;
 
 mod builtin;
 mod cells;
@@ -82,14 +91,64 @@ mod discovery;
 mod health;
 mod observe;
 
-pub fn init() -> JsRuntime {
+fn get_error_class_name(e: &AnyError) -> &'static str {
+    deno_runtime::errors::get_error_class_name(e).unwrap_or("Error")
+}
+
+pub fn init(main_module: Url) -> MainWorker {
     let extension = Extension::builder("").ops(stdlib()).build();
 
-    JsRuntime::new(RuntimeOptions {
-        extensions: vec![extension],
-        module_loader: Some(Rc::new(TypescriptModuleLoader)),
-        ..Default::default()
-    })
+    let create_web_worker_cb = Arc::new(|_| {
+        todo!("Web workers are not supported yet");
+    });
+    let web_worker_event_cb = Arc::new(|_| {
+        todo!("Web workers are not supported yet");
+    });
+
+    MainWorker::bootstrap_from_options(
+        main_module,
+        PermissionsContainer::allow_all(),
+        WorkerOptions {
+            extensions: vec![extension],
+            module_loader: Rc::new(TypescriptModuleLoader),
+            bootstrap: BootstrapOptions {
+                args: vec![],
+                cpu_count: 1,
+                debug_flag: false,
+                enable_testing_features: false,
+                locale: deno_core::v8::icu::get_language_tag(),
+                location: None,
+                no_color: false,
+                is_tty: false,
+                runtime_version: "".to_string(),
+                ts_version: "".to_string(),
+                unstable: true,
+                user_agent: "".to_string(),
+                inspect: false,
+            },
+            startup_snapshot: None,
+            unsafely_ignore_certificate_errors: None,
+            root_cert_store: None,
+            seed: None,
+            source_map_getter: None,
+            format_js_error_fn: None,
+            web_worker_preload_module_cb: web_worker_event_cb.clone(),
+            web_worker_pre_execute_module_cb: web_worker_event_cb,
+            create_web_worker_cb,
+            maybe_inspector_server: None,
+            should_break_on_first_statement: false,
+            should_wait_for_inspector_session: false,
+            npm_resolver: None,
+            get_error_class_fn: Some(&get_error_class_name),
+            cache_storage_dir: None,
+            origin_storage_dir: None,
+            blob_store: BlobStore::default(),
+            broadcast_channel: InMemoryBroadcastChannel::default(),
+            shared_array_buffer_store: None,
+            compiled_wasm_module_store: None,
+            stdio: Default::default(),
+        },
+    )
 }
 
 /// Standard Library Autogeneration Code
@@ -138,22 +197,23 @@ impl ModuleLoader for TypescriptModuleLoader {
                 .to_file_path()
                 .map_err(|_| anyhow!("Only file: URLs are supported."))?;
 
-            let media_type = MediaType::from(&path);
-            let (module_type, should_transpile) = match MediaType::from(&path) {
-                MediaType::JavaScript | MediaType::Mjs | MediaType::Cjs => {
-                    (ModuleType::JavaScript, false)
-                }
-                MediaType::Jsx => (ModuleType::JavaScript, true),
-                MediaType::TypeScript
-                | MediaType::Mts
-                | MediaType::Cts
-                | MediaType::Dts
-                | MediaType::Dmts
-                | MediaType::Dcts
-                | MediaType::Tsx => (ModuleType::JavaScript, true),
-                MediaType::Json => (ModuleType::Json, false),
-                _ => bail!("Unknown extension {:?}", path.extension()),
-            };
+            let media_type = MediaType::from_path(&path);
+            let (module_type, should_transpile) =
+                match MediaType::from_path(&path) {
+                    MediaType::JavaScript | MediaType::Mjs | MediaType::Cjs => {
+                        (ModuleType::JavaScript, false)
+                    }
+                    MediaType::Jsx => (ModuleType::JavaScript, true),
+                    MediaType::TypeScript
+                    | MediaType::Mts
+                    | MediaType::Cts
+                    | MediaType::Dts
+                    | MediaType::Dmts
+                    | MediaType::Dcts
+                    | MediaType::Tsx => (ModuleType::JavaScript, true),
+                    MediaType::Json => (ModuleType::Json, false),
+                    _ => bail!("Unknown extension {:?}", path.extension()),
+                };
 
             let code = std::fs::read_to_string(&path)?;
             let code = if should_transpile {
@@ -170,7 +230,7 @@ impl ModuleLoader for TypescriptModuleLoader {
                 code
             };
             let module = ModuleSource {
-                code: code.into_bytes().into_boxed_slice(),
+                code: ModuleCode::from(code.into_bytes()),
                 module_type,
                 module_url_specified: module_specifier.to_string(),
                 module_url_found: module_specifier.to_string(),
