@@ -76,6 +76,7 @@ nova: auraed aer auraescript ## The official Kris Nóva alias for her workflow t
 # - The ideal order for cargo to reuse artifacts is build -> lint -> test
 # - Different cargo target variants (nightly is a variant) do not produce compatible artifacts
 # - Cargo's `install` artifacts are not usable for build, lint, or test (and vice versa)
+# - Clippy seems to cache the results of only 1 target at a time
 
 # Super commands
 
@@ -83,19 +84,19 @@ nova: auraed aer auraescript ## The official Kris Nóva alias for her workflow t
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
 .PHONY: lint
-lint: musl libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
+lint: musl auraed-lint not-auraed-lint ## Run all lints
 
 .PHONY: test
-test: build lint libs-test auraed-test auraescript-test aer-test ## Builds, lints, and tests (does not include ignored tests)
+test: musl auraed-build auraed-lint auraed-test not-auraed-build not-auraed-lint not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: build lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
+test-all: musl auraed-build auraed-lint auraed-test-all not-auraed-build not-auraed-lint not-auraed-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
-build: musl auraed-build auraescript-build aer-build lint ## Build and lint
+build: musl auraed-build auraed-lint not-auraed-build not-auraed-lint ## Build and lint
 
 .PHONY: install
-install: musl lint test auraed-debug auraescript-debug aer-debug  ## Lint, test, and install (debug) 🎉
+install: musl lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
 docs: docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
@@ -201,7 +202,7 @@ $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
-$(1)-test: musl $(GEN_RS) $(GEN_TS) $(1)
+$(1)-test: musl $(GEN_RS) $(GEN_TS) auraed
 	$(cargo) test $(2) -p $(1)
 
 .PHONY: $(1)-test-all
@@ -248,6 +249,28 @@ ifeq ($(uid), 0)
 else
 	sudo -E $(HOME)/.cargo/bin/auraed
 endif
+
+#------------------------------------------------------------------------------#
+
+# Commands for not auraed
+#	Due to the way cargo & clippy cache artifacts, these commands are leveraged to
+#	allow for faster build/lint/test by not switching targets as often
+
+.PHONY: not-auraed-build
+not-auraed-build: $(GEN_RS) $(GEN_TS)
+	$(cargo) build --workspace --exclude auraed
+
+.PHONY: not-auraed-lint
+not-auraed-lint: $(GEN_RS) $(GEN_TS)
+	$(cargo) clippy --all-features --workspace --exclude auraed -- -D clippy::all -D warnings
+
+.PHONY: not-auraed-test
+not-auraed-test: $(GEN_RS) $(GEN_TS)
+	$(cargo) test --workspace --exclude auraed
+
+.PHONY: not-auraed-test-all
+not-auraed-test-all: $(GEN_RS) $(GEN_TS)
+	$(cargo) test --workspace --exclude auraed -- --include-ignored
 
 #------------------------------------------------------------------------------#
 
