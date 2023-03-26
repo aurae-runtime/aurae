@@ -37,6 +37,7 @@ use nix::{
     sys::signal::{Signal, SIGKILL, SIGTERM},
     unistd::Pid,
 };
+use std::path::PathBuf;
 use std::{
     io::{self, ErrorKind},
     os::unix::process::{CommandExt, ExitStatusExt},
@@ -72,7 +73,9 @@ impl NestedAuraed {
         );
         client_config.system.socket = AuraeSocket::Path(socket_path.clone());
 
-        let mut command = Command::new(auraed_runtime.auraed.to_string());
+        let auraed_path: PathBuf =
+            auraed_runtime.auraed.clone().try_into().expect("path to auraed");
+        let mut command = Command::new(auraed_path);
 
         let _ = command.current_dir("/").args([
             "--socket",
