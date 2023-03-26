@@ -39,7 +39,8 @@
 
 pub use self::{
     auth_config::AuthConfig, cert_material::CertMaterial,
-    client_cert_details::ClientCertDetails, system_config::SystemConfig,
+    client_cert_details::ClientCertDetails, system_config::AuraeSocket,
+    system_config::SystemConfig,
 };
 use anyhow::{anyhow, Context, Result};
 use serde::Deserialize;
@@ -116,7 +117,12 @@ impl AuraeConfig {
     /// * `socket` - Address to auraed
     ///
     /// Note: A new client is required for every independent execution of this process.
-    pub fn from_options<S1: Into<String>, S2: Into<String>, S3: Into<String>, S4: Into<String>>(
+    pub fn from_options<
+        S1: Into<String>,
+        S2: Into<String>,
+        S3: Into<String>,
+        S4: Into<String>,
+    >(
         ca_crt: S1,
         client_crt: S2,
         client_key: S3,
@@ -129,7 +135,7 @@ impl AuraeConfig {
             socket.into(),
         );
         let auth = AuthConfig { ca_crt, client_crt, client_key };
-        let system = SystemConfig { socket };
+        let system = SystemConfig { socket: AuraeSocket::Path(socket) };
         Self { auth, system }
     }
 }

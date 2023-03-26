@@ -39,6 +39,9 @@ ociopts       =  DOCKER_BUILDKIT=1
 uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
+clh_version   = 30.0
+vm_kernel     = 6.1.6
+vm_image      = https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
 ifeq ($(uid), 0)
 root_cargo    = cargo
 else
@@ -345,6 +348,42 @@ busybox: ## Create a "busybox" OCI bundle in target
 alpine: ## Create an "alpine" OCI bundle in target
 	./hack/oci-alpine
 
+#------------------------------------------------------------------------------#
+
+# Hypervisor commands
+
+/opt/aurae/cloud-hypervisor/cloud-hypervisor:
+	mkdir -p /opt/aurae/cloud-hypervisor
+	curl -LI https://github.com/cloud-hypervisor/cloud-hypervisor/releases/download/v$(clh_version)/cloud-hypervisor-static -o /opt/aurae/cloud-hypervisor/cloud-hypervisor
+	chmod +x /opt/aurae/cloud-hypervisor/cloud-hypervisor
+
+hypervisor/guest-kernel/linux-cloud-hypervisor:
+	git clone --depth 1 https://github.com/cloud-hypervisor/linux.git -b ch-$(vm_kernel) hypervisor/guest-kernel/linux-cloud-hypervisor
+
+.PHONY: build-guest-kernel
+build-guest-kernel: hypervisor/guest-kernel/linux-cloud-hypervisor
+	cp hypervisor/guest-kernel/linux-config-x86_64 hypervisor/guest-kernel/linux-cloud-hypervisor/.config
+	cd hypervisor/guest-kernel/linux-cloud-hypervisor && KCFLAGS="-Wa,-mx86-used-note=no" make bzImage -j `nproc`
+	mkdir -p /var/lib/aurae/vm/kernel
+	cp hypervisor/guest-kernel/linux-cloud-hypervisor/arch/x86/boot/compressed/vmlinux.bin /var/lib/aurae/vm/kernel/vmlinux.bin
+
+.PHONY: prepare-image
+prepare-image:
+	mkdir -p /var/lib/aurae/vm/image
+	curl $(vm_image) -o /var/lib/aurae/vm/image/disk.img
+	qemu-img convert -p -f qcow2 -O raw /var/lib/aurae/vm/image/disk.img /var/lib/aurae/vm/image/disk.raw
+	mkdir -p /mnt
+# TODO: read offset from filesystem (parse fdisk -l output)
+	mount -t ext4 -o loop,offset=116391936 /var/lib/aurae/vm/image/disk.raw /mnt
+# TODO: certificate provisioning
+	cp -vR /etc/aurae /mnt/etc/
+	mkdir -p /mnt/var/lib/aurae/ebpf
+	cp -v ./ebpf/target/bpfel-unknown-none/release/instrument* /mnt/var/lib/aurae/ebpf/
+	mkdir -p /mnt/lib/auraed
+	cp -v ./target/x86_64-unknown-linux-musl/debug/auraed /mnt/lib/auraed/
+	ln -sf ../lib/auraed/auraed /mnt/sbin/init
+	umount /mnt
+	
 #------------------------------------------------------------------------------#
 
 # CI Commands
