@@ -62,17 +62,15 @@ fn main() -> anyhow::Result<()> {
         std::process::exit(1);
     }
 
-    let mut js_runtime = init();
-
-    let _ = js_runtime.execute_script("", "Deno.core.initializeAsyncOps();")?;
-
     let main_module = resolve_path(&args[1].clone(), current_dir()?.as_path())?;
+    let mut main_worker = init(main_module.clone());
+
+    let _ =
+        main_worker.execute_script("", "Deno.core.initializeAsyncOps();")?;
 
     let future = async move {
-        let mod_id = js_runtime.load_main_module(&main_module, None).await?;
-        let result = js_runtime.mod_evaluate(mod_id);
-        js_runtime.run_event_loop(false).await?;
-        result.await?
+        main_worker.execute_main_module(&main_module).await?;
+        main_worker.run_event_loop(false).await
     };
 
     tokio::runtime::Builder::new_current_thread()
