@@ -53,14 +53,14 @@ fancy-regex = { workspace = true }
 futures = "0.3.23"
 ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
-libc = "0.2" # TODO: Nix comes with libc, can we rely on that?
+libc = "0.2.140" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
-libcgroups = { version = "0.0.4", default-features = false, features = ["v2"] }
-libcontainer = { git = "https://github.com/krisnova/youki", branch = "musl-libcontainer", features = ["v2"], default-features = false }
+libcgroups = {  git = "https://github.com/containers/youki", branch = "main", default-features = false, features = ["v2"] }
+libcontainer = { git = "https://github.com/containers/youki", branch = "main", features = ["v2"], default-features = false }
 log = "0.4.17"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched"] }
-oci-spec = "0.5" # upgrade to 0.6 blocked by libcgroups as of v0.0.4
+oci-spec = "0.6.0"
 once_cell = "1"
 procfs = "0.14.2"
 proto = { workspace = true }

@@ -36,7 +36,7 @@ use chrono::Utc;
 use libcontainer;
 use libcontainer::container::builder::ContainerBuilder;
 use libcontainer::syscall::syscall::create_syscall;
-use nix::sys::signal::Signal;
+use nix::sys::signal::SIGKILL;
 use proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
     CheckpointContainerRequest, CheckpointContainerResponse,
@@ -181,7 +181,7 @@ impl runtime_service_server::RuntimeService for RuntimeService {
 
         let mut sandboxes = self.sandboxes.lock().await;
         let sandbox = sandboxes.get_mut(&sandbox_id)?;
-        sandbox.init.kill(Signal::SIGKILL, false).map_err(|e| {
+        sandbox.init.kill(SIGKILL, false).map_err(|e| {
             RuntimeServiceError::KillError { sandbox_id, error: e.to_string() }
         })?;
         Ok(Response::new(StopPodSandboxResponse {}))
