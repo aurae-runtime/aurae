@@ -33,9 +33,10 @@
 //! Manages authenticating with remote Aurae instances, as well as searching
 //! the local filesystem for configuration and authentication material.
 
-use std::net::SocketAddr;
+use std::net::SocketAddrV6;
 
 use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
+use crate::AuraeSocket;
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};
@@ -74,7 +75,8 @@ impl Client {
         AuraeConfig { auth, system }: AuraeConfig,
     ) -> Result<Self> {
         let cert_material = auth.to_cert_material().await?;
-        let client_cert_details = Some(cert_material.get_client_cert_details()?);
+        let client_cert_details =
+            Some(cert_material.get_client_cert_details()?);
 
         let CertMaterial { server_root_ca_cert, client_cert, client_key } =
             cert_material;
@@ -85,22 +87,24 @@ impl Client {
             .ca_certificate(Certificate::from_pem(server_root_ca_cert))
             .identity(Identity::from_pem(client_cert, client_key));
 
-        let channel = Self::connect_chan(system.socket.clone(), Some(tls_config)).await?;
+        let channel =
+            Self::connect_chan(system.socket.clone(), Some(tls_config)).await?;
         Ok(Self { channel, client_cert_details })
     }
 
     /// Create a new Client without TLS, remote server should also expect no TLS.
     ///
     /// Note: A new client is required for every independent execution of this process.
-    pub async fn new_no_tls(
-        socket: String,
-    ) -> Result<Self> {
+    pub async fn new_no_tls(socket: AuraeSocket) -> Result<Self> {
         let channel = Self::connect_chan(socket, None).await?;
         let client_cert_details = None;
         Ok(Self { channel, client_cert_details })
     }
 
-    async fn connect_chan(socket: String, tls_config: Option<ClientTlsConfig>) -> Result<Channel> {
+    async fn connect_chan(
+        socket: AuraeSocket,
+        tls_config: Option<ClientTlsConfig>,
+    ) -> Result<Channel> {
         let endpoint = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR);
         let endpoint = match tls_config {
             None => endpoint,
@@ -109,20 +113,26 @@ impl Client {
 
         // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
         // connect as a UNIX socket (assume it's a file path).
-        let channel = if let Ok(sockaddr) = socket.parse::<SocketAddr>()
-        {
-            endpoint
-                .connect_with_connector(service_fn(move |_: Uri| {
-                    TcpStream::connect(sockaddr)
-                }))
-                .await
-        } else {
-            endpoint
-                .connect_with_connector(service_fn(move |_: Uri| {
-                    UnixStream::connect(socket.clone())
-                }))
-                .await
+        let channel = match socket {
+            AuraeSocket::Path(path) => {
+                endpoint
+                    .connect_with_connector(service_fn(move |_: Uri| {
+                        UnixStream::connect(path.clone())
+                    }))
+                    .await
+            }
+            AuraeSocket::IPv6 { ip, scope_id } => {
+                let mut socket =
+                    ip.parse::<SocketAddrV6>().expect("invalid ip address");
+                socket.set_scope_id(scope_id);
+                endpoint
+                    .connect_with_connector(service_fn(move |_: Uri| {
+                        TcpStream::connect(socket)
+                    }))
+                    .await
+            }
         }?;
+
         Ok(channel)
     }
 }

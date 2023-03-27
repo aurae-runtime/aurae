@@ -1,6 +1,6 @@
 use proto::vms::{
-    vm_service_server, VirtualMachine, VmServiceAllocateRequest,
-    VmServiceAllocateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
+    vm_service_server, VirtualMachine, VmServiceCreateRequest,
+    VmServiceCreateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
     VmServiceStartRequest, VmServiceStartResponse, VmServiceStopRequest,
     VmServiceStopResponse,
 };
@@ -15,10 +15,10 @@ pub struct VmService {
 
 #[tonic::async_trait]
 impl vm_service_server::VmService for VmService {
-    async fn allocate(
+    async fn create(
         &self,
-        _request: Request<VmServiceAllocateRequest>,
-    ) -> Result<Response<VmServiceAllocateResponse>, Status> {
+        _request: Request<VmServiceCreateRequest>,
+    ) -> Result<Response<VmServiceCreateResponse>, Status> {
         todo!()
     }
 

@@ -39,6 +39,9 @@ ociopts       =  DOCKER_BUILDKIT=1
 uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
+clh_version   = 30.0
+vm_kernel     = 6.1.6
+vm_image      = https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
 ifeq ($(uid), 0)
 root_cargo    = cargo
 else
@@ -73,6 +76,7 @@ nova: auraed aer auraescript ## The official Kris Nóva alias for her workflow t
 # - The ideal order for cargo to reuse artifacts is build -> lint -> test
 # - Different cargo target variants (nightly is a variant) do not produce compatible artifacts
 # - Cargo's `install` artifacts are not usable for build, lint, or test (and vice versa)
+# - Clippy seems to cache the results of only 1 target at a time
 
 # Super commands
 
@@ -80,19 +84,19 @@ nova: auraed aer auraescript ## The official Kris Nóva alias for her workflow t
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
 .PHONY: lint
-lint: musl libs-lint auraed-lint auraescript-lint aer-lint ## Run all lints
+lint: musl auraed-lint not-auraed-lint ## Run all lints
 
 .PHONY: test
-test: build lint libs-test auraed-test auraescript-test aer-test ## Builds, lints, and tests (does not include ignored tests)
+test: musl auraed-build auraed-lint auraed-test not-auraed-build not-auraed-lint not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: build lint libs-test-all auraed-test-all auraescript-test-all aer-test-all ## Run lints and tests (includes ignored tests)
+test-all: musl auraed-build auraed-lint auraed-test-all not-auraed-build not-auraed-lint not-auraed-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
-build: musl auraed-build auraescript-build aer-build lint ## Build and lint
+build: musl auraed-build auraed-lint not-auraed-build not-auraed-lint ## Build and lint
 
 .PHONY: install
-install: musl lint test auraed-debug auraescript-debug aer-debug  ## Lint, test, and install (debug) 🎉
+install: musl lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
 docs: docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
@@ -198,7 +202,7 @@ $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
-$(1)-test: musl $(GEN_RS) $(GEN_TS) $(1)
+$(1)-test: musl $(GEN_RS) $(GEN_TS) auraed
 	$(cargo) test $(2) -p $(1)
 
 .PHONY: $(1)-test-all
@@ -245,6 +249,28 @@ ifeq ($(uid), 0)
 else
 	sudo -E $(HOME)/.cargo/bin/auraed
 endif
+
+#------------------------------------------------------------------------------#
+
+# Commands for not auraed
+#	Due to the way cargo & clippy cache artifacts, these commands are leveraged to
+#	allow for faster build/lint/test by not switching targets as often
+
+.PHONY: not-auraed-build
+not-auraed-build: $(GEN_RS) $(GEN_TS)
+	$(cargo) build --workspace --exclude auraed
+
+.PHONY: not-auraed-lint
+not-auraed-lint: $(GEN_RS) $(GEN_TS)
+	$(cargo) clippy --all-features --workspace --exclude auraed -- -D clippy::all -D warnings
+
+.PHONY: not-auraed-test
+not-auraed-test: $(GEN_RS) $(GEN_TS)
+	$(cargo) test --workspace --exclude auraed
+
+.PHONY: not-auraed-test-all
+not-auraed-test-all: $(GEN_RS) $(GEN_TS)
+	$(cargo) test --workspace --exclude auraed -- --include-ignored
 
 #------------------------------------------------------------------------------#
 
@@ -345,6 +371,42 @@ busybox: ## Create a "busybox" OCI bundle in target
 alpine: ## Create an "alpine" OCI bundle in target
 	./hack/oci-alpine
 
+#------------------------------------------------------------------------------#
+
+# Hypervisor commands
+
+/opt/aurae/cloud-hypervisor/cloud-hypervisor:
+	mkdir -p /opt/aurae/cloud-hypervisor
+	curl -LI https://github.com/cloud-hypervisor/cloud-hypervisor/releases/download/v$(clh_version)/cloud-hypervisor-static -o /opt/aurae/cloud-hypervisor/cloud-hypervisor
+	chmod +x /opt/aurae/cloud-hypervisor/cloud-hypervisor
+
+hypervisor/guest-kernel/linux-cloud-hypervisor:
+	git clone --depth 1 https://github.com/cloud-hypervisor/linux.git -b ch-$(vm_kernel) hypervisor/guest-kernel/linux-cloud-hypervisor
+
+.PHONY: build-guest-kernel
+build-guest-kernel: hypervisor/guest-kernel/linux-cloud-hypervisor
+	cp hypervisor/guest-kernel/linux-config-x86_64 hypervisor/guest-kernel/linux-cloud-hypervisor/.config
+	cd hypervisor/guest-kernel/linux-cloud-hypervisor && KCFLAGS="-Wa,-mx86-used-note=no" make bzImage -j `nproc`
+	mkdir -p /var/lib/aurae/vm/kernel
+	cp hypervisor/guest-kernel/linux-cloud-hypervisor/arch/x86/boot/compressed/vmlinux.bin /var/lib/aurae/vm/kernel/vmlinux.bin
+
+.PHONY: prepare-image
+prepare-image:
+	mkdir -p /var/lib/aurae/vm/image
+	curl $(vm_image) -o /var/lib/aurae/vm/image/disk.img
+	qemu-img convert -p -f qcow2 -O raw /var/lib/aurae/vm/image/disk.img /var/lib/aurae/vm/image/disk.raw
+	mkdir -p /mnt
+# TODO: read offset from filesystem (parse fdisk -l output)
+	mount -t ext4 -o loop,offset=116391936 /var/lib/aurae/vm/image/disk.raw /mnt
+# TODO: certificate provisioning
+	cp -vR /etc/aurae /mnt/etc/
+	mkdir -p /mnt/var/lib/aurae/ebpf
+	cp -v ./ebpf/target/bpfel-unknown-none/release/instrument* /mnt/var/lib/aurae/ebpf/
+	mkdir -p /mnt/lib/auraed
+	cp -v ./target/x86_64-unknown-linux-musl/debug/auraed /mnt/lib/auraed/
+	ln -sf ../lib/auraed/auraed /mnt/sbin/init
+	umount /mnt
+	
 #------------------------------------------------------------------------------#
 
 # CI Commands
