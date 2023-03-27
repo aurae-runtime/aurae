@@ -167,8 +167,6 @@ impl Cell {
         do_free!(self, kill(), broadcast_kill())
     }
 
-    // NOTE: Having this function return the Client means we need to make it async,
-    // or we need to make [Client::new] not async.
     pub fn client_socket(&self) -> Result<AuraeSocket> {
         let CellState::Allocated { nested_auraed, .. } = &self.state else {
             return Err(CellsError::CellNotAllocated {
@@ -176,7 +174,7 @@ impl Cell {
             })
         };
 
-        Ok(nested_auraed.client_config.system.socket.clone())
+        Ok(nested_auraed.client_socket.clone())
     }
 
     /// Returns the [CellName] of the [Cell]
