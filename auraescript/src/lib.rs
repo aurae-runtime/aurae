@@ -96,7 +96,8 @@ fn get_error_class_name(e: &AnyError) -> &'static str {
 }
 
 pub fn init(main_module: Url) -> MainWorker {
-    let extension = Extension::builder("").ops(stdlib()).build();
+    let extension =
+        Extension::builder("").ops(stdlib()).force_op_registration().build();
 
     let create_web_worker_cb = Arc::new(|_| {
         todo!("Web workers are not supported yet");

@@ -65,8 +65,8 @@ fn main() -> anyhow::Result<()> {
     let main_module = resolve_path(&args[1].clone(), current_dir()?.as_path())?;
     let mut main_worker = init(main_module.clone());
 
-    let _ =
-        main_worker.execute_script("", "Deno.core.initializeAsyncOps();")?;
+    let _ = main_worker
+        .execute_script("", "Deno.core = Deno[Deno.internal].core;")?;
 
     let future = async move {
         main_worker.execute_main_module(&main_module).await?;
