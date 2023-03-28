@@ -63,7 +63,9 @@ async fn run_auraed() -> Client {
             client_crt: "/etc/aurae/pki/_signed.client.nova.crt".to_string(),
             client_key: "/etc/aurae/pki/client.nova.key".to_string(),
         },
-        system: SystemConfig { socket: AuraeSocket::Path(socket.clone()) },
+        system: SystemConfig {
+            socket: AuraeSocket::Path(socket.clone().into()),
+        },
     };
 
     let _ = tokio::spawn(async move {

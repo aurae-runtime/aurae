@@ -77,7 +77,7 @@ impl AuraeConfig {
         ];
 
         for path in search_paths {
-            match Self::parse_from_file(path) {
+            match Self::parse_from_toml_file(path) {
                 Ok(config) => {
                     return Ok(config);
                 }
@@ -92,7 +92,9 @@ impl AuraeConfig {
     }
 
     /// Attempt to parse a config file into memory.
-    pub fn parse_from_file<P: AsRef<Path>>(path: P) -> Result<AuraeConfig> {
+    pub fn parse_from_toml_file<P: AsRef<Path>>(
+        path: P,
+    ) -> Result<AuraeConfig> {
         let mut config_toml = String::new();
         let mut file = File::open(path)?;
 
@@ -104,7 +106,11 @@ impl AuraeConfig {
             return Err(anyhow!("empty config"));
         }
 
-        Ok(toml::from_str(&config_toml)?)
+        AuraeConfig::parse_from_toml(&config_toml)
+    }
+
+    pub fn parse_from_toml(config_toml: &str) -> Result<AuraeConfig> {
+        Ok(toml::from_str(config_toml)?)
     }
 
     /// Create a new AuraeConfig from given options
@@ -135,7 +141,60 @@ impl AuraeConfig {
             socket.into(),
         );
         let auth = AuthConfig { ca_crt, client_crt, client_key };
-        let system = SystemConfig { socket: AuraeSocket::Path(socket) };
+        let system = SystemConfig { socket: AuraeSocket::Path(socket.into()) };
         Self { auth, system }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::SocketAddrV6;
+    use std::str::FromStr;
+
+    fn get_input(socket: &str) -> String {
+        const INPUT: &str = r#"
+[auth]
+ca_crt = "~/.aurae/pki/ca.crt"
+client_crt = "~/.aurae/pki/_signed.client.nova.crt"
+client_key = "~/.aurae/pki/client.nova.key"
+
+[system]
+socket = "#;
+
+        format!("{INPUT}\"{socket}\"")
+    }
+
+    #[test]
+    fn can_parse_toml_config_socket_path() {
+        let input = get_input("/var/run/aurae/aurae.sock");
+        let config = AuraeConfig::parse_from_toml(&input).unwrap();
+        assert!(
+            matches!(config.system.socket, AuraeSocket::Path(path) if Some("/var/run/aurae/aurae.sock") == path.to_str())
+        )
+    }
+
+    #[test]
+    fn can_parse_toml_config_socket_ipv6_with_scope_id() {
+        let input = get_input("[fe80::2]:8080%4");
+        let config = AuraeConfig::parse_from_toml(&input).unwrap();
+        let AuraeSocket::IPv6 {ip, scope_id} = config.system.socket else {
+            panic!("expected AuraeSocket::IPv6");
+        };
+
+        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
+        assert_eq!(scope_id, Some(4));
+    }
+
+    #[test]
+    fn can_parse_toml_config_socket_ipv6_without_scope_id() {
+        let input = get_input("[fe80::2]:8080");
+        let config = AuraeConfig::parse_from_toml(&input).unwrap();
+        let AuraeSocket::IPv6 {ip, scope_id} = config.system.socket else {
+            panic!("expected AuraeSocket::IPv6");
+        };
+
+        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
+        assert_eq!(scope_id, None);
     }
 }
