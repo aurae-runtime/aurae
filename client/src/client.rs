@@ -120,7 +120,10 @@ impl Client {
                     .await
             }
             AuraeSocket::IPv6 { ip: mut socket, scope_id } => {
-                socket.set_scope_id(scope_id);
+                if let Some(scope_id) = scope_id {
+                    socket.set_scope_id(scope_id);
+                }
+
                 endpoint
                     .connect_with_connector(service_fn(move |_: Uri| {
                         TcpStream::connect(socket)

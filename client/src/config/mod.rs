@@ -149,9 +149,11 @@ impl AuraeConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::net::SocketAddrV6;
+    use std::str::FromStr;
 
     #[test]
-    fn can_parse_toml_config() {
+    fn can_parse_toml_config_socket_path() {
         const INPUT: &str = r#"
 [auth]
 ca_crt = "~/.aurae/pki/ca.crt"
@@ -166,5 +168,26 @@ socket = "/var/run/aurae/aurae.sock"
         assert!(
             matches!(config.system.socket, AuraeSocket::Path(path) if Some("/var/run/aurae/aurae.sock") == path.to_str())
         )
+    }
+
+    #[test]
+    fn can_parse_toml_config_socket_ipv6() {
+        const INPUT: &str = r#"
+[auth]
+ca_crt = "~/.aurae/pki/ca.crt"
+client_crt = "~/.aurae/pki/_signed.client.nova.crt"
+client_key = "~/.aurae/pki/client.nova.key"
+
+[system]
+socket = "[fe80::2]:8080%4"
+        "#;
+
+        let config = AuraeConfig::parse_from_toml(INPUT).unwrap();
+        let AuraeSocket::IPv6 {ip, scope_id} = config.system.socket else {
+            panic!("expected AuraeSocket::IPv6");
+        };
+
+        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
+        assert_eq!(scope_id, Some(4));
     }
 }

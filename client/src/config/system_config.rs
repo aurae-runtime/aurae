@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use if_chain::if_chain;
 use serde::de::{Error, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt::Formatter;
@@ -46,7 +47,7 @@ pub struct SystemConfig {
 #[derive(Debug, Clone)]
 pub enum AuraeSocket {
     Path(PathBuf),
-    IPv6 { ip: SocketAddrV6, scope_id: u32 },
+    IPv6 { ip: SocketAddrV6, scope_id: Option<u32> },
 }
 
 impl<'de> Deserialize<'de> for AuraeSocket {
@@ -85,6 +86,69 @@ impl<'de> Visitor<'de> for AuraeSocketVisitor {
     where
         E: Error,
     {
-        Ok(AuraeSocket::Path(PathBuf::from(v)))
+        if_chain! {
+            if let Some((ip, scope_id)) = v.rsplit_once('%');
+            if let Ok(ip) = ip.parse::<SocketAddrV6>();
+            if let Ok(scope_id) = scope_id.parse::<u32>();
+            then {
+                Ok(AuraeSocket::IPv6 {ip, scope_id: Some(scope_id)})
+            }
+            else {
+                if let Ok(ip) = v.parse::<SocketAddrV6>() {
+                    Ok(AuraeSocket::IPv6 {ip, scope_id: None})
+                } else {
+                    Ok(AuraeSocket::Path(v.into()))
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::str::FromStr;
+
+    #[test]
+    fn can_parse_aurae_socket_path() {
+        let visitor = AuraeSocketVisitor {};
+
+        let res = visitor
+            .visit_str::<toml::de::Error>("/var/run/aurae/aurae.sock")
+            .unwrap();
+
+        assert!(
+            matches!(res, AuraeSocket::Path(path) if Some("/var/run/aurae/aurae.sock") == path.to_str())
+        );
+    }
+
+    #[test]
+    fn can_parse_aurae_socket_ipv6() {
+        let visitor = AuraeSocketVisitor {};
+
+        let res =
+            visitor.visit_str::<toml::de::Error>("[fe80::2]:8080").unwrap();
+
+        let AuraeSocket::IPv6 {ip, scope_id} = res else {
+            panic!("expected AuraeSocket::IPv6");
+        };
+
+        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
+        assert_eq!(scope_id, None);
+    }
+
+    #[test]
+    fn can_parse_aurae_socket_ipv6_with_scope_id() {
+        let visitor = AuraeSocketVisitor {};
+
+        let res =
+            visitor.visit_str::<toml::de::Error>("[fe80::2]:8080%4").unwrap();
+
+        let AuraeSocket::IPv6 {ip, scope_id} = res else {
+            panic!("expected AuraeSocket::IPv6");
+        };
+
+        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
+        assert_eq!(scope_id, Some(4));
     }
 }
