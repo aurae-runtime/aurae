@@ -31,8 +31,8 @@
 import * as aurae from "../auraescript/gen/aurae.ts";
 import * as cells from "../auraescript/gen/cells.ts";
 
-let client = await aurae.createClient();
-let cellService = new cells.CellServiceClient(client);
+const client = await aurae.createClient();
+const cellService = new cells.CellServiceClient(client);
 const nestedCellName = "ae-sleeper-cell/nested-sleeper"
 const cellName = "ae-sleeper-cell";
 

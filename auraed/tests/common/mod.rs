@@ -63,7 +63,9 @@ async fn run_auraed() -> Client {
             client_crt: "/etc/aurae/pki/_signed.client.nova.crt".to_string(),
             client_key: "/etc/aurae/pki/client.nova.key".to_string(),
         },
-        system: SystemConfig { socket: AuraeSocket::Path(socket.clone()) },
+        system: SystemConfig {
+            socket: AuraeSocket::Path(socket.clone().into()),
+        },
     };
 
     let _ = tokio::spawn(async move {
@@ -103,21 +105,21 @@ pub async fn auraed_client() -> Client {
     CLIENT.get_or_init(inner).await.clone()
 }
 
-pub async fn remote_auraed_client(ip: String, scope_id: u32) -> Client {
-    let client_config = AuraeConfig {
-        auth: AuthConfig {
-            ca_crt: "/etc/aurae/pki/ca.crt".to_string(),
-            client_crt: "/etc/aurae/pki/_signed.client.nova.crt".to_string(),
-            client_key: "/etc/aurae/pki/client.nova.key".to_string(),
-        },
-        system: SystemConfig { socket: AuraeSocket::IPv6 { ip, scope_id } },
-    };
-    let client = Client::new(client_config.clone())
-        .await
-        .expect("failed to create client");
-
-    client
-}
+// pub async fn remote_auraed_client(ip: String, scope_id: u32) -> Client {
+//     let client_config = AuraeConfig {
+//         auth: AuthConfig {
+//             ca_crt: "/etc/aurae/pki/ca.crt".to_string(),
+//             client_crt: "/etc/aurae/pki/_signed.client.nova.crt".to_string(),
+//             client_key: "/etc/aurae/pki/client.nova.key".to_string(),
+//         },
+//         system: SystemConfig { socket: AuraeSocket::IPv6 { ip, scope_id } },
+//     };
+//     let client = Client::new(client_config.clone())
+//         .await
+//         .expect("failed to create client");
+//
+//     client
+// }
 
 pub fn default_retry_strategy() -> ExponentialBackoff<SystemClock> {
     ExponentialBackoffBuilder::new()
