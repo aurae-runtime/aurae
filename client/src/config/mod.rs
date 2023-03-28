@@ -152,8 +152,7 @@ mod tests {
     use std::net::SocketAddrV6;
     use std::str::FromStr;
 
-    #[test]
-    fn can_parse_toml_config_socket_path() {
+    fn get_input(socket: &str) -> String {
         const INPUT: &str = r#"
 [auth]
 ca_crt = "~/.aurae/pki/ca.crt"
@@ -161,33 +160,41 @@ client_crt = "~/.aurae/pki/_signed.client.nova.crt"
 client_key = "~/.aurae/pki/client.nova.key"
 
 [system]
-socket = "/var/run/aurae/aurae.sock"
-        "#;
+socket = "#;
 
-        let config = AuraeConfig::parse_from_toml(INPUT).unwrap();
+        format!("{INPUT}\"{socket}\"")
+    }
+
+    #[test]
+    fn can_parse_toml_config_socket_path() {
+        let input = get_input("/var/run/aurae/aurae.sock");
+        let config = AuraeConfig::parse_from_toml(&input).unwrap();
         assert!(
             matches!(config.system.socket, AuraeSocket::Path(path) if Some("/var/run/aurae/aurae.sock") == path.to_str())
         )
     }
 
     #[test]
-    fn can_parse_toml_config_socket_ipv6() {
-        const INPUT: &str = r#"
-[auth]
-ca_crt = "~/.aurae/pki/ca.crt"
-client_crt = "~/.aurae/pki/_signed.client.nova.crt"
-client_key = "~/.aurae/pki/client.nova.key"
-
-[system]
-socket = "[fe80::2]:8080%4"
-        "#;
-
-        let config = AuraeConfig::parse_from_toml(INPUT).unwrap();
+    fn can_parse_toml_config_socket_ipv6_with_scope_id() {
+        let input = get_input("[fe80::2]:8080%4");
+        let config = AuraeConfig::parse_from_toml(&input).unwrap();
         let AuraeSocket::IPv6 {ip, scope_id} = config.system.socket else {
             panic!("expected AuraeSocket::IPv6");
         };
 
         assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
         assert_eq!(scope_id, Some(4));
+    }
+
+    #[test]
+    fn can_parse_toml_config_socket_ipv6_without_scope_id() {
+        let input = get_input("[fe80::2]:8080");
+        let config = AuraeConfig::parse_from_toml(&input).unwrap();
+        let AuraeSocket::IPv6 {ip, scope_id} = config.system.socket else {
+            panic!("expected AuraeSocket::IPv6");
+        };
+
+        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
+        assert_eq!(scope_id, None);
     }
 }

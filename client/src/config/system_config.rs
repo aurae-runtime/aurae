@@ -41,6 +41,13 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Deserialize)]
 pub struct SystemConfig {
     /// Socket to connect the client to.  Can be a path (unix socket) or a network socket address.
+    ///
+    /// When deserializing from a string, the deserializer will try to parse a valid value in the following order:
+    /// - IPv6 with scope id (e.g., "[fe80::2]:8080%4")
+    /// - IPv6 without scope id (e.g., "[fe80::2]:8080")
+    /// - Otherwise a path
+    ///
+    /// scope id must be a valid u32, otherwise it will be assumed a path
     pub socket: AuraeSocket,
 }
 
