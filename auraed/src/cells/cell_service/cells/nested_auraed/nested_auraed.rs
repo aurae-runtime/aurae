@@ -68,7 +68,8 @@ impl NestedAuraed {
             auraed_runtime.runtime_dir.to_string_lossy(),
             uuid::Uuid::new_v4(),
         );
-        let client_socket = AuraeSocket::Path(socket_path.clone());
+
+        let client_socket = AuraeSocket::Path(socket_path.clone().into());
 
         let auraed_path: PathBuf =
             auraed_runtime.auraed.clone().try_into().expect("path to auraed");

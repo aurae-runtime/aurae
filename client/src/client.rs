@@ -33,8 +33,6 @@
 //! Manages authenticating with remote Aurae instances, as well as searching
 //! the local filesystem for configuration and authentication material.
 
-use std::net::SocketAddrV6;
-
 use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
 use crate::AuraeSocket;
 use thiserror::Error;
@@ -121,9 +119,7 @@ impl Client {
                     }))
                     .await
             }
-            AuraeSocket::IPv6 { ip, scope_id } => {
-                let mut socket =
-                    ip.parse::<SocketAddrV6>().expect("invalid ip address");
+            AuraeSocket::IPv6 { ip: mut socket, scope_id } => {
                 socket.set_scope_id(scope_id);
                 endpoint
                     .connect_with_connector(service_fn(move |_: Uri| {
