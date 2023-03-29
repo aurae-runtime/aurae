@@ -32,7 +32,7 @@ use if_chain::if_chain;
 use serde::de::{Error, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt::Formatter;
-use std::net::SocketAddrV6;
+use std::net::{SocketAddr, SocketAddrV4, SocketAddrV6};
 use std::path::PathBuf;
 
 /// The system configuration for AuraeScript.
@@ -43,8 +43,9 @@ pub struct SystemConfig {
     /// Socket to connect the client to.  Can be a path (unix socket) or a network socket address.
     ///
     /// When deserializing from a string, the deserializer will try to parse a valid value in the following order:
-    /// - IPv6 with scope id (e.g., "[fe80::2]:8080%4")
-    /// - IPv6 without scope id (e.g., "[fe80::2]:8080")
+    /// - IpV6 with scope id (e.g., "[fe80::2]:8080%4")
+    /// - IpV6 without scope id (e.g., "[fe80::2]:8080")
+    /// - IpV4 (e.g., "127.0.0.1:8080")
     /// - Otherwise a path
     ///
     /// scope id must be a valid u32, otherwise it will be assumed a path
@@ -54,7 +55,7 @@ pub struct SystemConfig {
 #[derive(Debug, Clone)]
 pub enum AuraeSocket {
     Path(PathBuf),
-    IPv6 { ip: SocketAddrV6, scope_id: Option<u32> },
+    Addr(SocketAddr),
 }
 
 impl<'de> Deserialize<'de> for AuraeSocket {
@@ -94,15 +95,18 @@ impl<'de> Visitor<'de> for AuraeSocketVisitor {
         E: Error,
     {
         if_chain! {
-            if let Some((ip, scope_id)) = v.rsplit_once('%');
-            if let Ok(ip) = ip.parse::<SocketAddrV6>();
+            if let Some((addr, scope_id)) = v.rsplit_once('%');
+            if let Ok(mut addr) = addr.parse::<SocketAddrV6>();
             if let Ok(scope_id) = scope_id.parse::<u32>();
             then {
-                Ok(AuraeSocket::IPv6 {ip, scope_id: Some(scope_id)})
+                addr.set_scope_id(scope_id);
+                Ok(AuraeSocket::Addr(addr.into()))
             }
             else {
-                if let Ok(ip) = v.parse::<SocketAddrV6>() {
-                    Ok(AuraeSocket::IPv6 {ip, scope_id: None})
+                if let Ok(addr) = v.parse::<SocketAddrV6>() {
+                    Ok(AuraeSocket::Addr(addr.into()))
+                } else if let Ok(addr) = v.parse::<SocketAddrV4>() {
+                    Ok(AuraeSocket::Addr(addr.into()))
                 } else {
                     Ok(AuraeSocket::Path(v.into()))
                 }
@@ -114,6 +118,7 @@ impl<'de> Visitor<'de> for AuraeSocketVisitor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::net::{Ipv4Addr, Ipv6Addr};
     use std::str::FromStr;
 
     #[test]
@@ -136,12 +141,17 @@ mod tests {
         let res =
             visitor.visit_str::<toml::de::Error>("[fe80::2]:8080").unwrap();
 
-        let AuraeSocket::IPv6 {ip, scope_id} = res else {
-            panic!("expected AuraeSocket::IPv6");
+        let AuraeSocket::Addr (addr) = res else {
+            panic!("expected AuraeSocket::Addr");
         };
 
-        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
-        assert_eq!(scope_id, None);
+        let SocketAddr::V6(addr) = addr else {
+            panic!("expected v6 addr");
+        };
+
+        assert_eq!(*addr.ip(), Ipv6Addr::from_str("fe80::2").unwrap());
+        assert_eq!(addr.port(), 8080);
+        assert_eq!(addr.scope_id(), 0);
     }
 
     #[test]
@@ -151,11 +161,35 @@ mod tests {
         let res =
             visitor.visit_str::<toml::de::Error>("[fe80::2]:8080%4").unwrap();
 
-        let AuraeSocket::IPv6 {ip, scope_id} = res else {
-            panic!("expected AuraeSocket::IPv6");
+        let AuraeSocket::Addr (addr) = res else {
+            panic!("expected AuraeSocket::Addr");
         };
 
-        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
-        assert_eq!(scope_id, Some(4));
+        let SocketAddr::V6(addr) = addr else {
+            panic!("expected v6 addr");
+        };
+
+        assert_eq!(*addr.ip(), Ipv6Addr::from_str("fe80::2").unwrap());
+        assert_eq!(addr.port(), 8080);
+        assert_eq!(addr.scope_id(), 4);
+    }
+
+    #[test]
+    fn can_parse_aurae_socket_ipv4() {
+        let visitor = AuraeSocketVisitor {};
+
+        let res =
+            visitor.visit_str::<toml::de::Error>("127.0.0.1:8081").unwrap();
+
+        let AuraeSocket::Addr (addr) = res else {
+            panic!("expected AuraeSocket::Addr");
+        };
+
+        let SocketAddr::V4(addr) = addr else {
+            panic!("expected v4 addr");
+        };
+
+        assert_eq!(*addr.ip(), Ipv4Addr::from_str("127.0.0.1").unwrap());
+        assert_eq!(addr.port(), 8081);
     }
 }

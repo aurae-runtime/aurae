@@ -149,7 +149,7 @@ impl AuraeConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::net::SocketAddrV6;
+    use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
     use std::str::FromStr;
 
     fn get_input(socket: &str) -> String {
@@ -178,23 +178,49 @@ socket = "#;
     fn can_parse_toml_config_socket_ipv6_with_scope_id() {
         let input = get_input("[fe80::2]:8080%4");
         let config = AuraeConfig::parse_from_toml(&input).unwrap();
-        let AuraeSocket::IPv6 {ip, scope_id} = config.system.socket else {
-            panic!("expected AuraeSocket::IPv6");
+        let AuraeSocket::Addr (addr) = config.system.socket else {
+            panic!("expected AuraeSocket::Addr");
         };
 
-        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
-        assert_eq!(scope_id, Some(4));
+        let SocketAddr::V6(addr) = addr else {
+            panic!("expected v6 addr");
+        };
+
+        assert_eq!(*addr.ip(), Ipv6Addr::from_str("fe80::2").unwrap());
+        assert_eq!(addr.port(), 8080);
+        assert_eq!(addr.scope_id(), 4);
     }
 
     #[test]
     fn can_parse_toml_config_socket_ipv6_without_scope_id() {
         let input = get_input("[fe80::2]:8080");
         let config = AuraeConfig::parse_from_toml(&input).unwrap();
-        let AuraeSocket::IPv6 {ip, scope_id} = config.system.socket else {
-            panic!("expected AuraeSocket::IPv6");
+        let AuraeSocket::Addr (addr) = config.system.socket else {
+            panic!("expected AuraeSocket::Addr");
         };
 
-        assert_eq!(ip, SocketAddrV6::from_str("[fe80::2]:8080").unwrap());
-        assert_eq!(scope_id, None);
+        let SocketAddr::V6(addr) = addr else {
+            panic!("expected v6 addr");
+        };
+
+        assert_eq!(*addr.ip(), Ipv6Addr::from_str("fe80::2").unwrap());
+        assert_eq!(addr.port(), 8080);
+        assert_eq!(addr.scope_id(), 0);
+    }
+
+    #[test]
+    fn can_parse_toml_config_socket_ipv4() {
+        let input = get_input("127.1.2.3:1234");
+        let config = AuraeConfig::parse_from_toml(&input).unwrap();
+        let AuraeSocket::Addr (addr) = config.system.socket else {
+            panic!("expected AuraeSocket::Addr");
+        };
+
+        let SocketAddr::V4(addr) = addr else {
+            panic!("expected v4 addr");
+        };
+
+        assert_eq!(*addr.ip(), Ipv4Addr::from_str("127.1.2.3").unwrap());
+        assert_eq!(addr.port(), 1234);
     }
 }
