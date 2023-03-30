@@ -46,15 +46,16 @@ export function createClient(opts: CreateClient = { kind: "default" }): Promise<
     let config;
     switch (opts.kind) {
         case "default": {
-            config = Deno[Deno.internal].core.opAsync("as__aurae_config__try_default");
+            console.log(Deno[Deno.internal].core);
+            config = Deno[Deno.internal].core.ops.as__aurae_config__try_default();
             break;
         }
         case "path": {
-            config = Deno[Deno.internal].core.opAsync("as__aurae_config__parse_from_file", opts.path);
+            config = Deno[Deno.internal].core.ops.as__aurae_config__parse_from_file(opts.path);
             break;
         }
         case "opts": {
-            config = Deno[Deno.internal].core.opAsync("as__aurae_config__from_options",
+            config = Deno[Deno.internal].core.ops.as__aurae_config__from_options(
                 opts.ca_crt, opts.client_crt, opts.client_key, opts.socket
             );
             break;
