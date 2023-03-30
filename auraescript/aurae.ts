@@ -46,7 +46,6 @@ export function createClient(opts: CreateClient = { kind: "default" }): Promise<
     let config;
     switch (opts.kind) {
         case "default": {
-            console.log(Deno[Deno.internal].core);
             config = Deno[Deno.internal].core.ops.as__aurae_config__try_default();
             break;
         }
