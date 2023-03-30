@@ -46,7 +46,7 @@ let allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
         }),
     })
 });
-aurae.print('Allocated:', allocated)
+console.log('Allocated:', allocated)
 
 // [ Start ]
 let started = await cellService.start(<cells.CellServiceStartRequest>{
@@ -57,7 +57,7 @@ let started = await cellService.start(<cells.CellServiceStartRequest>{
         name: "sleep-42"
     })
 })
-aurae.print('Started:', started)
+console.log('Started:', started)
 
 // [ Allocate nested ]
 let nested_allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
@@ -69,21 +69,21 @@ let nested_allocated = await cellService.allocate(<cells.CellServiceAllocateRequ
         }),
     })
 });
-aurae.print('Allocated Nested:', nested_allocated)
+console.log('Allocated Nested:', nested_allocated)
 
 // [ List cellService ]
 let listed = await cellService.list(<cells.CellServiceListRequest>{})
-aurae.print('Listed:', listed)
+console.log('Listed:', listed)
 
 // [ Stop ]
 let stopped = await cellService.stop(<cells.CellServiceStopRequest>{
     cellName,
     executableName: "sleep-42",
 })
-aurae.print('Stopped:', stopped)
+console.log('Stopped:', stopped)
 
 // [ Free ]
 let freed = await cellService.free(<cells.CellServiceFreeRequest>{
     cellName
 });
-aurae.print('Freed:', freed)
+console.log('Freed:', freed)

@@ -1,8 +1,3 @@
-export function print(...values: any[]) {
-    // @ts-ignore
-    Deno.core.print(values.map(toString).join(' ') + "\n");
-}
-
 function toString(value: any): string {
     if (
         typeof value === 'object' &&

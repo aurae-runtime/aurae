@@ -45,7 +45,7 @@ let allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
         name: cellName,
     })
 });
-aurae.print(allocated)
+console.log(allocated)
 
 // [ Start ]
 let started = await cellService.start(<cells.CellServiceStartRequest>{
@@ -56,7 +56,7 @@ let started = await cellService.start(<cells.CellServiceStartRequest>{
         name: "sleep-2"
     })
 })
-aurae.print(started)
+console.log(started)
 
 // wait for sleep to complete
 const sleep = async (waitTime: number) =>
@@ -70,10 +70,10 @@ let stopped = await cellService.stop(<cells.CellServiceStopRequest>{
     cellName,
     executableName: "sleep-2",
 })
-aurae.print(stopped)
+console.log(stopped)
 
 // [ Free ]
 let freed = await cellService.free(<cells.CellServiceFreeRequest>{
     cellName
 });
-aurae.print(freed)
+console.log(freed)

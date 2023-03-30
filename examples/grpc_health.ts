@@ -35,20 +35,20 @@ let client = await aurae.createClient();
 let healthClient = new grpc_health.HealthClient(client);
 
 // [ Grpc health ]
-aurae.print("Checking overall status")
+console.log("Checking overall status")
 let overall = await healthClient.check(<grpc_health.HealthCheckRequest>{
     service: ""
 });
-aurae.print(overall)
+console.log(overall)
 
-aurae.print("Checking CellService status")
+console.log("Checking CellService status")
 let single_service = await healthClient.check(<grpc_health.HealthCheckRequest>{
     service: "aurae.runtime.v0.CellService"
 });
-aurae.print(single_service)
+console.log(single_service)
 
-aurae.print("Checking status of unregistered service")
+console.log("Checking status of unregistered service")
 let unknown_service = await healthClient.check(<grpc_health.HealthCheckRequest>{
     service: "aurae.runtime.v0.UnknownService"
 });
-aurae.print(unknown_service)
+console.log(unknown_service)

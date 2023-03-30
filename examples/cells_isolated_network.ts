@@ -46,7 +46,7 @@ let net_allocated = await cellService.allocate(<cells.CellServiceAllocateRequest
         isolateProcess: false,
     })
 });
-aurae.print(net_allocated)
+console.log(net_allocated)
 
 // [ Start ]
 let net_started = await cellService.start(<cells.CellServiceStartRequest>{
@@ -57,7 +57,7 @@ let net_started = await cellService.start(<cells.CellServiceStartRequest>{
         name: "net-info"
     })
 })
-aurae.print(net_started)
+console.log(net_started)
 
 // [ Free ]
 await cellService.free(<cells.CellServiceFreeRequest>{

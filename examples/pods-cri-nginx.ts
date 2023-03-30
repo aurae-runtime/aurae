@@ -52,7 +52,7 @@ let pod = await cells.runPodSandbox(<cri.RunPodSandboxRequest>{
         }),
     })
 })
-aurae.print(pod)
+console.log(pod)
 
 let container = cells.createContainer(<cri.CreateContainerRequest>{
     podSandboxId: pod.podSandboxId,
@@ -65,5 +65,5 @@ let container = cells.createContainer(<cri.CreateContainerRequest>{
     }),
 
 })
-aurae.print(container)
+console.log(container)
 
