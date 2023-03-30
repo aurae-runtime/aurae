@@ -2513,7 +2513,7 @@ checksum = "99227334921fae1a979cf0bfdfcc6b3e5ce376ef57e16fb6fb3ea2ed6095f80c"
 [[package]]
 name = "libcgroups"
 version = "0.0.4"
-source = "git+https://github.com/containers/youki?branch=main#d1e19fdbe3229999c287949e31615b4251c90d17"
+source = "git+https://github.com/containers/youki?branch=main#0c907571a899f9715d08be7672548acc1883f1b7"
 dependencies = [
  "anyhow",
  "fixedbitset",
@@ -2527,7 +2527,7 @@ dependencies = [
 [[package]]
 name = "libcontainer"
 version = "0.0.4"
-source = "git+https://github.com/containers/youki?branch=main#d1e19fdbe3229999c287949e31615b4251c90d17"
+source = "git+https://github.com/containers/youki?branch=main#0c907571a899f9715d08be7672548acc1883f1b7"
 dependencies = [
  "anyhow",
  "bitflags 2.0.2",

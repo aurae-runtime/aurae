@@ -5,19 +5,18 @@ use std::{cell::RefCell, rc::Rc};
 
 // `AuraeConfig` `try_default`
 #[deno_core::op]
-pub(crate) async fn as__aurae_config__try_default(
-    op_state: Rc<RefCell<OpState>>,
+pub(crate) fn as__aurae_config__try_default(
+    op_state: &mut OpState,
 ) -> Result<ResourceId> {
     let config = AuraeConfig::try_default()?;
-    let mut op_state = op_state.borrow_mut();
     let rid = op_state.resource_table.add(AuraeScriptConfig(config));
     Ok(rid)
 }
 
 // `AuraeConfig` `from_options`
 #[deno_core::op]
-pub(crate) async fn as__aurae_config__from_options(
-    op_state: Rc<RefCell<OpState>>,
+pub(crate) fn as__aurae_config__from_options(
+    op_state: &mut OpState,
     ca_crt: String,
     client_crt: String,
     client_key: String,
@@ -25,18 +24,16 @@ pub(crate) async fn as__aurae_config__from_options(
 ) -> ResourceId {
     let config =
         AuraeConfig::from_options(ca_crt, client_crt, client_key, socket);
-    let mut op_state = op_state.borrow_mut();
     op_state.resource_table.add(AuraeScriptConfig(config))
 }
 
 // `AuraeConfig` `parse_from_file`
 #[deno_core::op]
-pub(crate) async fn as__aurae_config__parse_from_file(
-    op_state: Rc<RefCell<OpState>>,
+pub(crate) fn as__aurae_config__parse_from_file(
+    op_state: &mut OpState,
     path: String,
 ) -> Result<ResourceId> {
     let config = AuraeConfig::parse_from_toml_file(path)?;
-    let mut op_state = op_state.borrow_mut();
     let rid = op_state.resource_table.add(AuraeScriptConfig(config));
     Ok(rid)
 }

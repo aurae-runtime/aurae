@@ -53,7 +53,8 @@ use auraescript::*;
 use deno_core::resolve_path;
 use std::env::current_dir;
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
 
     // only supports a single script for now
@@ -65,17 +66,6 @@ fn main() -> anyhow::Result<()> {
     let main_module = resolve_path(&args[1].clone(), current_dir()?.as_path())?;
     let mut main_worker = init(main_module.clone());
 
-    let _ =
-        main_worker.execute_script("", "Deno.core.initializeAsyncOps();")?;
-
-    let future = async move {
-        main_worker.execute_main_module(&main_module).await?;
-        main_worker.run_event_loop(false).await
-    };
-
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("failed to initialize tokio runtime")
-        .block_on(future)
+    main_worker.execute_main_module(&main_module).await?;
+    main_worker.run_event_loop(false).await
 }
