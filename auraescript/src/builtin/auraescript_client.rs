@@ -40,7 +40,6 @@ pub(crate) fn as__aurae_config__parse_from_file(
 
 // Re export AuraeConfig in auraescript to be able
 // to impl Resource on it
-
 pub(crate) struct AuraeScriptConfig(pub AuraeConfig);
 
 impl Resource for AuraeScriptConfig {} // Blank impl
@@ -56,7 +55,6 @@ pub(crate) async fn as__client_new(
         let rt = &op_state.resource_table; // get `ResourceTable` from JsRuntime `OpState`
         rt.get::<AuraeScriptConfig>(config)?.0.clone() // get `Config` from its rid
     };
-
     let client = Client::new(config).await?;
     let mut op_state = op_state.borrow_mut();
     let rid = op_state.resource_table.add(AuraeScriptClient(client));
