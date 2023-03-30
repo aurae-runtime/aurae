@@ -653,7 +653,6 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "client-macros",
- "if_chain",
  "proto",
  "serde",
  "thiserror",
