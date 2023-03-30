@@ -7,7 +7,6 @@ license = "Apache-2.0"
 
 [dependencies]
 anyhow = { workspace = true }
-if_chain = { workspace = true }
 macros = { package = "client-macros", path = "macros" }
 proto = { workspace = true }
 serde = { workspace = true }
