@@ -51,7 +51,6 @@ clap = { version = "4.1.1", features = ["derive"] }
 fancy-regex = "0.11.0"
 futures-util = "0.3.26"
 heck = "0.4.0"
-if_chain = "1.0.2"
 lazy_static = "1.4.0"
 nix = "0.26.2"
 proc-macro2 = "1.0"
