@@ -46,7 +46,7 @@ let s_allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
         isolateProcess: true,
     })
 });
-aurae.print(s_allocated)
+console.log(s_allocated)
 
 // [ Start ]
 let s_started = await cellService.start(<cells.CellServiceStartRequest>{
@@ -57,7 +57,7 @@ let s_started = await cellService.start(<cells.CellServiceStartRequest>{
         name: "ps-aux"
     })
 })
-aurae.print(s_started)
+console.log(s_started)
 
 let host_started = await cellService.start(<cells.CellServiceStartRequest>{
     cellName: cellName,
@@ -67,7 +67,7 @@ let host_started = await cellService.start(<cells.CellServiceStartRequest>{
         name: "show-hostname"
     })
 })
-aurae.print(host_started)
+console.log(host_started)
 
 // [ Free ]
 await cellService.free(<cells.CellServiceFreeRequest>{

@@ -47,7 +47,7 @@ let allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
         name: cellName,
     })
 });
-//aurae.print(allocated)
+//console.log(allocated)
 
 // [ Start ]
 let started_out = await cellService.start(<cells.CellServiceStartRequest>{
@@ -58,7 +58,7 @@ let started_out = await cellService.start(<cells.CellServiceStartRequest>{
         name: "echo-stdout"
     })
 })
-//aurae.print(started_out)
+//console.log(started_out)
 
 // [ Start ]
 let started_err = await cellService.start(<cells.CellServiceStartRequest>{
@@ -80,10 +80,10 @@ let stopped_err = await cellService.stop(<cells.CellServiceStopRequest>{
     cellName,
     executableName: "echo-stderr",
 })
-//aurae.print(stopped)
+//console.log(stopped)
 
 // [ Free ]
 let freed = await cellService.free(<cells.CellServiceFreeRequest>{
     cellName
 });
-//aurae.print(freed)
+//console.log(freed)

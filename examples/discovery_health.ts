@@ -36,4 +36,4 @@ let discovery_service = new discovery.DiscoveryServiceClient(client);
 
 // [ Ping ]
 let ack = await discovery_service.health(<discovery.HealthRequest>{});
-aurae.print(ack)
+console.log(ack)

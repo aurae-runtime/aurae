@@ -10,9 +10,6 @@ AuraeScript is a quick way to access the core Aurae APIs and follows normal UNIX
 // @ts-ignore
 import {AllocateCellRequest, Cell, CellServiceClient} from "../lib/runtime.ts";
 
-// @ts-ignore
-Deno.core.initializeAsyncOps();
-
 let cells = new CellServiceClient();
 
 cells.Allocate(<AllocateCellRequest>{
@@ -21,8 +18,7 @@ cells.Allocate(<AllocateCellRequest>{
         cpus: "2"
     })
 }).then(r => {
-    // @ts-ignore
-    Deno.core.print("done")
+    console.log("done")
 });
 ```
 

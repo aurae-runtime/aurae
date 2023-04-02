@@ -33,7 +33,7 @@ let allocated = await cellService.allocate(<cells.CellServiceAllocateRequest>{
         }),
     })
 });
-aurae.print('Allocated:', allocated)
+console.log('Allocated:', allocated)
 ```
 
 The script can be executed locally against a running `auraed` daemon as long as you have [certificates](/certs) installed and configured properly. You do so by using `auraescript`:
@@ -63,7 +63,7 @@ let started = await cellService.start(<cells.CellServiceStartRequest>{
         name: "sleep-42"
     })
 })
-aurae.print('Started:', started)
+console.log('Started:', started)
 ```
 
 Execute the script again with
