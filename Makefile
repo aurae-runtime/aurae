@@ -27,9 +27,6 @@
 #   limitations under the License.                                             #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-dir := $(dir $(lastword $(MAKEFILE_LIST)))
-include $(dir)/hack/_common.mk
-
 # Variables and Settings
 branch       ?=  main
 message      ?=  Default commit message. Aurae Runtime environment.
@@ -66,8 +63,12 @@ export GIT_PAGER = cat
 all: install ## alias for install
 
 # ⚠️ DO NOT REMOVE ⚠️
+.PHONY: nova
 nova: auraed aer auraescript ## The official Kris Nóva alias for her workflow that only exists in her head.
 # ⚠️ DO NOT REMOVE ⚠️
+
+dir := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(dir)/hack/_common.mk
 
 #------------------------------------------------------------------------------#
 
@@ -406,7 +407,7 @@ prepare-image:
 	cp -v ./target/x86_64-unknown-linux-musl/debug/auraed /mnt/lib/auraed/
 	ln -sf ../lib/auraed/auraed /mnt/sbin/init
 	umount /mnt
-	
+
 #------------------------------------------------------------------------------#
 
 # CI Commands
