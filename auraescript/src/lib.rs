@@ -26,7 +26,7 @@
  *   See the License for the specific language governing permissions and      *
  *   limitations under the License.                                           *
  *                                                                            *
-\* -------------------------------------------------------------------------- */
+ \* -------------------------------------------------------------------------- */
 //! # AuraeScript
 //!
 //! AuraeScript is a turing complete language for platform teams built on [Deno](https://deno.land).
@@ -74,15 +74,12 @@ use deno_core::{
     ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, ResolutionKind,
 };
 
-use deno_runtime::deno_broadcast_channel::InMemoryBroadcastChannel;
-use deno_runtime::deno_web::BlobStore;
 use deno_runtime::permissions::PermissionsContainer;
 use deno_runtime::worker::{MainWorker, WorkerOptions};
-use deno_runtime::BootstrapOptions;
+use deno_runtime::{BootstrapOptions, WorkerLogLevel};
 
 use std::pin::Pin;
 use std::rc::Rc;
-use std::sync::Arc;
 
 mod builtin;
 mod cells;
@@ -97,14 +94,7 @@ fn get_error_class_name(e: &AnyError) -> &'static str {
 
 pub fn init(main_module: Url) -> MainWorker {
     let extension =
-        Extension::builder("").ops(stdlib()).force_op_registration().build();
-
-    let create_web_worker_cb = Arc::new(|_| {
-        todo!("Web workers are not supported yet");
-    });
-    let web_worker_event_cb = Arc::new(|_| {
-        todo!("Web workers are not supported yet");
-    });
+        Extension::builder("").ops(stdlib()).build();
 
     MainWorker::bootstrap_from_options(
         main_module,
@@ -112,13 +102,14 @@ pub fn init(main_module: Url) -> MainWorker {
         WorkerOptions {
             extensions: vec![extension],
             module_loader: Rc::new(TypescriptModuleLoader),
+            get_error_class_fn: Some(&get_error_class_name),
             bootstrap: BootstrapOptions {
                 args: vec![],
                 cpu_count: 1,
-                debug_flag: false,
                 enable_testing_features: false,
                 locale: deno_core::v8::icu::get_language_tag(),
                 location: None,
+                log_level: WorkerLogLevel::Info,
                 no_color: false,
                 is_tty: false,
                 runtime_version: "".to_string(),
@@ -127,29 +118,9 @@ pub fn init(main_module: Url) -> MainWorker {
                 user_agent: "".to_string(),
                 inspect: false,
             },
-            startup_snapshot: None,
-            unsafely_ignore_certificate_errors: None,
-            root_cert_store: None,
-            seed: None,
-            source_map_getter: None,
-            format_js_error_fn: None,
-            web_worker_preload_module_cb: web_worker_event_cb.clone(),
-            web_worker_pre_execute_module_cb: web_worker_event_cb,
-            create_web_worker_cb,
-            maybe_inspector_server: None,
-            should_break_on_first_statement: false,
-            should_wait_for_inspector_session: false,
-            npm_resolver: None,
-            get_error_class_fn: Some(&get_error_class_name),
-            cache_storage_dir: None,
-            origin_storage_dir: None,
-            blob_store: BlobStore::default(),
-            broadcast_channel: InMemoryBroadcastChannel::default(),
-            shared_array_buffer_store: None,
-            compiled_wasm_module_store: None,
-            stdio: Default::default(),
+            ..Default::default()
         },
-    )
+        )
 }
 
 /// Standard Library Autogeneration Code
@@ -189,7 +160,7 @@ impl ModuleLoader for TypescriptModuleLoader {
     fn load(
         &self,
         module_specifier: &ModuleSpecifier,
-        _maybe_referrer: Option<ModuleSpecifier>,
+        _maybe_referrer: Option<&ModuleSpecifier>,
         _is_dyn_import: bool,
     ) -> Pin<Box<ModuleSourceFuture>> {
         let module_specifier = module_specifier.clone();
@@ -206,12 +177,12 @@ impl ModuleLoader for TypescriptModuleLoader {
                     }
                     MediaType::Jsx => (ModuleType::JavaScript, true),
                     MediaType::TypeScript
-                    | MediaType::Mts
-                    | MediaType::Cts
-                    | MediaType::Dts
-                    | MediaType::Dmts
-                    | MediaType::Dcts
-                    | MediaType::Tsx => (ModuleType::JavaScript, true),
+                        | MediaType::Mts
+                        | MediaType::Cts
+                        | MediaType::Dts
+                        | MediaType::Dmts
+                        | MediaType::Dcts
+                        | MediaType::Tsx => (ModuleType::JavaScript, true),
                     MediaType::Json => (ModuleType::Json, false),
                     _ => bail!("Unknown extension {:?}", path.extension()),
                 };
@@ -230,12 +201,10 @@ impl ModuleLoader for TypescriptModuleLoader {
             } else {
                 code
             };
-            let module = ModuleSource {
-                code: ModuleCode::from(code.into_bytes()),
-                module_type,
-                module_url_specified: module_specifier.to_string(),
-                module_url_found: module_specifier.to_string(),
-            };
+            let module = ModuleSource::new_with_redirect(
+                module_type, ModuleCode::from(code),
+                &module_specifier,
+                &module_specifier);
             Ok(module)
         }
         .boxed_local()
