@@ -84,7 +84,10 @@ impl Cgroup {
         if let Err(e) = leaf.add_task(nested_auraed_pid) {
             let _ = leaf.remove();
             let _ = non_leaf.remove();
-            return Err(CgroupsError::AddTaskToCgroup { cell_name, source: e });
+            return Err(CgroupsError::AddTaskToCgroup {
+                cell_name,
+                source: e.into(),
+            });
         }
 
         let builder = LinuxResourcesBuilder::default();
@@ -170,7 +173,10 @@ impl Cgroup {
             // libcgroups takes care of killing any processes it finds
             let _ = leaf.remove();
             let _ = non_leaf.remove();
-            return Err(CgroupsError::CreateCgroup { cell_name, source: e });
+            return Err(CgroupsError::CreateCgroup {
+                cell_name,
+                source: e.into(),
+            });
         }
 
         Ok(Self { cell_name })
@@ -185,7 +191,7 @@ impl Cgroup {
 
         manager.add_task(pid).map_err(|e| CgroupsError::AddTaskToCgroup {
             cell_name: self.cell_name.clone(),
-            source: e,
+            source: e.into(),
         })
     }
 
@@ -198,7 +204,7 @@ impl Cgroup {
 
         leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
             cell_name: self.cell_name.clone(),
-            source: e,
+            source: e.into(),
         })?;
 
         let non_leaf = v2::manager::Manager::new(
@@ -209,7 +215,7 @@ impl Cgroup {
 
         non_leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
             cell_name: self.cell_name.clone(),
-            source: e,
+            source: e.into(),
         })
     }
 
@@ -233,7 +239,7 @@ impl Cgroup {
 
         non_leaf.stats().map_err(|e| CgroupsError::ReadStats {
             cell_name: self.cell_name.clone(),
-            source: e,
+            source: e.into(),
         })
     }
 
