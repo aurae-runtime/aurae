@@ -36,6 +36,7 @@ use chrono::Utc;
 use libcontainer;
 use libcontainer::container::builder::ContainerBuilder;
 use libcontainer::syscall::syscall::create_syscall;
+use log::info;
 use nix::sys::signal::SIGKILL;
 use proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
@@ -139,16 +140,28 @@ impl runtime_service_server::RuntimeService for RuntimeService {
 
             // Spawn auraed here
             // TODO Check if sandbox already exists?
-            let _spawned = spawn_auraed_oci_to(
+            let check_spawned = spawn_auraed_oci_to(
                 bundle_path.clone(),
                 oci_builder.build().expect("building pod oci spec"),
             );
+            match check_spawned {
+                Ok(x) => {}
+                Err(_e) => {
+                    return Err(RuntimeServiceError::SandboxNotFound {
+                        sandbox_id,
+                    }
+                    .into())
+                }
+            }
 
             let pod_path = crate::AURAED_RUNTIME
                 .get()
                 .expect("runtime")
                 .pods_dir()
                 .join(sandbox_id.clone());
+
+            info!("Pod path: {:?}", pod_path);
+            info!("Bundle path: {:?}", bundle_path);
 
             // Define the init container startup environment
             let mut init_container = container_builder

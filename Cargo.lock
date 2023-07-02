@@ -2833,8 +2833,8 @@ checksum = "f92be4933c13fd498862a9e02a3055f8a8d9c039ce33db97306fd5a6caa7f29b"
 
 [[package]]
 name = "libcgroups"
-version = "0.0.5"
-source = "git+https://github.com/containers/youki?rev=f4e7e300e6be7a4ea758a436218b9db1b39c69cd#f4e7e300e6be7a4ea758a436218b9db1b39c69cd"
+version = "0.1.0"
+source = "git+https://github.com/containers/youki?rev=4dc30bf7c02be584eddfc182d4e96b7cbbb3474c#4dc30bf7c02be584eddfc182d4e96b7cbbb3474c"
 dependencies = [
  "fixedbitset",
  "nix 0.26.2",
@@ -2847,8 +2847,8 @@ dependencies = [
 
 [[package]]
 name = "libcontainer"
-version = "0.0.5"
-source = "git+https://github.com/containers/youki?rev=f4e7e300e6be7a4ea758a436218b9db1b39c69cd#f4e7e300e6be7a4ea758a436218b9db1b39c69cd"
+version = "0.1.0"
+source = "git+https://github.com/containers/youki?rev=4dc30bf7c02be584eddfc182d4e96b7cbbb3474c#4dc30bf7c02be584eddfc182d4e96b7cbbb3474c"
 dependencies = [
  "bitflags 2.3.2",
  "caps",
