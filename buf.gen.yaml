@@ -7,7 +7,7 @@ plugins:
       - file_descriptor_set
       - compile_well_known_types
       - extern_path=.google.protobuf=::pbjson_types
-  - plugin: buf.build/prost/serde:v0.2.1-1
+  - plugin: buf.build/community/neoeinstein-prost-serde:v0.2.3
     out: proto/gen
     opt:
       - extern_path=.google.protobuf=::pbjson_types
