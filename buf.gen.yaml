@@ -1,22 +1,22 @@
 version: v1
 plugins:
-  - remote: buf.build/prost/plugins/prost:v0.2.1-1
+  - plugin: buf.build/community/neoeinstein-prost:v0.2.3
     out: proto/gen
     opt:
       - bytes=.
       - file_descriptor_set
       - compile_well_known_types
       - extern_path=.google.protobuf=::pbjson_types
-  - remote: buf.build/prost/plugins/serde:v0.2.1-1
+  - plugin: buf.build/prost/serde:v0.2.1-1
     out: proto/gen
     opt:
       - extern_path=.google.protobuf=::pbjson_types
-  - remote: buf.build/prost/plugins/tonic:v0.2.1-1
+  - plugin: buf.build/community/neoeinstein-tonic:v0.3.0
     out: proto/gen
     opt:
       - compile_well_known_types
       - extern_path=.google.protobuf=::pbjson_types
-  - remote: buf.build/stephenh/plugins/ts-proto
+  - plugin: buf.build/community/stephenh-ts-proto
     out: auraescript/gen
     opt:
       - outputEncodeMethods=false
