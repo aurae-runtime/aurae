@@ -28,6 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use deno_core::Op;
+
 // TODO: macro doesn't support streaming. Does deno?
 macros::ops_generator!(
     "../api/grpc/health/v1/health.proto",

@@ -79,6 +79,7 @@ use deno_runtime::permissions::PermissionsContainer;
 use deno_runtime::worker::{MainWorker, WorkerOptions};
 use deno_runtime::{BootstrapOptions, WorkerLogLevel};
 
+use std::borrow::Cow;
 use std::pin::Pin;
 use std::rc::Rc;
 
@@ -95,7 +96,8 @@ fn get_error_class_name(e: &AnyError) -> &'static str {
 
 pub fn init(main_module: Url) -> MainWorker {
     let extension =
-        Extension::builder("").ops(stdlib()).build();
+        //Extension::builder("").ops(stdlib()).build();
+        Extension{name: "", ops: Cow::from(stdlib()), ..Default::default()};
 
     MainWorker::bootstrap_from_options(
         main_module,
