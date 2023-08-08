@@ -70,10 +70,11 @@ use deno_core::error::AnyError;
 use deno_core::futures::FutureExt;
 use deno_core::url::Url;
 use deno_core::{
-    resolve_import, Extension, ModuleCode, ModuleLoader, ModuleSource,
-    ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, ResolutionKind,
+    resolve_import, ModuleCode, ModuleLoader, ModuleSource,
+    ModuleSourceFuture, ModuleSpecifier, ModuleType, ResolutionKind,
 };
 
+use deno_runtime::deno_core::{Extension, OpDecl};
 use deno_runtime::permissions::PermissionsContainer;
 use deno_runtime::worker::{MainWorker, WorkerOptions};
 use deno_runtime::{BootstrapOptions, WorkerLogLevel};
