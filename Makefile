@@ -174,8 +174,10 @@ GEN_RS += $(patsubst api/v0/%,$(GEN_TONIC_RS_PATTERN),$(PROTO_DIRS))
 
 GEN_TS = $(patsubst api/v0/%.proto,$(GEN_TS_PATTERN),$(PROTOS))
 
+BUF_VERSION = $(shell buf --version)
+
 $(GEN_TS_PATTERN) $(GEN_RS_PATTERN) $(GEN_SERDE_RS_PATTERN) $(GEN_TONIC_RS_PATTERN): $(PROTOS)
-	@buf --version >/dev/null 2>&1 || (echo "Warning: buf is not installed! Please install the 'buf' command line tool: https://docs.buf.build/installation"; exit 1)
+	@if [[ "${BUF_VERSION}" != "1.25.0" ]]; then echo "Warning: buf 1.25.0 is not installed! Please install v1.25.0 of the 'buf' command line tool: https://docs.buf.build/installation"; exit 1; fi;
 	buf lint api
 	buf generate -v api
 
