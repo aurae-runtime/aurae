@@ -1,6 +1,6 @@
 use anyhow::Result;
 use client::{AuraeConfig, Client};
-use deno_core::{OpState, Resource, ResourceId};
+use deno_core::{Op, OpState, Resource, ResourceId};
 use std::{cell::RefCell, rc::Rc};
 
 // `AuraeConfig` `try_default`
@@ -63,10 +63,10 @@ pub(crate) async fn as__client_new(
 
 pub(crate) fn op_decls() -> Vec<::deno_core::OpDecl> {
     vec![
-        as__aurae_config__try_default::decl(),
-        as__aurae_config__from_options::decl(),
-        as__aurae_config__parse_from_file::decl(),
-        as__client_new::decl(),
+        as__aurae_config__try_default::DECL,
+        as__aurae_config__from_options::DECL,
+        as__aurae_config__parse_from_file::DECL,
+        as__client_new::DECL,
     ]
 }
 

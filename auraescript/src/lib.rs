@@ -70,14 +70,16 @@ use deno_core::error::AnyError;
 use deno_core::futures::FutureExt;
 use deno_core::url::Url;
 use deno_core::{
-    resolve_import, Extension, ModuleCode, ModuleLoader, ModuleSource,
-    ModuleSourceFuture, ModuleSpecifier, ModuleType, OpDecl, ResolutionKind,
+    resolve_import, ModuleCode, ModuleLoader, ModuleSource,
+    ModuleSourceFuture, ModuleSpecifier, ModuleType, ResolutionKind,
 };
 
+use deno_runtime::deno_core::{Extension, OpDecl};
 use deno_runtime::permissions::PermissionsContainer;
 use deno_runtime::worker::{MainWorker, WorkerOptions};
 use deno_runtime::{BootstrapOptions, WorkerLogLevel};
 
+use std::borrow::Cow;
 use std::pin::Pin;
 use std::rc::Rc;
 
@@ -94,7 +96,8 @@ fn get_error_class_name(e: &AnyError) -> &'static str {
 
 pub fn init(main_module: Url) -> MainWorker {
     let extension =
-        Extension::builder("").ops(stdlib()).build();
+        //Extension::builder("").ops(stdlib()).build();
+        Extension{name: "", ops: Cow::from(stdlib()), ..Default::default()};
 
     MainWorker::bootstrap_from_options(
         main_module,
