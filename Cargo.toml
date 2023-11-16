@@ -29,7 +29,6 @@
 # ---------------------------------------------------------------------------- #
 
 [workspace]
-
 members = [
     "aer",
     "auraed",
@@ -38,10 +37,10 @@ members = [
     "ebpf-shared",
     "proto",
 ]
-
 exclude = [
     "ebpf"
 ]
+resolver = "2"
 
 [workspace.dependencies]
 anyhow = "1.0.72"
