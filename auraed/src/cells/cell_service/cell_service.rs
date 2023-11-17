@@ -180,7 +180,7 @@ impl CellService {
         let ValidatedCellServiceStartRequest { cell_name, executable } =
             request;
 
-        assert!(matches!(cell_name, None));
+        assert!(cell_name.is_none());
         info!("CellService: start() executable={:?}", executable);
 
         let mut executables = self.executables.lock().await;
@@ -238,7 +238,7 @@ impl CellService {
         let ValidatedCellServiceStopRequest { cell_name, executable_name } =
             request;
 
-        assert!(matches!(cell_name, None));
+        assert!(cell_name.is_none());
         info!("CellService: stop() executable_name={:?}", executable_name,);
 
         let mut executables = self.executables.lock().await;

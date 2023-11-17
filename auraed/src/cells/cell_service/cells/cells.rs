@@ -108,7 +108,6 @@ impl Cells {
             // TODO: Should we remove the cell from the cache here if the call to allocate fails?
             cell.allocate()?;
 
-            let cell = cell;
             Ok(cell)
         })
     }
@@ -130,7 +129,9 @@ impl Cells {
             self.handle_cgroup_does_not_exist(cell_name)?;
 
             let Some(cell) = self.cache.get(cell_name) else {
-                return Err(CellsError::CgroupIsNotACell { cell_name: cell_name.clone() });
+                return Err(CellsError::CgroupIsNotACell {
+                    cell_name: cell_name.clone(),
+                });
             };
 
             let res = f(cell);
@@ -174,7 +175,9 @@ impl Cells {
         self.handle_cgroup_does_not_exist(cell_name)?;
 
         let Some(cell) = self.cache.get_mut(cell_name) else {
-            return Err(CellsError::CgroupIsNotACell { cell_name: cell_name.clone() });
+            return Err(CellsError::CgroupIsNotACell {
+                cell_name: cell_name.clone(),
+            });
         };
 
         let res = f(cell);
