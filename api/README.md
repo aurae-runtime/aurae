@@ -6,7 +6,7 @@ The library leverages [protobuf](https://github.com/protocolbuffers/protobuf) as
 
 ### What is a subsystem?
 
-A subsystem is a smaller and scoped subsection of the library composed of RPCs and services. Subsystems are similar to "packages" or "modules" in programming languages such as [Rust](https://github.com/rust-lang/rust/tree/master/library/core/src). Kubernetes as API groups, and Linux itself has subsystems.
+A subsystem is a smaller and scoped subsection of the library composed of RPCs and services. Subsystems are similar to "packages" or "modules" in programming languages such as [Rust](https://github.com/rust-lang/rust/tree/master/library/core/src). Kubernetes has API groups, and Linux itself has subsystems.
 
 Each subsystem is unique. Each subsystem is liable to come with its own guarantees, and expectations.
 
