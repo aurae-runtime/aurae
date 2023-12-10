@@ -4,11 +4,11 @@ Welcome to The Aurae Runtime project.
 
 The project name is pronounced like the English word "aura" and is named after a minor Greek/Roman mythological deity, whose name means "breeze".
 
-Aurae a [Nivenly Foundation](https://github.com/nivenly) project and agrees to abide by the Nivenly covenant.
+Aurae is a [Nivenly Foundation](https://github.com/nivenly) project and agrees to abide by the Nivenly covenant.
 
 # Getting Involved
 
-If you would like to get involved with Aurae development.
+If you would like to get involved with Aurae development:
 
 - Join our [discord](https://discord.gg/aTe2Rjg5rq).
 - Read the [Nivenly Covenant](https://nivenly.org/covenant) which calls out the code of conduct.
