@@ -26,7 +26,7 @@ impl Parse for OpsGeneratorInput {
         let _: Token![,] = input.parse()?;
         let module = input.parse()?;
         let _: Token![,] = input.parse()?;
-        let service_names = input.parse_terminated(Ident::parse)?;
+        let service_names = input.parse_terminated(Ident::parse, Token![,])?;
 
         Ok(Self { file_path, module, service_names })
     }

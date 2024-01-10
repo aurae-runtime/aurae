@@ -43,33 +43,33 @@ exclude = [
 resolver = "2"
 
 [workspace.dependencies]
-anyhow = "1.0.72"
-chrono = { version = "0.4.26", default-features = false, features = ["clock", "std", "wasmbind"] } # default features except `oldtime`
+anyhow = "1.0.79"
+chrono = { version = "0.4.31", default-features = false, features = ["clock", "std", "wasmbind"] } # default features except `oldtime`
 client = { path = "./client" }
-clap = { version = "4.3.21", features = ["derive"] }
-fancy-regex = "0.11.0"
-futures-util = "0.3.28"
+clap = { version = "4.4.14", features = ["derive"] }
+fancy-regex = "0.13.0"
+futures-util = "0.3.30"
 heck = "0.4.1"
 lazy_static = "1.4.0"
-nix = "0.26.2"
+nix = "0.27.1"
 proc-macro2 = "1.0"
 proto = { path = "./proto" }
 protobuf = "3.2.0"
 protobuf-parse = "=3.2.0" # This crate makes no promises of stabilty, so we pin to the exact version
-quote = "1.0"
-serial_test = "1.0.0"
-serde = "1.0.183"
-serde_json = "1.0.104"
-syn = { version = "1.0", features = ["full"] } # used in macros, so full doesn't affect binary size
+quote = "1.0.35"
+serial_test = "3.0.0"
+serde = "1.0.195"
+serde_json = "1.0.111"
+syn = { version = "2.0", features = ["full"] } # used in macros, so full doesn't affect binary size
 test-helpers = { path = "./crates/test-helpers" }
 test-helpers-macros = { path = "./crates/test-helpers-macros" }
-thiserror = "1.0.44"
-tokio = "1.29.1"
-tonic = "0.9.2"
-tonic-health = "0.9.2"
+thiserror = "1.0.56"
+tokio = "1.35.1"
+tonic = "0.10.2"
+tonic-health = "0.10.2"
 tracing = "0.1"
-uuid = { version = "1.2.2", features = ["v4"] }
-url = "2.3.1"
+uuid = { version = "1.6.1", features = ["v4"] }
+url = "2.4.1"
 validation = { path = "./crates/validation" }
 
 #[patch.crates-io]

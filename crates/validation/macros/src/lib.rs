@@ -108,6 +108,7 @@ pub fn validated_type(input: TokenStream) -> TokenStream {
                 #validated_type_ident,
                 ::validation::ValidationError
             > {
+                panic!("here");
                 #validator_struct_ident::pre_validate(
                     &input,
                     parent_name

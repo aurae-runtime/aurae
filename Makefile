@@ -13,7 +13,7 @@
 #                         Distributed Systems Runtime                          #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-#                                                                              #
+#                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");            #
 #   you may not use this file except in compliance with the License.           #
 #   You may obtain a copy of the License at                                    #
@@ -177,7 +177,7 @@ GEN_TS = $(patsubst api/v0/%.proto,$(GEN_TS_PATTERN),$(PROTOS))
 BUF_VERSION = $(shell buf --version)
 
 $(GEN_TS_PATTERN) $(GEN_RS_PATTERN) $(GEN_SERDE_RS_PATTERN) $(GEN_TONIC_RS_PATTERN): $(PROTOS)
-	@if [ "${BUF_VERSION}" != "1.25.0" ]; then echo "Warning: buf 1.25.0 is not installed! Please install v1.25.0 of the 'buf' command line tool: https://docs.buf.build/installation"; exit 1; fi;
+	@if [ "${BUF_VERSION}" != "1.28.1" ]; then echo "Warning: buf 1.28.1 is not installed! Please install v1.28.1 of the 'buf' command line tool: https://docs.buf.build/installation"; exit 1; fi;
 	buf lint api
 	buf generate -v api
 

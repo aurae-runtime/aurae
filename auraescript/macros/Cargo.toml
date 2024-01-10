@@ -12,7 +12,7 @@ proc-macro = true
 [dependencies]
 heck = { workspace = true }
 proc-macro2 = { workspace = true }
-protobuf = "3.2.0"
+protobuf = { workspace = true }
 protobuf-parse = { workspace = true }
 proto-reader = { path = "../../crates/proto-reader" } # using workspace isn't working
 quote = { workspace = true }

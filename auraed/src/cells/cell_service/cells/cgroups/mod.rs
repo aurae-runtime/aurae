@@ -28,7 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-pub use allocation::Allocation;
 pub use cgroup::Cgroup;
 pub use cpu::CpuController;
 pub use cpuset::CpusetController;
