@@ -63,7 +63,7 @@ impl Parse for SubcommandInput {
 
         let commands = if input.peek(Token![,]) {
             let _: Token![,] = input.parse()?;
-            Some(input.parse_terminated(CommandInput::parse, Token![,])?)
+            Some(input.parse_terminated(CommandInput::parse)?)
         } else {
             None
         };
@@ -84,7 +84,7 @@ impl Parse for CommandInput {
         let flags = if Brace::peek(input.cursor()) {
             let content;
             let _ = braced!(content in input);
-            Some(content.parse_terminated(FlagInput::parse, Token![,])?)
+            Some(content.parse_terminated(FlagInput::parse)?)
         } else {
             None
         };

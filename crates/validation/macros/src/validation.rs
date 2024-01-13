@@ -1,6 +1,6 @@
 use heck::ToSnakeCase;
 use proc_macro2::{Ident, TokenStream};
-use quote::{quote, ToTokens};
+use quote::quote;
 use std::str::FromStr;
 use syn::{Data, DeriveInput};
 
@@ -89,11 +89,11 @@ impl From<DeriveInput> for ValidateInput {
                     .attrs
                     .iter()
                     .filter(|x| {
-                        x.path().segments.len() == 1
-                            && x.path().segments[0].ident == "field_type"
+                        x.path.segments.len() == 1
+                            && x.path.segments[0].ident == "field_type"
                     })
                     .map(|x| {
-                        let arg_type = x.to_token_stream().to_string().replace(['(', ')'], "");
+                        let arg_type = x.tokens.to_string().replace(['(', ')'], "");
 
                         syn::Type::Verbatim(
                             TokenStream::from_str(&arg_type)
@@ -115,18 +115,16 @@ impl From<DeriveInput> for ValidateInput {
                 let auto_validate = f.attrs
                     .iter()
                     .filter(|x| {
-                        x.path().segments.len() == 1 && x.path().segments[0].ident == "validate"
+                        x.path.segments.len() == 1 && x.path.segments[0].ident == "validate"
                     })
                     .map(|attr| {
-                        let arg = attr.to_token_stream().to_string().replace(['(', ')'], "");
+                        let arg = attr.tokens.to_string().replace(['(', ')'], "");
                         match &*arg {
                             "" => AutoValidate::Validate,
                             "opt" => AutoValidate::ValidateOpt,
                             "none" => AutoValidate::ValidateNone,
                             "create" => AutoValidate::ValidateForCreation,
-                            _=> panic!(
-                                "Found {} but only `opt`, `none`, and `create` are a valid args for the `validate` attribute", arg
-                            ),
+                            _=> panic!("`opt`, `none`, and `create` are a valid args for the `validate` attribute"),
                         }
                     })
                     .next()

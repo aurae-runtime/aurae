@@ -35,7 +35,7 @@ use crate::spawn_auraed_oci_to;
 use chrono::Utc;
 use libcontainer;
 use libcontainer::container::builder::ContainerBuilder;
-use libcontainer::syscall::syscall::create_syscall;
+use libcontainer::syscall::syscall::SyscallType;
 use nix::sys::signal::SIGKILL;
 use proto::cri::{
     runtime_service_server, AttachRequest, AttachResponse,
@@ -124,11 +124,10 @@ impl runtime_service_server::RuntimeService for RuntimeService {
         // TODO We made the decision to create a "KernelSpec" *name structure that will be how we distinguish between VMs and Containers
 
         let sandbox = {
-            let scoped_syscall = create_syscall();
             // Initialize a new container builder with the AURAE_SELF_IDENTIFIER name as the "init" container running a recursive Auraed
             let container_builder = ContainerBuilder::new(
                 AURAE_SELF_IDENTIFIER.to_string(),
-                scoped_syscall.as_ref(),
+                SyscallType::default()
             );
 
             let bundle_path = crate::AURAED_RUNTIME

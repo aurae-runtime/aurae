@@ -58,13 +58,13 @@ lazy_static = { workspace = true }
 libcgroups = { version = "0.3.1", default-features = false, features = ["v2"] }
 libcontainer = { version = "0.3.1", default-features = false, features = ["v2"] }
 log = "0.4.20"
-netlink-packet-route = "0.18.1" # Used for netlink_packet_route::rtnl::address::nlas definition
+netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched"] }
 oci-spec = "0.6.4"
 once_cell = "1"
 procfs = "0.16.0"
 proto = { workspace = true }
-rtnetlink = "0.14.0"
+rtnetlink = "0.11.0"
 serde_json.workspace = true
 serde.workspace = true
 syslog-tracing = "0.2.0"
