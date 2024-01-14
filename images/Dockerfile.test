@@ -40,7 +40,7 @@ LABEL org.opencontainers.image.source https://github.com/aurae-runtime/aurae
 
 ## Define ARGs
 ARG CACHE_VERSION=v0
-ARG BUF_VERSION=1.25.0
+ARG BUF_VERSION=1.28.1
 ARG VALE_VERSION=2.21.3
 ARG PROTOC_VERSION=1.5.1
 
