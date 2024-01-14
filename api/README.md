@@ -20,7 +20,7 @@ For example, Aurae has the concept of an `Executable` resource which represents 
 
 The core resources are intended to be fundamental and composable, similar to the objects and structures found in modern programming languages.
 
-Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed to directly to, or received directly from an RPC.
+Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed directly to, or received directly from an RPC.
 
 In protobuf terms a resource is a [message](https://protobuf.dev/programming-guides/proto3/#simple).
 
@@ -31,7 +31,7 @@ Services are a section of the API designed to be a way of grouping functionality
 A service should be discreet in the terms of how it mutates the system. For example if a service starts, it should stop. If a service allocates, it should free. And so on.
 
 Services should be named after a resource or set of functionality around common resources.
-Services should follow the `service NameService` paradigm as defined in the [style guide](https://protobuf.dev/programming-guides/style/)
+Services should follow the `service NameService` paradigm as defined in the [style guide](https://protobuf.dev/programming-guides/style/).
 
 For example the service that mutates a `Cell` should be called `CellService`.
 
@@ -89,7 +89,7 @@ enum FooBar {
 }
 ``` 
 
-A notable exception to the public specification above is the Aurae projects preference for standardizing the objects that are used as the request and response messages.
+A notable exception to the public specification above is the Aurae project's preference for standardizing the objects that are used as the request and response messages.
 
 The traditional convention that is meant to reduce the likelihood of future breaking changes and ease the creation of macros for generating code:
 
