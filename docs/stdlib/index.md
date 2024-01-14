@@ -20,7 +20,7 @@ For example, Aurae has the concept of an `Executable` resource which represents 
 
 The core resources are intended to be fundamental and composable, similar to the objects and structures found in modern programming languages.
 
-Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed directly to or received directly from an RPC.
+Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed directly to, or received directly from an RPC.
 
 In protobuf terms a resource is a [message](https://protobuf.dev/programming-guides/proto3/#simple).
 
@@ -67,7 +67,7 @@ import "path/to/other.proto";
 
 // everything else
 
-```
+``` 
 
 Generally follow these rules:
 
@@ -87,7 +87,7 @@ enum FooBar {
   FOO_BAR_FIRST_VALUE = 1;
   FOO_BAR_SECOND_VALUE = 2;
 }
-```
+``` 
 
 A notable exception to the public specification above is the Aurae project's preference for standardizing the objects that are used as the request and response messages.
 
