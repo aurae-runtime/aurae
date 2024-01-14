@@ -1,6 +1,6 @@
 version: v1
 plugins:
-  - plugin: buf.build/community/neoeinstein-prost:v0.2.2
+  - plugin: buf.build/community/neoeinstein-prost:v0.2.3
     out: proto/gen
     opt:
       - bytes=.
@@ -11,7 +11,7 @@ plugins:
     out: proto/gen
     opt:
       - extern_path=.google.protobuf=::pbjson_types
-  - plugin: buf.build/community/neoeinstein-tonic:v0.2.2
+  - plugin: buf.build/community/neoeinstein-tonic:v0.3.0
     out: proto/gen
     opt:
       - compile_well_known_types

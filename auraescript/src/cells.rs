@@ -28,4 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use deno_core::Op;
+
 macros::ops_generator!("../api/v0/cells/cells.proto", cells, CellService,);

@@ -18,13 +18,13 @@ To run auraed as a standard library server you can run the daemon alongside your
 
 We suggest using the [aurae](https://github.com/aurae-runtime/aurae) repository for building all parts of the project.
 
-If you intend on building this repository directly you can leverage the Makefile in this repository.
+If you intend on building this repository directly you can leverage the Makefile in this repository:
 
 ```bash
 make auraed
 ```
 
-or using Cargo directly
+or use Cargo directly:
 
 ```bash
 cargo clippy
@@ -39,7 +39,7 @@ It is possible to run auraed in a container as long as the following is consider
  - Populating mTLS certificate material into the container.
  - Exposing either the socket or a network interface from the container for client connections.
 
-Building the container (replace with your values).
+Building the container (replace with your values):
 
 ```
 sudo -E docker build -t krisnova/aurae:latest -t krisnova/aurae:$sha -f images/Dockerfile.nested .

@@ -114,7 +114,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
             // generate a OpDecl for each function for conveniently adding to the deno runtime
             let op_decls: Vec<proc_macro2::TokenStream> = op_idents.map(|op_ident| {
                 quote! {
-                    #op_ident::decl()
+                    #op_ident::DECL
                 }
             }).collect();
 
