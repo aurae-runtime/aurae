@@ -37,7 +37,7 @@ For example the service that mutates a `Cell` should be called `CellService`.
 
 ### What are functions?
 
-A function is a discreet piece of functionality designed to execute on the "backend," or directly by an Aurae Daemon server.
+A function is a discreet piece of functionality designed to execute on the "backend", or directly by an Aurae Daemon server.
 
 The library is designed to be executed procedurally and quickly. Many function calls per second is a reasonable expectation for any client.
 
@@ -67,7 +67,7 @@ import "path/to/other.proto";
 
 // everything else
 
-``` 
+```
 
 Generally follow these rules:
 
@@ -87,7 +87,7 @@ enum FooBar {
   FOO_BAR_FIRST_VALUE = 1;
   FOO_BAR_SECOND_VALUE = 2;
 }
-``` 
+```
 
 A notable exception to the public specification above is the Aurae project's preference for standardizing the objects that are used as the request and response messages.
 
