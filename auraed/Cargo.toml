@@ -55,8 +55,12 @@ ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
 libc = "0.2.147" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
-libcgroups = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7a4ea758a436218b9db1b39c69cd", default-features = false, features = ["v2"] }
-libcontainer = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7a4ea758a436218b9db1b39c69cd", default-features = false, features = ["v2"] }
+libcgroups = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7a4ea758a436218b9db1b39c69cd", default-features = false, features = [
+    "v2",
+] }
+libcontainer = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7a4ea758a436218b9db1b39c69cd", default-features = false, features = [
+    "v2",
+] }
 log = "0.4.17"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched"] }
@@ -69,12 +73,20 @@ serde_json.workspace = true
 serde.workspace = true
 syslog-tracing = "0.1.0"
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["fs", "macros", "net", "parking_lot", "process", "rt-multi-thread", "signal", "sync"] }
+tokio = { workspace = true, features = [
+    "fs",
+    "macros",
+    "net",
+    "parking_lot",
+    "process",
+    "rt-multi-thread",
+    "signal",
+    "sync",
+] }
 tokio-stream = { version = "0.1.14", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
 tonic-health = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
-tracing-log = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
 uuid = { workspace = true }
 validation = { workspace = true, features = ["regex", "tonic"] }
