@@ -25,12 +25,13 @@ nav:
   - Reference:
     - auraed: /crate/auraed
     - auraescript: /crate/auraescript
-    - implementors: /crate/implementors
-    - macros: /crate/macros
+    - client: /crate/client
+    - aer: /crate/aer
     - src:
       - auraed: /crate/src/auraed/lib.rs.html
       - auraescript: /crate/src/auraescript/lib.rs.html
-      - macros: /crate/src/macros/lib.rs.html
+      - client: /crate/src/client/lib.rs.html
+      - aer: /crate/src/aer/lib.rs.html
   - Blog:
       - Isolation with Aurae Cells: /blog/2022-10-24-aurae-cells
       - Cgroups in Aurae: /blog/2022-12-11-cgroups

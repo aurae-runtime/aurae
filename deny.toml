@@ -59,38 +59,19 @@ feature-depth = 1
 [advisories]
 # The path where the advisory database is cloned/fetched into
 db-path = "~/.cargo/advisory-db"
-# The url(s) of the advisory databases to use
-db-urls = ["https://github.com/rustsec/advisory-db"]
-# The lint level for security vulnerabilities
-vulnerability = "warn"
-# The lint level for unmaintained crates
+db-urls = ["https://github.com/RustSec/advisory-db"]
+vulnerability = "deny"
 unmaintained = "warn"
-# The lint level for crates that have been yanked from their source registry
+notice = "deny"
 yanked = "warn"
-# The lint level for crates with security notices. Note that as of
-# 2019-12-17 there are no security notice advisories in
-# https://github.com/rustsec/advisory-db
-notice = "warn"
-# A list of advisory IDs to ignore. Note that ignored advisories will still
-# output a note when they are encountered.
+unsound = "warn"
+severity-threshold = "medium"
 ignore = [
-    #"RUSTSEC-0000-0000",
+    # Marvin Attack: potential key recovery through timing sidechannels in `rsa v0.7.2` crate
+    # No available fix as of 2024-01-14
+    "RUSTSEC-2023-0071",
 ]
-# Threshold for security vulnerabilities, any vulnerability with a CVSS score
-# lower than the range specified will be ignored. Note that ignored advisories
-# will still output a note when they are encountered.
-# * None - CVSS Score 0.0
-# * Low - CVSS Score 0.1 - 3.9
-# * Medium - CVSS Score 4.0 - 6.9
-# * High - CVSS Score 7.0 - 8.9
-# * Critical - CVSS Score 9.0 - 10.0
-#severity-threshold =
 
-# If this is true, then cargo deny will use the git executable to fetch advisory database.
-# If this is false, then it uses a built-in git library.
-# Setting this to true can be helpful if you have special authentication requirements that cargo-deny does not support.
-# See Git Authentication for more information about setting up git authentication.
-#git-fetch-with-cli = true
 
 # This section is considered when running `cargo deny check licenses`
 # More documentation for the licenses section can be found here:
@@ -150,52 +131,27 @@ exceptions = [
 # Some crates don't have (easily) machine readable licensing information,
 # adding a clarification entry for it allows you to manually specify the
 # licensing information
-#[[licenses.clarify]]
-# The name of the crate the clarification applies to
-#name = "ring"
-# The optional version constraint for the crate
-#version = "*"
-# The SPDX expression for the license requirements of the crate
-#expression = "MIT AND ISC AND OpenSSL"
-# One or more files in the crate's source used as the "source of truth" for
-# the license expression. If the contents match, the clarification will be used
-# when running the license check, otherwise the clarification will be ignored
-# and the crate will be checked normally, which may produce warnings or errors
-# depending on the rest of your configuration
-#license-files = [
-    # Each entry is a crate relative path, and the (opaque) hash of its contents
-    #{ path = "LICENSE", hash = 0xbd0eed23 }
-#]
-
 [[licenses.clarify]]
 name = "libcgroups"
 expression = "Apache-2.0"
-license-files = [
-    { path = "LICENSE", hash = 0x8767455a }
-]
+license-files = [{ path = "../../LICENSE", hash = 0x8767455a }]
 
 [[licenses.clarify]]
 name = "libcontainer"
 expression = "Apache-2.0"
-license-files = [
-    { path = "LICENSE", hash = 0x8767455a }
-]
+license-files = [{ path = "../../LICENSE", hash = 0x8767455a }]
 
 # https://github.com/briansmith/ring/blob/main/LICENSE (ISC AND MIT AND OpenSSL)
 [[licenses.clarify]]
 name = "ring"
 expression = "LicenseRef-ring"
-license-files = [
-    { path = "LICENSE", hash = 0xbd0eed23 }
-]
+license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
 
 # https://github.com/briansmith/webpki/blob/main/LICENSE (ISC-style)
 [[licenses.clarify]]
 name = "webpki"
 expression = "LicenseRef-webpki"
-license-files = [
-    { path = "LICENSE", hash = 0x001c7e6c }
-]
+license-files = [{ path = "LICENSE", hash = 0x001c7e6c }]
 
 [licenses.private]
 # If true, ignores workspace crates that aren't published, or are only

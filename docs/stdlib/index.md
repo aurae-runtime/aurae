@@ -20,7 +20,7 @@ For example, Aurae has the concept of an `Executable` resource which represents 
 
 The core resources are intended to be fundamental and composable, similar to the objects and structures found in modern programming languages.
 
-Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed directly to or received directly from an RPC.
+Resources are defined directly in the corresponding protobuf definition and later generated into code for various languages. A resource's corresponding message should never be passed directly to, or received directly from an RPC.
 
 In protobuf terms a resource is a [message](https://protobuf.dev/programming-guides/proto3/#simple).
 
@@ -37,7 +37,7 @@ For example the service that mutates a `Cell` should be called `CellService`.
 
 ### What are functions?
 
-A function is a discreet piece of functionality designed to execute on the "backend," or directly by an Aurae Daemon server.
+A function is a discreet piece of functionality designed to execute on the "backend", or directly by an Aurae Daemon server.
 
 The library is designed to be executed procedurally and quickly. Many function calls per second is a reasonable expectation for any client.
 

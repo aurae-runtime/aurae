@@ -69,7 +69,16 @@ serde_json.workspace = true
 serde.workspace = true
 syslog-tracing = "0.2.0"
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["fs", "macros", "net", "parking_lot", "process", "rt-multi-thread", "signal", "sync"] }
+tokio = { workspace = true, features = [
+    "fs",
+    "macros",
+    "net",
+    "parking_lot",
+    "process",
+    "rt-multi-thread",
+    "signal",
+    "sync",
+] }
 tokio-stream = { version = "0.1.14", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
 tonic-health = { workspace = true }
