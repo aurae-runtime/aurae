@@ -120,6 +120,7 @@ pub fn init(main_module: Url) -> MainWorker {
                 unstable: true,
                 user_agent: "".to_string(),
                 inspect: false,
+                ..Default::default()
             },
             ..Default::default()
         },
