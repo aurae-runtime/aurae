@@ -171,14 +171,14 @@ exceptions = [
 name = "libcgroups"
 expression = "Apache-2.0"
 license-files = [
-    { path = "LICENSE", hash = 0x8767455a }
+    { path = "../../LICENSE", hash = 0x8767455a }
 ]
 
 [[licenses.clarify]]
 name = "libcontainer"
 expression = "Apache-2.0"
 license-files = [
-    { path = "LICENSE", hash = 0x8767455a }
+    { path = "../../LICENSE", hash = 0x8767455a }
 ]
 
 # https://github.com/briansmith/ring/blob/main/LICENSE (ISC AND MIT AND OpenSSL)
