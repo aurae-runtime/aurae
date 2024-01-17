@@ -28,7 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use deno_core::Op;
+use deno_runtime::deno_core::{self, Op};
 
 // TODO: macro doesn't support streaming. Does deno?
 macros::ops_generator!(

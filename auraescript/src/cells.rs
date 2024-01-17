@@ -27,7 +27,6 @@
  *   limitations under the License.                                           *
  *                                                                            *
 \* -------------------------------------------------------------------------- */
-
-use deno_core::Op;
+use deno_runtime::deno_core::{self, Op};
 
 macros::ops_generator!("../api/v0/cells/cells.proto", cells, CellService,);

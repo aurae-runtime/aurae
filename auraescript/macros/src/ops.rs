@@ -80,24 +80,25 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
 
                     // Magic OpState from deno (https://github.com/denoland/deno/blob/b6ac54815c1bcfa44a45b3f2c1c982829482477f/ops/lib.rs#L295)
                     quote! {
-                        #[::deno_core::op]
+                        #[::deno_runtime::deno_core::op2(async)]
+                        #[serde]
                         pub(crate) async fn #op_ident(
                             op_state: Rc<RefCell<OpState>>, // Auto filled by deno macro, call from typescript ignoring this parameter
-                            client_rid: Option<::deno_core::ResourceId>,
-                            req: ::proto::#module::#input_type,
+                            #[smi] client_rid: Option<::deno_runtime::deno_core::ResourceId>,
+                            #[serde] req: ::proto::#module::#input_type,
                         ) -> std::result::Result<
                             ::proto::#module::#output_type,
                             ::anyhow::Error
                         > {
                             let client = match client_rid {
-                                None => ::deno_core::RcRef::new(::client::Client::default().await?),
+                                None => ::deno_runtime::deno_core::RcRef::new(::client::Client::default().await?),
                                 Some(client_rid) => {
                                     let as_client = {
                                         let op_state = &op_state.borrow();
                                         let rt = &op_state.resource_table; // get `ResourceTable` from JsRuntime `OpState`
                                         rt.get::<crate::builtin::auraescript_client::AuraeScriptClient>(client_rid)?.clone() // get `Client` from its rid
                                     };
-                                    ::deno_core::RcRef::map(as_client, |v| &v.0)
+                                    ::deno_runtime::deno_core::RcRef::map(as_client, |v| &v.0)
                                 }
                             };
                             let res = ::client::#module::#service_name_in_snake_case::#client_ident::#name(
@@ -127,11 +128,11 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         use ::std::{rc::Rc, cell::RefCell};
-        use ::deno_core::OpState;
+        use ::deno_runtime::deno_core::OpState;
 
         #(#(#op_functions)*)*
 
-        pub(crate) fn op_decls() -> Vec<::deno_core::OpDecl> {
+        pub(crate) fn op_decls() -> Vec<::deno_runtime::deno_core::OpDecl> {
             vec![#(#(#op_decls,)*)*]
         }
     };

@@ -1,32 +1,32 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
- *                                                                            *
- *                +--------------------------------------------+              *
- *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
- *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
- *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
- *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
- *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
- *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
- *                +--------------------------------------------+              *
- *                                                                            *
- *                         Distributed Systems Runtime                        *
- *                                                                            *
- * -------------------------------------------------------------------------- *
- *                                                                            *
- *   Licensed under the Apache License, Version 2.0 (the "License");          *
- *   you may not use this file except in compliance with the License.         *
- *   You may obtain a copy of the License at                                  *
- *                                                                            *
- *       http://www.apache.org/licenses/LICENSE-2.0                           *
- *                                                                            *
- *   Unless required by applicable law or agreed to in writing, software      *
- *   distributed under the License is distributed on an "AS IS" BASIS,        *
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
- *   See the License for the specific language governing permissions and      *
- *   limitations under the License.                                           *
- *                                                                            *
- \* -------------------------------------------------------------------------- */
+*        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+*                                                                            *
+*                +--------------------------------------------+              *
+*                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+*                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+*                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+*                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+*                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+*                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+*                +--------------------------------------------+              *
+*                                                                            *
+*                         Distributed Systems Runtime                        *
+*                                                                            *
+* -------------------------------------------------------------------------- *
+*                                                                            *
+*   Licensed under the Apache License, Version 2.0 (the "License");          *
+*   you may not use this file except in compliance with the License.         *
+*   You may obtain a copy of the License at                                  *
+*                                                                            *
+*       http://www.apache.org/licenses/LICENSE-2.0                           *
+*                                                                            *
+*   Unless required by applicable law or agreed to in writing, software      *
+*   distributed under the License is distributed on an "AS IS" BASIS,        *
+*   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+*   See the License for the specific language governing permissions and      *
+*   limitations under the License.                                           *
+*                                                                            *
+\* -------------------------------------------------------------------------- */
 //! # AuraeScript
 //!
 //! AuraeScript is a turing complete language for platform teams built on [Deno](https://deno.land).
@@ -66,18 +66,16 @@
 
 use anyhow::{anyhow, bail, Error};
 use deno_ast::{MediaType, ParseParams, SourceTextInfo};
-use deno_core::error::AnyError;
-use deno_core::futures::FutureExt;
-use deno_core::url::Url;
-use deno_core::{
-    resolve_import, ModuleCode, ModuleLoader, ModuleSource,
-    ModuleSourceFuture, ModuleSpecifier, ModuleType, ResolutionKind,
+use deno_runtime::{
+    deno_core::{
+        self, error::AnyError, futures::FutureExt, resolve_import, url::Url,
+        Extension, FastString, ModuleLoader, ModuleSource, ModuleSourceCode,
+        ModuleSourceFuture, ModuleSpecifier, ModuleType, ResolutionKind,
+    },
+    permissions::PermissionsContainer,
+    worker::{MainWorker, WorkerOptions},
+    BootstrapOptions, WorkerLogLevel,
 };
-
-use deno_runtime::deno_core::{Extension, OpDecl};
-use deno_runtime::permissions::PermissionsContainer;
-use deno_runtime::worker::{MainWorker, WorkerOptions};
-use deno_runtime::{BootstrapOptions, WorkerLogLevel};
 
 use std::borrow::Cow;
 use std::pin::Pin;
@@ -95,9 +93,11 @@ fn get_error_class_name(e: &AnyError) -> &'static str {
 }
 
 pub fn init(main_module: Url) -> MainWorker {
-    let extension =
-        //Extension::builder("").ops(stdlib()).build();
-        Extension{name: "", ops: Cow::from(stdlib()), ..Default::default()};
+    let extension = Extension {
+        name: "auraescript",
+        ops: Cow::from(stdlib()),
+        ..Default::default()
+    };
 
     MainWorker::bootstrap_from_options(
         main_module,
@@ -115,8 +115,6 @@ pub fn init(main_module: Url) -> MainWorker {
                 log_level: WorkerLogLevel::Info,
                 no_color: false,
                 is_tty: false,
-                runtime_version: "".to_string(),
-                ts_version: "".to_string(),
                 unstable: true,
                 user_agent: "".to_string(),
                 inspect: false,
@@ -124,7 +122,7 @@ pub fn init(main_module: Url) -> MainWorker {
             },
             ..Default::default()
         },
-        )
+    )
 }
 
 /// Standard Library Autogeneration Code
@@ -137,7 +135,7 @@ pub fn init(main_module: Url) -> MainWorker {
 ///
 /// ops.extend(my_package::op_decls());
 ///
-fn stdlib() -> Vec<OpDecl> {
+fn stdlib() -> Vec<deno_core::OpDecl> {
     let mut ops = vec![];
     ops.extend(builtin::auraescript_client::op_decls());
     ops.extend(cells::op_decls());
@@ -181,12 +179,12 @@ impl ModuleLoader for TypescriptModuleLoader {
                     }
                     MediaType::Jsx => (ModuleType::JavaScript, true),
                     MediaType::TypeScript
-                        | MediaType::Mts
-                        | MediaType::Cts
-                        | MediaType::Dts
-                        | MediaType::Dmts
-                        | MediaType::Dcts
-                        | MediaType::Tsx => (ModuleType::JavaScript, true),
+                    | MediaType::Mts
+                    | MediaType::Cts
+                    | MediaType::Dts
+                    | MediaType::Dmts
+                    | MediaType::Dcts
+                    | MediaType::Tsx => (ModuleType::JavaScript, true),
                     MediaType::Json => (ModuleType::Json, false),
                     _ => bail!("Unknown extension {:?}", path.extension()),
                 };
@@ -206,9 +204,11 @@ impl ModuleLoader for TypescriptModuleLoader {
                 code
             };
             let module = ModuleSource::new_with_redirect(
-                module_type, ModuleCode::from(code),
+                module_type,
+                ModuleSourceCode::String(FastString::Owned(code.into())),
                 &module_specifier,
-                &module_specifier);
+                &module_specifier,
+            );
             Ok(module)
         }
         .boxed_local()
