@@ -64,6 +64,7 @@ ARG GH_CLI_VERSION=2.21.2
 # Do not at GNU libraries here! Do not add GNU libraries here!
 RUN  apt-get update && \
     apt-get install -y --no-install-recommends \
+    cmake \
     curl \
     git \
     make \
