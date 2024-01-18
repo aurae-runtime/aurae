@@ -52,8 +52,8 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
         // Query the number of CPUs on the host
         let num_cpus = nr_cpus()?;
 
-        // Query the page size on the host
-        let page_size = page_size()?;
+        // Get the page size on the host
+        let page_size = page_size();
 
         // Get the size of the event payload
         let event_struct_size: usize = size_of::<T>();

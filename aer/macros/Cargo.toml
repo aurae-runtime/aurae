@@ -11,7 +11,7 @@ proc-macro = true
 
 [dependencies]
 heck = { workspace = true }
-itertools = "0.10.5"
+itertools = "0.12.0"
 proc-macro2 = { workspace = true }
 protobuf = { workspace = true }
 protobuf-parse = { workspace = true }

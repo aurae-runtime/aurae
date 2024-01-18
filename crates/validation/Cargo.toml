@@ -18,7 +18,7 @@ url = ["dep:url"]
 fancy-regex = { workspace = true, optional = true }
 lazy_static = { workspace = true, optional = true }
 thiserror = { workspace = true }
-validator = "0.16.0"
+validator = "0.16.1"
 secrecy = { version = "0.8.0", optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
@@ -26,5 +26,5 @@ tonic = { workspace = true, optional = true }
 url = { workspace = true, optional = true }
 
 [dev-dependencies]
-num_enum = "0.5.7"
-num_enum_derive = "0.5.7"
+num_enum = "0.7.2"
+num_enum_derive = "0.7.2"
