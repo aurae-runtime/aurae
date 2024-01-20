@@ -28,7 +28,7 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-name: "Tester (101) [aurae-builder:builder-latest] [auraescript]"
+name: "Tester (102) [aurae-builder:builder-latest] [auraescript]"
 on:
   push:
     branches: main
