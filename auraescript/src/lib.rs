@@ -109,8 +109,10 @@ pub fn init(main_module: Url) -> MainWorker {
             bootstrap: BootstrapOptions {
                 args: vec![],
                 cpu_count: 1,
+                enable_testing_features: false,
                 locale: deno_core::v8::icu::get_language_tag(),
-                log_level: WorkerLogLevel::Debug,
+                location: None,
+                log_level: WorkerLogLevel::Info,
                 no_color: false,
                 is_tty: false,
                 unstable: true,
