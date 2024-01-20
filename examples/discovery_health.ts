@@ -35,5 +35,5 @@ let client = await aurae.createClient();
 let discovery_service = new discovery.DiscoveryServiceClient(client);
 
 // [ Ping ]
-let ack = await discovery_service.health(<discovery.HealthRequest>{});
+let ack = await discovery_service.discover(<discovery.DiscoverRequest>{});
 console.log(ack)

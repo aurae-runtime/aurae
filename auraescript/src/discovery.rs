@@ -28,8 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-use deno_runtime::deno_core::{self, Op};
-
 macros::ops_generator!(
     "../api/v0/discovery/discovery.proto",
     discovery,

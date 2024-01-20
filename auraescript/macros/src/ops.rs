@@ -128,7 +128,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         use ::std::{rc::Rc, cell::RefCell};
-        use ::deno_runtime::deno_core::OpState;
+        use ::deno_runtime::deno_core::{self, Op, OpState};
 
         #(#(#op_functions)*)*
 
@@ -249,7 +249,7 @@ export class {service_name}Client implements {service_name} {{
             r#"
 {fn_name}(request: {input_type}): Promise<{output_type}> {{
     // @ts-ignore
-    return Deno[Deno.internal].core.opAsync("{op_name}", this.client, request);
+    return Deno[Deno.internal].core.ops.{op_name}(this.client, request);
 }}
         "#
         ));
