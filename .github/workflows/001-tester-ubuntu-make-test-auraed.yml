@@ -39,7 +39,7 @@
 #
 # When this build passes we should have a "clean cargo" output!
 #
-name: "Tester (001) [ubuntu:latest]"
+name: "Tester (001) [ubuntu:latest] [auraed]"
 on:
   push:
     branches: main
