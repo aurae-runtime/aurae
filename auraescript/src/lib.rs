@@ -69,15 +69,15 @@ use deno_ast::{MediaType, ParseParams, SourceTextInfo};
 use deno_runtime::{
     deno_core::{
         self, error::AnyError, futures::FutureExt, resolve_import, url::Url,
-        Extension, FastString, ModuleLoader, ModuleSource, ModuleSourceCode,
+        FastString, ModuleLoader, ModuleSource, ModuleSourceCode,
         ModuleSourceFuture, ModuleSpecifier, ModuleType, ResolutionKind,
+        Snapshot,
     },
     permissions::PermissionsContainer,
     worker::{MainWorker, WorkerOptions},
     BootstrapOptions, WorkerLogLevel,
 };
 
-use std::borrow::Cow;
 use std::pin::Pin;
 use std::rc::Rc;
 
@@ -88,31 +88,29 @@ mod discovery;
 mod health;
 mod observe;
 
+// Load the snapshot of the Deno javascript runtime
+static RUNTIME_SNAPSHOT: &[u8] = include_bytes!("../gen/runtime.bin");
+
 fn get_error_class_name(e: &AnyError) -> &'static str {
     deno_runtime::errors::get_error_class_name(e).unwrap_or("Error")
 }
 
-pub fn init(main_module: Url) -> MainWorker {
-    let extension = Extension {
-        name: "auraescript",
-        ops: Cow::from(stdlib()),
-        ..Default::default()
-    };
+deno_core::extension!(auraescript, ops_fn = stdlib);
 
+pub fn init(main_module: Url) -> MainWorker {
     MainWorker::bootstrap_from_options(
         main_module,
         PermissionsContainer::allow_all(),
         WorkerOptions {
-            extensions: vec![extension],
+            extensions: vec![auraescript::init_ops()],
             module_loader: Rc::new(TypescriptModuleLoader),
             get_error_class_fn: Some(&get_error_class_name),
+            startup_snapshot: Some(Snapshot::Static(RUNTIME_SNAPSHOT)),
             bootstrap: BootstrapOptions {
                 args: vec![],
                 cpu_count: 1,
-                enable_testing_features: false,
                 locale: deno_core::v8::icu::get_language_tag(),
-                location: None,
-                log_level: WorkerLogLevel::Info,
+                log_level: WorkerLogLevel::Debug,
                 no_color: false,
                 is_tty: false,
                 unstable: true,
