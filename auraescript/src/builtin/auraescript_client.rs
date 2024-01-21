@@ -1,10 +1,11 @@
 use anyhow::Result;
 use client::{AuraeConfig, Client};
-use deno_core::{Op, OpState, Resource, ResourceId};
+use deno_runtime::deno_core::{self, op2, Op, OpState, Resource, ResourceId};
 use std::{cell::RefCell, rc::Rc};
 
 // `AuraeConfig` `try_default`
-#[deno_core::op]
+#[op2(fast)]
+#[smi]
 pub(crate) fn as__aurae_config__try_default(
     op_state: &mut OpState,
 ) -> Result<ResourceId> {
@@ -14,13 +15,14 @@ pub(crate) fn as__aurae_config__try_default(
 }
 
 // `AuraeConfig` `from_options`
-#[deno_core::op]
+#[op2(fast)]
+#[smi]
 pub(crate) fn as__aurae_config__from_options(
     op_state: &mut OpState,
-    ca_crt: String,
-    client_crt: String,
-    client_key: String,
-    socket: String,
+    #[string] ca_crt: String,
+    #[string] client_crt: String,
+    #[string] client_key: String,
+    #[string] socket: String,
 ) -> ResourceId {
     let config =
         AuraeConfig::from_options(ca_crt, client_crt, client_key, socket);
@@ -28,27 +30,28 @@ pub(crate) fn as__aurae_config__from_options(
 }
 
 // `AuraeConfig` `parse_from_file`
-#[deno_core::op]
+#[op2(fast)]
+#[smi]
 pub(crate) fn as__aurae_config__parse_from_file(
     op_state: &mut OpState,
-    path: String,
+    #[string] path: String,
 ) -> Result<ResourceId> {
     let config = AuraeConfig::parse_from_toml_file(path)?;
     let rid = op_state.resource_table.add(AuraeScriptConfig(config));
     Ok(rid)
 }
 
-// Re export AuraeConfig in auraescript to be able
-// to impl Resource on it
+// Re export AuraeConfig in auraescript to be able to impl Resource on it
 pub(crate) struct AuraeScriptConfig(pub AuraeConfig);
 
 impl Resource for AuraeScriptConfig {} // Blank impl
 
 // Create a `Client` with given `AuraeConfig`
-#[deno_core::op]
+#[op2(async)]
+#[smi]
 pub(crate) async fn as__client_new(
     op_state: Rc<RefCell<OpState>>,
-    config: ResourceId,
+    #[smi] config: ResourceId,
 ) -> Result<ResourceId> {
     let config = {
         let op_state = &op_state.borrow();
@@ -61,7 +64,7 @@ pub(crate) async fn as__client_new(
     Ok(rid)
 }
 
-pub(crate) fn op_decls() -> Vec<::deno_core::OpDecl> {
+pub(crate) fn op_decls() -> Vec<::deno_runtime::deno_core::OpDecl> {
     vec![
         as__aurae_config__try_default::DECL,
         as__aurae_config__from_options::DECL,

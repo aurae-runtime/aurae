@@ -1,9 +1,16 @@
+use deno_runtime::snapshot;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
 
 fn main() {
     generate_aurae_ts();
+
+    // Create a runtime snapshot for Deno to be used on startup
+    snapshot::create_runtime_snapshot(
+        "gen/runtime.bin".into(),
+        Default::default(),
+    )
 }
 
 fn generate_aurae_ts() {

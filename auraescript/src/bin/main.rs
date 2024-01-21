@@ -49,8 +49,8 @@
 )]
 #![warn(clippy::unwrap_used)]
 
-use auraescript::*;
-use deno_core::resolve_path;
+use auraescript::init;
+use deno_runtime::deno_core::resolve_path;
 use std::env::current_dir;
 
 #[tokio::main(flavor = "current_thread")]
