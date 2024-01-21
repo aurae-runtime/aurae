@@ -1,0 +1,104 @@
+# ---------------------------------------------------------------------------- #
+#        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors            #
+#                                                                              #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#   Licensed under the Apache License, Version 2.0 (the "License");            #
+#   you may not use this file except in compliance with the License.           #
+#   You may obtain a copy of the License at                                    #
+#                                                                              #
+#       http://www.apache.org/licenses/LICENSE-2.0                             #
+#                                                                              #
+#   Unless required by applicable law or agreed to in writing, software        #
+#   distributed under the License is distributed on an "AS IS" BASIS,          #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+#   See the License for the specific language governing permissions and        #
+#   limitations under the License.                                             #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+#
+# This is the main compile time check for Aurae.
+#
+# This build check will introduce confidence for the following:
+#
+# - That the binary does not have unexpected dependencies.
+# - We intentionally build this on a clean ubuntu image, to prove that we can
+#   generate a static binary with minimal dependencies.
+# - That the code does not warn (due to clippy errors/warnings)
+#
+# When this build passes we should have a "clean cargo" output!
+#
+name: "Tester (001) [ubuntu:latest] [auraed]"
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+          version: 1.28.1
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: 000-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            000-${{ runner.os }}-cargo-
+      - name: Install protoc-gen-doc in [ubuntu:latest]
+        run: |
+          wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+          chmod +x protoc-gen-doc
+          cp protoc-gen-doc /usr/local/bin/protoc-gen-doc
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+      - name: Install compile time dependencies (musl-tools) in [ubuntu:latest]
+        #
+        # Do not add GNU libraries here! Do not add GNU libraries here!
+        #
+        # Please (seriously please) be careful about adding commands here.
+        # This is our core way of validating that our binary is "healthy"
+        # If we need to install anything with the word "lib" in it to get
+        # the build to pass, we likely should be having other discussions
+        # instead of adding commands here.
+        #
+        # Do not add GNU libraries here! Do not add GNU libraries here!
+        #
+        # For example, we should NOT be adding libraries such as "libseccomp"
+        # or "libdbus".
+        #
+        # If in doubt, please ask in Discord in the build channel.
+        #
+        # Do not at GNU libraries here! Do not add GNU libraries here!
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+      - name: Cargo build, lint, test [make test]
+        # This should remain the only command we execute as this matches the title of the file.
+        # The goal is for this to be easy to find from the GitHub dashboard.
+        # Instead of adding more commands here, consider another make target or a new YAML file
+        # named with a good name.
+        run: make auraed-test
