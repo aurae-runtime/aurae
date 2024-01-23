@@ -71,6 +71,16 @@ let nested_allocated = await cellService.allocate(<cells.CellServiceAllocateRequ
 });
 console.log('Allocated Nested:', nested_allocated)
 
+let nested_started = await cellService.start(<cells.CellServiceStartRequest>{
+    cellName: nestedCellName,
+    executable: cells.Executable.fromPartial({
+        command: "/usr/bin/echo 'hello world'",
+        description: "say 'hello'",
+        name: "hello"
+    })
+})
+console.log('Started:', nested_started)
+
 // [ List cellService ]
 let listed = await cellService.list(<cells.CellServiceListRequest>{})
 console.log('Listed:', listed)
@@ -81,6 +91,15 @@ let stopped = await cellService.stop(<cells.CellServiceStopRequest>{
     executableName: "sleep-42",
 })
 console.log('Stopped:', stopped)
+
+let nested_stopped = await cellService.stop(<cells.CellServiceStopRequest>{
+    cellName: nestedCellName,
+    executableName: "hello",
+})
+
+let nested_freed = await cellService.free(<cells.CellServiceFreeRequest>{
+    cellName: nestedCellName
+});
 
 // [ Free ]
 let freed = await cellService.free(<cells.CellServiceFreeRequest>{
