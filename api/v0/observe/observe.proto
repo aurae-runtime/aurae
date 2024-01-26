@@ -83,10 +83,10 @@ message Signal {
 message GetAuraeDaemonLogStreamRequest {
 }
 
-// TODO: not implemented
+// TODO: not implemented in auraescript
 message GetSubProcessStreamRequest {
-  LogChannelType channel_type = 1;
   int32 process_id = 2;
+  LogChannelType channel_type = 1;
 }
 
 message LogItem {

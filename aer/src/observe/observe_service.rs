@@ -28,4 +28,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
-macros::subcommand!("../api/v0/observe/observe.proto", observe, ObserveService);
+macros::subcommand!("../api/v0/observe/observe.proto", observe, ObserveService,
+    GetSubProcessStream {
+        process_id[required = true, alias = "pid"],
+        channel_type[default_value = "1"],  // default to stdout
+    },
+);
