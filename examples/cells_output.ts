@@ -58,7 +58,7 @@ let started_out = await cellService.start(<cells.CellServiceStartRequest>{
         name: "echo-stdout"
     })
 })
-//console.log(started_out)
+console.log(started_out)
 
 // [ Start ]
 let started_err = await cellService.start(<cells.CellServiceStartRequest>{
@@ -69,6 +69,7 @@ let started_err = await cellService.start(<cells.CellServiceStartRequest>{
         name: "echo-stderr"
     })
 })
+console.log(started_err)
 
 // [ Stop ]
 let stopped_out = await cellService.stop(<cells.CellServiceStopRequest>{
