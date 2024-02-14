@@ -67,7 +67,7 @@ pub mod runtime;
 macro_rules! execute {
     ($call:path, $req:ident) => {{
         let client = ::client::Client::default().await?;
-        let res = $call(&client, $req).await?;
+        let res = $call(&client, $req).await?.into_inner();
         println!("{res:#?}");
         res
     }};
@@ -79,8 +79,7 @@ macro_rules! execute {
 #[macro_export]
 macro_rules! execute_server_streaming {
     ($call:path, $req:ident) => {{
-        let res = $crate::execute!($call, $req);
-        let mut res = res.into_inner();
+        let mut res = $crate::execute!($call, $req);
         while let Some(res) = futures_util::StreamExt::next(&mut res).await {
             let res = res?;
             println!("{res:#?}");
