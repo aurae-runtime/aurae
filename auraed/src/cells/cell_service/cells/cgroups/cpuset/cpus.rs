@@ -1,11 +1,18 @@
 use fancy_regex::Regex;
-
+use lazy_static::lazy_static;
 use std::{
     fmt::{Display, Formatter},
     ops::Deref,
 };
-
 use validation::{ValidatedField, ValidationError};
+
+lazy_static! {
+    // input should be a comma seperated list of numbers with optional -s
+    // or the empty string.
+    static ref CPUS_INPUT_REGEX:  Regex = {
+            Regex::new(r"^(\d(-\d)?,?)*$").expect("regex construction")
+    };
+}
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct Cpus(String);
@@ -29,12 +36,12 @@ impl ValidatedField<String> for Cpus {
     ) -> Result<Self, ValidationError> {
         let input = validation::required(input, field_name, parent_name)?;
 
-        // TODO: maybe lazy_static this
-        // input should be a comma seperated list of numbers with optional -s
-        // or the empty string.
-        let pattern: Regex =
-            Regex::new(r"^(\d(-\d)?,?)*$").expect("regex construction");
-        validation::allow_regex(&input, &pattern, field_name, parent_name)?;
+        validation::allow_regex(
+            &input,
+            &CPUS_INPUT_REGEX,
+            field_name,
+            parent_name,
+        )?;
 
         Ok(Self(input))
     }
