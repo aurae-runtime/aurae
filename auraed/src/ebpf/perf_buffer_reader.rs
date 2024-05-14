@@ -76,7 +76,7 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
         // indexed by CPU id.
         // https://libbpf.readthedocs.io/en/latest/api.html
         let mut perf_array =
-            AsyncPerfEventArray::try_from(bpf.map_mut(perf_buffer)?)?;
+            AsyncPerfEventArray::try_from(bpf.map_mut(perf_buffer).ok_or(Error(format!("Failed to find '{}'", perf_buffer))))?;
 
         // Spawn a thread per CPU to listen for events from the kernel.
         for cpu_id in online_cpus()? {
