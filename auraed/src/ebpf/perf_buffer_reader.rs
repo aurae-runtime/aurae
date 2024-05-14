@@ -48,7 +48,7 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
     fn read_from_perf_buffer(
         bpf: &mut Bpf,
         perf_buffer: &'static str,
-    ) -> Result<PerfEventBroadcast<T>, anyhow::Error> {
+    ) -> anyhow::Result<PerfEventBroadcast<T>> {
         // Query the number of CPUs on the host
         let num_cpus = nr_cpus()?;
 
@@ -75,8 +75,13 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
         // kernel to userspace. This array contains the per-CPU buffers and is
         // indexed by CPU id.
         // https://libbpf.readthedocs.io/en/latest/api.html
-        let mut perf_array =
-            AsyncPerfEventArray::try_from(bpf.map_mut(perf_buffer).ok_or(Error(format!("Failed to find '{}'", perf_buffer))))?;
+        //let perf_array: &mut AsyncPerfEventArray<&mut MapData> = bpf
+        //    .map_mut(perf_buffer)
+        //    .ok_or_else(|| anyhow::anyhow!("failed to get perf event array"))?
+        //    .try_into()?;
+        let mut perf_array = AsyncPerfEventArray::try_from(
+            bpf.take_map(perf_buffer).expect("Failed to find perf event array"),
+        )?;
 
         // Spawn a thread per CPU to listen for events from the kernel.
         for cpu_id in online_cpus()? {
