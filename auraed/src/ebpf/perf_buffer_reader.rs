@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use anyhow::Context;
 use aya::{
     maps::perf::AsyncPerfEventArray,
     util::{nr_cpus, online_cpus},
@@ -75,12 +76,9 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
         // kernel to userspace. This array contains the per-CPU buffers and is
         // indexed by CPU id.
         // https://libbpf.readthedocs.io/en/latest/api.html
-        //let perf_array: &mut AsyncPerfEventArray<&mut MapData> = bpf
-        //    .map_mut(perf_buffer)
-        //    .ok_or_else(|| anyhow::anyhow!("failed to get perf event array"))?
-        //    .try_into()?;
         let mut perf_array = AsyncPerfEventArray::try_from(
-            bpf.take_map(perf_buffer).expect("Failed to find perf event array"),
+            bpf.take_map(perf_buffer)
+                .context("Failed to find '{perf_buffer}' perf event array")?,
         )?;
 
         // Spawn a thread per CPU to listen for events from the kernel.
