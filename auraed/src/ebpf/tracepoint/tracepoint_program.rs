@@ -28,6 +28,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use anyhow::Context;
 use aya::programs::{ProgramError, TracePoint};
 use aya::Bpf;
 use tracing::{trace, warn};
@@ -44,7 +45,8 @@ pub trait TracepointProgram<T: Clone + Send + 'static> {
         // Load the eBPF TracePoint program
         let program: &mut TracePoint = bpf
             .program_mut(Self::PROGRAM_NAME)
-            .ok_or_else(|| anyhow::anyhow!("failed to get eBPF program"))?
+            .context("failed to get eBPF program")?
+            //.ok_or_else(|| anyhow::anyhow!("failed to get eBPF program"))?
             .try_into()?;
 
         // Load the program

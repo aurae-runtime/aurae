@@ -31,6 +31,7 @@
 //! Generated Protobuf definitions for the Aurae Standard Library
 
 #![allow(clippy::derive_partial_eq_without_eq)]
+#![allow(clippy::empty_docs)]
 #![allow(clippy::match_single_binding)]
 
 pub mod cells {
