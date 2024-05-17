@@ -46,7 +46,6 @@ pub trait TracepointProgram<T: Clone + Send + 'static> {
         let program: &mut TracePoint = bpf
             .program_mut(Self::PROGRAM_NAME)
             .context("failed to get eBPF program")?
-            //.ok_or_else(|| anyhow::anyhow!("failed to get eBPF program"))?
             .try_into()?;
 
         // Load the program
