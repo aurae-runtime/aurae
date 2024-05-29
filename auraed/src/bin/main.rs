@@ -130,8 +130,10 @@ enum SubCommands {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Parse command line arguments into AuraedOptions
     let options = AuraedOptions::parse();
 
+    // Match on the subcommand and handle accordingly
     let exit_code = match &options.subcmd {
         Some(SubCommands::Spawn { output }) => {
             handle_spawn_subcommand(output).await
@@ -146,6 +148,7 @@ async fn handle_default(options: AuraedOptions) -> i32 {
     info!("Starting Aurae Daemon Runtime");
     info!("Aurae Daemon is pid {}", std::process::id());
 
+    // Destructure the options into individual variables
     let AuraedOptions {
         server_crt,
         server_key,
@@ -158,6 +161,7 @@ async fn handle_default(options: AuraedOptions) -> i32 {
         subcmd: _,
     } = options;
 
+    // Destructure the default runtime into individual variables
     let AuraedRuntime {
         auraed: default_auraed,
         ca_crt: default_ca_crt,
@@ -167,6 +171,7 @@ async fn handle_default(options: AuraedOptions) -> i32 {
         library_dir: default_library_dir,
     } = AuraedRuntime::default();
 
+    // Create a new runtime configuration, using provided options or defaults
     let runtime = AuraedRuntime {
         auraed: default_auraed,
         ca_crt: ca_crt.map(PathBuf::from).unwrap_or(default_ca_crt),
@@ -180,16 +185,17 @@ async fn handle_default(options: AuraedOptions) -> i32 {
             .unwrap_or(default_library_dir),
     };
 
-    if let Err(e) = run(runtime, socket, verbose, nested).await {
-        error!("{:?}", e);
-        EXIT_ERROR
+    // Run the auraed daemon with the configured runtime
+    if let Err(e) = run(runtime, socket, verbose, nested).await { 
+        error!("{:?}", e); // Log any errors that occur
+        EXIT_ERROR // Return error exit code
     } else {
-        EXIT_OKAY
+        EXIT_OKAY // Return success exit code
     }
 }
 
 async fn handle_spawn_subcommand(output: &str) -> i32 {
     info!("Spawning Auraed OCI bundle: {}", output);
-    prep_oci_spec_for_spawn(output);
-    EXIT_OKAY
+    prep_oci_spec_for_spawn(output); // Prepare the OCI spec for spawning
+    EXIT_OKAY // Return success exit code
 }

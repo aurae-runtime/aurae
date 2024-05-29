@@ -60,22 +60,30 @@ use tokio::sync::Mutex;
 use tonic::{Code, Request, Response, Status};
 use tracing::{info, trace, warn};
 
+/**
+ * Macro to perform an operation within a cell.
+ * It retries the operation with an exponential backoff strategy in case of connection errors.
+ */
 macro_rules! do_in_cell {
     ($self:ident, $cell_name:ident, $function:ident, $request:ident) => {{
+        // Lock the cells mutex to ensure exclusive access
         let mut cells = $self.cells.lock().await;
 
+        // Retrieve the client socket for the specified cell
         let client_socket = cells
             .get(&$cell_name, |cell| cell.client_socket())
             .map_err(CellsServiceError::CellsError)?;
 
+        // Initialize the exponential backoff strategy for retrying the operation
         let mut retry_strategy = backoff::ExponentialBackoffBuilder::new()
             .with_initial_interval(Duration::from_millis(50)) // 1st retry in 50ms
-            .with_multiplier(10.0) // 10x the delay after 1st retry (500ms)
-            .with_randomization_factor(0.5) // with a randomness of +/-50% (250-750ms)
+            .with_multiplier(10.0) // 10x the delay each attempt
+            .with_randomization_factor(0.5) // with a randomness of +/-50%
             .with_max_interval(Duration::from_secs(3)) // but never delay more than 3s
             .with_max_elapsed_time(Some(Duration::from_secs(20))) // or 20s total
             .build();
 
+        // Attempt to create a new client with retries in case of connection errors
         let client = loop {
             match Client::new_no_tls(client_socket.clone()).await {
                 Ok(client) => break Ok(client),
@@ -92,6 +100,7 @@ macro_rules! do_in_cell {
             }
         }.map_err(CellsServiceError::from)?;
 
+        // Attempt the operation with the backoff strategy
         backoff::future::retry(
             retry_strategy,
             || async {
@@ -109,6 +118,7 @@ macro_rules! do_in_cell {
     }};
 }
 
+/// CellService struct manages the lifecycle of cells and executables.
 #[derive(Debug, Clone)]
 pub struct CellService {
     cells: Arc<Mutex<Cells>>,
@@ -117,6 +127,10 @@ pub struct CellService {
 }
 
 impl CellService {
+    /// Creates a new instance of CellService.
+    ///
+    /// # Arguments
+    /// * `observe_service` - An instance of ObserveService to manage log channels.
     pub fn new(observe_service: ObserveService) -> Self {
         CellService {
             cells: Default::default(),
@@ -125,6 +139,14 @@ impl CellService {
         }
     }
 
+    /// Allocates a new cell based on the provided request.
+    ///
+    /// # Arguments
+    /// * `request` - A validated request to allocate a cell.
+    ///
+    /// # Returns
+    /// A result containing the CellServiceAllocateResponse or an error.
+    /// Frees an existing cell based on the provided request.
     #[tracing::instrument(skip(self))]
     async fn allocate(
         &self,
@@ -136,7 +158,10 @@ impl CellService {
         let cell_name = cell.name.clone();
         let cell_spec = cell.into();
 
+        // Lock the cells mutex to ensure exclusive access
         let mut cells = self.cells.lock().await;
+
+        // Allocate a new cell with the specified name and specification
         let cell = cells.allocate(cell_name, cell_spec)?;
 
         Ok(CellServiceAllocateResponse {
@@ -145,6 +170,13 @@ impl CellService {
         })
     }
 
+    /// Frees a cell. Will delocate the cell.
+    ///
+    /// # Arguments
+    /// * `request` - A request containing CellServiceFreeRequest.
+    ///
+    /// # Returns
+    /// A response containing CellServiceFreeResponse or a Status error.
     #[tracing::instrument(skip(self))]
     async fn free(
         &self,
@@ -155,6 +187,8 @@ impl CellService {
         info!("CellService: free() cell_name={cell_name:?}");
 
         let mut cells = self.cells.lock().await;
+
+        // Free the cell with the specified name
         cells.free(&cell_name)?;
 
         Ok(CellServiceFreeResponse::default())
@@ -164,15 +198,24 @@ impl CellService {
     pub(crate) async fn free_all(&self) -> Result<()> {
         let mut cells = self.cells.lock().await;
 
-        // First try to gracefully free all cells.
+        // Attempt to gracefully free all cells
         cells.broadcast_free();
+
         // The cells that remain failed to shut down for some reason.
+        // Forcefully kill any remaining cells that failed to shut down
         cells.broadcast_kill();
 
         Ok(())
     }
 
     #[tracing::instrument(skip(self))]
+    /// Handles a start request.
+    ///
+    /// # Arguments
+    /// * `request` - A request containing CellServiceStartRequest.
+    ///
+    /// # Returns
+    /// A response containing CellServiceStartResponse or a Status error.
     async fn start(
         &self,
         request: ValidatedCellServiceStartRequest,
@@ -183,18 +226,22 @@ impl CellService {
         assert!(cell_name.is_none());
         info!("CellService: start() executable={:?}", executable);
 
+        // Lock the executables mutex to ensure exclusive access
         let mut executables = self.executables.lock().await;
+
+        // Start the executable and handle any errors
         let executable = executables
             .start(executable)
             .map_err(CellsServiceError::ExecutablesError)?;
 
+        // Retrieve the process ID (PID) of the started executable
         let pid = executable
             .pid()
             .map_err(CellsServiceError::Io)?
             .expect("pid")
             .as_raw();
 
-        // Ensure the observe service is aware of the executable's logs.
+        // Register the stdout log channel for the executable's PID
         if let Err(e) = self
             .observe_service
             .register_sub_process_channel(
@@ -206,6 +253,8 @@ impl CellService {
         {
             warn!("failed to register stdout channel for pid {pid}: {e}");
         }
+
+        // Register the stderr log channel for the executable's PID
         if let Err(e) = self
             .observe_service
             .register_sub_process_channel(
@@ -231,6 +280,13 @@ impl CellService {
     }
 
     #[tracing::instrument(skip(self))]
+    /// Handles the stop request.
+    ///
+    /// # Arguments
+    /// * `request` - A request containing CellServiceStopRequest.
+    ///
+    /// # Returns
+    /// A response containing CellServiceStopResponse or a Status error.
     async fn stop(
         &self,
         request: ValidatedCellServiceStopRequest,
@@ -243,6 +299,7 @@ impl CellService {
 
         let mut executables = self.executables.lock().await;
 
+        // Retrieve the process ID (PID) of the executable to be stopped
         let pid = executables
             .get(&executable_name)
             .map_err(CellsServiceError::ExecutablesError)?
@@ -251,12 +308,13 @@ impl CellService {
             .expect("pid")
             .as_raw();
 
+        // Stop the executable and handle any errors
         let _: ExitStatus = executables
             .stop(&executable_name)
             .await
             .map_err(CellsServiceError::ExecutablesError)?;
 
-        // Remove the executable logs from the observe service.
+        // Remove the executable's logs from the observe service.
         if let Err(e) = self
             .observe_service
             .unregister_sub_process_channel(pid, LogChannelType::Stdout)
@@ -287,14 +345,17 @@ impl CellService {
     #[tracing::instrument(skip(self))]
     pub(crate) async fn stop_all(&self) -> Result<()> {
         let mut executables = self.executables.lock().await;
+        // Broadcast a stop signal to all executables
         executables.broadcast_stop().await;
         Ok(())
     }
 
     #[tracing::instrument(skip(self))]
     async fn list(&self) -> Result<CellServiceListResponse> {
+        // Lock the cells mutex to ensure exclusive access
         let cells = self.cells.lock().await;
 
+        // Retrieve all cells and convert them for returning
         let cells = cells
             .get_all(|x| x.try_into())
             .expect("cells doesn't error")
@@ -309,21 +370,33 @@ impl CellService {
 impl TryFrom<&super::cells::Cell> for CellGraphNode {
     type Error = CellsError;
 
+    /// Converts a Cell into a CellGraphNode.
+    ///
+    /// # Arguments
+    /// * `value` - A reference to the Cell.
+    ///
+    /// # Returns
+    /// A result containing the CellGraphNode or an error.
     fn try_from(
         value: &super::cells::Cell,
     ) -> std::result::Result<Self, Self::Error> {
+        // Extract the name and specification of the cell
         let name = value.name();
         let spec = value.spec();
+        // Retrieve and convert all child cells
         let children = CellsCache::get_all(value, |x| x.try_into())?
             .into_iter()
             .filter_map(|x| x.ok())
             .collect();
 
+        // Extract cgroup and isolation specifications
         let super::cells::CellSpec { cgroup_spec, iso_ctl } = spec;
+        // Extract CPU, cpuset, and memory specifications
         let super::cells::cgroups::CgroupSpec { cpu, cpuset, memory } =
             cgroup_spec;
 
         Ok(Self {
+            // Create a new Cell instance with the extracted specifications
             cell: Some(Cell {
                 name: name.to_string(),
                 cpu: cpu.as_ref().map(|x| x.into()),
@@ -395,12 +468,15 @@ impl cell_service_server::CellService for CellService {
         request: Request<CellServiceAllocateRequest>,
     ) -> std::result::Result<Response<CellServiceAllocateResponse>, Status>
     {
+        // Extract the inner request from the request
         let request = request.into_inner();
+        // Validate the allocate request
         let request = ValidatedCellServiceAllocateRequest::validate(
             request.clone(),
             None,
         )?;
 
+        // return the allocated cell
         Ok(Response::new(self.allocate(request).await?))
     }
 
@@ -409,9 +485,11 @@ impl cell_service_server::CellService for CellService {
         request: Request<CellServiceFreeRequest>,
     ) -> std::result::Result<Response<CellServiceFreeResponse>, Status> {
         let request = request.into_inner();
+        // Validate the free request
         let request =
             ValidatedCellServiceFreeRequest::validate(request.clone(), None)?;
 
+        // free the cell
         Ok(Response::new(self.free(request).await?))
     }
 
@@ -421,22 +499,24 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<CellServiceStartResponse>, Status> {
         let request = request.into_inner();
 
-        // We execute start if cell_name is none
+        // Execute start if cell_name is none
         if request.cell_name.is_none() {
             let request =
                 ValidatedCellServiceStartRequest::validate(request, None)?;
             Ok(self.start(request).await?)
         } else {
-            // We are in a parent cell (or validation will fail)
+            // We are in a parent cell, or validation will fail
             let validated = ValidatedCellServiceStartRequest::validate(
                 request.clone(),
                 None,
             )?;
 
-            // validation has succeeded, so we can make assumptions about the request and use expect
+            // Validation has succeeded, so we can make assumptions about the request and use expect
             let cell_name = validated.cell_name.expect("cell name");
             let mut request = request;
             request.cell_name = None;
+
+            // start in the cell
             self.start_in_cell(&cell_name, request).await
         }
     }
@@ -447,26 +527,35 @@ impl cell_service_server::CellService for CellService {
     ) -> std::result::Result<Response<CellServiceStopResponse>, Status> {
         let request = request.into_inner();
 
-        // We execute stop if cell_name is none
+        // Execute stop if cell_name is none
         if request.cell_name.is_none() {
             let request =
                 ValidatedCellServiceStopRequest::validate(request, None)?;
             Ok(self.stop(request).await?)
         } else {
-            // We are in a parent cell (or validation will fail)
+            // Validate the request is valid
             let validated = ValidatedCellServiceStopRequest::validate(
                 request.clone(),
                 None,
             )?;
 
-            // validation has succeeded, so we can make assumptions about the request and use expect
+            // Validation has succeeded, so we can make assumptions about the request and use expect
             let cell_name = validated.cell_name.expect("cell name");
             let mut request = request;
             request.cell_name = None;
+
+            // stop the cell
             self.stop_in_cell(&cell_name, request).await
         }
     }
 
+    /// Response with a list of cells
+    ///
+    /// # Arguments
+    /// * `_request` - A request containing CellServiceListRequest.
+    ///
+    /// # Returns
+    /// A response containing CellServiceListResponse or a Status error.
     async fn list(
         &self,
         _request: Request<CellServiceListRequest>,
@@ -489,24 +578,29 @@ mod tests {
     use iter_tools::Itertools;
     use test_helpers::*;
 
+    /// Test for the list function.
     #[tokio::test]
     async fn test_list() {
         skip_if_not_root!("test_list");
         skip_if_seccomp!("test_list");
 
+        // Set the Auraed runtime for the test
         let _ = AURAED_RUNTIME.set(AuraedRuntime::default());
 
+        // Create a new instance of CellService for testing
         let service = CellService::new(ObserveService::new(
             Arc::new(LogChannel::new(String::from("test"))),
             (None, None, None),
         ));
 
+        // Allocate a parent cell for testing
         let parent_cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());
         assert!(service
             .allocate(allocate_request(&parent_cell_name))
             .await
             .is_ok());
 
+        // Allocate a nested cell within the parent cell for testing
         let nested_cell_name =
             format!("{}/ae-test-{}", &parent_cell_name, uuid::Uuid::new_v4());
         assert!(service
@@ -514,6 +608,7 @@ mod tests {
             .await
             .is_ok());
 
+        // Allocate a cell without children for testing
         let cell_without_children_name =
             format!("ae-test-{}", uuid::Uuid::new_v4());
         assert!(service
@@ -521,12 +616,14 @@ mod tests {
             .await
             .is_ok());
 
+        // List all cells and verify the result
         let result = service.list().await;
         assert!(result.is_ok());
 
         let list = result.unwrap();
         assert_eq!(list.cells.len(), 2);
 
+        // Verify the root cell names
         let mut expected_root_cell_names =
             vec![&parent_cell_name, &cell_without_children_name];
         expected_root_cell_names.sort();
@@ -539,6 +636,7 @@ mod tests {
         actual_root_cell_names.sort();
         assert_eq!(actual_root_cell_names, expected_root_cell_names);
 
+        // Verify the parent cell name in child cells.
         let parent_cell = list
             .cells
             .iter()
@@ -555,9 +653,17 @@ mod tests {
         assert_eq!(actual_nested_cell_names, expected_nested_cell_names);
     }
 
+    /// Helper function to create a ValidatedCellServiceAllocateRequest.
+    ///
+    /// # Arguments
+    /// * `cell_name` - The name of the cell.
+    ///
+    /// # Returns
+    /// A ValidatedCellServiceAllocateRequest.
     fn allocate_request(
         cell_name: &str,
     ) -> ValidatedCellServiceAllocateRequest {
+        // Create a validated cell for the allocate request
         let cell = ValidatedCell {
             name: CellName::from(cell_name),
             cpu: Some(ValidatedCpuController { weight: None, max: None }),
@@ -571,6 +677,7 @@ mod tests {
             isolate_process: false,
             isolate_network: false,
         };
+        // Return the validated allocate request
         ValidatedCellServiceAllocateRequest { cell }
     }
 }
