@@ -66,7 +66,6 @@ use tracing::{info, trace, warn};
  */
 macro_rules! do_in_cell {
     ($self:ident, $cell_name:ident, $function:ident, $request:ident) => {{
-        // Lock the cells mutex to ensure exclusive access
         let mut cells = $self.cells.lock().await;
 
         // Retrieve the client socket for the specified cell
@@ -158,10 +157,8 @@ impl CellService {
         let cell_name = cell.name.clone();
         let cell_spec = cell.into();
 
-        // Lock the cells mutex to ensure exclusive access
         let mut cells = self.cells.lock().await;
 
-        // Allocate a new cell with the specified name and specification
         let cell = cells.allocate(cell_name, cell_spec)?;
 
         Ok(CellServiceAllocateResponse {
@@ -170,7 +167,7 @@ impl CellService {
         })
     }
 
-    /// Frees a cell. Will delocate the cell.
+    /// Frees a cell.
     ///
     /// # Arguments
     /// * `request` - A request containing CellServiceFreeRequest.
@@ -188,7 +185,6 @@ impl CellService {
 
         let mut cells = self.cells.lock().await;
 
-        // Free the cell with the specified name
         cells.free(&cell_name)?;
 
         Ok(CellServiceFreeResponse::default())
@@ -226,7 +222,6 @@ impl CellService {
         assert!(cell_name.is_none());
         info!("CellService: start() executable={:?}", executable);
 
-        // Lock the executables mutex to ensure exclusive access
         let mut executables = self.executables.lock().await;
 
         // Start the executable and handle any errors
@@ -352,7 +347,6 @@ impl CellService {
 
     #[tracing::instrument(skip(self))]
     async fn list(&self) -> Result<CellServiceListResponse> {
-        // Lock the cells mutex to ensure exclusive access
         let cells = self.cells.lock().await;
 
         // Retrieve all cells and convert them for returning
