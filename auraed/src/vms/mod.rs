@@ -12,4 +12,8 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
+
+pub mod manager;
+pub mod virtual_machine;
+pub mod virtual_machines;
 pub mod vm_service;

@@ -12,29 +12,68 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
+
 use proto::vms::{
-    vm_service_server, VirtualMachine, VmServiceCreateRequest,
-    VmServiceCreateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
-    VmServiceStartRequest, VmServiceStartResponse, VmServiceStopRequest,
-    VmServiceStopResponse,
+    vm_service_server, VmServiceCreateRequest, VmServiceCreateResponse,
+    VmServiceFreeRequest, VmServiceFreeResponse, VmServiceStartRequest,
+    VmServiceStartResponse, VmServiceStopRequest, VmServiceStopResponse,
 };
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
 
-#[allow(dead_code)]
+use super::{
+    virtual_machine::{RootDriveSpec, VmID, VmSpec},
+    virtual_machines::VirtualMachines,
+};
+
 #[derive(Debug, Clone)]
 pub struct VmService {
-    _vms: Arc<Mutex<VirtualMachine>>,
+    vms: Arc<Mutex<VirtualMachines>>,
+}
+
+impl VmService {
+    pub fn new() -> Self {
+        let vms = Arc::new(Mutex::new(VirtualMachines::new()));
+        Self { vms }
+    }
 }
 
 #[tonic::async_trait]
 impl vm_service_server::VmService for VmService {
     async fn create(
         &self,
-        _request: Request<VmServiceCreateRequest>,
+        request: Request<VmServiceCreateRequest>,
     ) -> Result<Response<VmServiceCreateResponse>, Status> {
-        todo!()
+        let mut vms = self.vms.lock().await;
+        let req = request.into_inner();
+
+        let Some(vm) = req.machine else {
+            return Err(Status::invalid_argument("No machine config provided"));
+        };
+
+        let Some(root_drive) = vm.root_drive else {
+            return Err(Status::invalid_argument("No root drive provided"));
+        };
+
+        let id = VmID::new(vm.id);
+        let spec = VmSpec {
+            memory_size: vm.mem_size_mb,
+            vcpu_count: vm.vcpu_count,
+            kernel_image_path: PathBuf::from(vm.kernel_img_path.as_str()),
+            kernel_args: vm.kernel_args,
+            root_drive: RootDriveSpec {
+                host_path: PathBuf::from(root_drive.host_path.as_str()),
+                read_only: false,
+            },
+            mounts: Vec::new(),
+        };
+
+        let vm = vms
+            .create(id, spec)
+            .map_err(|_| Status::internal("Failed to create VM"))?;
+
+        Ok(Response::new(VmServiceCreateResponse { vm_id: vm.id.to_string() }))
     }
 
     async fn free(
@@ -46,15 +85,31 @@ impl vm_service_server::VmService for VmService {
 
     async fn start(
         &self,
-        _request: Request<VmServiceStartRequest>,
+        request: Request<VmServiceStartRequest>,
     ) -> Result<Response<VmServiceStartResponse>, Status> {
-        todo!()
+        let vms = self.vms.lock().await;
+        let req = request.into_inner();
+
+        let id = VmID::new(req.vm_id);
+        let vm =
+            vms.get(&id).ok_or_else(|| Status::not_found("VM not found"))?;
+        vm.start().map_err(|_| Status::internal("Failed to start VM"))?;
+
+        Ok(Response::new(VmServiceStartResponse {}))
     }
 
     async fn stop(
         &self,
-        _request: Request<VmServiceStopRequest>,
+        request: Request<VmServiceStopRequest>,
     ) -> Result<Response<VmServiceStopResponse>, Status> {
-        todo!()
+        let vms = self.vms.lock().await;
+        let req = request.into_inner();
+
+        let id = VmID::new(req.vm_id);
+        let vm =
+            vms.get(&id).ok_or_else(|| Status::not_found("VM not found"))?;
+        vm.stop().map_err(|_| Status::internal("Failed to stop VM"))?;
+
+        Ok(Response::new(VmServiceStopResponse {}))
     }
 }
