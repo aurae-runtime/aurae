@@ -61,7 +61,7 @@ wget -qO- --show-progress "https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-${
     tar xJ
 cp "$thisDir/config/$KERNEL_CONFIG" linux-${KERNEL_VERSION}/.config
 pushd linux-${KERNEL_VERSION}
-make -j`nproc`
+KCFLAGS="-Wa,-mx86-used-note=no" make -j`nproc`
 
 mkdir -p ${TARGET_DIR}/kernel
 cp -v arch/x86/boot/bzImage ${TARGET_DIR}/kernel/vmlinuz-$KERNEL_VERSION
