@@ -385,6 +385,7 @@ dependencies = [
  "libcontainer",
  "log",
  "multi_log",
+ "net_util",
  "netlink-packet-route",
  "nix 0.26.2",
  "oci-spec",
