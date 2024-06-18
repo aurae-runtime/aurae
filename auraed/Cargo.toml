@@ -83,6 +83,7 @@ vmm = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39
 hypervisor = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39.0", features = [
     "kvm",
 ] }
+net_util = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39.0" }
 vmm-sys-util = "0.12.1"
 vm-memory = "0.14.1"
 linux-loader = "0.11.0"

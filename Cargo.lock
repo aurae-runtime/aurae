@@ -422,6 +422,7 @@ dependencies = [
  "linux-loader",
  "log",
  "multi_log",
+ "net_util",
  "netlink-packet-route",
  "nix 0.28.0",
  "oci-spec",

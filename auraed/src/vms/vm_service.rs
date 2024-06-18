@@ -23,7 +23,7 @@ use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
 
 use super::{
-    virtual_machine::{RootDriveSpec, VmID, VmSpec},
+    virtual_machine::{MountSpec, VmID, VmSpec},
     virtual_machines::VirtualMachines,
 };
 
@@ -62,16 +62,16 @@ impl vm_service_server::VmService for VmService {
             vcpu_count: vm.vcpu_count,
             kernel_image_path: PathBuf::from(vm.kernel_img_path.as_str()),
             kernel_args: vm.kernel_args,
-            root_drive: RootDriveSpec {
+            mounts: vec![MountSpec {
                 host_path: PathBuf::from(root_drive.host_path.as_str()),
                 read_only: false,
-            },
-            mounts: Vec::new(),
+            }],
+            net: Vec::new(),
         };
 
-        let vm = vms
-            .create(id, spec)
-            .map_err(|_| Status::internal("Failed to create VM"))?;
+        let vm = vms.create(id, spec).map_err(|e| {
+            Status::internal(format!("Failed to create VM: {:?}", e))
+        })?;
 
         Ok(Response::new(VmServiceCreateResponse { vm_id: vm.id.to_string() }))
     }
@@ -93,7 +93,9 @@ impl vm_service_server::VmService for VmService {
         let id = VmID::new(req.vm_id);
         let vm =
             vms.get(&id).ok_or_else(|| Status::not_found("VM not found"))?;
-        vm.start().map_err(|_| Status::internal("Failed to start VM"))?;
+        vm.start().map_err(|e| {
+            Status::internal(format!("Failed to start VM: {:?}", e))
+        })?;
 
         Ok(Response::new(VmServiceStartResponse {}))
     }
@@ -108,7 +110,9 @@ impl vm_service_server::VmService for VmService {
         let id = VmID::new(req.vm_id);
         let vm =
             vms.get(&id).ok_or_else(|| Status::not_found("VM not found"))?;
-        vm.stop().map_err(|_| Status::internal("Failed to stop VM"))?;
+        vm.stop().map_err(|e| {
+            Status::internal(format!("Failed to stop VM: {:?}", e))
+        })?;
 
         Ok(Response::new(VmServiceStopResponse {}))
     }
