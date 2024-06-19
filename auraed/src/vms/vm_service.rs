@@ -13,17 +13,18 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
+use net_util::MacAddr;
 use proto::vms::{
     vm_service_server, VmServiceCreateRequest, VmServiceCreateResponse,
     VmServiceFreeRequest, VmServiceFreeResponse, VmServiceStartRequest,
     VmServiceStartResponse, VmServiceStopRequest, VmServiceStopResponse,
 };
-use std::{path::PathBuf, sync::Arc};
+use std::{net::Ipv4Addr, path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
 
 use super::{
-    virtual_machine::{MountSpec, VmID, VmSpec},
+    virtual_machine::{MountSpec, NetSpec, VmID, VmSpec},
     virtual_machines::VirtualMachines,
 };
 
@@ -56,17 +57,29 @@ impl vm_service_server::VmService for VmService {
             return Err(Status::invalid_argument("No root drive provided"));
         };
 
+        let mut mounts = vec![MountSpec {
+            host_path: PathBuf::from(root_drive.host_path.as_str()),
+            read_only: !root_drive.is_writeable,
+        }];
+        mounts.extend(vm.drive_mounts.into_iter().map(|m| MountSpec {
+            host_path: PathBuf::from(m.host_path.as_str()),
+            read_only: !m.is_writeable,
+        }));
+
         let id = VmID::new(vm.id);
         let spec = VmSpec {
             memory_size: vm.mem_size_mb,
             vcpu_count: vm.vcpu_count,
             kernel_image_path: PathBuf::from(vm.kernel_img_path.as_str()),
             kernel_args: vm.kernel_args,
-            mounts: vec![MountSpec {
-                host_path: PathBuf::from(root_drive.host_path.as_str()),
-                read_only: false,
+            mounts,
+            net: vec![NetSpec {
+                tap: Some("tap0".to_string()),
+                ip: Ipv4Addr::new(192, 168, 122, 1),
+                mask: Ipv4Addr::new(255, 255, 255, 255),
+                mac: MacAddr::local_random(),
+                host_mac: Some(MacAddr::local_random()),
             }],
-            net: Vec::new(),
         };
 
         let vm = vms.create(id, spec).map_err(|e| {
@@ -78,22 +91,28 @@ impl vm_service_server::VmService for VmService {
 
     async fn free(
         &self,
-        _request: Request<VmServiceFreeRequest>,
+        request: Request<VmServiceFreeRequest>,
     ) -> Result<Response<VmServiceFreeResponse>, Status> {
-        todo!()
+        let req = request.into_inner();
+        let id = VmID::new(req.vm_id);
+
+        let mut vms = self.vms.lock().await;
+        vms.delete(&id).map_err(|e| {
+            Status::internal(format!("Failed to start VM: {:?}", e))
+        })?;
+
+        Ok(Response::new(VmServiceFreeResponse { vm_id: req.vm_id }))
     }
 
     async fn start(
         &self,
         request: Request<VmServiceStartRequest>,
     ) -> Result<Response<VmServiceStartResponse>, Status> {
-        let vms = self.vms.lock().await;
         let req = request.into_inner();
-
         let id = VmID::new(req.vm_id);
-        let vm =
-            vms.get(&id).ok_or_else(|| Status::not_found("VM not found"))?;
-        vm.start().map_err(|e| {
+
+        let mut vms = self.vms.lock().await;
+        vms.start(&id).map_err(|e| {
             Status::internal(format!("Failed to start VM: {:?}", e))
         })?;
 
@@ -104,13 +123,11 @@ impl vm_service_server::VmService for VmService {
         &self,
         request: Request<VmServiceStopRequest>,
     ) -> Result<Response<VmServiceStopResponse>, Status> {
-        let vms = self.vms.lock().await;
         let req = request.into_inner();
-
         let id = VmID::new(req.vm_id);
-        let vm =
-            vms.get(&id).ok_or_else(|| Status::not_found("VM not found"))?;
-        vm.stop().map_err(|e| {
+
+        let mut vms = self.vms.lock().await;
+        vms.stop(&id).map_err(|e| {
             Status::internal(format!("Failed to stop VM: {:?}", e))
         })?;
 

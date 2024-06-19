@@ -15,27 +15,10 @@
 
 use super::{SocketStream, SystemRuntime, SystemRuntimeError};
 use crate::init::{
-    fileio::show_dir,
-    fs::{copy_dir_all, FsError, MountSpec},
-    logging, network,
-    power::spawn_thread_power_button_listener,
-    system_runtimes::create_tcp_socket_stream,
-    BANNER,
+    fs::MountSpec, logging, network, power::spawn_thread_power_button_listener,
+    system_runtimes::create_tcp_socket_stream, BANNER,
 };
-use client::{
-    cells::cell_service::CellServiceClient,
-    cri::runtime_service::RuntimeServiceClient,
-};
-use fancy_regex::RuntimeError;
-use nix::{
-    mount::MsFlags,
-    sys::stat::Mode,
-    unistd::{self, chroot, mkdir},
-};
-use proto::cells::{
-    Cell, CellServiceAllocateRequest, CellServiceStartRequest, Executable,
-};
-use std::{io, net::SocketAddr, path::Path, thread::sleep};
+use std::{net::SocketAddr, path::Path};
 use tonic::async_trait;
 use tracing::{error, info, trace};
 
@@ -88,75 +71,6 @@ impl SystemRuntime for Pid1SystemRuntime {
         // TODO From within the context of a container (cgroup trailing / in cgroup namespace)
         // TODO We likely to do not need to mount these filesystems.
         // TODO Do we want to have a way to "try" these mounts and continue without erroring?
-
-        let chmod_0755: Mode = Mode::S_IRWXU
-            | Mode::S_IRGRP
-            | Mode::S_IXGRP
-            | Mode::S_IROTH
-            | Mode::S_IXOTH;
-        let chmod_0555: Mode = Mode::S_IRUSR
-            | Mode::S_IXUSR
-            | Mode::S_IRGRP
-            | Mode::S_IXGRP
-            | Mode::S_IROTH
-            | Mode::S_IXOTH;
-        let common_mnt_flags: MsFlags =
-            MsFlags::MS_NODEV | MsFlags::MS_NOEXEC | MsFlags::MS_NOSUID;
-
-        info!("Mounting /dev");
-        nix::mount::mount(
-            Some("devtmpfs"),
-            "/dev",
-            Some("devtmpfs"),
-            nix::mount::MsFlags::MS_NOSUID,
-            Some("mode=0755"),
-        )
-        .map_err(|e| FsError::MountFailure {
-            spec: MountSpec {
-                source: Some("devtmpfs"),
-                target: "/dev",
-                fstype: Some("devtmpfs"),
-            },
-            source: io::Error::from_raw_os_error(e as i32),
-        })?;
-
-        info!("Mounting root filesystem");
-        mkdir("/mnt/root", chmod_0755).ok();
-        nix::mount::mount::<_, _, _, [u8]>(
-            Some("/dev/vda1"),
-            "/mnt/root",
-            Some("ext4"),
-            nix::mount::MsFlags::MS_RELATIME,
-            None,
-        )
-        .map_err(|e| FsError::MountFailure {
-            spec: MountSpec {
-                source: Some("/dev/vda"),
-                target: "/mnt/root",
-                fstype: Some("ext4"),
-            },
-            source: io::Error::from_raw_os_error(e as i32),
-        })?;
-
-        info!("Copying aurae config to root filesystem");
-        copy_dir_all("/etc/aurae", "/mnt/root/etc/aurae")?;
-
-        info!("Changing root to to /mnt/root");
-        nix::unistd::chdir("/mnt/root").map_err(|e| {
-            SystemRuntimeError::Other(anyhow::anyhow!(
-                "Failed to chdir to new root: {e}"
-            ))
-        })?;
-        nix::unistd::chroot(".").map_err(|e| {
-            SystemRuntimeError::Other(anyhow::anyhow!(
-                "Failed to chroot new root: {e}"
-            ))
-        })?;
-        nix::unistd::chdir("/").map_err(|e| {
-            SystemRuntimeError::Other(anyhow::anyhow!(
-                "Failed to chdir to /: {e}"
-            ))
-        })?;
 
         MountSpec {
             source: Some("sysfs"),

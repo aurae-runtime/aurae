@@ -16,9 +16,8 @@ pub struct VirtualMachines {
 impl VirtualMachines {
     /// Create a new instance of the virtual machines cache.
     pub fn new() -> Self {
-        // SAFETY: Trivially safe.
         unsafe {
-            libc::signal(libc::SIGCHLD, libc::SIG_IGN);
+            let _ = libc::signal(libc::SIGCHLD, libc::SIG_IGN);
         }
 
         // Before we start any threads, mask the signals we'll be
@@ -54,19 +53,35 @@ impl VirtualMachines {
         }
 
         let vm = VirtualMachine::new(id.clone(), spec)?;
-        self.cache.insert(id, vm.clone());
+        let _ = self.cache.insert(id, vm.clone()).is_none();
         Ok(vm)
     }
 
-    /// Get a virtual machine by its ID
-    pub fn get(&self, id: &VmID) -> Option<&VirtualMachine> {
-        self.cache.get(id)
+    /// Stop a virtual machine by its ID
+    pub fn stop(&mut self, id: &VmID) -> Result<(), anyhow::Error> {
+        if let Some(vm) = self.cache.get_mut(id) {
+            vm.stop()?;
+            Ok(())
+        } else {
+            Err(anyhow!("Virtual machine with ID '{:?}' not found", id))
+        }
     }
 
-    // Stop a virtual machine by its ID
-    pub fn stop(&self, id: &VmID) -> Result<(), anyhow::Error> {
-        if let Some(vm) = self.cache.get(id) {
-            vm.stop()?;
+    /// Start a virtual machine by its ID
+    pub fn start(&mut self, id: &VmID) -> Result<(), anyhow::Error> {
+        if let Some(vm) = self.cache.get_mut(id) {
+            vm.start()?;
+            Ok(())
+        } else {
+            Err(anyhow!("Virtual machine with ID '{:?}' not found", id))
+        }
+    }
+
+    /// Delete a virtual machine by its ID
+    pub fn delete(&mut self, id: &VmID) -> Result<(), anyhow::Error> {
+        if let Some(vm) = self.cache.get_mut(id) {
+            vm.delete()?;
+            let _ = self.cache.remove(id);
             Ok(())
         } else {
             Err(anyhow!("Virtual machine with ID '{:?}' not found", id))
