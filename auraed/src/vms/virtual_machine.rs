@@ -1,20 +1,18 @@
 use anyhow::anyhow;
 use net_util::MacAddr;
-use proto::vms::DriveMount;
 use std::{
     fmt,
     net::Ipv4Addr,
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::{Arc, Mutex},
 };
 use vmm::{
     api::ApiAction,
     config::{
         ConsoleConfig, ConsoleOutputMode, CpuFeatures, CpusConfig,
-        DebugConsoleConfig, DiskConfig, HotplugMethod, MemoryConfig,
-        PayloadConfig, RngConfig, VhostMode, DEFAULT_DISK_NUM_QUEUES,
-        DEFAULT_DISK_QUEUE_SIZE, DEFAULT_MAX_PHYS_BITS, DEFAULT_NET_NUM_QUEUES,
-        DEFAULT_NET_QUEUE_SIZE,
+        DebugConsoleConfig, HotplugMethod, MemoryConfig, PayloadConfig,
+        RngConfig, VhostMode, DEFAULT_DISK_NUM_QUEUES, DEFAULT_DISK_QUEUE_SIZE,
+        DEFAULT_MAX_PHYS_BITS, DEFAULT_NET_NUM_QUEUES, DEFAULT_NET_QUEUE_SIZE,
     },
 };
 
@@ -47,7 +45,6 @@ pub struct VmSpec {
 
 impl From<VmSpec> for vmm::vm_config::VmConfig {
     fn from(spec: VmSpec) -> Self {
-        let drives = spec.mounts.into_iter().map(Into::into).collect();
         vmm::vm_config::VmConfig {
             cpus: CpusConfig {
                 boot_vcpus: 1,
@@ -75,10 +72,10 @@ impl From<VmSpec> for vmm::vm_config::VmConfig {
                 firmware: None,
                 kernel: Some(spec.kernel_image_path),
                 cmdline: Some(spec.kernel_args.join(" ")),
-                initramfs: Some(PathBuf::from("target/initramfs.zst")),
+                initramfs: None,
             }),
             rate_limit_groups: None,
-            disks: Some(drives),
+            disks: Some(spec.mounts.into_iter().map(Into::into).collect()),
             net: Some(spec.net.into_iter().map(Into::into).collect()),
             rng: RngConfig::default(),
             balloon: None,
@@ -182,7 +179,15 @@ impl From<MountSpec> for vmm::vm_config::DiskConfig {
 pub struct VirtualMachine {
     pub id: VmID,
     pub vm: VmSpec,
+    status: VmStatus,
     manager: Arc<Mutex<Manager>>,
+}
+
+#[derive(Debug, Clone)]
+enum VmStatus {
+    Running,
+    Stopped,
+    Deleting,
 }
 
 impl fmt::Debug for VirtualMachine {
@@ -211,11 +216,15 @@ impl VirtualMachine {
         Ok(VirtualMachine {
             id,
             vm: spec,
+            status: VmStatus::Stopped,
             manager: Arc::new(Mutex::new(manager)),
         })
     }
 
-    pub fn start(&self) -> Result<(), anyhow::Error> {
+    pub fn start(&mut self) -> Result<(), anyhow::Error> {
+        if let VmStatus::Running = self.status {
+            return Err(anyhow!("Virtual machine already running"));
+        }
         let manager = self
             .manager
             .lock()
@@ -225,6 +234,7 @@ impl VirtualMachine {
             let _ = vmm::api::VmBoot
                 .send(manager.events.try_clone()?, sender.clone(), ())
                 .map_err(|e| anyhow!("Failed to send start request: {e}"))?;
+            self.status = VmStatus::Running;
         } else {
             return Err(anyhow!("Virtual machine manager not initialized"))?;
         }
@@ -232,7 +242,10 @@ impl VirtualMachine {
         Ok(())
     }
 
-    pub fn stop(&self) -> Result<(), anyhow::Error> {
+    pub fn stop(&mut self) -> Result<(), anyhow::Error> {
+        if let VmStatus::Stopped = self.status {
+            return Err(anyhow!("Virtual machine already stopped"));
+        }
         let manager = self
             .manager
             .lock()
@@ -242,6 +255,28 @@ impl VirtualMachine {
             let _ = vmm::api::VmShutdown
                 .send(manager.events.try_clone()?, sender.clone(), ())
                 .map_err(|e| anyhow!("Failed to send stop request: {e}"))?;
+            self.status = VmStatus::Stopped;
+        } else {
+            return Err(anyhow!("Virtual machine manager not initialized"));
+        }
+
+        Ok(())
+    }
+
+    pub fn delete(&mut self) -> Result<(), anyhow::Error> {
+        if let VmStatus::Running = self.status {
+            self.stop()?;
+            self.status = VmStatus::Deleting;
+        };
+        let manager = self
+            .manager
+            .lock()
+            .map_err(|_| anyhow!("Failed to aquire lock for vm manager"))?;
+
+        if let Some(sender) = &manager.sender {
+            let _ = vmm::api::VmDelete
+                .send(manager.events.try_clone()?, sender.clone(), ())
+                .map_err(|e| anyhow!("Failed to send destroy request: {e}"))?;
         } else {
             return Err(anyhow!("Virtual machine manager not initialized"));
         }
@@ -266,42 +301,32 @@ mod tests {
         let spec = VmSpec {
             memory_size: 2048,
             vcpu_count: 2,
-            kernel_image_path: PathBuf::from("target/kernel/vmlinuz-5.15.68"),
+            kernel_image_path: PathBuf::from(
+                "/var/lib/aurae/vm/kernel/vmlinux.bin",
+            ),
             kernel_args: vec![
                 "console=ttyS0".to_string(),
                 "root=/dev/vda1".to_string(),
             ],
-            mounts: vec![
-                MountSpec {
-                    host_path: PathBuf::from(
-                        "target/disk/focal-server-cloudimg-amd64.raw",
-                    ),
-                    read_only: false,
-                },
-                MountSpec {
-                    host_path: PathBuf::from(
-                        "target/disk/ubuntu-cloudinit.img",
-                    ),
-                    read_only: false,
-                },
-            ],
+            mounts: vec![MountSpec {
+                host_path: PathBuf::from("/var/lib/aurae/vm/image/disk.raw"),
+                read_only: false,
+            }],
             net: vec![NetSpec {
                 tap: Some("tap0".to_string()),
                 ip: Ipv4Addr::new(192, 168, 122, 1),
-                mask: Ipv4Addr::new(255, 255, 255, 0),
+                mask: Ipv4Addr::new(255, 255, 255, 255),
                 mac: MacAddr::local_random(),
-                host_mac: Some(
-                    MacAddr::parse_str("52:54:00:27:bb:eb")
-                        .expect("Failed to parse MAC address"),
-                ),
+                host_mac: Some(MacAddr::local_random()),
             }],
         };
 
-        let vm = VirtualMachine::new(id.clone(), spec).unwrap();
+        let mut vm = VirtualMachine::new(id.clone(), spec).unwrap();
         assert_eq!(vm.id, id);
 
-        vm.start().unwrap();
+        assert!(vm.start().is_ok(), "{:?}", vm);
         std::thread::sleep(std::time::Duration::from_secs(120));
-        vm.stop().unwrap();
+        assert!(vm.stop().is_ok(), "{:?}", vm);
+        assert!(vm.delete().is_ok(), "{:?}", vm);
     }
 }

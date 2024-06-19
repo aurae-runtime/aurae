@@ -12,18 +12,12 @@ pub struct Manager {
     pub events: EventFd,
     pub sender: Option<Sender<ApiRequest>>,
     hypervisor: Arc<dyn Hypervisor>,
-    exit: EventFd,
-    monitor: EventFd,
     debug: EventFd,
     vmm_thread: Option<VmmThreadHandle>,
 }
 
 impl Manager {
     pub fn new() -> Self {
-        let exit =
-            EventFd::new(EFD_NONBLOCK).expect("Failed to create exit eventfd");
-        let monitor =
-            EventFd::new(EFD_NONBLOCK).expect("Failed to create event monitor");
         let debug =
             EventFd::new(EFD_NONBLOCK).expect("Failed to create event monitor");
         let api_evt =
@@ -34,8 +28,6 @@ impl Manager {
 
         Self {
             hypervisor,
-            exit,
-            monitor,
             debug,
             sender: None,
             events: api_evt,

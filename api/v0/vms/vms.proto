@@ -56,10 +56,10 @@ message VmServiceCreateResponse{
   string vm_id = 1;
 }
 
-message VmServiceFreeRequest{}
-message VmServiceFreeResponse{
+message VmServiceFreeRequest{
   string vm_id = 1;
 }
+message VmServiceFreeResponse{}
 
 message VmServiceStartRequest{
   string vm_id = 1;
@@ -121,6 +121,7 @@ message RootDrive {
   bool is_writeable = 2;
 }
 
+// Message to specify a block device config for a VM
 message DriveMount {
   // The path on the host to the filesystem image or device
   // that will be mounted inside the VM.
