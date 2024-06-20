@@ -67,11 +67,11 @@ impl VirtualMachines {
         }
     }
 
-    /// Start a virtual machine by its ID
-    pub fn start(&mut self, id: &VmID) -> Result<(), anyhow::Error> {
+    /// Start a virtual machine by its ID, returning the scope ID of its TAP device
+    pub fn start(&mut self, id: &VmID) -> Result<u32, anyhow::Error> {
         if let Some(vm) = self.cache.get_mut(id) {
             vm.start()?;
-            Ok(())
+            Ok(vm.tap().unwrap_or_default())
         } else {
             Err(anyhow!("Virtual machine with ID '{:?}' not found", id))
         }

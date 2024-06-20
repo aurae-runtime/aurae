@@ -22,6 +22,7 @@ use proto::vms::{
 use std::{net::Ipv4Addr, path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
+use vmm_sys_util::rand;
 
 use super::{
     virtual_machine::{MountSpec, NetSpec, VmID, VmSpec},
@@ -66,6 +67,19 @@ impl vm_service_server::VmService for VmService {
             read_only: !m.is_writeable,
         }));
 
+        let net = vec![NetSpec {
+            tap: Some(format!(
+                "aurae0-{}",
+                rand::rand_alphanumerics(8).into_string().map_err(|_| {
+                    Status::internal("Failed to generate tap device name")
+                })?
+            )),
+            ip: Ipv4Addr::new(192, 168, 122, 1),
+            mask: Ipv4Addr::new(255, 255, 255, 255),
+            mac: MacAddr::local_random(),
+            host_mac: Some(MacAddr::local_random()),
+        }];
+
         let id = VmID::new(vm.id);
         let spec = VmSpec {
             memory_size: vm.mem_size_mb,
@@ -73,13 +87,7 @@ impl vm_service_server::VmService for VmService {
             kernel_image_path: PathBuf::from(vm.kernel_img_path.as_str()),
             kernel_args: vm.kernel_args,
             mounts,
-            net: vec![NetSpec {
-                tap: Some("tap0".to_string()),
-                ip: Ipv4Addr::new(192, 168, 122, 1),
-                mask: Ipv4Addr::new(255, 255, 255, 255),
-                mac: MacAddr::local_random(),
-                host_mac: Some(MacAddr::local_random()),
-            }],
+            net,
         };
 
         let vm = vms.create(id, spec).map_err(|e| {
@@ -112,11 +120,11 @@ impl vm_service_server::VmService for VmService {
         let id = VmID::new(req.vm_id);
 
         let mut vms = self.vms.lock().await;
-        vms.start(&id).map_err(|e| {
+        let scope_id = vms.start(&id).map_err(|e| {
             Status::internal(format!("Failed to start VM: {:?}", e))
         })?;
 
-        Ok(Response::new(VmServiceStartResponse {}))
+        Ok(Response::new(VmServiceStartResponse { socket_scope_id: scope_id }))
     }
 
     async fn stop(

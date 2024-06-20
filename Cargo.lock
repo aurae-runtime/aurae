@@ -419,7 +419,6 @@ dependencies = [
  "libc",
  "libcgroups",
  "libcontainer",
- "linux-loader",
  "log",
  "multi_log",
  "net_util",

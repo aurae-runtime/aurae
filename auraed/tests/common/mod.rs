@@ -21,7 +21,7 @@ use client::{
     AuraeConfig, AuraeSocket, AuthConfig, Client, ClientError, SystemConfig,
 };
 use once_cell::sync::Lazy;
-use std::{future::Future, time::Duration};
+use std::{future::Future, net::SocketAddr, time::Duration};
 use tokio::sync::OnceCell;
 
 pub mod cells;
@@ -82,16 +82,17 @@ async fn run_auraed() -> Client {
         },
     };
 
-    let _ = tokio::spawn(async move {
-        let mut runtime = AuraedRuntime::default();
-        runtime.auraed = AuraedPath::from_path("auraed");
-
+    tokio::spawn(async move {
+        let runtime = AuraedRuntime {
+            auraed: AuraedPath::from_path("auraed"),
+            ..Default::default()
+        };
         auraed::run(runtime, Some(socket), false, false).await.unwrap()
     });
 
     let mut retry_strategy = default_retry_strategy();
 
-    let client = loop {
+    loop {
         match Client::new(client_config.clone()).await {
             Ok(client) => break Ok(client),
             e @ Err(ClientError::ConnectionError(_)) => {
@@ -104,9 +105,7 @@ async fn run_auraed() -> Client {
             e => break e,
         }
     }
-    .expect("failed to create client");
-
-    client
+    .expect("failed to create client")
 }
 
 static CLIENT: OnceCell<Client> = OnceCell::const_new();
@@ -119,21 +118,19 @@ pub async fn auraed_client() -> Client {
     CLIENT.get_or_init(inner).await.clone()
 }
 
-// pub async fn remote_auraed_client(ip: String, scope_id: u32) -> Client {
-//     let client_config = AuraeConfig {
-//         auth: AuthConfig {
-//             ca_crt: "/etc/aurae/pki/ca.crt".to_string(),
-//             client_crt: "/etc/aurae/pki/_signed.client.nova.crt".to_string(),
-//             client_key: "/etc/aurae/pki/client.nova.key".to_string(),
-//         },
-//         system: SystemConfig { socket: AuraeSocket::IPv6 { ip, scope_id } },
-//     };
-//     let client = Client::new(client_config.clone())
-//         .await
-//         .expect("failed to create client");
-//
-//     client
-// }
+pub async fn remote_auraed_client(ip: String) -> Client {
+    let addr: SocketAddr =
+        ip.parse().expect("failed to parse socket address for aurae client");
+    let client_config = AuraeConfig {
+        auth: AuthConfig {
+            ca_crt: "/etc/aurae/pki/ca.crt".to_string(),
+            client_crt: "/etc/aurae/pki/_signed.client.nova.crt".to_string(),
+            client_key: "/etc/aurae/pki/client.nova.key".to_string(),
+        },
+        system: SystemConfig { socket: AuraeSocket::Addr(addr) },
+    };
+    Client::new(client_config.clone()).await.expect("failed to create client")
+}
 
 pub fn default_retry_strategy() -> ExponentialBackoff<SystemClock> {
     ExponentialBackoffBuilder::new()

@@ -64,7 +64,9 @@ message VmServiceFreeResponse{}
 message VmServiceStartRequest{
   string vm_id = 1;
 }
-message VmServiceStartResponse{}
+message VmServiceStartResponse{
+  uint32 socket_scope_id = 1;
+}
 
 message VmServiceStopRequest{
   string vm_id = 1;
