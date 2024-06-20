@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use net_util::MacAddr;
 use std::{
-    fmt,
+    fmt::{self, Display},
     net::Ipv4Addr,
     path::PathBuf,
     sync::{Arc, Mutex},
@@ -9,7 +9,7 @@ use std::{
 use vmm::{
     api::ApiAction,
     config::{
-        ConsoleConfig, ConsoleOutputMode, CpuFeatures, CpusConfig,
+        default_console, default_serial, CpuFeatures, CpusConfig,
         DebugConsoleConfig, HotplugMethod, MemoryConfig, PayloadConfig,
         RngConfig, VhostMode, DEFAULT_DISK_NUM_QUEUES, DEFAULT_DISK_QUEUE_SIZE,
         DEFAULT_MAX_PHYS_BITS, DEFAULT_NET_NUM_QUEUES, DEFAULT_NET_QUEUE_SIZE,
@@ -27,9 +27,9 @@ impl VmID {
     }
 }
 
-impl ToString for VmID {
-    fn to_string(&self) -> String {
-        self.0.clone()
+impl Display for VmID {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -47,7 +47,7 @@ impl From<VmSpec> for vmm::vm_config::VmConfig {
     fn from(spec: VmSpec) -> Self {
         vmm::vm_config::VmConfig {
             cpus: CpusConfig {
-                boot_vcpus: 1,
+                boot_vcpus: spec.vcpu_count as u8,
                 max_vcpus: spec.vcpu_count as u8,
                 topology: None,
                 kvm_hyperv: false,
@@ -81,18 +81,8 @@ impl From<VmSpec> for vmm::vm_config::VmConfig {
             balloon: None,
             fs: None,
             pmem: None,
-            serial: ConsoleConfig {
-                file: None,
-                mode: ConsoleOutputMode::Tty,
-                iommu: false,
-                socket: None,
-            },
-            console: ConsoleConfig {
-                file: None,
-                mode: ConsoleOutputMode::Null,
-                iommu: false,
-                socket: None,
-            },
+            serial: default_serial(),
+            console: default_console(),
             debug_console: DebugConsoleConfig::default(),
             devices: None,
             user_devices: None,
@@ -283,6 +273,12 @@ impl VirtualMachine {
 
         Ok(())
     }
+
+    /// Get a reference to the tap device's zone id
+    pub fn tap(&self) -> Option<u32> {
+        let iface = self.vm.net.first()?.clone().tap?;
+        nix::net::if_::if_nametoindex(iface.as_str()).ok()
+    }
 }
 
 #[cfg(test)]
@@ -296,16 +292,16 @@ mod tests {
     };
 
     #[test]
-    fn test_create_vm_auraed_init() {
+    fn test_create_vm() {
         let id = VmID::new("test_vm");
         let spec = VmSpec {
-            memory_size: 2048,
-            vcpu_count: 2,
+            memory_size: 1024,
+            vcpu_count: 4,
             kernel_image_path: PathBuf::from(
                 "/var/lib/aurae/vm/kernel/vmlinux.bin",
             ),
             kernel_args: vec![
-                "console=ttyS0".to_string(),
+                "console=hvc0".to_string(),
                 "root=/dev/vda1".to_string(),
             ],
             mounts: vec![MountSpec {
@@ -314,10 +310,10 @@ mod tests {
             }],
             net: vec![NetSpec {
                 tap: Some("tap0".to_string()),
-                ip: Ipv4Addr::new(192, 168, 122, 1),
+                ip: Ipv4Addr::new(192, 168, 249, 1),
                 mask: Ipv4Addr::new(255, 255, 255, 255),
                 mac: MacAddr::local_random(),
-                host_mac: Some(MacAddr::local_random()),
+                host_mac: None,
             }],
         };
 
@@ -325,8 +321,12 @@ mod tests {
         assert_eq!(vm.id, id);
 
         assert!(vm.start().is_ok(), "{:?}", vm);
-        std::thread::sleep(std::time::Duration::from_secs(120));
+
+        // Give the VM some time to boot
+        std::thread::sleep(std::time::Duration::from_secs(10));
         assert!(vm.stop().is_ok(), "{:?}", vm);
+
+        std::thread::sleep(std::time::Duration::from_secs(5));
         assert!(vm.delete().is_ok(), "{:?}", vm);
     }
 }
