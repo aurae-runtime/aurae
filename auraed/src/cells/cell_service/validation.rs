@@ -146,14 +146,17 @@ pub struct ValidatedCpuController {
     #[field_type(Option<i64>)]
     #[validate(opt)]
     pub max: Option<Limit>,
+
+    #[validate(none)]
+    pub period: Option<u64>,
 }
 
 impl CpuControllerTypeValidator for CpuControllerValidator {}
 
 impl From<ValidatedCpuController> for cgroups::cpu::CpuController {
     fn from(value: ValidatedCpuController) -> Self {
-        let ValidatedCpuController { weight, max } = value;
-        Self { weight, max }
+        let ValidatedCpuController { weight, max, period } = value;
+        Self { weight, max, period }
     }
 }
 
@@ -310,7 +313,7 @@ mod tests {
     #[test]
     fn test_cell_type_cpu_valid() {
         let validated = CellValidator::validate_cpu(
-            Some(CpuController { weight: Some(1000), max: None }),
+            Some(CpuController { weight: Some(1000), max: None, period: None }),
             "field",
             Some("parent"),
         );
@@ -320,12 +323,13 @@ mod tests {
         let controller = inner.unwrap();
         assert_eq!(controller.weight, Some(Weight::new(1000)));
         assert_eq!(controller.max, None);
+        assert_eq!(controller.period, None);
     }
 
     #[test]
     fn test_cell_type_cpu_weight_too_small() {
         let validated = CellValidator::validate_cpu(
-            Some(CpuController { weight: Some(0), max: None }),
+            Some(CpuController { weight: Some(0), max: None, period: None }),
             "field",
             Some("parent"),
         );
@@ -335,7 +339,11 @@ mod tests {
     #[test]
     fn test_cell_type_cpu_weight_too_large() {
         let validated = CellValidator::validate_cpu(
-            Some(CpuController { weight: Some(10001), max: None }),
+            Some(CpuController {
+                weight: Some(10001),
+                max: None,
+                period: None,
+            }),
             "field",
             Some("parent"),
         );
@@ -345,7 +353,11 @@ mod tests {
     #[test]
     fn test_cell_type_cpu_max_too_small() {
         let validated = CellValidator::validate_cpu(
-            Some(CpuController { weight: Some(1000), max: Some(-1) }),
+            Some(CpuController {
+                weight: Some(1000),
+                max: Some(-1),
+                period: None,
+            }),
             "field",
             Some("parent"),
         );

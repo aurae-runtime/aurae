@@ -34,4 +34,5 @@ use super::{Limit, Weight};
 pub struct CpuController {
     pub weight: Option<Weight>,
     pub max: Option<Limit>,
+    pub period: Option<u64>,
 }

@@ -62,7 +62,8 @@ impl CellSpec {
             cgroup_spec: CgroupSpec {
                 cpu: Some(CpuController {
                     weight: Some(Weight::new(100)),
-                    max: Some(Limit::new(100000)),
+                    max: None,
+                    period: Some(100000),
                 }),
                 cpuset: None,
                 memory: Some(MemoryController {
