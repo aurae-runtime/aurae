@@ -53,7 +53,7 @@ fancy-regex = { workspace = true }
 futures = "0.3.28"
 ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
-libc = "0.2.147" # TODO: Nix comes with libc, can we rely on that?
+libc = "0.2.155" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
 libcgroups = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7a4ea758a436218b9db1b39c69cd", default-features = false, features = [
     "v2",
