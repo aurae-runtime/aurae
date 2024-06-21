@@ -207,6 +207,15 @@ message CpuController {
   // By default a cgroup has no limit, represented as the literal string "max".
   // Not settings this field retains the default of no limit.
   optional int64 max = 2;
+
+  // The period is used as the scheduling slice.  It interacts with
+  // max (see above) as a given workload will only run for max
+  // microseconds within period microseconds.
+  //
+  // * Minimum: 0
+  //
+  // By default a cgroup has period 100000.
+  optional uint64 period = 3;
 }
 
 // Docs: https://docs.kernel.org/admin-guide/cgroup-v2.html#cpuset

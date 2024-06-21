@@ -11,6 +11,9 @@ use tokio::process::{Child, Command};
 use tokio::task::JoinHandle;
 use tracing::info_span;
 
+// TODO: decide if we're going to use the description or not.  Remove if not.
+#[allow(dead_code)]
+
 #[derive(Debug)]
 pub struct Executable {
     pub name: ExecutableName,
