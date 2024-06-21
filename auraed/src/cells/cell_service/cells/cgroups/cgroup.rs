@@ -44,10 +44,6 @@ use std::str::FromStr;
 
 use super::error::{CgroupsError, Result};
 
-/// This is used as the denominator for the CPU quota/period configuration.  This allows users to
-/// set the quota as if it was in the unit "µs/s" without worrying about also setting the period.
-const MICROSECONDS_PER_SECOND: u64 = 1000000;
-
 #[derive(Debug)]
 pub struct Cgroup {
     cell_name: CellName,
@@ -97,23 +93,28 @@ impl Cgroup {
             let cpu_builder = LinuxCpuBuilder::default();
 
             // cpu controller
-            let cpu_builder = if let Some(CpuController { weight, max }) = cpu {
-                let cpu_builder = if let Some(weight) = weight {
-                    cpu_builder.shares(weight.into_inner())
+            let cpu_builder =
+                if let Some(CpuController { weight, max, period }) = cpu {
+                    let mut cpu_builder = if let Some(weight) = weight {
+                        cpu_builder.shares(weight.into_inner())
+                    } else {
+                        cpu_builder
+                    };
+
+                    cpu_builder = if let Some(max) = max {
+                        cpu_builder.quota(max.into_inner())
+                    } else {
+                        cpu_builder
+                    };
+
+                    if let Some(period) = period {
+                        cpu_builder.period(period)
+                    } else {
+                        cpu_builder
+                    }
                 } else {
                     cpu_builder
                 };
-
-                if let Some(max) = max {
-                    cpu_builder
-                        .quota(max.into_inner())
-                        .period(MICROSECONDS_PER_SECOND) // microseconds in a second
-                } else {
-                    cpu_builder
-                }
-            } else {
-                cpu_builder
-            };
 
             // cpuset controller
             let cpu_builder =

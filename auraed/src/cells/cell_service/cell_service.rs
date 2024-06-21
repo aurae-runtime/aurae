@@ -406,12 +406,13 @@ impl TryFrom<&super::cells::Cell> for CellGraphNode {
 
 impl From<&super::cells::cgroups::CpuController> for CpuController {
     fn from(value: &super::cells::cgroups::CpuController) -> Self {
-        let super::cells::cgroups::CpuController { weight, max } =
+        let super::cells::cgroups::CpuController { weight, max, period } =
             value.clone();
 
         Self {
             weight: weight.map(|x| x.into_inner()),
             max: max.map(|x| x.into_inner()),
+            period,
         }
     }
 }
@@ -660,7 +661,7 @@ mod tests {
         // Create a validated cell for the allocate request
         let cell = ValidatedCell {
             name: CellName::from(cell_name),
-            cpu: Some(ValidatedCpuController { weight: None, max: None }),
+            cpu: Some(ValidatedCpuController { weight: None, max: None, period: None }),
             cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
             memory: Some(ValidatedMemoryController {
                 min: None,
