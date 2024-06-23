@@ -118,7 +118,9 @@ pub async fn auraed_client() -> Client {
     CLIENT.get_or_init(inner).await.clone()
 }
 
-pub async fn remote_auraed_client(ip: String) -> Client {
+pub async fn remote_auraed_client(
+    ip: String,
+) -> Result<Client, client::ClientError> {
     let addr: SocketAddr =
         ip.parse().expect("failed to parse socket address for aurae client");
     let client_config = AuraeConfig {
@@ -129,7 +131,7 @@ pub async fn remote_auraed_client(ip: String) -> Client {
         },
         system: SystemConfig { socket: AuraeSocket::Addr(addr) },
     };
-    Client::new(client_config.clone()).await.expect("failed to create client")
+    Client::new(client_config.clone()).await
 }
 
 pub fn default_retry_strategy() -> ExponentialBackoff<SystemClock> {

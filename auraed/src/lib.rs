@@ -78,12 +78,12 @@ use crate::{
 use anyhow::{anyhow, Context};
 use aurae_ebpf_shared::{ForkedProcess, ProcessExit, Signal};
 use once_cell::sync::OnceCell;
-use proto::vms::vm_service_server::VmServiceServer;
 use proto::{
     cells::cell_service_server::CellServiceServer,
     cri::runtime_service_server::RuntimeServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
     observe::observe_service_server::ObserveServiceServer,
+    vms::vm_service_server::VmServiceServer,
 };
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -93,7 +93,7 @@ use tokio::task::JoinHandle;
 use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace, warn};
-use vms::vm_service::VmService;
+use vms::VmService;
 
 mod auraed_path;
 mod cells;
