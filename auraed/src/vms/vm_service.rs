@@ -15,9 +15,10 @@
 
 use net_util::MacAddr;
 use proto::vms::{
-    vm_service_server, VmServiceCreateRequest, VmServiceCreateResponse,
-    VmServiceFreeRequest, VmServiceFreeResponse, VmServiceStartRequest,
-    VmServiceStartResponse, VmServiceStopRequest, VmServiceStopResponse,
+    vm_service_server, VirtualMachineSummary, VmServiceCreateRequest,
+    VmServiceCreateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
+    VmServiceListResponse, VmServiceStartRequest, VmServiceStartResponse,
+    VmServiceStopRequest, VmServiceStopResponse,
 };
 use std::{net::Ipv4Addr, path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
@@ -36,8 +37,7 @@ pub struct VmService {
 
 impl VmService {
     pub fn new() -> Self {
-        let vms = Arc::new(Mutex::new(VirtualMachines::new()));
-        Self { vms }
+        Self { vms: Default::default() }
     }
 }
 
@@ -59,12 +59,12 @@ impl vm_service_server::VmService for VmService {
         };
 
         let mut mounts = vec![MountSpec {
-            host_path: PathBuf::from(root_drive.host_path.as_str()),
-            read_only: !root_drive.is_writeable,
+            host_path: PathBuf::from(root_drive.image_path.as_str()),
+            read_only: root_drive.read_only,
         }];
         mounts.extend(vm.drive_mounts.into_iter().map(|m| MountSpec {
-            host_path: PathBuf::from(m.host_path.as_str()),
-            read_only: !m.is_writeable,
+            host_path: PathBuf::from(m.image_path.as_str()),
+            read_only: m.read_only,
         }));
 
         let net = vec![NetSpec {
@@ -120,11 +120,11 @@ impl vm_service_server::VmService for VmService {
         let id = VmID::new(req.vm_id);
 
         let mut vms = self.vms.lock().await;
-        let scope_id = vms.start(&id).map_err(|e| {
+        let addr = vms.start(&id).map_err(|e| {
             Status::internal(format!("Failed to start VM: {:?}", e))
         })?;
 
-        Ok(Response::new(VmServiceStartResponse { socket_scope_id: scope_id }))
+        Ok(Response::new(VmServiceStartResponse { auraed_address: addr }))
     }
 
     async fn stop(
@@ -140,5 +140,37 @@ impl vm_service_server::VmService for VmService {
         })?;
 
         Ok(Response::new(VmServiceStopResponse {}))
+    }
+
+    async fn list(
+        &self,
+        _request: Request<proto::vms::VmServiceListRequest>,
+    ) -> Result<Response<proto::vms::VmServiceListResponse>, Status> {
+        let vms = self.vms.lock().await;
+        Ok(Response::new(VmServiceListResponse {
+            machines: vms
+                .list()
+                .iter()
+                .map(|m| VirtualMachineSummary {
+                    id: m.id.to_string(),
+                    mem_size_mb: m.vm.memory_size,
+                    vcpu_count: m.vm.vcpu_count,
+                    kernel_img_path: m
+                        .vm
+                        .kernel_image_path
+                        .to_string_lossy()
+                        .to_string(),
+                    root_dir_path: m.vm.mounts[0]
+                        .host_path
+                        .to_string_lossy()
+                        .to_string(),
+                    auraed_address: m
+                        .tap()
+                        .map(|t| t.to_string())
+                        .unwrap_or_default(),
+                    status: m.status.to_string(),
+                })
+                .collect(),
+        }))
     }
 }
