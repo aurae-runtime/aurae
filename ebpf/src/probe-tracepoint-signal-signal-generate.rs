@@ -23,11 +23,11 @@
 #![no_main]
 
 use aurae_ebpf_shared::Signal;
-use aya_bpf::helpers;
-use aya_bpf::macros::map;
-use aya_bpf::macros::tracepoint;
-use aya_bpf::maps::PerfEventArray;
-use aya_bpf::programs::TracePointContext;
+use aya_ebpf::helpers;
+use aya_ebpf::macros::map;
+use aya_ebpf::macros::tracepoint;
+use aya_ebpf::maps::PerfEventArray;
+use aya_ebpf::programs::TracePointContext;
 
 #[link_section = "license"]
 #[used]
@@ -49,7 +49,7 @@ static mut SIGNALS: PerfEventArray<Signal> =
 const SIGNAL_OFFSET: usize = 8;
 const PID_OFFSET: usize = 36;
 
-#[tracepoint(name = "signal_signal_generate")]
+#[tracepoint(name = "signal_signal_generate", category = "signal")]
 pub fn signals(ctx: TracePointContext) -> u32 {
     match try_signals(ctx) {
         Ok(ret) => ret,

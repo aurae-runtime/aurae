@@ -23,10 +23,10 @@
 #![no_main]
 
 use aurae_ebpf_shared::ForkedProcess;
-use aya_bpf::macros::map;
-use aya_bpf::macros::tracepoint;
-use aya_bpf::maps::PerfEventArray;
-use aya_bpf::programs::TracePointContext;
+use aya_ebpf::macros::map;
+use aya_ebpf::macros::tracepoint;
+use aya_ebpf::maps::PerfEventArray;
+use aya_ebpf::programs::TracePointContext;
 
 #[link_section = "license"]
 #[used]
@@ -39,7 +39,7 @@ static mut FORKED_PROCESSES: PerfEventArray<ForkedProcess> =
 const PARENT_PID_OFFSET: usize = 24;
 const CHILD_PID_OFFSET: usize = 44;
 
-#[tracepoint(name = "sched_process_fork")]
+#[tracepoint(name = "sched_process_fork", category = "sched")]
 pub fn sched_process_fork(ctx: TracePointContext) -> i32 {
     match try_forked_process(ctx) {
         Ok(ret) => ret,
