@@ -65,20 +65,18 @@
 #![allow(unused_qualifications)]
 
 use anyhow::{anyhow, bail, Error};
-use deno_ast::{MediaType, ParseParams, SourceTextInfo};
+use deno_ast::{EmitOptions, MediaType, ParseParams, SourceTextInfo};
+use deno_core::{
+    self, error::AnyError, futures::FutureExt, resolve_import, url::Url,
+    ModuleLoadResponse, ModuleLoader, ModuleSource, ModuleSourceCode,
+    ModuleSpecifier, ModuleType, RequestedModuleType, ResolutionKind,
+};
 use deno_runtime::{
-    deno_core::{
-        self, error::AnyError, futures::FutureExt, resolve_import, url::Url,
-        FastString, ModuleLoader, ModuleSource, ModuleSourceCode,
-        ModuleSourceFuture, ModuleSpecifier, ModuleType, ResolutionKind,
-        Snapshot,
-    },
     permissions::PermissionsContainer,
     worker::{MainWorker, WorkerOptions},
     BootstrapOptions, WorkerLogLevel,
 };
 
-use std::pin::Pin;
 use std::rc::Rc;
 
 mod builtin;
@@ -105,7 +103,7 @@ pub fn init(main_module: Url) -> MainWorker {
             extensions: vec![auraescript::init_ops()],
             module_loader: Rc::new(TypescriptModuleLoader),
             get_error_class_fn: Some(&get_error_class_name),
-            startup_snapshot: Some(Snapshot::Static(RUNTIME_SNAPSHOT)),
+            startup_snapshot: Some(RUNTIME_SNAPSHOT),
             bootstrap: BootstrapOptions {
                 args: vec![],
                 cpu_count: 1,
@@ -114,7 +112,6 @@ pub fn init(main_module: Url) -> MainWorker {
                 location: None,
                 log_level: WorkerLogLevel::Info,
                 no_color: false,
-                is_tty: false,
                 unstable: true,
                 user_agent: "".to_string(),
                 inspect: false,
@@ -164,9 +161,10 @@ impl ModuleLoader for TypescriptModuleLoader {
         module_specifier: &ModuleSpecifier,
         _maybe_referrer: Option<&ModuleSpecifier>,
         _is_dyn_import: bool,
-    ) -> Pin<Box<ModuleSourceFuture>> {
+        _requested_module_type: RequestedModuleType,
+    ) -> ModuleLoadResponse {
         let module_specifier = module_specifier.clone();
-        async move {
+        let future = async move {
             let path = module_specifier
                 .to_file_path()
                 .map_err(|_| anyhow!("Only file: URLs are supported."))?;
@@ -192,25 +190,30 @@ impl ModuleLoader for TypescriptModuleLoader {
             let code = std::fs::read_to_string(&path)?;
             let code = if should_transpile {
                 let parsed = deno_ast::parse_module(ParseParams {
-                    specifier: module_specifier.to_string(),
+                    specifier: module_specifier.clone(),
                     text_info: SourceTextInfo::from_string(code),
                     media_type,
                     capture_tokens: false,
                     scope_analysis: false,
                     maybe_syntax: None,
                 })?;
-                parsed.transpile(&Default::default())?.text
+                parsed
+                    .transpile(&Default::default(), &EmitOptions::default())?
+                    .into_source()
+                    .text
             } else {
                 code
             };
             let module = ModuleSource::new_with_redirect(
                 module_type,
-                ModuleSourceCode::String(FastString::Owned(code.into())),
+                ModuleSourceCode::String(code.into()),
                 &module_specifier,
                 &module_specifier,
+                None,
             );
             Ok(module)
         }
-        .boxed_local()
+        .boxed_local();
+        ModuleLoadResponse::Async(future)
     }
 }

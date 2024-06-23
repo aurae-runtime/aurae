@@ -50,7 +50,7 @@
 #![warn(clippy::unwrap_used)]
 
 use auraescript::init;
-use deno_runtime::deno_core::resolve_path;
+use deno_core::resolve_path;
 use std::env::current_dir;
 
 #[tokio::main(flavor = "current_thread")]

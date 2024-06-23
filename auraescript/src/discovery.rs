@@ -28,6 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+#![allow(non_snake_case)]
+
 macros::ops_generator!(
     "../api/v0/discovery/discovery.proto",
     discovery,

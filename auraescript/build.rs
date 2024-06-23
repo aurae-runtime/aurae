@@ -10,6 +10,7 @@ fn main() {
     snapshot::create_runtime_snapshot(
         "gen/runtime.bin".into(),
         Default::default(),
+        Vec::new(),
     )
 }
 
