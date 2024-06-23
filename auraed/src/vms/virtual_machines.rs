@@ -13,6 +13,12 @@ pub struct VirtualMachines {
     cache: Cache,
 }
 
+impl Default for VirtualMachines {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VirtualMachines {
     /// Create a new instance of the virtual machines cache.
     pub fn new() -> Self {
@@ -67,11 +73,14 @@ impl VirtualMachines {
         }
     }
 
-    /// Start a virtual machine by its ID, returning the scope ID of its TAP device
-    pub fn start(&mut self, id: &VmID) -> Result<u32, anyhow::Error> {
+    /// Start a virtual machine by its ID, returning the addres of its TAP device
+    pub fn start(&mut self, id: &VmID) -> Result<String, anyhow::Error> {
         if let Some(vm) = self.cache.get_mut(id) {
             vm.start()?;
-            Ok(vm.tap().unwrap_or_default())
+            match vm.tap() {
+                Some(tap) => Ok(tap.to_string()),
+                None => Ok("".into()),
+            }
         } else {
             Err(anyhow!("Virtual machine with ID '{:?}' not found", id))
         }
@@ -86,5 +95,10 @@ impl VirtualMachines {
         } else {
             Err(anyhow!("Virtual machine with ID '{:?}' not found", id))
         }
+    }
+
+    /// List all virtual machines
+    pub fn list(&self) -> Vec<VirtualMachine> {
+        self.cache.values().cloned().collect()
     }
 }

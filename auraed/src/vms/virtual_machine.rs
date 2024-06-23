@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use net_util::MacAddr;
 use std::{
     fmt::{self, Display},
-    net::Ipv4Addr,
+    net::{Ipv4Addr, SocketAddr},
     path::PathBuf,
     sync::{Arc, Mutex},
 };
@@ -14,6 +14,7 @@ use vmm::{
         RngConfig, VhostMode, DEFAULT_DISK_NUM_QUEUES, DEFAULT_DISK_QUEUE_SIZE,
         DEFAULT_MAX_PHYS_BITS, DEFAULT_NET_NUM_QUEUES, DEFAULT_NET_QUEUE_SIZE,
     },
+    vm::VmState,
 };
 
 use crate::vms::manager::Manager;
@@ -169,20 +170,22 @@ impl From<MountSpec> for vmm::vm_config::DiskConfig {
 pub struct VirtualMachine {
     pub id: VmID,
     pub vm: VmSpec,
-    status: VmStatus,
+    pub status: VmStatus,
     manager: Arc<Mutex<Manager>>,
-}
-
-#[derive(Debug, Clone)]
-enum VmStatus {
-    Running,
-    Stopped,
-    Deleting,
 }
 
 impl fmt::Debug for VirtualMachine {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "VirtualMachine {{ id: {:?}, vm: {:?} }}", self.id, self.vm)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct VmStatus(VmState);
+
+impl Display for VmStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.0)
     }
 }
 
@@ -206,13 +209,13 @@ impl VirtualMachine {
         Ok(VirtualMachine {
             id,
             vm: spec,
-            status: VmStatus::Stopped,
+            status: VmStatus(VmState::Created),
             manager: Arc::new(Mutex::new(manager)),
         })
     }
 
     pub fn start(&mut self) -> Result<(), anyhow::Error> {
-        if let VmStatus::Running = self.status {
+        if let VmState::Running = self.status.0 {
             return Err(anyhow!("Virtual machine already running"));
         }
         let manager = self
@@ -224,7 +227,7 @@ impl VirtualMachine {
             let _ = vmm::api::VmBoot
                 .send(manager.events.try_clone()?, sender.clone(), ())
                 .map_err(|e| anyhow!("Failed to send start request: {e}"))?;
-            self.status = VmStatus::Running;
+            self.status = VmStatus(VmState::Running);
         } else {
             return Err(anyhow!("Virtual machine manager not initialized"))?;
         }
@@ -233,7 +236,7 @@ impl VirtualMachine {
     }
 
     pub fn stop(&mut self) -> Result<(), anyhow::Error> {
-        if let VmStatus::Stopped = self.status {
+        if let VmState::Shutdown = self.status.0 {
             return Err(anyhow!("Virtual machine already stopped"));
         }
         let manager = self
@@ -245,7 +248,7 @@ impl VirtualMachine {
             let _ = vmm::api::VmShutdown
                 .send(manager.events.try_clone()?, sender.clone(), ())
                 .map_err(|e| anyhow!("Failed to send stop request: {e}"))?;
-            self.status = VmStatus::Stopped;
+            self.status = VmStatus(VmState::Shutdown);
         } else {
             return Err(anyhow!("Virtual machine manager not initialized"));
         }
@@ -254,9 +257,8 @@ impl VirtualMachine {
     }
 
     pub fn delete(&mut self) -> Result<(), anyhow::Error> {
-        if let VmStatus::Running = self.status {
+        if self.status.0 != VmState::Shutdown {
             self.stop()?;
-            self.status = VmStatus::Deleting;
         };
         let manager = self
             .manager
@@ -274,10 +276,16 @@ impl VirtualMachine {
         Ok(())
     }
 
-    /// Get a reference to the tap device's zone id
-    pub fn tap(&self) -> Option<u32> {
+    /// Get a reference to the address of the TAP device for this VM
+    pub fn tap(&self) -> Option<SocketAddr> {
         let iface = self.vm.net.first()?.clone().tap?;
-        nix::net::if_::if_nametoindex(iface.as_str()).ok()
+        let scope_id = nix::net::if_::if_nametoindex(iface.as_str()).ok()?;
+
+        // TODO: Make this somehow configurable
+        let addr: SocketAddr = format!("[fe80::2%{scope_id}]:8080")
+            .parse()
+            .expect("failed to parse socket address for aurae client");
+        Some(addr)
     }
 }
 
