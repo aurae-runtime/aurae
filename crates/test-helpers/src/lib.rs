@@ -1,3 +1,18 @@
+# ---------------------------------------------------------------------------- #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+# ---------------------------------------------------------------------------- #
+# Copyright 2022 - 2024, the aurae contributors
+# SPDX-License-Identifier: Apache-2.0
+
 /* -------------------------------------------------------------------------- *\
  *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
@@ -111,7 +126,9 @@ macro_rules! assert_eventually_eq {
             ::tokio::time::sleep(poll_interval).await;
             let now = ::std::time::Instant::now();
             if now.duration_since(start) > timeout {
-                ::core::panic!("assertion failed: `(left == right)`\nleft: {:#?}\nright: {:#?}", $left, $right);
+                ::core::panic!("assertion failed: `(left == right)`
+left: {:#?}
+right: {:#?}", $left, $right);
             }
         }
     };

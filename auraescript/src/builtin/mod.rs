@@ -1,3 +1,18 @@
+# ---------------------------------------------------------------------------- #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+# ---------------------------------------------------------------------------- #
+# Copyright 2022 - 2024, the aurae contributors
+# SPDX-License-Identifier: Apache-2.0
+
 /* -------------------------------------------------------------------------- *\
  *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
@@ -44,11 +59,13 @@ const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 /// Show meta information about AuraeScript.
 #[allow(unused)]
 fn about() {
-    println!("\n");
+    println!("
+");
     println!("Aurae. Distributed Runtime.");
     println!("Authors: {AUTHORS}");
     version();
-    println!("\n");
+    println!("
+");
 }
 
 /// Show version information.

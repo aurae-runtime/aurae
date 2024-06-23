@@ -1,3 +1,18 @@
+# ---------------------------------------------------------------------------- #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+# ---------------------------------------------------------------------------- #
+# Copyright 2022 - 2024, the aurae contributors
+# SPDX-License-Identifier: Apache-2.0
+
 use heck::{ToLowerCamelCase, ToSnakeCase};
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
@@ -159,7 +174,9 @@ fn typescript_generator(
         )
         .map(|s| typescript_service_generator(module, s))
         .collect::<Vec<String>>()
-        .join("\n\n");
+        .join("
+
+");
 
     let gen_dir = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(out_dir) => {

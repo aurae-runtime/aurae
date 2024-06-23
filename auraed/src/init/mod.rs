@@ -1,3 +1,18 @@
+# ---------------------------------------------------------------------------- #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+# ---------------------------------------------------------------------------- #
+# Copyright 2022 - 2024, the aurae contributors
+# SPDX-License-Identifier: Apache-2.0
+
 /* -------------------------------------------------------------------------- *\
  *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
@@ -80,7 +95,8 @@ const BANNER: &str = "
  │                                                   │
  │  WARNING WARNING WARNING WARNING WARNING WARNING  │
  └───────────────────────────────────────────────────┘
-\n";
+
+";
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum InitError {
@@ -144,7 +160,8 @@ impl Context {
 // Here we have bespoke "in_container" logic that will check and see if we
 // are executing inside an Aurae pod container.
 //
-// Note: All of the contents of the "cgroup" files in procfs end with a trailing \n newline byte
+// Note: All of the contents of the "cgroup" files in procfs end with a trailing 
+ newline byte
 //
 // Auraed container: /proc/self/cgroup: 0::/_aurae
 // Auraed cell     : /proc/self/cgroup: 0::/../../../ae-1/_
@@ -178,7 +195,8 @@ fn in_new_cgroup_namespace() -> bool {
                 .expect("reading /proc/self/cgroup");
 
             // Here we examine the last few bytes of /proc/self/cgroup
-            // We know if the cgroup string ends with a \n newline
+            // We know if the cgroup string ends with a 
+ newline
             // as well as a / as in "0::/" we are in a new (and nested)
             // cgroup namespace.
             //
@@ -190,7 +208,8 @@ fn in_new_cgroup_namespace() -> bool {
             // Therefore we would expect Aurae cells to also match this
             // pattern.
             //
-            contents.to_string().ends_with("_aurae\n")
+            contents.to_string().ends_with("_aurae
+")
             // TODO Use the AURAE_SELF_IDENTIFIER const as currently defined in runtime_service.rs
             // TODO Consider moving the const to a better home :)
         }

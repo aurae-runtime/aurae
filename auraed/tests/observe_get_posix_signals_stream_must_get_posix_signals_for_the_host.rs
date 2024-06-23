@@ -1,3 +1,18 @@
+# ---------------------------------------------------------------------------- #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+# ---------------------------------------------------------------------------- #
+# Copyright 2022 - 2024, the aurae contributors
+# SPDX-License-Identifier: Apache-2.0
+
 use client::cells::cell_service::CellServiceClient;
 use common::{
     cells::{
@@ -70,6 +85,8 @@ async fn observe_get_posix_signal_stream_must_get_posix_signals_for_the_host() {
     let expected = Signal { process_id: pid, signal: 9 };
     assert!(
         guard.contains(&expected),
-        "signal not found\nexpected: {expected:#?}\nintercepted: {guard:#?}",
+        "signal not found
+expected: {expected:#?}
+intercepted: {guard:#?}",
     );
 }

@@ -1,3 +1,18 @@
+# ---------------------------------------------------------------------------- #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+# ---------------------------------------------------------------------------- #
+# Copyright 2022 - 2024, the aurae contributors
+# SPDX-License-Identifier: Apache-2.0
+
 /* -------------------------------------------------------------------------- *\
  *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
@@ -343,8 +358,8 @@ async fn dump_addresses(
         info!("{}:", iface);
         for nla in link_msg.nlas.into_iter() {
             if let Nla::IfName(name) = nla {
-                info!("\tindex: {}", link_msg.header.index);
-                info!("\tname: {name}");
+                info!("	index: {}", link_msg.header.index);
+                info!("	name: {name}");
             }
         }
 
@@ -372,10 +387,10 @@ async fn dump_addresses(
 
                     match &ip_addr {
                         Some(IpAddr::V4(ip_addr)) => {
-                            info!("\t ipv4: {ip_addr}");
+                            info!("	 ipv4: {ip_addr}");
                         }
                         Some(IpAddr::V6(ip_addr)) => {
-                            info!("\t ipv6: {ip_addr}");
+                            info!("	 ipv6: {ip_addr}");
                         }
                         None => {}
                     }
