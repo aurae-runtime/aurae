@@ -232,6 +232,22 @@ impl VirtualMachine {
             return Err(anyhow!("Virtual machine manager not initialized"))?;
         }
 
+        // Update the VM with the network device information if it wasn't provided
+        if self.vm.net.is_empty() {
+            if let Some(net) = &self.info()?.net {
+                self.vm.net = net
+                    .iter()
+                    .map(|n| NetSpec {
+                        tap: n.tap.clone(),
+                        ip: n.ip,
+                        mask: n.mask,
+                        mac: n.mac,
+                        host_mac: n.host_mac,
+                    })
+                    .collect();
+            }
+        }
+
         Ok(())
     }
 
@@ -269,16 +285,42 @@ impl VirtualMachine {
             let _ = vmm::api::VmDelete
                 .send(manager.events.try_clone()?, sender.clone(), ())
                 .map_err(|e| anyhow!("Failed to send destroy request: {e}"))?;
-        } else {
-            return Err(anyhow!("Virtual machine manager not initialized"));
+            return Ok(());
         }
+        Err(anyhow!("Virtual machine manager not initialized"))
+    }
 
-        Ok(())
+    fn info(&self) -> Result<vmm::vm_config::VmConfig, anyhow::Error> {
+        let manager = self
+            .manager
+            .lock()
+            .map_err(|_| anyhow!("Failed to aquire lock for vm manager"))?;
+
+        if let Some(sender) = &manager.sender {
+            let res = vmm::api::VmInfo
+                .send(manager.events.try_clone()?, sender.clone(), ())
+                .map_err(|e| anyhow!("Failed to send info request: {e}"))?;
+            let config = res
+                .config
+                .lock()
+                .map_err(|_| anyhow!("Failed to aquire lock for vm config"))?;
+            return Ok(config.clone());
+        }
+        Err(anyhow!("Virtual machine manager not initialized"))
     }
 
     /// Get a reference to the address of the TAP device for this VM
     pub fn tap(&self) -> Option<SocketAddr> {
-        let iface = self.vm.net.first()?.clone().tap?;
+        let manager = self.manager.lock().ok()?;
+
+        // Retrieve config from the VMM
+        let res = vmm::api::VmInfo
+            .send(manager.events.try_clone().ok()?, manager.sender.clone()?, ())
+            .ok()?;
+        let config = res.config.lock().ok()?;
+        let net = config.net.clone()?;
+
+        let iface = net.first()?.tap.clone()?;
         let scope_id = nix::net::if_::if_nametoindex(iface.as_str()).ok()?;
 
         // TODO: Make this somehow configurable

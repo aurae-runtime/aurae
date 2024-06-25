@@ -1,5 +1,5 @@
 use client::discovery::discovery_service::DiscoveryServiceClient;
-use client::vms::vms_service::VmServiceClient;
+use client::vms::vm_service::VmServiceClient;
 use client::{Client, ClientError};
 use common::remote_auraed_client;
 use proto::discovery::DiscoverRequest;
