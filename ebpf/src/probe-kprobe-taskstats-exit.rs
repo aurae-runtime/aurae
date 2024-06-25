@@ -23,11 +23,11 @@
 #![no_main]
 
 use aurae_ebpf_shared::ProcessExit;
-use aya_bpf::helpers;
-use aya_bpf::macros::kprobe;
-use aya_bpf::macros::map;
-use aya_bpf::maps::PerfEventArray;
-use aya_bpf::programs::ProbeContext;
+use aya_ebpf::helpers;
+use aya_ebpf::macros::kprobe;
+use aya_ebpf::macros::map;
+use aya_ebpf::maps::PerfEventArray;
+use aya_ebpf::programs::ProbeContext;
 
 #[link_section = "license"]
 #[used]
@@ -37,7 +37,7 @@ pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 static mut PROCESS_EXITS: PerfEventArray<ProcessExit> =
     PerfEventArray::<ProcessExit>::with_max_entries(1024, 0);
 
-#[kprobe(name = "kprobe_taskstats_exit")]
+#[kprobe]
 pub fn kprobe_taskstats_exit(ctx: ProbeContext) -> u32 {
     let pid = helpers::bpf_get_current_pid_tgid() as i32;
     let e = ProcessExit { pid };

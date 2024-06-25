@@ -7,34 +7,35 @@ name = "aurae-ebpf-shared"
 version = "0.0.0"
 
 [[package]]
-name = "aya-bpf"
+name = "aya-ebpf"
 version = "0.1.0"
-source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
+source = "git+https://github.com/aya-rs/aya?branch=main#35aa9ac1a5b4f50357d72c5e94d821eb9aabe0e9"
 dependencies = [
- "aya-bpf-bindings",
- "aya-bpf-cty",
- "aya-bpf-macros",
+ "aya-ebpf-bindings",
+ "aya-ebpf-cty",
+ "aya-ebpf-macros",
  "rustversion",
 ]
 
 [[package]]
-name = "aya-bpf-bindings"
+name = "aya-ebpf-bindings"
 version = "0.1.0"
-source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
+source = "git+https://github.com/aya-rs/aya?branch=main#35aa9ac1a5b4f50357d72c5e94d821eb9aabe0e9"
 dependencies = [
- "aya-bpf-cty",
+ "aya-ebpf-cty",
 ]
 
 [[package]]
-name = "aya-bpf-cty"
+name = "aya-ebpf-cty"
 version = "0.2.1"
-source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
+source = "git+https://github.com/aya-rs/aya?branch=main#35aa9ac1a5b4f50357d72c5e94d821eb9aabe0e9"
 
 [[package]]
-name = "aya-bpf-macros"
+name = "aya-ebpf-macros"
 version = "0.1.0"
-source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
+source = "git+https://github.com/aya-rs/aya?branch=main#35aa9ac1a5b4f50357d72c5e94d821eb9aabe0e9"
 dependencies = [
+ "proc-macro-error",
  "proc-macro2",
  "quote",
  "syn",
@@ -42,8 +43,8 @@ dependencies = [
 
 [[package]]
 name = "aya-log-common"
-version = "0.1.13"
-source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
+version = "0.1.14"
+source = "git+https://github.com/aya-rs/aya?branch=main#35aa9ac1a5b4f50357d72c5e94d821eb9aabe0e9"
 dependencies = [
  "num_enum",
 ]
@@ -51,9 +52,9 @@ dependencies = [
 [[package]]
 name = "aya-log-ebpf"
 version = "0.1.0"
-source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
+source = "git+https://github.com/aya-rs/aya?branch=main#35aa9ac1a5b4f50357d72c5e94d821eb9aabe0e9"
 dependencies = [
- "aya-bpf",
+ "aya-ebpf",
  "aya-log-common",
  "aya-log-ebpf-macros",
 ]
@@ -61,7 +62,7 @@ dependencies = [
 [[package]]
 name = "aya-log-ebpf-macros"
 version = "0.1.0"
-source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
+source = "git+https://github.com/aya-rs/aya?branch=main#35aa9ac1a5b4f50357d72c5e94d821eb9aabe0e9"
 dependencies = [
  "aya-log-common",
  "aya-log-parser",
@@ -72,8 +73,8 @@ dependencies = [
 
 [[package]]
 name = "aya-log-parser"
-version = "0.1.11-dev.0"
-source = "git+https://github.com/aya-rs/aya?branch=main#27017ca8a32e692d6226e11857d68e5c0acc249e"
+version = "0.1.13"
+source = "git+https://github.com/aya-rs/aya?branch=main#35aa9ac1a5b4f50357d72c5e94d821eb9aabe0e9"
 dependencies = [
  "aya-log-common",
 ]
@@ -83,24 +84,24 @@ name = "ebpf-probes"
 version = "0.0.0"
 dependencies = [
  "aurae-ebpf-shared",
- "aya-bpf",
+ "aya-ebpf",
  "aya-log-ebpf",
 ]
 
 [[package]]
 name = "num_enum"
-version = "0.5.9"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d829733185c1ca374f17e52b762f24f535ec625d2cc1f070e34c8a9068f341b"
+checksum = "02339744ee7253741199f897151b38e72257d13802d4ee837285cc2990a90845"
 dependencies = [
  "num_enum_derive",
 ]
 
 [[package]]
 name = "num_enum_derive"
-version = "0.5.9"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2be1598bf1c313dcdd12092e3f1920f463462525a21b7b4e11b4168353d0123e"
+checksum = "681030a937600a36906c185595136d26abfebb4aa9c65701cefcaf8578bb982b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -108,19 +109,42 @@ dependencies = [
 ]
 
 [[package]]
-name = "proc-macro2"
-version = "1.0.50"
+name = "proc-macro-error"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ef7d57beacfaf2d8aee5937dab7b7f28de3cb8b1828479bb5de2a7106f2bae2"
+checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
+dependencies = [
+ "proc-macro-error-attr",
+ "proc-macro2",
+ "quote",
+ "version_check",
+]
+
+[[package]]
+name = "proc-macro-error-attr"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "version_check",
+]
+
+[[package]]
+name = "proc-macro2"
+version = "1.0.85"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22244ce15aa966053a896d1accb3a6e68469b97c7f33f284b99f0d576879fc23"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.23"
+version = "1.0.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8856d8364d252a14d474036ea1358d63c9e6965c8e5c1885c18f73d70bff9c7b"
+checksum = "0fa76aaf39101c457836aec0ce2316dbdc3ab723cdda1c6bd4e6ad4208acaca7"
 dependencies = [
  "proc-macro2",
 ]
@@ -133,9 +157,9 @@ checksum = "5583e89e108996506031660fe09baa5011b9dd0341b89029313006d1fb508d70"
 
 [[package]]
 name = "syn"
-version = "1.0.107"
+version = "2.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4064b5b16e03ae50984a5a8ed5d4f8803e6bc1fd170a3cda91a1be4b18e3f5"
+checksum = "c42f3f41a2de00b01c0aaad383c5a45241efc8b2d1eda5661812fda5f3cdcff5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -147,3 +171,9 @@ name = "unicode-ident"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84a22b9f218b40614adcb3f4ff08b703773ad44fa9423e4e0d346d5db86e4ebc"
+
+[[package]]
+name = "version_check"
+version = "0.9.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
