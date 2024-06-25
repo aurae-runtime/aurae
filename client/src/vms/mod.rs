@@ -12,4 +12,5 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
-pub mod vms_service;
+
+pub mod vm_service;
