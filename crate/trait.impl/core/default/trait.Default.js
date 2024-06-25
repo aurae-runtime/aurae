@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"auraed":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.79.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"auraed/struct.AuraedPath.html\" title=\"struct auraed::AuraedPath\">AuraedPath</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.79.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"auraed/struct.AuraedRuntime.html\" title=\"struct auraed::AuraedRuntime\">AuraedRuntime</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
