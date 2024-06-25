@@ -20,13 +20,12 @@ use proto::vms::{
     VmServiceListResponse, VmServiceStartRequest, VmServiceStartResponse,
     VmServiceStopRequest, VmServiceStopResponse,
 };
-use std::{net::Ipv4Addr, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
-use vmm_sys_util::rand;
 
 use super::{
-    virtual_machine::{MountSpec, NetSpec, VmID, VmSpec},
+    virtual_machine::{MountSpec, VmID, VmSpec},
     virtual_machines::VirtualMachines,
 };
 
@@ -67,19 +66,6 @@ impl vm_service_server::VmService for VmService {
             read_only: m.read_only,
         }));
 
-        let net = vec![NetSpec {
-            tap: Some(format!(
-                "aurae0-{}",
-                rand::rand_alphanumerics(8).into_string().map_err(|_| {
-                    Status::internal("Failed to generate tap device name")
-                })?
-            )),
-            ip: Ipv4Addr::new(192, 168, 122, 1),
-            mask: Ipv4Addr::new(255, 255, 255, 255),
-            mac: MacAddr::local_random(),
-            host_mac: Some(MacAddr::local_random()),
-        }];
-
         let id = VmID::new(vm.id);
         let spec = VmSpec {
             memory_size: vm.mem_size_mb,
@@ -87,7 +73,7 @@ impl vm_service_server::VmService for VmService {
             kernel_image_path: PathBuf::from(vm.kernel_img_path.as_str()),
             kernel_args: vm.kernel_args,
             mounts,
-            net,
+            net: vec![],
         };
 
         let vm = vms.create(id, spec).map_err(|e| {

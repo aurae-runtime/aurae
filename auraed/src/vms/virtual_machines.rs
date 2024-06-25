@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, net::Ipv4Addr};
 
 use anyhow::anyhow;
-use vmm_sys_util::signal::block_signal;
+use net_util::MacAddr;
+use vmm_sys_util::{rand, signal::block_signal};
 
-use super::virtual_machine::{VirtualMachine, VmID, VmSpec};
+use super::virtual_machine::{NetSpec, VirtualMachine, VmID, VmSpec};
 
 type Cache = HashMap<VmID, VirtualMachine>;
 
@@ -44,11 +45,19 @@ impl VirtualMachines {
         Self { cache: Cache::new() }
     }
 
+    /// Allocate an IP address for a new virtual machine
+    ///
+    /// Use the hard-coded Cloud Hypervisor default address as starting IP
+    /// https://github.com/cloud-hypervisor/cloud-hypervisor/blob/165c2c476f752909aba41d4e319f12ade20b72d3/vmm/src/vm_config.rs#L313-L319
+    fn allocate_ip(&self) -> Ipv4Addr {
+        Ipv4Addr::new(192, 168, 249, self.cache.len() as u8 + 1)
+    }
+
     /// Create a new virtual machine
     pub fn create(
         &mut self,
         id: VmID,
-        spec: VmSpec,
+        mut spec: VmSpec,
     ) -> Result<VirtualMachine, anyhow::Error> {
         if let Some(vm) = self.cache.get(&id) {
             return Err(anyhow!(
@@ -56,6 +65,22 @@ impl VirtualMachines {
                 &id,
                 vm.vm,
             ));
+        }
+
+        // Populate the default network configuration if it's empty
+        if spec.net.is_empty() {
+            spec.net.push(NetSpec {
+                tap: Some(format!(
+                    "auraed-{}",
+                    rand::rand_alphanumerics(6).into_string().map_err(
+                        |_| anyhow!("Error generating TAP device name")
+                    )?,
+                )),
+                ip: self.allocate_ip(),
+                mask: Ipv4Addr::new(255, 255, 255, 0),
+                mac: MacAddr::local_random(),
+                host_mac: None,
+            });
         }
 
         let vm = VirtualMachine::new(id.clone(), spec)?;
