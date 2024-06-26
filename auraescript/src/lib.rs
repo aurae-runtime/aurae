@@ -65,19 +65,14 @@
 #![allow(unused_qualifications)]
 
 use anyhow::{anyhow, bail, Error};
-use deno_ast::{EmitOptions, MediaType, ParseParams, SourceTextInfo};
+use deno_ast::{EmitOptions, MediaType, ParseParams, SourceMapOption};
 use deno_core::{
-    self, error::AnyError, futures::FutureExt, resolve_import, url::Url,
+    self, error::AnyError, resolve_import, url::Url, JsRuntime,
     ModuleLoadResponse, ModuleLoader, ModuleSource, ModuleSourceCode,
     ModuleSpecifier, ModuleType, RequestedModuleType, ResolutionKind,
+    RuntimeOptions, SourceMapGetter,
 };
-use deno_runtime::{
-    permissions::PermissionsContainer,
-    worker::{MainWorker, WorkerOptions},
-    BootstrapOptions, WorkerLogLevel,
-};
-
-use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap, future::Future, rc::Rc};
 
 mod builtin;
 mod cells;
@@ -86,40 +81,31 @@ mod discovery;
 mod health;
 mod observe;
 
-// Load the snapshot of the Deno javascript runtime
-static RUNTIME_SNAPSHOT: &[u8] = include_bytes!("../gen/runtime.bin");
-
 fn get_error_class_name(e: &AnyError) -> &'static str {
     deno_runtime::errors::get_error_class_name(e).unwrap_or("Error")
 }
 
 deno_core::extension!(auraescript, ops_fn = stdlib);
 
-pub fn init(main_module: Url) -> MainWorker {
-    MainWorker::bootstrap_from_options(
-        main_module,
-        PermissionsContainer::allow_all(),
-        WorkerOptions {
-            extensions: vec![auraescript::init_ops()],
-            module_loader: Rc::new(TypescriptModuleLoader),
-            get_error_class_fn: Some(&get_error_class_name),
-            startup_snapshot: Some(RUNTIME_SNAPSHOT),
-            bootstrap: BootstrapOptions {
-                args: vec![],
-                cpu_count: 1,
-                enable_testing_features: false,
-                locale: deno_core::v8::icu::get_language_tag(),
-                location: None,
-                log_level: WorkerLogLevel::Info,
-                no_color: false,
-                unstable: true,
-                user_agent: "".to_string(),
-                inspect: false,
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-    )
+pub fn runtime(main_module: Url) -> impl Future<Output = Result<(), Error>> {
+    let source_map_store =
+        SourceMapStore(Rc::new(RefCell::new(HashMap::new())));
+    let mut runtime = JsRuntime::new(RuntimeOptions {
+        module_loader: Some(Rc::new(TypescriptModuleLoader {
+            source_maps: source_map_store.clone(),
+        })),
+        source_map_getter: Some(Rc::new(source_map_store)),
+        extensions: vec![auraescript::init_ops()],
+        get_error_class_fn: Some(&get_error_class_name),
+        ..Default::default()
+    });
+
+    async move {
+        let mod_id = runtime.load_main_es_module(&main_module).await?;
+        let result = runtime.mod_evaluate(mod_id);
+        runtime.run_event_loop(Default::default()).await?;
+        result.await
+    }
 }
 
 /// Standard Library Autogeneration Code
@@ -144,7 +130,26 @@ fn stdlib() -> Vec<deno_core::OpDecl> {
 }
 
 // From: https://github.com/denoland/deno/blob/main/core/examples/ts_module_loader.rs
-struct TypescriptModuleLoader;
+#[derive(Clone)]
+struct SourceMapStore(Rc<RefCell<HashMap<String, Vec<u8>>>>);
+
+impl SourceMapGetter for SourceMapStore {
+    fn get_source_map(&self, specifier: &str) -> Option<Vec<u8>> {
+        self.0.borrow().get(specifier).cloned()
+    }
+
+    fn get_source_line(
+        &self,
+        _file_name: &str,
+        _line_number: usize,
+    ) -> Option<String> {
+        None
+    }
+}
+
+struct TypescriptModuleLoader {
+    source_maps: SourceMapStore,
+}
 
 impl ModuleLoader for TypescriptModuleLoader {
     fn resolve(
@@ -163,11 +168,13 @@ impl ModuleLoader for TypescriptModuleLoader {
         _is_dyn_import: bool,
         _requested_module_type: RequestedModuleType,
     ) -> ModuleLoadResponse {
-        let module_specifier = module_specifier.clone();
-        let future = async move {
+        fn load(
+            source_maps: SourceMapStore,
+            module_specifier: &ModuleSpecifier,
+        ) -> Result<ModuleSource, Error> {
             let path = module_specifier
                 .to_file_path()
-                .map_err(|_| anyhow!("Only file: URLs are supported."))?;
+                .map_err(|_| anyhow!("Only file:// URLs are supported."))?;
 
             let media_type = MediaType::from_path(&path);
             let (module_type, should_transpile) =
@@ -191,29 +198,43 @@ impl ModuleLoader for TypescriptModuleLoader {
             let code = if should_transpile {
                 let parsed = deno_ast::parse_module(ParseParams {
                     specifier: module_specifier.clone(),
-                    text_info: SourceTextInfo::from_string(code),
+                    text: code.into(),
                     media_type,
                     capture_tokens: false,
                     scope_analysis: false,
                     maybe_syntax: None,
                 })?;
-                parsed
-                    .transpile(&Default::default(), &EmitOptions::default())?
-                    .into_source()
-                    .text
+                let source = parsed
+                    .transpile(
+                        &Default::default(),
+                        &EmitOptions {
+                            source_map: SourceMapOption::Separate,
+                            inline_sources: true,
+                            ..Default::default()
+                        },
+                    )?
+                    .into_source();
+
+                if let Some(map) = source.source_map {
+                    let _ = source_maps
+                        .0
+                        .borrow_mut()
+                        .insert(module_specifier.to_string(), map);
+                }
+                String::from_utf8(source.source)?
             } else {
                 code
             };
-            let module = ModuleSource::new_with_redirect(
+            Ok(ModuleSource::new(
                 module_type,
                 ModuleSourceCode::String(code.into()),
-                &module_specifier,
-                &module_specifier,
+                module_specifier,
                 None,
-            );
-            Ok(module)
+            ))
         }
-        .boxed_local();
-        ModuleLoadResponse::Async(future)
+        ModuleLoadResponse::Sync(load(
+            self.source_maps.clone(),
+            module_specifier,
+        ))
     }
 }

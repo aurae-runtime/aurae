@@ -249,7 +249,7 @@ export class {service_name}Client implements {service_name} {{
             r#"
 {fn_name}(request: {input_type}): Promise<{output_type}> {{
     // @ts-ignore
-    return Deno[Deno.internal].core.ops.{op_name}(this.client, request);
+    return Deno.core.ops.{op_name}(this.client, request);
 }}
         "#
         ));

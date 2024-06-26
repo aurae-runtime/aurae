@@ -49,12 +49,11 @@
 )]
 #![warn(clippy::unwrap_used)]
 
-use auraescript::init;
+use auraescript::runtime;
 use deno_core::resolve_path;
 use std::env::current_dir;
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
 
     // only supports a single script for now
@@ -64,8 +63,9 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let main_module = resolve_path(&args[1].clone(), current_dir()?.as_path())?;
-    let mut main_worker = init(main_module.clone());
-
-    main_worker.execute_main_module(&main_module).await?;
-    main_worker.run_event_loop(false).await
+    let rt = runtime(main_module.clone());
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(rt)
 }
