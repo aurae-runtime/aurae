@@ -28,6 +28,8 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+#![allow(non_snake_case)]
+
 // TODO: macro doesn't support streaming. Does deno?
 macros::ops_generator!(
     "../api/cri/v1/release-1.26.proto",

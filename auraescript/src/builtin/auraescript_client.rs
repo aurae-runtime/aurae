@@ -1,6 +1,8 @@
+#![allow(non_snake_case)]
+
 use anyhow::Result;
 use client::{AuraeConfig, Client};
-use deno_runtime::deno_core::{self, op2, Op, OpState, Resource, ResourceId};
+use deno_core::{self, op2, OpState, Resource, ResourceId};
 use std::{cell::RefCell, rc::Rc};
 
 // `AuraeConfig` `try_default`
@@ -64,12 +66,12 @@ pub(crate) async fn as__client_new(
     Ok(rid)
 }
 
-pub(crate) fn op_decls() -> Vec<::deno_runtime::deno_core::OpDecl> {
+pub(crate) fn op_decls() -> Vec<::deno_core::OpDecl> {
     vec![
-        as__aurae_config__try_default::DECL,
-        as__aurae_config__from_options::DECL,
-        as__aurae_config__parse_from_file::DECL,
-        as__client_new::DECL,
+        as__aurae_config__try_default(),
+        as__aurae_config__from_options(),
+        as__aurae_config__parse_from_file(),
+        as__client_new(),
     ]
 }
 
