@@ -13,8 +13,6 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-use std::thread;
-
 use client::discovery::discovery_service::DiscoveryServiceClient;
 use client::vms::vm_service::VmServiceClient;
 use client::{Client, ClientError};

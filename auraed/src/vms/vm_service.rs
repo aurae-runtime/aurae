@@ -13,7 +13,6 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-use net_util::MacAddr;
 use proto::vms::{
     vm_service_server, VirtualMachineSummary, VmServiceCreateRequest,
     VmServiceCreateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
@@ -95,7 +94,7 @@ impl vm_service_server::VmService for VmService {
             Status::internal(format!("Failed to start VM: {:?}", e))
         })?;
 
-        Ok(Response::new(VmServiceFreeResponse { vm_id: req.vm_id }))
+        Ok(Response::new(VmServiceFreeResponse {}))
     }
 
     async fn start(
