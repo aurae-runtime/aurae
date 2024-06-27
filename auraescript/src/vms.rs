@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *\
- *             Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+ *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
  *                                                                            *
  *                +--------------------------------------------+              *
  *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
@@ -30,10 +30,4 @@
 
 #![allow(non_snake_case)]
 
-// TODO: macro doesn't support streaming. Does deno?
-macros::ops_generator!(
-    "../api/cri/v1/release-1.26.proto",
-    cri,
-    RuntimeService,
-    ImageService,
-);
+macros::ops_generator!("../api/v0/vms/vms.proto", vms, VmService);

@@ -1,1 +1,1 @@
-pub mod vms_service;
+pub mod vm_service;

@@ -61,7 +61,7 @@ libcgroups = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7
 libcontainer = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7a4ea758a436218b9db1b39c69cd", default-features = false, features = [
     "v2",
 ] }
-log = "0.4.17"
+log = "0.4.21"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched"] }
 oci-spec = "0.6.1"
@@ -92,6 +92,16 @@ uuid = { workspace = true }
 validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
+vmm = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39.0", default-features = false, features = [
+    "kvm",
+] }
+hypervisor = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39.0", features = [
+    "kvm",
+] }
+net_util = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39.0" }
+vmm-sys-util = "0.12.1"
+vm-memory = "0.14.1"
+seccompiler = "0.4.0"
 
 [dev-dependencies]
 futures-util = { workspace = true }

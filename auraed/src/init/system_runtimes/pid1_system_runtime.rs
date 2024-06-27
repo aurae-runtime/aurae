@@ -87,8 +87,12 @@ impl SystemRuntime for Pid1SystemRuntime {
         // TODO We likely to do not need to mount these filesystems.
         // TODO Do we want to have a way to "try" these mounts and continue without erroring?
 
-        MountSpec { source: None, target: "/sys", fstype: Some("sysfs") }
-            .mount()?;
+        MountSpec {
+            source: Some("sysfs"),
+            target: "/sys",
+            fstype: Some("sysfs"),
+        }
+        .mount()?;
 
         MountSpec {
             source: Some("proc"),
@@ -119,6 +123,8 @@ impl SystemRuntime for Pid1SystemRuntime {
         let socket_addr = socket_address
             .unwrap_or_else(|| DEFAULT_NETWORK_SOCKET_ADDR.into())
             .parse::<SocketAddr>()?;
-        create_tcp_socket_stream(socket_addr).await
+        let stream = create_tcp_socket_stream(socket_addr).await?;
+
+        Ok(stream)
     }
 }

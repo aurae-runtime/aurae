@@ -1,3 +1,4 @@
+use nix::mount::MsFlags;
 use std::io;
 use tracing::{error, info};
 
@@ -22,7 +23,7 @@ impl MountSpec {
             self.source,
             self.target,
             self.fstype,
-            nix::mount::MsFlags::empty(),
+            MsFlags::empty(),
             None::<&str>,
         ) {
             error!("Failed to mount {:?}", self);

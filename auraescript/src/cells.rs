@@ -28,4 +28,6 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+#![allow(non_snake_case)]
+
 macros::ops_generator!("../api/v0/cells/cells.proto", cells, CellService);
