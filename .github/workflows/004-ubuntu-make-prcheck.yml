@@ -24,7 +24,7 @@
 #
 # - That the code does not warn (due to clippy errors/warnings)
 #
-name: "(004) [ubuntu:latest] [prcheck]"
+name: "PR check (004) [ubuntu:latest] [prcheck]"
 on:
   push:
     branches: main
