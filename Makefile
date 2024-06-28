@@ -60,12 +60,7 @@ export GIT_PAGER = cat
 
 # Keep all as the first command to have it be the default as per convention
 .PHONY: all
-all: install ## alias for install
-
-# ⚠️ DO NOT REMOVE ⚠️
-.PHONY: nova
-nova: auraed aer auraescript ## The official Kris Nóva alias for her workflow that only exists in her head.
-# ⚠️ DO NOT REMOVE ⚠️
+all: build
 
 dir := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(dir)/hack/_common.mk
@@ -88,16 +83,16 @@ clean: clean-certs clean-gens clean-crates ## Clean the repo
 lint: musl auraed-lint not-auraed-lint ## Run all lints
 
 .PHONY: test
-test: musl auraed-build auraed-lint auraed-test not-auraed-build not-auraed-lint not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
+test: musl lint build auraed-test not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: musl auraed-build auraed-lint auraed-test-all not-auraed-build not-auraed-lint not-auraed-test-all ## Run lints and tests (includes ignored tests)
+test-all: musl lint build auraed-test-all not-auraed-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
-build: musl auraed-build auraed-lint not-auraed-build not-auraed-lint ## Build and lint
+build: musl auraed-build not-auraed-build ## Build and lint
 
 .PHONY: install
-install: musl lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
+install: musl test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
 docs: docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
@@ -205,15 +200,15 @@ $(1)-lint: musl $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
-$(1)-test: musl $(GEN_RS) $(GEN_TS) auraed
+$(1)-test: musl $(GEN_RS) $(GEN_TS) auraed-debug
 	$(cargo) test $(2) -p $(1)
 
 .PHONY: $(1)-test-all
-$(1)-test-all: musl $(GEN_RS) $(GEN_TS) auraed
+$(1)-test-all: musl $(GEN_RS) $(GEN_TS) auraed-debug
 	$(root_cargo) test $(2) -p $(1) -- --include-ignored
 
 .PHONY: $(1)-test-integration
-$(1)-test-integration: musl $(GEN_RS) $(GEN_TS) auraed
+$(1)-test-integration: musl $(GEN_RS) $(GEN_TS) auraed-debug
 	$(root_cargo) test $(2) -p $(1) --test '*' -- --include-ignored
 
 .PHONY: $(1)-test-watch
