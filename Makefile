@@ -42,7 +42,7 @@ vm_image      = https://cloud-images.ubuntu.com/focal/current/focal-server-cloud
 ifeq ($(uid), 0)
 root_cargo    = cargo
 else
-root_cargo    = sudo -E cargo
+	root_cargo    = sudo -E `which cargo`
 endif
 
 # Configuration Options
@@ -197,7 +197,7 @@ $(1): musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (fo
 
 .PHONY: $(1)-lint
 $(1)-lint: musl $(GEN_RS) $(GEN_TS)
-	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
+	$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
 $(1)-test: musl $(GEN_RS) $(GEN_TS) auraed-debug
