@@ -91,5 +91,5 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-      - name: [auraed] lint and test
+      - name: Lint and test [auraed]
         run: make auraed-lint auraed-test

@@ -86,5 +86,5 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-      - name: [auraescript] lint and test
+      - name: Lint and test [auraescript]
         run: make auraescript-lint auraescript-test

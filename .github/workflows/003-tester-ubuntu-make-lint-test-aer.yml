@@ -86,5 +86,5 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-      - name: [aer] lint and test
+      - name: Lint and test [aer]
         run: make aer-lint aer-test
