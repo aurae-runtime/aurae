@@ -16,7 +16,7 @@ plugins:
     opt:
       - compile_well_known_types
       - extern_path=.google.protobuf=::pbjson_types
-  - plugin: buf.build/community/stephenh-ts-proto
+  - plugin: buf.build/community/stephenh-ts-proto:v1.178.0
     out: auraescript/gen
     opt:
       - outputEncodeMethods=false
