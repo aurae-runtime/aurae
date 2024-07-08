@@ -33,7 +33,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
 jobs:
-  build:
+  test-all:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
