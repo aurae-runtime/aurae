@@ -40,9 +40,9 @@ clh_version   = 30.0
 vm_kernel     = 6.1.6
 vm_image      = https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
 ifeq ($(uid), 0)
-root_cargo    = cargo
+root_cargo    = $(cargo)
 else
-	root_cargo    = sudo -E `which cargo`
+root_cargo    = sudo -E `which cargo`
 endif
 
 # Configuration Options
@@ -229,7 +229,7 @@ $(1)-debug: musl $(GEN_RS) $(GEN_TS) $(1)-lint
 
 .PHONY: $(1)-release
 $(1)-release: musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and install $(1)
-	$(cargo) install $(2) --path ./$(1) --force
+	$(cargo) install --path ./$(1) --force
 endef
 
 MUSL_TARGET=--target $(uname_m)-unknown-linux-musl

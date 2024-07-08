@@ -24,7 +24,7 @@
 #
 # - That the code does not warn (due to clippy errors/warnings)
 #
-name: "PR check (004) [ubuntu:latest] [prcheck]"
+name: "Test all (004) [ubuntu:latest] [test-all]"
 on:
   push:
     branches: main
@@ -86,9 +86,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-      - name: PR Check
+      - name: test-all
         # This should remain the only command we execute as this matches the title of the file.
         # The goal is for this to be easy to find from the GitHub dashboard.
         # Instead of adding more commands here, consider another make target or a new YAML file
         # named with a good name.
-        run: make prcheck
+        run: make test-all
