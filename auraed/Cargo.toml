@@ -55,16 +55,16 @@ ipnetwork = "0.20.0"
 iter_tools = "0.1.4"
 libc = "0.2.155" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
-libcgroups = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7a4ea758a436218b9db1b39c69cd", default-features = false, features = [
+libcgroups = { git = "https://github.com/containers/youki", tag = "v0.1.0", default-features = false, features = [
     "v2",
 ] }
-libcontainer = { git = "https://github.com/containers/youki", rev = "f4e7e300e6be7a4ea758a436218b9db1b39c69cd", default-features = false, features = [
+libcontainer = { git = "https://github.com/containers/youki", tag = "v0.1.0", default-features = false, features = [
     "v2",
 ] }
 log = "0.4.17"
 netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched"] }
-oci-spec = "0.6.1"
+oci-spec = "= 0.6.1"
 once_cell = "1"
 procfs = "0.14.2"
 proto = { workspace = true }
