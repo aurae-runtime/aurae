@@ -30,8 +30,8 @@
 
 use oci_spec::runtime::{
     Capability, LinuxBuilder, LinuxDeviceCgroupBuilder, LinuxNamespaceBuilder,
-    LinuxNamespaceType, LinuxResourcesBuilder, LinuxRlimitBuilder,
-    LinuxRlimitType,
+    LinuxNamespaceType, LinuxResourcesBuilder, PosixRlimitBuilder,
+    PosixRlimitType,
 };
 use oci_spec::runtime::{
     LinuxCapabilitiesBuilder, MountBuilder, ProcessBuilder, RootBuilder, Spec,
@@ -187,8 +187,8 @@ impl AuraeOCIBuilder {
                             .build()
                             .expect("default oci: process.capabilities"))
                         .rlimits(vec![
-                            LinuxRlimitBuilder::default()
-                                .typ(LinuxRlimitType::RlimitNofile)
+                            PosixRlimitBuilder::default()
+                                .typ(PosixRlimitType::RlimitNofile)
                                 .hard(1024u32)
                                 .soft(1024u32)
                                 .build().expect("default oci: linux rlimit: RLIMIT_NOFILE"),

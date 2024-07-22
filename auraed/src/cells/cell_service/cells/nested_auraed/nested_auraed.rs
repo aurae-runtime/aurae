@@ -34,7 +34,7 @@ use client::AuraeSocket;
 use clone3::Flags;
 use nix::{
     libc::SIGCHLD,
-    sys::signal::{Signal, SIGKILL, SIGTERM},
+    sys::signal::{Signal, Signal::SIGKILL, Signal::SIGTERM},
     unistd::Pid,
 };
 use std::path::PathBuf;
