@@ -1,0 +1,1 @@
+searchState.loadedDescShard("auraescript", 0, "AuraeScript\nAn extension for use with the Deno JS runtime. To use it, …\nReturns the argument unchanged.\nInitialize this extension for runtime or snapshot …\nInitialize this extension for runtime or snapshot …\nCalls <code>U::from(self)</code>.")
