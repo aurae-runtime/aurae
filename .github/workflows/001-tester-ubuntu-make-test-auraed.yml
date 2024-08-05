@@ -18,14 +18,15 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #
-# This is the main compile time check for Aurae.
+# This is the premerge test workflow for auraed
 #
-# This build check will introduce confidence for the following:
+# This check will introduce confidence for the following:
 #
 # - That the binary does not have unexpected dependencies.
 # - We intentionally build this on a clean ubuntu image, to prove that we can
 #   generate a static binary with minimal dependencies.
 # - That the code does not warn (due to clippy errors/warnings)
+# - That the behaviour works as per tests
 #
 # When this build passes we should have a "clean cargo" output!
 #
