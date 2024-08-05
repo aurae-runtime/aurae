@@ -8,6 +8,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct VmService {
     _vms: Arc<Mutex<VirtualMachine>>,
