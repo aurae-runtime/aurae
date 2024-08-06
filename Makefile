@@ -42,7 +42,7 @@ vm_image      = https://cloud-images.ubuntu.com/focal/current/focal-server-cloud
 ifeq ($(uid), 0)
 root_cargo    = cargo
 else
-root_cargo    = sudo -E cargo
+root_cargo    = sudo -E `which cargo`
 endif
 
 # Configuration Options
