@@ -444,15 +444,11 @@ tlsinfo: ## Show TLS Info for /var/run/aurae*
 fmt: headers ## Format the entire code base(s)
 	./hack/code-format
 
+# writes license headers to files that are missing them. from the root of the
+# repo, you can run `DRY_RUN=1 ./hack/headers-write` manually in case you are
+# unsure what the script is going to do
 .PHONY: headers
-headers: headers-write ## Fix headers. Run this if you want to clobber things.
-
-.PHONY: headers-check
-headers-check: ## Only check for problematic files.
-	./hack/headers-check
-
-.PHONY: headers-write
-headers-write: ## Fix any problematic files blindly.
+headers:
 	./hack/headers-write
 
 .PHONY: check-deps

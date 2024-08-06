@@ -13,13 +13,17 @@
 # Copyright 2022 - 2024, the aurae contributors                                #
 # SPDX-License-Identifier: Apache-2.0                                          #
 # ---------------------------------------------------------------------------- #
+#
+# strips SPDX headers from source and scripts
 
 function info() {
 	green='[0;32m'
 	nc='[0m'
-	printf "${green}%s${nc}\n" "$1"
+	printf "${green}%s${nc}
+" "$1"
 }
 
+# This script assumes running from the top level directory within a Makefile
 D=$(pwd)
 if [[ $D == *"hack"* ]]; then
   echo ""
@@ -29,13 +33,12 @@ if [[ $D == *"hack"* ]]; then
   exit 99
 fi
 
-# This script assumes running from the top level directory within a Makefile
-
+# contains $SCRIPTS, $SOURCES, $EXPECTEDSOURCE, $EXPECTEDSCRIPT
 . hack/file-definitions
 
-# check for the license header in a script, and write it if its not present. this
-# function is shebang aware and will ensure the header doesn't overwrite it
-function write_script_header() {
+# strip a header from a script file. use `/hack/file-definitions` to understand what files can be
+# passed in
+function strip_script_header() {
   local file="$1"
   local expected="$2"
   # Bypass files here
@@ -43,41 +46,40 @@ function write_script_header() {
       return
   fi
 
-  # parse the file header
+  # set header line length
   FIRST_LINE=$(head -n1 "$file")
-  # account for scripts with shebangs by adding the shebang to the expected
-  # header if the target file starts with a shebang
+  # account for scripts with shebangs
   if [ "$FIRST_LINE" = '#!/usr/bin/env bash' ]; then
-      HEADER_LINES=15
+      HEADER_LINES=30
       expected=$(printf "%s
 %s" '#!/usr/bin/env bash' "$expected")
   else
-      HEADER_LINES=14
+      HEADER_LINES=29
   fi
   FILE_HEADER=$(head -n "$HEADER_LINES" "$file")
-  if [ "$FILE_HEADER" != "$expected" ] ; then
-    # adding DRY_RUN=1 to the start of the invocation prints to be affected
-    # files instead of mutating them
-    if [ "${DRY_RUN:-0}" -eq 0 ] ; then
-      if [ "$HEADER_LINES" -eq 15 ]; then
-        info "  -> [MUTATING SOURCE FILE] Writing header: $file"
-        # remove first line of file before writing header with shebang included
-        SRC=$(tail -n+2 "$file")
-        # using printf is the easiest way to preserve newline characters in source code
-        printf "%s\n%s" "$expected" "$SRC" > "$file"
-      elif [ "$HEADER_LINES" -eq 14 ]; then
-        info "  -> [MUTATING SOURCE FILE] Writing header: $file"
-        SRC=$(cat "$file")
-        printf "%s\n%s" "$expected" "$SRC" > "$file"
-      fi
-    else
-      info "  -> [DRY RUN SOURCE FILE] Detected Missing Header: $file"
+  if [ "$FILE_HEADER" = "$expected" ]; then
+    info "  -> [MUTATING SOURCE FILE] Stripping header: $file"
+    # strip the header from the source
+    tail -n +$((HEADER_LINES + 1)) "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
+    if [ "$HEADER_LINES" -eq 30 ]; then
+      # readd shebang
+      SRC=$(cat "$file")
+      echo -e "#!/usr/bin/env bash
+$SRC" > "${file}.tmp" && mv "${file}.tmp" "$file"
+    fi
+  else
+    info "  -> [SKIPPING SOURCE FILE] $file"
+    if [ "${SHOW_DEBUG:-0}" -gt 0 ] ; then
+      info "File Header:"
+      echo "$FILE_HEADER"
+      info "Expected Header:"
+      echo "$expected"
     fi
   fi
 }
 
-# check for license header in source files and append it if its missing
-function write_source_header() {
+# simpler method of stripping headers for source that doesn't need to worry about shebang
+function strip_source_header() {
   local file="$1"
   local expected="$2"
   # Bypass files here
@@ -85,46 +87,47 @@ function write_source_header() {
       return
   fi
 
-  HEADER_LINES=14
+  HEADER_LINES=29
   FILE_HEADER=$(head -n "$HEADER_LINES" "$file")
-  if [ "$FILE_HEADER" != "$expected" ]; then
-    # adding DRY_RUN=1 to the start of the invocation prints to be affected
-    # files instead of mutating them
-    if [ "${DRY_RUN:-0}" -eq 0 ] ; then
-      info "  -> [MUTATING SOURCE FILE] Writing header: $file"
-      SRC=$(cat "$file")
-      printf "%s\n%s" "$expected" "$SRC" > "$file"
-    else
-      info "  -> [DRY RUN SOURCE FILE] Detected Missing Header: $file"
+  if [ "$FILE_HEADER" = "$expected" ]; then
+    info "  -> [MUTATING SOURCE FILE] Stripping header: $file"
+    # strip the header from the source
+    tail -n +$((HEADER_LINES + 1)) "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
+  else
+    info "  -> [SKIPPING SOURCE FILE] $file"
+    if [ "${SHOW_DEBUG:-0}" -gt 0 ] ; then
+      info "File Header:"
+      echo "$FILE_HEADER"
+      info "Expected Header:"
+      echo "$expected"
     fi
   fi
 }
 
-### Write Scripts
+FILE_ARG="$1"
+if [ -f "$FILE_ARG" ] ; then
+  strip_script_header "$FILE_ARG"
+  exit "$?"
+fi
+
+EXPECTEDSCRIPT=$(echo "$EXPECTEDSCRIPT" | sed -E -e "s/Copyright © DATE/Copyright © $(date +%Y)/")
 echo ""
-echo " [ Checking Scripts ] "
+echo " [ Stripping Scripts ] "
 echo ""
 for FILE in $SCRIPTS; do
-  echo "Checking $FILE"
-  write_script_header "$FILE" "$EXPECTEDSCRIPT"
+  strip_script_header "$FILE" "$EXPECTEDSCRIPT"
 done
 
-### Write Hack Scripts
 echo ""
 echo " [ Stripping Hack Scripts ] "
 echo ""
 for FILE in $HACKSCRIPTS; do
-  echo "Checking $FILE"
-  write_script_header "$FILE" "$EXPECTEDSCRIPT"
+  strip_script_header "$FILE" "$EXPECTEDSCRIPT"
 done
 
-### Write Source Files (.rs, .go, .c, etc)
 echo ""
-echo " [ Checking Source Code ] "
+echo " [ Stripping Source ] "
 echo ""
 for FILE in $SOURCES; do
-  echo "Checking $FILE"
-  write_source_header "$FILE" "$EXPECTEDSOURCE"
+  strip_source_header "$FILE" "$EXPECTEDSOURCE"
 done
-
-echo " [ Write Complete] "
