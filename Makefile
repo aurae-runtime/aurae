@@ -85,19 +85,19 @@ include $(dir)/hack/_common.mk
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
 .PHONY: lint
-lint: musl auraed-lint not-auraed-lint ## Run all lints
+lint: auraed-lint not-auraed-lint ## Run all lints
 
 .PHONY: test
-test: musl auraed-build auraed-lint auraed-test not-auraed-build not-auraed-lint not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
+test: auraed-build auraed-lint auraed-test not-auraed-build not-auraed-lint not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: musl auraed-build auraed-lint auraed-test-all not-auraed-build not-auraed-lint not-auraed-test-all ## Run lints and tests (includes ignored tests)
+test-all: auraed-build auraed-lint auraed-test-all not-auraed-build not-auraed-lint not-auraed-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
-build: musl auraed-build auraed-lint not-auraed-build not-auraed-lint ## Build and lint
+build: auraed-build auraed-lint not-auraed-build not-auraed-lint ## Build and lint
 
 .PHONY: install
-install: musl lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
+install: lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
 docs: docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
@@ -133,11 +133,6 @@ config: certs ## Set up default config
 	sed -i 's|~|$(HOME)|g' $(HOME)/.aurae/config
 	mkdir -p $(HOME)/.aurae/pki
 	cp -v pki/* $(HOME)/.aurae/pki
-
-.PHONY: musl
-musl: ## Add target for musl
-	rustup target list | grep -qc '$(uname_m)-unknown-linux-musl (installed)' || \
-	rustup target add $(uname_m)-unknown-linux-musl
 
 #------------------------------------------------------------------------------#
 
@@ -198,48 +193,46 @@ PROGS = aer auraed auraescript
 
 define AURAE_template =
 .PHONY: $(1)
-$(1): musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use during development)
+$(1): $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use during development)
 
 .PHONY: $(1)-lint
-$(1)-lint: musl $(GEN_RS) $(GEN_TS)
-	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
+$(1)-lint: $(GEN_RS) $(GEN_TS)
+	$$(cargo) clippy  -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
-$(1)-test: musl $(GEN_RS) $(GEN_TS) auraed
-	$(cargo) test $(2) -p $(1)
+$(1)-test: $(GEN_RS) $(GEN_TS) auraed
+	$(cargo) test  -p $(1)
 
 .PHONY: $(1)-test-all
-$(1)-test-all: musl $(GEN_RS) $(GEN_TS) auraed
-	$(root_cargo) test $(2) -p $(1) -- --include-ignored
+$(1)-test-all: $(GEN_RS) $(GEN_TS) auraed
+	$(root_cargo) test  -p $(1) -- --include-ignored
 
 .PHONY: $(1)-test-integration
-$(1)-test-integration: musl $(GEN_RS) $(GEN_TS) auraed
-	$(root_cargo) test $(2) -p $(1) --test '*' -- --include-ignored
+$(1)-test-integration: $(GEN_RS) $(GEN_TS) auraed
+	$(root_cargo) test -p $(1) --test '*' -- --include-ignored
 
 .PHONY: $(1)-test-watch
-$(1)-test-watch: musl $(GEN_RS) $(GEN_TS) auraed # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
-	$(root_cargo) watch -- $(cargo) test $(2) -p $(1) $(name) -- --include-ignored --nocapture
+$(1)-test-watch: $(GEN_RS) $(GEN_TS) auraed # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
+	$(root_cargo) watch -- $(cargo) test  -p $(1) $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
-$(1)-build: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build $(2) -p $(1)
+$(1)-build: $(GEN_RS) $(GEN_TS)
+	$(cargo) build  -p $(1)
 
 .PHONY: $(1)-build-release
-$(1)-build-release: musl $(GEN_RS) $(GEN_TS)
-	$(cargo) build $(2) -p $(1) --release
+$(1)-build-release: $(GEN_RS) $(GEN_TS)
+	$(cargo) build  -p $(1) --release
 
 .PHONY: $(1)-debug
-$(1)-debug: musl $(GEN_RS) $(GEN_TS) $(1)-lint
-	$(cargo) install $(2) --path ./$(1) --debug --force
+$(1)-debug: $(GEN_RS) $(GEN_TS) $(1)-lint
+	$(cargo) install  --path ./$(1) --debug --force
 
 .PHONY: $(1)-release
-$(1)-release: musl $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and install $(1)
-	$(cargo) install $(2) --path ./$(1) --force
+$(1)-release: $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and install $(1)
+	$(cargo) install  --path ./$(1) --force
 endef
 
-MUSL_TARGET=--target $(uname_m)-unknown-linux-musl
-
-$(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,$(p)),$(MUSL_TARGET),))))
+$(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,$(p)),))))
 
 #------------------------------------------------------------------------------#
 
@@ -314,7 +307,7 @@ docs-stdlib: $(GEN_TS) $(GEN_RS)
 endif
 
 .PHONY: docs-crates
-docs-crates: musl $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
+docs-crates: $(GEN_TS) $(GEN_RS) ## Build the crate (documentation)
 	$(cargo) doc --no-deps --package auraed
 	$(cargo) doc --no-deps --package auraescript
 	$(cargo) doc --no-deps --package client
@@ -452,12 +445,12 @@ headers:
 	./hack/headers-write
 
 .PHONY: check-deps
-check-deps: musl $(GEN_TS) $(GEN_RS) ## Check if there are any unused dependencies in Cargo.toml
+check-deps: $(GEN_TS) $(GEN_RS) ## Check if there are any unused dependencies in Cargo.toml
 	$(cargo) +nightly udeps --target $(uname_m)-unknown-linux-musl --package auraed
 	$(cargo) +nightly udeps --package auraescript
 	$(cargo) +nightly udeps --package client
 	$(cargo) +nightly udeps --package aer
 
 .PHONY: check-deny
-check-deny: musl $(GEN_TS) $(GEN_RS) ## Run cargo-deny
+check-deny: $(GEN_TS) $(GEN_RS) ## Run cargo-deny
 	$(cargo) deny check
