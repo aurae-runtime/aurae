@@ -108,8 +108,6 @@ impl SystemRuntime for Pid1SystemRuntime {
         let socket_addr = socket_address
             .unwrap_or_else(|| DEFAULT_NETWORK_SOCKET_ADDR.into())
             .parse::<SocketAddr>()?;
-        let stream = create_tcp_socket_stream(socket_addr).await?;
-
-        Ok(stream)
+        create_tcp_socket_stream(socket_addr).await
     }
 }
