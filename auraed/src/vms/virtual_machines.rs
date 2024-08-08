@@ -2,6 +2,7 @@ use std::{collections::HashMap, net::Ipv4Addr};
 
 use anyhow::anyhow;
 use net_util::MacAddr;
+use tracing::error;
 use vmm_sys_util::{rand, signal::block_signal};
 
 use super::virtual_machine::{NetSpec, VirtualMachine, VmID, VmSpec};
@@ -27,18 +28,16 @@ impl VirtualMachines {
             let _ = libc::signal(libc::SIGCHLD, libc::SIG_IGN);
         }
 
-        // Before we start any threads, mask the signals we'll be
-        // installing handlers for, to make sure they only ever run on the
-        // dedicated signal handling thread we'll start in a bit.
+        // Mask the signals handled by the Cloud Hyupervisor VMM so they only run on the dedicated signal handling thread
         for sig in &vmm::vm::Vm::HANDLED_SIGNALS {
             if let Err(e) = block_signal(*sig) {
-                eprintln!("Error blocking signals: {e}");
+                error!("Error blocking signals: {e}");
             }
         }
 
         for sig in &vmm::Vmm::HANDLED_SIGNALS {
             if let Err(e) = block_signal(*sig) {
-                eprintln!("Error blocking signals: {e}");
+                error!("Error blocking signals: {e}");
             }
         }
 
