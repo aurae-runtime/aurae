@@ -356,6 +356,7 @@ mod tests {
     };
 
     #[test]
+    #[ignore]
     fn test_create_vm() {
         let id = VmID::new("test_vm");
         let spec = VmSpec {

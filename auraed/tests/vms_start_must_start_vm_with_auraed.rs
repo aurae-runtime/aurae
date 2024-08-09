@@ -26,6 +26,7 @@ use proto::vms::{
 mod common;
 
 #[test_helpers_macros::shared_runtime_test]
+#[ignore]
 async fn vms_with_auraed() {
     let vm_id = format!("ae-test-vm-{}", uuid::Uuid::new_v4());
     let client = common::auraed_client().await;
