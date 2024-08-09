@@ -94,6 +94,7 @@ mod cri;
 mod discovery;
 mod health;
 mod observe;
+mod vms;
 
 fn get_error_class_name(e: &AnyError) -> &'static str {
     deno_runtime::errors::get_error_class_name(e).unwrap_or("Error")
@@ -140,6 +141,7 @@ fn stdlib() -> Vec<deno_core::OpDecl> {
     ops.extend(discovery::op_decls());
     ops.extend(health::op_decls());
     ops.extend(observe::op_decls());
+    ops.extend(vms::op_decls());
     ops
 }
 

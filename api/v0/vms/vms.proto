@@ -46,25 +46,58 @@ service VmService {
 
   // Stop one or more VMs.
   rpc Stop(VmServiceStopRequest) returns (VmServiceStopResponse) {}
+
+  // List all VMs
+  rpc List(VmServiceListRequest) returns (VmServiceListResponse) {}
+}
+
+message VmServiceListRequest{}
+message VmServiceListResponse{
+  repeated VirtualMachineSummary machines = 1;
+}
+
+message VirtualMachineSummary {
+  // The identifier of the VM
+  string id = 1;
+
+  // Status of the VM
+  string status = 2;
+
+  // The memory size of VM
+  uint32 mem_size_mb = 3;
+
+  // The number of vCPUs for the VM
+  uint32 vcpu_count = 4;
+
+  // The path to the VM kernel image
+  string kernel_img_path = 5;
+
+  // Path to the image mounted as the root directory of the VM
+  string root_dir_path = 6;
+
+  // Auraed server address of the VM
+  string auraed_address = 7;
 }
 
 message VmServiceCreateRequest{
   VirtualMachine machine = 1;
 }
-
 message VmServiceCreateResponse{
   string vm_id = 1;
 }
 
-message VmServiceFreeRequest{}
-message VmServiceFreeResponse{
+message VmServiceFreeRequest{
   string vm_id = 1;
 }
+message VmServiceFreeResponse{}
 
 message VmServiceStartRequest{
   string vm_id = 1;
 }
-message VmServiceStartResponse{}
+message VmServiceStartResponse{
+  // Auraed server address of the VM
+  string auraed_address = 1;
+}
 
 message VmServiceStopRequest{
   string vm_id = 1;
@@ -94,39 +127,28 @@ message VirtualMachine {
 
   // Additional drive mount configs
   repeated DriveMount drive_mounts = 7;
+
+  // Auraed server address of the VM
+  string auraed_address = 8;
 }
 
-// Static IP configuration for a VM network interface
-message IPConfiguration {
-  // PrimaryAddr specifies, in CIDR notation, the primary address
-  // and subnet that a network interface will be assigned inside
-  // the VM.
-  string primary_addr = 1;
-
-  // GatewayAddr specifies the default gateway that a network interface
-  // should use inside the VM.
-  string gateway_addr = 2;
-
-  // Nameservers is a list of nameservers that the VM will be configured to use internally
-  repeated string nameservers = 3;
-}
-
-// Message to specify the block device config for a  VM
+// Message to specify the root filesystem config for a  VM
 message RootDrive {
-  // The path on the host to the filesystem image or device
+  // The path on the host to the filesystem image
   // that will supply the rootfs of the VM.
-  string host_path = 1;
+  string image_path = 1;
 
-  // Mount the root filesystem as read-write. (Default: false)
-  bool is_writeable = 2;
+  // Mount the root filesystem as read-only. (Default: false)
+  bool read_only = 2;
 }
 
+// Message to specify a block device config for a VM
 message DriveMount {
-  // The path on the host to the filesystem image or device
+  // The path on the host to the filesystem image
   // that will be mounted inside the VM.
-  string host_path = 1;
+  string image_path = 1;
 
-  // The path inside the VM guest at which the filesystem image or device will be mounted.
+  // The path inside the VM guest at which the filesystem image will be mounted.
   string vm_path = 2;
 
   // The filesystem type (i.e. ext4, xfs, etc.), as
@@ -134,6 +156,6 @@ message DriveMount {
   // is expected to have support for this filesystem.
   string fs_type = 3;
 
-  // Mount the root filesystem as read-write. (Default: false)
-  bool is_writeable = 4;
+  // Mount the root filesystem as read-only. (Default: false)
+  bool read_only = 4;
 }

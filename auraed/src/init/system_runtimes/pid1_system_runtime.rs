@@ -72,8 +72,12 @@ impl SystemRuntime for Pid1SystemRuntime {
         // TODO We likely to do not need to mount these filesystems.
         // TODO Do we want to have a way to "try" these mounts and continue without erroring?
 
-        MountSpec { source: None, target: "/sys", fstype: Some("sysfs") }
-            .mount()?;
+        MountSpec {
+            source: Some("sysfs"),
+            target: "/sys",
+            fstype: Some("sysfs"),
+        }
+        .mount()?;
 
         MountSpec {
             source: Some("proc"),

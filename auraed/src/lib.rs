@@ -83,6 +83,7 @@ use proto::{
     cri::runtime_service_server::RuntimeServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
     observe::observe_service_server::ObserveServiceServer,
+    vms::vm_service_server::VmServiceServer,
 };
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -92,6 +93,7 @@ use tokio::task::JoinHandle;
 use tonic::transport::server::Connected;
 use tonic::transport::{Certificate, Identity, Server, ServerTlsConfig};
 use tracing::{error, info, trace, warn};
+use vms::VmService;
 
 mod auraed_path;
 mod cells;
@@ -281,9 +283,9 @@ pub async fn run(
             .set_serving::<RuntimeServiceServer<RuntimeService>>()
             .await;
 
-        // let vm_service = VmService::new();
-        // let vm_service_server = VmServiceServer::new(vm_service.clone());
-        // health_reporter.set_serving::<VmServiceServer<VmService>>().await;
+        let vm_service = VmService::new();
+        let vm_service_server = VmServiceServer::new(vm_service.clone());
+        health_reporter.set_serving::<VmServiceServer<VmService>>().await;
 
         let graceful_shutdown = graceful_shutdown::GracefulShutdown::new(
             health_reporter,
@@ -301,7 +303,7 @@ pub async fn run(
                 .add_service(observe_service_server)
                 // .add_service(pod_service_server)
                 .add_service(runtime_service_server)
-                // .add_service(vm_service_server)
+                .add_service(vm_service_server)
                 .serve_with_incoming_shutdown(socket_stream, async {
                     let mut graceful_shutdown_signal = graceful_shutdown_signal;
                     let _ = graceful_shutdown_signal.changed().await;

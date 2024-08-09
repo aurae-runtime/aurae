@@ -12,5 +12,6 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
+#![allow(non_snake_case)]
 
-pub mod vm_service;
+macros::ops_generator!("../api/v0/vms/vms.proto", vms, VmService);
