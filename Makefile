@@ -36,13 +36,13 @@ ociopts       =  DOCKER_BUILDKIT=1
 uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
 cri_version   =  release-1.26
-clh_version   = 30.0
-vm_kernel     = 6.1.6
-vm_image      = https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
+clh_version   =  30.0
+vm_kernel     =  6.1.6
+vm_image      =  https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
 ifeq ($(uid), 0)
-root_cargo    = cargo
+root_cargo    =  cargo
 else
-root_cargo    = sudo -E `which cargo`
+root_cargo    =  sudo -E `which cargo`
 endif
 
 # Configuration Options
@@ -133,6 +133,9 @@ config: certs ## Set up default config
 	sed -i 's|~|$(HOME)|g' $(HOME)/.aurae/config
 	mkdir -p $(HOME)/.aurae/pki
 	cp -v pki/* $(HOME)/.aurae/pki
+
+.PHONY: os-deps ## install os dependencies for building aurae
+os-deps: ; ./hack/install-build-deps.sh
 
 #------------------------------------------------------------------------------#
 
