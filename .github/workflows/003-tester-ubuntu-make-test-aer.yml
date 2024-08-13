@@ -30,7 +30,7 @@
 #
 # When this build passes we should have a "clean cargo" output!
 #
-name: "Tester (003) [ubuntu:latest] [aer]"
+name: "(003) [ubuntu:latest] make aer-test"
 on:
   push:
     branches: main
