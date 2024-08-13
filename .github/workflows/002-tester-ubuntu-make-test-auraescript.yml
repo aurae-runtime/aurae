@@ -30,7 +30,7 @@
 #
 # When this build passes we should have a "clean cargo" output!
 #
-name: "Tester (002) [ubuntu:latest] [auraescript]"
+name: "(002) [ubuntu:latest] make auraescript-test"
 on:
   push:
     branches: main
