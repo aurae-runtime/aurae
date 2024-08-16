@@ -122,6 +122,8 @@ message CellServiceFreeResponse {}
 message CellServiceStartRequest {
   optional string cell_name = 1;
   Executable executable = 2;
+  optional uint32 uid = 3;
+  optional uint32 gid = 4;
 }
 
 // The response after starting an executable within a Cell.
@@ -130,8 +132,10 @@ message CellServiceStartResponse {
   // in various libc libraries.
   int32 pid = 1;
 
-  // int32 gid = 2;     // TODO
-  // int32 uid = 3;     // TODO
+  // Return uid and gid of the spawned child which should either match the
+  // `CellServiceStartRequest` or be inherited from the auraed process.
+  uint32 uid = 2;
+  uint32 gid = 3;
   // string user = 4;   // TODO
   // string group = 5;  // TODO
 }

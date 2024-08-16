@@ -115,11 +115,18 @@ impl ExecutableBuilder {
 pub(crate) struct CellServiceStartRequestBuilder {
     cell_name: Option<String>,
     executable_builder: ExecutableBuilder,
+    uid: Option<u32>,
+    gid: Option<u32>,
 }
 
 impl CellServiceStartRequestBuilder {
     pub fn new() -> Self {
-        Self { cell_name: None, executable_builder: ExecutableBuilder::new() }
+        Self {
+            cell_name: None,
+            executable_builder: ExecutableBuilder::new(),
+            uid: None,
+            gid: None,
+        }
     }
 
     pub fn cell_name(&mut self, cell_name: String) -> &mut Self {
@@ -132,11 +139,23 @@ impl CellServiceStartRequestBuilder {
         self
     }
 
+    pub fn uid(&mut self, uid: u32) -> &mut Self {
+        self.uid = Some(uid);
+        self
+    }
+
+    pub fn gid(&mut self, gid: u32) -> &mut Self {
+        self.gid = Some(gid);
+        self
+    }
+
     pub fn build(&self) -> CellServiceStartRequest {
         assert!(self.cell_name.is_some(), "cell_name needs to be set");
         CellServiceStartRequest {
             cell_name: self.cell_name.clone(),
             executable: Some(self.executable_builder.build()),
+            uid: self.uid,
+            gid: self.gid,
         }
     }
 }

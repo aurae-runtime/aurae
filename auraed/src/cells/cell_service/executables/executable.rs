@@ -27,7 +27,6 @@ use tracing::info_span;
 
 // TODO: decide if we're going to use the description or not.  Remove if not.
 #[allow(dead_code)]
-
 #[derive(Debug)]
 pub struct Executable {
     pub name: ExecutableName,
@@ -65,17 +64,27 @@ impl Executable {
 
     /// Starts the underlying process.
     /// Does nothing if [Executable] has previously been started.
-    pub fn start(&mut self) -> io::Result<()> {
+    pub fn start(
+        &mut self,
+        uid: Option<u32>,
+        gid: Option<u32>,
+    ) -> io::Result<()> {
         let ExecutableState::Init { command } = &mut self.state else {
             return Ok(());
         };
 
-        let mut child = command
+        let mut command = command
             .kill_on_drop(true)
             .current_dir("/")
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()?;
+            .stderr(Stdio::piped());
+        if uid.is_some() {
+            command = command.uid(uid.expect("uid"));
+        }
+        if gid.is_some() {
+            command = command.gid(gid.expect("gid"));
+        }
+        let mut child = command.spawn()?;
 
         let log_channel = self.stdout.clone();
         let stdout = child.stdout.take().expect("stdout");
@@ -146,7 +155,8 @@ impl Executable {
 
     /// Returns the [Pid] while [Executable] is running, otherwise returns [None].
     pub fn pid(&self) -> io::Result<Option<Pid>> {
-        let ExecutableState::Started { child: process, .. } = &self.state else {
+        let ExecutableState::Started { child: process, .. } = &self.state
+        else {
             return Ok(None);
         };
 
