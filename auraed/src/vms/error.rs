@@ -23,8 +23,8 @@ pub(crate) type Result<T> = std::result::Result<T, VmServiceError>;
 
 #[derive(Debug, Error)]
 pub(crate) enum VmServiceError {
-    #[error("vm '{id}' could not be created: {source}")]
-    FailedToCreateError { id: VmID, source: anyhow::Error },
+    #[error("vm '{id}' could not be allocated: {source}")]
+    FailedToAllocateError { id: VmID, source: anyhow::Error },
     #[error("vm '{id}' could not be freed: {source}")]
     FailedToFreeError { id: VmID, source: anyhow::Error },
     #[error("vm '{id}' could not be started: {source}")]
@@ -42,7 +42,7 @@ impl From<VmServiceError> for Status {
         let msg = err.to_string();
         error!("{msg}");
         match err {
-            VmServiceError::FailedToCreateError { .. }
+            VmServiceError::FailedToAllocateError { .. }
             | VmServiceError::FailedToFreeError { .. }
             | VmServiceError::FailedToStartError { .. }
             | VmServiceError::FailedToStopError { .. } => Status::internal(msg),

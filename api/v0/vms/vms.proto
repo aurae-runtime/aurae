@@ -36,7 +36,7 @@ option go_package = "github.com/aurae-runtime/ae/client/pkg/api/v0/vms;vmsv0";
 
 service VmService {
   // Reserve requested system resources for a new VM.
-  rpc Create(VmServiceCreateRequest) returns (VmServiceCreateResponse) {}
+  rpc Allocate(VmServiceAllocateRequest) returns (VmServiceAllocateResponse) {}
 
   // Free up previously requested resources for an existing VM
   rpc Free(VmServiceFreeRequest) returns (VmServiceFreeResponse) {}
@@ -79,10 +79,10 @@ message VirtualMachineSummary {
   string auraed_address = 7;
 }
 
-message VmServiceCreateRequest{
+message VmServiceAllocateRequest{
   VirtualMachine machine = 1;
 }
-message VmServiceCreateResponse{
+message VmServiceAllocateResponse{
   string vm_id = 1;
 }
 

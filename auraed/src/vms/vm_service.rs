@@ -14,8 +14,8 @@
 \* -------------------------------------------------------------------------- */
 
 use proto::vms::{
-    vm_service_server, VirtualMachineSummary, VmServiceCreateRequest,
-    VmServiceCreateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
+    vm_service_server, VirtualMachineSummary, VmServiceAllocateRequest,
+    VmServiceAllocateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
     VmServiceListRequest, VmServiceListResponse, VmServiceStartRequest,
     VmServiceStartResponse, VmServiceStopRequest, VmServiceStopResponse,
 };
@@ -37,25 +37,24 @@ pub struct VmService {
 }
 
 impl VmService {
-    /// Creates a new instance of VmService.
+    /// Allocates a new instance of VmService.
     pub fn new() -> Self {
         Self { vms: Default::default() }
     }
 
-    // TODO: rename allocate
     // TODO: validate requestts
-    /// Creates a new VM based on the provided request.
+    /// Allocates a new VM based on the provided request.
     ///
     /// # Arguments
-    /// * `request` - A (currently unvalidated) request to create a VM
+    /// * `request` - A (currently unvalidated) request to allocate a VM
     ///
     /// # Returns
-    /// A result containing the VmServiceCreateResponse or an error.
+    /// A result containing the VmServiceAllocateResponse or an error.
     #[tracing::instrument(skip(self))]
-    async fn create(
+    async fn allocate(
         &self,
-        request: VmServiceCreateRequest,
-    ) -> Result<VmServiceCreateResponse> {
+        request: VmServiceAllocateRequest,
+    ) -> Result<VmServiceAllocateResponse> {
         let mut vms = self.vms.lock().await;
 
         let Some(vm) = request.machine else {
@@ -86,10 +85,10 @@ impl VmService {
         };
 
         let vm = vms.create(id.clone(), spec).map_err(|e| {
-            VmServiceError::FailedToCreateError { id, source: e }
+            VmServiceError::FailedToAllocateError { id, source: e }
         })?;
 
-        Ok(VmServiceCreateResponse { vm_id: vm.id.to_string() })
+        Ok(VmServiceAllocateResponse { vm_id: vm.id.to_string() })
     }
 
     /// Frees a VM
@@ -193,13 +192,13 @@ impl VmService {
 
 #[tonic::async_trait]
 impl vm_service_server::VmService for VmService {
-    async fn create(
+    async fn allocate(
         &self,
-        request: Request<VmServiceCreateRequest>,
-    ) -> std::result::Result<Response<VmServiceCreateResponse>, Status> {
+        request: Request<VmServiceAllocateRequest>,
+    ) -> std::result::Result<Response<VmServiceAllocateResponse>, Status> {
         let req = request.into_inner();
         // TODO: validate the request
-        Ok(Response::new(self.create(req).await?))
+        Ok(Response::new(self.allocate(req).await?))
     }
 
     async fn free(
