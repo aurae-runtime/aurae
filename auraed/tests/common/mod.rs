@@ -118,6 +118,8 @@ pub async fn auraed_client() -> Client {
     CLIENT.get_or_init(inner).await.clone()
 }
 
+// This is only used in ignored tests (for now).
+#[allow(dead_code)]
 pub async fn remote_auraed_client(
     ip: String,
 ) -> Result<Client, client::ClientError> {
