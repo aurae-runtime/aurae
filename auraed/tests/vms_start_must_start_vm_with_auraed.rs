@@ -19,7 +19,7 @@ use client::{Client, ClientError};
 use common::remote_auraed_client;
 use proto::discovery::DiscoverRequest;
 use proto::vms::{
-    RootDrive, VirtualMachine, VmServiceCreateRequest, VmServiceListRequest,
+    RootDrive, VirtualMachine, VmServiceAllocateRequest, VmServiceListRequest,
     VmServiceStartRequest,
 };
 
@@ -32,7 +32,7 @@ async fn vms_with_auraed() {
     let client = common::auraed_client().await;
     let res = retry!(
         client
-            .create(VmServiceCreateRequest {
+            .allocate(VmServiceAllocateRequest {
                 machine: Some(VirtualMachine {
                     id: vm_id.clone(),
                     mem_size_mb: 1024,
