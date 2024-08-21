@@ -94,9 +94,22 @@ impl SystemRuntime for Pid1SystemRuntime {
         .mount()?;
 
         trace!("Configure network");
+
+        const DEFAULT_NET_DEV: &str = "eth0";
+        const DEFAULT_NET_DEV_IPV6: &str = "fe80::2";
+        const DEFAULT_NET_DEV_IPV6_GATEWAY: &str = "fe80::1";
+        const DEFAULT_NET_DEV_IPV6_SUBNET: &str = "/64";
+
         // show_dir("/sys/class/net/", false); // Show available network interfaces
         let network = network::Network::connect()?;
-        network.init().await?;
+        network
+            .init(&network::Config {
+                device: DEFAULT_NET_DEV.to_owned(),
+                address: DEFAULT_NET_DEV_IPV6.to_owned(),
+                gateway: DEFAULT_NET_DEV_IPV6_GATEWAY.to_owned(),
+                subnet: DEFAULT_NET_DEV_IPV6_SUBNET.to_owned(),
+            })
+            .await?;
         network.show_network_info().await;
 
         // TODO: do we need to create an interface and address for socket_address?
