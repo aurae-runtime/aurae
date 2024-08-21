@@ -233,18 +233,13 @@ pub async fn run(
             info!("Loading eBPF probes");
 
             let mut bpf_handle = BpfContext::new();
-            let process_fork_listener = bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>().ok();
-            let process_exit_listener = bpf_handle.load_and_attach_kprobe_program::<TaskstatsExitKProbeProgram, ProcessExit>().ok();
-            let posix_signals_listener = bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok();
+            let perf_events = (
+                bpf_handle.load_and_attach_tracepoint_program::<SchedProcessForkTracepointProgram, ForkedProcess>().ok(),
+                bpf_handle.load_and_attach_kprobe_program::<TaskstatsExitKProbeProgram, ProcessExit>().ok(),
+                bpf_handle.load_and_attach_tracepoint_program::<SignalSignalGenerateTracepointProgram, Signal>().ok(),
+            );
 
-            (
-                Some(bpf_handle),
-                (
-                    process_fork_listener,
-                    process_exit_listener,
-                    posix_signals_listener,
-                ),
-            )
+            (Some(bpf_handle), perf_events)
         };
 
         // Build gRPC Services
@@ -252,7 +247,7 @@ pub async fn run(
             tonic_health::server::health_reporter();
 
         let observe_service = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("TODO"))),
+            Arc::new(LogChannel::new(String::from("auraed"))),
             perf_events,
         );
         let observe_service_server =
