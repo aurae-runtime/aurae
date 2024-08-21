@@ -15,8 +15,6 @@
 
 // @todo @krisnova remove this once logging is further along
 #![allow(dead_code)]
-//TODO(jeroen) this warning comes from the `perf_events` arument in ObserveService::new()
-#![allow(clippy::type_complexity)]
 
 use super::cgroup_cache;
 use super::error::ObserveServiceError;
@@ -52,15 +50,14 @@ pub struct ObserveService {
         Arc<Mutex<HashMap<i32, HashMap<LogChannelType, LogChannel>>>>,
 }
 
+type PerfEvents = (
+    Option<PerfEventBroadcast<ForkedProcess>>,
+    Option<PerfEventBroadcast<ProcessExit>>,
+    Option<PerfEventBroadcast<Signal>>,
+);
+
 impl ObserveService {
-    pub fn new(
-        aurae_logger: Arc<LogChannel>,
-        perf_events: (
-            Option<PerfEventBroadcast<ForkedProcess>>,
-            Option<PerfEventBroadcast<ProcessExit>>,
-            Option<PerfEventBroadcast<Signal>>,
-        ),
-    ) -> Self {
+    pub fn new(aurae_logger: Arc<LogChannel>, perf_events: PerfEvents) -> Self {
         let proc_cache = match perf_events {
             (Some(f), Some(e), _) => {
                 Some(Arc::new(Mutex::new(ProcCache::new(
