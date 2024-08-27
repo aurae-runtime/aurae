@@ -39,6 +39,7 @@ use proto::{
     },
     observe::LogChannelType,
 };
+use std::os::unix::fs::MetadataExt;
 use std::time::Duration;
 use std::{process::ExitStatus, sync::Arc};
 use tokio::sync::Mutex;
@@ -201,8 +202,12 @@ impl CellService {
         &self,
         request: ValidatedCellServiceStartRequest,
     ) -> std::result::Result<Response<CellServiceStartResponse>, Status> {
-        let ValidatedCellServiceStartRequest { cell_name, executable } =
-            request;
+        let ValidatedCellServiceStartRequest {
+            cell_name,
+            executable,
+            uid,
+            gid,
+        } = request;
 
         assert!(cell_name.is_none());
         info!("CellService: start() executable={:?}", executable);
@@ -211,7 +216,7 @@ impl CellService {
 
         // Start the executable and handle any errors
         let executable = executables
-            .start(executable)
+            .start(executable, uid, gid)
             .map_err(CellsServiceError::ExecutablesError)?;
 
         // Retrieve the process ID (PID) of the started executable
@@ -247,7 +252,14 @@ impl CellService {
             warn!("failed to register stderr channel for pid {pid}: {e}");
         }
 
-        Ok(Response::new(CellServiceStartResponse { pid }))
+        let (self_uid, self_gid) =
+            std::fs::metadata("/proc/self").map(|m| (m.uid(), m.gid()))?;
+
+        Ok(Response::new(CellServiceStartResponse {
+            pid,
+            uid: uid.unwrap_or(self_uid),
+            gid: gid.unwrap_or(self_gid),
+        }))
     }
 
     #[tracing::instrument(skip(self))]
@@ -646,7 +658,11 @@ mod tests {
         // Create a validated cell for the allocate request
         let cell = ValidatedCell {
             name: CellName::from(cell_name),
-            cpu: Some(ValidatedCpuController { weight: None, max: None, period: None }),
+            cpu: Some(ValidatedCpuController {
+                weight: None,
+                max: None,
+                period: None,
+            }),
             cpuset: Some(ValidatedCpusetController { cpus: None, mems: None }),
             memory: Some(ValidatedMemoryController {
                 min: None,

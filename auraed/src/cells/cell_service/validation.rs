@@ -238,6 +238,10 @@ pub struct ValidatedCellServiceStartRequest {
     pub cell_name: Option<CellName>,
     #[field_type(Option<Executable>)]
     pub executable: ValidatedExecutable,
+    #[validate(none)]
+    pub uid: Option<u32>,
+    #[validate(none)]
+    pub gid: Option<u32>,
 }
 
 impl CellServiceStartRequestTypeValidator for CellServiceStartRequestValidator {

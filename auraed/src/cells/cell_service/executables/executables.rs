@@ -30,6 +30,8 @@ impl Executables {
     pub fn start<T: Into<ExecutableSpec>>(
         &mut self,
         executable_spec: T,
+        uid: Option<u32>,
+        gid: Option<u32>,
     ) -> Result<&Executable> {
         let executable_spec = executable_spec.into();
 
@@ -46,7 +48,7 @@ impl Executables {
 
         // start the exe before we add it to the cache, as otherwise a failure leads to the
         // executable remaining in the cache and start cannot be called again.
-        executable.start().map_err(|e| {
+        executable.start(uid, gid).map_err(|e| {
             ExecutablesError::FailedToStartExecutable {
                 executable_name: executable_name.clone(),
                 source: e,
