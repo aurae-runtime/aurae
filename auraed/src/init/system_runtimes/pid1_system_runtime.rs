@@ -25,7 +25,7 @@ use nix::{
     mount::MsFlags,
     unistd::{mkdir, symlinkat},
 };
-use std::{ net::SocketAddr, path::Path};
+use std::{net::SocketAddr, path::Path};
 use tonic::async_trait;
 use tracing::{error, info, trace};
 
