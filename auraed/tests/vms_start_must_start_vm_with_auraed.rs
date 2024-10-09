@@ -37,8 +37,9 @@ async fn vms_with_auraed() {
     let vm_id = format!("ae-test-vm-{}", uuid::Uuid::new_v4());
     let client = common::auraed_client().await;
     let res = retry!(
-        client
-            .allocate(VmServiceAllocateRequest {
+        VmServiceClient::allocate(
+            &client,
+            VmServiceAllocateRequest {
                 machine: Some(VirtualMachine {
                     id: vm_id.clone(),
                     mem_size_mb: 1024,
@@ -57,8 +58,9 @@ async fn vms_with_auraed() {
                     drive_mounts: vec![],
                     auraed_address: String::new()
                 }),
-            })
-            .await
+            }
+        )
+        .await
     );
 
     assert!(res.is_ok(), "{:?}", res);
@@ -104,9 +106,11 @@ async fn vms_with_auraed() {
     let res = res.expect("this shouldn't happen").into_inner();
     assert!(res.healthy);
 
-    let res = remote_client
-        .allocate(CellServiceAllocateRequestBuilder::new().build())
-        .await;
+    let res = CellServiceClient::allocate(
+        &remote_client,
+        CellServiceAllocateRequestBuilder::new().build(),
+    )
+    .await;
     assert!(res.is_ok(), "{:?}", res);
     let cell_name = res.unwrap().into_inner().cell_name;
     info!("Allocated cell: {}", cell_name);
