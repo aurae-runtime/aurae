@@ -12,6 +12,7 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
+use crate::vms::manager::Manager;
 use anyhow::anyhow;
 use net_util::MacAddr;
 use std::{
@@ -20,18 +21,18 @@ use std::{
     path::PathBuf,
     sync::{Arc, Mutex},
 };
+#[cfg(target_arch = "x86_64")]
+use vmm::config::DebugConsoleConfig;
 use vmm::{
     api::ApiAction,
     config::{
         default_console, default_serial, CpuFeatures, CpusConfig,
-        DebugConsoleConfig, HotplugMethod, MemoryConfig, PayloadConfig,
-        RngConfig, VhostMode, DEFAULT_DISK_NUM_QUEUES, DEFAULT_DISK_QUEUE_SIZE,
+        HotplugMethod, MemoryConfig, PayloadConfig, RngConfig, VhostMode,
+        DEFAULT_DISK_NUM_QUEUES, DEFAULT_DISK_QUEUE_SIZE,
         DEFAULT_MAX_PHYS_BITS, DEFAULT_NET_NUM_QUEUES, DEFAULT_NET_QUEUE_SIZE,
     },
     vm::VmState,
 };
-
-use crate::vms::manager::Manager;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct VmID(String);
@@ -98,6 +99,7 @@ impl From<VmSpec> for vmm::vm_config::VmConfig {
             pmem: None,
             serial: default_serial(),
             console: default_console(),
+            #[cfg(target_arch = "x86_64")]
             debug_console: DebugConsoleConfig::default(),
             devices: None,
             user_devices: None,
@@ -105,6 +107,7 @@ impl From<VmSpec> for vmm::vm_config::VmConfig {
             vsock: None,
             pvpanic: false,
             iommu: false,
+            #[cfg(target_arch = "x86_64")]
             sgx_epc: None,
             numa: None,
             watchdog: false,
