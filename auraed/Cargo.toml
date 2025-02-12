@@ -36,24 +36,24 @@ chrono = { workspace = true }
 clone3 = "0.2.3"
 fancy-regex = { workspace = true }
 futures = "0.3.28"
-ipnetwork = "0.20.0"
-iter_tools = "0.20.0"
-libc = "0.2.155" # TODO: Nix comes with libc, can we rely on that?
+ipnetwork = "0.21.1"
+iter_tools = "0.24.0"
+libc = "0.2.169" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
-libcgroups = { git = "https://github.com/containers/youki", rev = "5b62356e377def45c36c29183c586c4302685cf8", default-features = false, features = [
+libcgroups = { git = "https://github.com/containers/youki", tag = "v0.5.1", default-features = false, features = [
     "v2",
 ] }
-libcontainer = { git = "https://github.com/containers/youki", rev = "5b62356e377def45c36c29183c586c4302685cf8", default-features = false, features = [
+libcontainer = { git = "https://github.com/containers/youki", tag = "v0.5.1", default-features = false, features = [
     "v2",
 ] }
 log = "0.4.21"
-netlink-packet-route = "0.13.0" # Used for netlink_packet_route::rtnl::address::nlas definition
+netlink-packet-route = "0.17.1" # Used for netlink_packet_route::rtnl::address::nlas definition
 nix = { workspace = true, features = ["sched", "mount", "signal", "net"] }
-oci-spec = "0.6.4"
+oci-spec = "0.7.1"
 once_cell = "1"
-procfs = "0.16.0"
+procfs = "0.17.0"
 proto = { workspace = true }
-rtnetlink = "0.11.0"
+rtnetlink = "0.13.1"
 serde_json.workspace = true
 serde.workspace = true
 syslog-tracing = "0.3.1"
@@ -77,15 +77,15 @@ uuid = { workspace = true }
 validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
-vmm = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39.0", default-features = false, features = [
+vmm = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v43.0", default-features = false, features = [
     "kvm",
 ] }
-hypervisor = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39.0", features = [
+hypervisor = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v43.0", features = [
     "kvm",
 ] }
-net_util = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v39.0" }
+net_util = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v43.0" }
 vmm-sys-util = "0.12.1"
-vm-memory = "0.14.1"
+vm-memory = "0.16.1"
 seccompiler = "0.4.0"
 
 [dev-dependencies]
