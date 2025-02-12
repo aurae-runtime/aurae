@@ -68,7 +68,7 @@ tokio = { workspace = true, features = [
     "signal",
     "sync",
 ] }
-tokio-stream = { version = "0.1.14", features = ["net", "sync"] }
+tokio-stream = { version = "0.1.17", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
 tonic-health = { workspace = true }
 tracing = { workspace = true, features = ["log"] }

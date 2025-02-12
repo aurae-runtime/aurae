@@ -20,6 +20,7 @@
 
 use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
 use crate::AuraeSocket;
+use hyper_util::rt::TokioIo;
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};
@@ -99,15 +100,26 @@ impl Client {
         let channel = match socket {
             AuraeSocket::Path(path) => {
                 endpoint
-                    .connect_with_connector(service_fn(move |_: Uri| {
-                        UnixStream::connect(path.clone())
+                    .connect_with_connector(service_fn({
+                        move |_: Uri| {
+                            let path = path.clone();
+                            async move {
+                                Ok::<_, std::io::Error>(TokioIo::new(
+                                    UnixStream::connect(path).await?,
+                                ))
+                            }
+                        }
                     }))
                     .await
             }
             AuraeSocket::Addr(addr) => {
                 endpoint
-                    .connect_with_connector(service_fn(move |_: Uri| {
-                        TcpStream::connect(addr)
+                    .connect_with_connector(service_fn({
+                        move |_: Uri| async move {
+                            Ok::<_, std::io::Error>(TokioIo::new(
+                                TcpStream::connect(addr).await?,
+                            ))
+                        }
                     }))
                     .await
             }
