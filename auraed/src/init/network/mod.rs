@@ -63,6 +63,7 @@ pub(crate) struct Config {
 pub(crate) struct Network(Handle);
 
 impl Network {
+    #[allow(clippy::result_large_err)]
     pub(crate) fn connect() -> Result<Network, NetworkError> {
         let (connection, handle, _) = rtnetlink::new_connection()?;
         let _ignored = tokio::spawn(connection);

@@ -12,7 +12,6 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
-use std::ffi::CStr;
 use tracing::{info, Level};
 use tracing_subscriber::{
     layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer,
@@ -73,8 +72,7 @@ fn init_daemon_logging(tracing_level: Level) -> Result<(), LoggingError> {
     info!("initializing syslog logging");
 
     // Syslog
-    let syslog_identity =
-        CStr::from_bytes_with_nul(b"auraed\0").expect("valid CStr");
+    let syslog_identity = c"auraed";
     let syslog_facility = Default::default();
     let syslog_options = syslog_tracing::Options::LOG_PID;
     let Some(syslog) = syslog_tracing::Syslog::new(
