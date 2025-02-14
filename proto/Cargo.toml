@@ -23,7 +23,7 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pbjson = "0.5.1"
-prost = "0.11.2"
+pbjson = "0.7.0"
+prost = "0.13.4"
 serde = { workspace = true }
 tonic = { workspace = true }

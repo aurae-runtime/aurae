@@ -198,8 +198,8 @@ impl observe_service_server::ObserveService for ObserveService {
         &self,
         request: Request<GetSubProcessStreamRequest>,
     ) -> Result<Response<Self::GetSubProcessStreamStream>, Status> {
-        let channel = LogChannelType::from_i32(request.get_ref().channel_type)
-            .ok_or(ObserveServiceError::InvalidLogChannelType {
+        let channel = LogChannelType::try_from(request.get_ref().channel_type)
+            .map_err(|_| ObserveServiceError::InvalidLogChannelType {
                 channel_type: request.get_ref().channel_type,
             })?;
         let pid: i32 = request.get_ref().process_id;

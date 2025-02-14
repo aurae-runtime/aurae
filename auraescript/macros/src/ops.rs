@@ -26,8 +26,6 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, Lit, Path, Token};
 
-#[allow(clippy::format_push_string)]
-
 struct OpsGeneratorInput {
     file_path: Lit,
     module: Path,

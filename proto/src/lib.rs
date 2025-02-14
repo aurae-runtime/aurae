@@ -19,6 +19,7 @@
 #![allow(clippy::empty_docs)]
 #![allow(clippy::match_single_binding)]
 #![allow(clippy::doc_lazy_continuation)]
+#![allow(clippy::needless_lifetimes)]
 
 pub mod cells {
     include!("../gen/aurae.cells.v0.rs");
