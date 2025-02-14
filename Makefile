@@ -203,19 +203,19 @@ $(1)-lint: $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy  -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
-$(1)-test: $(GEN_RS) $(GEN_TS) auraed
+$(1)-test: $(GEN_RS) $(GEN_TS) $(1)-lint
 	$(cargo) test  -p $(1) --locked
 
 .PHONY: $(1)-test-all
-$(1)-test-all: $(GEN_RS) $(GEN_TS) auraed
+$(1)-test-all: $(GEN_RS) $(GEN_TS) $(1)-lint
 	$(root_cargo) test  -p $(1) --locked -- --include-ignored
 
 .PHONY: $(1)-test-integration
-$(1)-test-integration: $(GEN_RS) $(GEN_TS) auraed
+$(1)-test-integration: $(GEN_RS) $(GEN_TS) $(1)-lint
 	$(root_cargo) test -p $(1) --locked --test '*' -- --include-ignored
 
 .PHONY: $(1)-test-watch
-$(1)-test-watch: $(GEN_RS) $(GEN_TS) auraed # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
+$(1)-test-watch: $(GEN_RS) $(GEN_TS) $(1)-lint # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
 	$(root_cargo) watch -- $(cargo) test -p $(1) --locked $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
