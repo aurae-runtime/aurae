@@ -27,6 +27,7 @@ use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity, Uri};
 use tower::service_fn;
 
 const KNOWN_IGNORED_SOCKET_ADDR: &str = "hxxp://null";
+const KNOWN_IGNORED_TLS_SOCKET_ADDR: &str = "https://null";
 
 type Result<T> = std::result::Result<T, ClientError>;
 
@@ -89,10 +90,12 @@ impl Client {
         socket: AuraeSocket,
         tls_config: Option<ClientTlsConfig>,
     ) -> Result<Channel> {
-        let endpoint = Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR);
         let endpoint = match tls_config {
-            None => endpoint,
-            Some(tls_config) => endpoint.tls_config(tls_config)?,
+            None => Channel::from_static(KNOWN_IGNORED_SOCKET_ADDR),
+            Some(tls_config) => {
+                Channel::from_static(KNOWN_IGNORED_TLS_SOCKET_ADDR)
+                    .tls_config(tls_config)?
+            }
         };
 
         // If the system socket looks like a SocketAddr, bind to it directly.  Otherwise,
