@@ -88,10 +88,10 @@ clean: clean-certs clean-gens clean-crates ## Clean the repo
 lint: auraed-lint not-auraed-lint ## Run all lints
 
 .PHONY: test
-test: auraed-build auraed-lint auraed-test not-auraed-build not-auraed-lint not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
+test: auraed-build auraed-test not-auraed-build not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: auraed-build auraed-lint auraed-test-all not-auraed-build not-auraed-lint not-auraed-test-all ## Run lints and tests (includes ignored tests)
+test-all: auraed-build auraed-test-all not-auraed-build not-auraed-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
 build: auraed-build auraed-lint not-auraed-build not-auraed-lint ## Build and lint
@@ -264,11 +264,11 @@ not-auraed-lint: $(GEN_RS) $(GEN_TS)
 	$(cargo) clippy --all-features --workspace --exclude auraed -- -D clippy::all -D warnings
 
 .PHONY: not-auraed-test
-not-auraed-test: $(GEN_RS) $(GEN_TS)
+not-auraed-test: $(GEN_RS) $(GEN_TS) not-auraed-lint
 	$(cargo) test --workspace --locked --exclude auraed
 
 .PHONY: not-auraed-test-all
-not-auraed-test-all: $(GEN_RS) $(GEN_TS)
+not-auraed-test-all: $(GEN_RS) $(GEN_TS) not-auraed-lint
 	$(cargo) test --workspace --locked --exclude auraed -- --include-ignored
 
 #------------------------------------------------------------------------------#
