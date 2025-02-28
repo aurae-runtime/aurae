@@ -46,7 +46,7 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
-          version: 1.32.0
+          version: 1.50.0
       - uses: actions/cache@v3
         with:
           path: |
