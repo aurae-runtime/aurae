@@ -1,46 +1,55 @@
+/* -------------------------------------------------------------------------- *\
+ *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+ *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+ *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+ *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+ *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+ *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+ *                +--------------------------------------------+              *
+ *                                                                            *
+ *                         Distributed Systems Runtime                        *
+ * -------------------------------------------------------------------------- *
+ * Copyright 2022 - 2024, the aurae contributors                              *
+ * SPDX-License-Identifier: Apache-2.0                                        *
+\* -------------------------------------------------------------------------- */
 {
-  inputs = {
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-    };
+  description = "Aurea dev shell";
 
-    flake-utils.follows = "rust-overlay/flake-utils";
-    nixpkgs.follows = "rust-overlay/nixpkgs";
+  inputs = {
+    nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    flake-utils.url  = "github:numtide/flake-utils";
   };
 
-  outputs = inputs: with inputs; # pass through all inputs and bring them into scope
-    # Build the output set for each default system and map system sets into
-    # attributes, resulting in paths such as:
-    # nix build .#packages.x86_64-linux.<name>
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
-
-      # let-in expressions, very similar to Rust's let bindings.  These names
-      # are used to express the output but not themselves paths in the output.
       let
-        # Create nixpkgs that contains the rust-overlay.
+        overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ rust-overlay.overlays.default ];
+          inherit system overlays;
         };
-      in
-      rec {
-        # This is contents of the (recursive) output set, which is expressed
-        # for each system.
 
-        # The default development shell for Aurae, launched with `nix develop`.
-        devShells.default = pkgs.mkShell {
-          shellHook = ''
-            # `make musl` requires a default toolchain.
-            rustup default stable
-          '';
-
-          buildInputs = with pkgs; [
-            buf
-            libseccomp
-            protobuf
-            rustup
+        rust-version = (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml).override {
+          extensions = [
+            "clippy"
+            "rust-docs"
+            "rust-src"
+            "rustfmt"
+            "rust-analyzer"
           ];
         };
-      }
+      in
+        {
+          devShells.default = with pkgs; mkShell {
+            buildInputs = [
+              act
+              # The version 1.50.0 requires us to follow NixOS' unstable channel.
+              buf
+              libseccomp
+              protobuf
+              rust-version
+            ];
+          };
+        }
     );
 }
