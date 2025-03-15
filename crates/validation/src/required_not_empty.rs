@@ -76,7 +76,7 @@ mod tests {
     #[test]
     fn test_required_not_empty_secret_string() {
         assert!(matches!(
-            required_not_empty_secret_string(Some(SecretString::new("hi".to_string())), "test", None),
+            required_not_empty_secret_string(Some(SecretString::new("hi".to_string().into_boxed_str())), "test", None),
             Ok(x) if x.expose_secret() == "hi"
         ));
 
@@ -87,7 +87,7 @@ mod tests {
 
         assert!(matches!(
             required_not_empty_secret_string(
-                Some(SecretString::new("".to_string())),
+                Some(SecretString::new("".to_string().into_boxed_str())),
                 "test",
                 None
             ),
@@ -95,3 +95,4 @@ mod tests {
         ));
     }
 }
+
