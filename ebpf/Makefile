@@ -30,9 +30,13 @@ default: all ## Build all eBPF probes (debug)
 all: build ## Build all eBPF probes (debug)
 
 install: ## Install the eBPF probes to /var/lib/aurae/probes (release only)
+ifeq ($(uid), 0)
 	@mkdir -p $(aurae_ebpf)
 	@cp -v  ./target/bpfel-unknown-none/release/instrument* $(aurae_ebpf)
-
+else
+	@sudo -E mkdir -p $(aurae_ebpf)
+	@sudo -E cp -v  ./target/bpfel-unknown-none/release/instrument* $(aurae_ebpf)
+endif
 .PHONY: build ## Build all eBPF probes (debug)
 build: nightly bpf-linker
 	$(cargo) +nightly build --target=bpfel-unknown-none -Z build-std=core
@@ -48,10 +52,7 @@ nightly: ## Add nightly toolchain (needed for eBPF)
 
 .PHONY: bpf-linker
 bpf-linker: ## Install bpf-linker (needed for eBPF)
-	$(cargo) install --list | grep -qc 'bpf-linker' || \
-	if [ '$(uname_m)' = 'aarch64' ]; \
-	then $(cargo) install --git https://github.com/aya-rs/bpf-linker  --tag v0.9.5 --no-default-features --features system-llvm -- bpf-linker; \
-	else $(cargo) install bpf-linker; fi
+	$(cargo) install --list | grep -qc 'bpf-linker' || $(cargo) install bpf-linker
 
 clean: ## Clean the target artifacts
 	cargo clean
