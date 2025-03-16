@@ -27,7 +27,7 @@ chrono = { version = "0.4.26", default-features = false, features = [
 ] } # default features except `oldtime`
 client = { path = "./client" }
 clap = { version = "4.3.21", features = ["derive"] }
-fancy-regex = "0.13.0"
+fancy-regex = "0.14.0"
 futures-util = "0.3.28"
 heck = "0.5.0"
 lazy_static = "1.4.0"
@@ -38,15 +38,15 @@ proto-reader = { path = "./crates/proto-reader" }
 protobuf = "3.2.0"
 protobuf-parse = "=3.2.0" # This crate makes no promises of stabilty, so we pin to the exact version
 quote = "1.0"
-serial_test = "1.0.0"
+serial_test = "3.2.0"
 serde = "1.0.183"
 serde_json = "1.0.104"
-syn = { version = "1.0", features = [
+syn = { version = "1.0.109", features = [
     "full",
 ] } # used in macros, so full doesn't affect binary size
 test-helpers = { path = "./crates/test-helpers" }
 test-helpers-macros = { path = "./crates/test-helpers-macros" }
-thiserror = "1.0.44"
+thiserror = "2.0"
 tokio = "1.43.0"
 tonic = "0.12.3"
 tonic-health = "0.12.3"

@@ -40,10 +40,10 @@ ipnetwork = "0.21.1"
 iter_tools = "0.24.0"
 libc = "0.2.169" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
-libcgroups = { git = "https://github.com/containers/youki", tag = "v0.5.1", default-features = false, features = [
+libcgroups = { git = "https://github.com/containers/youki", tag = "v0.5.2", default-features = false, features = [
     "v2",
 ] }
-libcontainer = { git = "https://github.com/containers/youki", tag = "v0.5.1", default-features = false, features = [
+libcontainer = { git = "https://github.com/containers/youki", tag = "v0.5.2", default-features = false, features = [
     "v2",
 ] }
 log = "0.4.21"
@@ -77,13 +77,13 @@ uuid = { workspace = true }
 validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
 walkdir = "2"
-vmm = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v43.0", default-features = false, features = [
+vmm = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v44.0", default-features = false, features = [
     "kvm",
 ] }
-hypervisor = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v43.0", features = [
+hypervisor = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v44.0", features = [
     "kvm",
 ] }
-net_util = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v43.0" }
+net_util = { git = "https://github.com/cloud-hypervisor/cloud-hypervisor", tag = "v44.0" }
 vmm-sys-util = "0.12.1"
 vm-memory = "0.16.1"
 seccompiler = "0.4.0"
