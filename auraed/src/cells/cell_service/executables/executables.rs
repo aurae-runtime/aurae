@@ -30,6 +30,8 @@ impl Executables {
     pub fn start<T: Into<ExecutableSpec>>(
         &mut self,
         executable_spec: T,
+        uid: Option<u32>,
+        gid: Option<u32>,
     ) -> Result<&Executable> {
         let executable_spec = executable_spec.into();
 
@@ -42,27 +44,30 @@ impl Executables {
         }
 
         let executable_name = executable_spec.name.clone();
-        // `or_insert` will always insert as we've already assured ourselves that the key does not exist.
-        let executable = self
-            .cache
-            .entry(executable_name.clone())
-            .or_insert_with(|| Executable::new(executable_spec));
+        let mut executable = Executable::new(executable_spec);
 
-        // TODO: if we fail to start, the exe remains in the cache and start cannot be called again
-        // solving ^^ was a borrow checker fight and I (future-highway) lost this round.
-        executable.start().map_err(|e| {
+        // start the exe before we add it to the cache, as otherwise a failure leads to the
+        // executable remaining in the cache and start cannot be called again.
+        executable.start(uid, gid).map_err(|e| {
             ExecutablesError::FailedToStartExecutable {
-                executable_name,
+                executable_name: executable_name.clone(),
                 source: e,
             }
         })?;
 
-        Ok(executable)
+        // `or_insert` will always insert as we've already assured ourselves that the key does not
+        // exist.
+        let inserted_executable =
+            self.cache.entry(executable_name).or_insert_with(|| executable);
+
+        Ok(inserted_executable)
     }
 
     pub fn get(&self, executable_name: &ExecutableName) -> Result<&Executable> {
         let Some(executable) = self.cache.get(executable_name) else {
-            return Err(ExecutablesError::ExecutableNotFound { executable_name: executable_name.clone() });
+            return Err(ExecutablesError::ExecutableNotFound {
+                executable_name: executable_name.clone(),
+            });
         };
         Ok(executable)
     }
@@ -72,7 +77,9 @@ impl Executables {
         executable_name: &ExecutableName,
     ) -> Result<ExitStatus> {
         let Some(executable) = self.cache.get_mut(executable_name) else {
-            return Err(ExecutablesError::ExecutableNotFound { executable_name: executable_name.clone() });
+            return Err(ExecutablesError::ExecutableNotFound {
+                executable_name: executable_name.clone(),
+            });
         };
 
         let exit_status = executable.kill().await.map_err(|e| {
@@ -84,7 +91,8 @@ impl Executables {
 
         let Some(exit_status) = exit_status else {
             // Exes that never started return None
-            let executable = self.cache.remove(executable_name).expect("exe in cache");
+            let executable =
+                self.cache.remove(executable_name).expect("exe in cache");
             return Err(ExecutablesError::ExecutableNotFound {
                 executable_name: executable.name,
             });

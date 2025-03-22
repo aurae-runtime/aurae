@@ -14,46 +14,56 @@
 \* -------------------------------------------------------------------------- */
 
 use proto::vms::{
-    vm_service_server, VirtualMachineSummary, VmServiceCreateRequest,
-    VmServiceCreateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
-    VmServiceListResponse, VmServiceStartRequest, VmServiceStartResponse,
-    VmServiceStopRequest, VmServiceStopResponse,
+    vm_service_server, VirtualMachineSummary, VmServiceAllocateRequest,
+    VmServiceAllocateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
+    VmServiceListRequest, VmServiceListResponse, VmServiceStartRequest,
+    VmServiceStartResponse, VmServiceStopRequest, VmServiceStopResponse,
 };
 use std::{path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
 
 use super::{
+    error::{Result, VmServiceError},
     virtual_machine::{MountSpec, VmID, VmSpec},
     virtual_machines::VirtualMachines,
 };
 
+/// VmService struct manages the lifecycle of virtual machines.
 #[derive(Debug, Clone)]
 pub struct VmService {
     vms: Arc<Mutex<VirtualMachines>>,
+    // TODO: ObserveService
 }
 
 impl VmService {
+    /// Allocates a new instance of VmService.
     pub fn new() -> Self {
         Self { vms: Default::default() }
     }
-}
 
-#[tonic::async_trait]
-impl vm_service_server::VmService for VmService {
-    async fn create(
+    // TODO: validate requestts
+    /// Allocates a new VM based on the provided request.
+    ///
+    /// # Arguments
+    /// * `request` - A (currently unvalidated) request to allocate a VM
+    ///
+    /// # Returns
+    /// A result containing the VmServiceAllocateResponse or an error.
+    #[tracing::instrument(skip(self))]
+    async fn allocate(
         &self,
-        request: Request<VmServiceCreateRequest>,
-    ) -> Result<Response<VmServiceCreateResponse>, Status> {
+        request: VmServiceAllocateRequest,
+    ) -> Result<VmServiceAllocateResponse> {
         let mut vms = self.vms.lock().await;
-        let req = request.into_inner();
 
-        let Some(vm) = req.machine else {
-            return Err(Status::invalid_argument("No machine config provided"));
+        let Some(vm) = request.machine else {
+            return Err(VmServiceError::MissingMachineConfig {});
         };
 
+        let id = VmID::new(vm.id);
         let Some(root_drive) = vm.root_drive else {
-            return Err(Status::invalid_argument("No root drive provided"));
+            return Err(VmServiceError::MissingRootDrive { id: id.clone() });
         };
 
         let mut mounts = vec![MountSpec {
@@ -65,7 +75,6 @@ impl vm_service_server::VmService for VmService {
             read_only: m.read_only,
         }));
 
-        let id = VmID::new(vm.id);
         let spec = VmSpec {
             memory_size: vm.mem_size_mb,
             vcpu_count: vm.vcpu_count,
@@ -75,64 +84,85 @@ impl vm_service_server::VmService for VmService {
             net: vec![],
         };
 
-        let vm = vms.create(id, spec).map_err(|e| {
-            Status::internal(format!("Failed to create VM: {:?}", e))
+        let vm = vms.create(id.clone(), spec).map_err(|e| {
+            VmServiceError::FailedToAllocateError { id, source: e }
         })?;
 
-        Ok(Response::new(VmServiceCreateResponse { vm_id: vm.id.to_string() }))
+        Ok(VmServiceAllocateResponse { vm_id: vm.id.to_string() })
     }
 
+    /// Frees a VM
+    ///
+    /// # Arguments
+    /// * `request` - An (unvalidated) request to free a VM
+    ///
+    /// # Returns
+    /// A result containing VmServiceFreeResponse or an error.
+    #[tracing::instrument(skip(self))]
     async fn free(
         &self,
-        request: Request<VmServiceFreeRequest>,
-    ) -> Result<Response<VmServiceFreeResponse>, Status> {
-        let req = request.into_inner();
-        let id = VmID::new(req.vm_id);
+        request: VmServiceFreeRequest,
+    ) -> Result<VmServiceFreeResponse> {
+        let id = VmID::new(request.vm_id);
 
         let mut vms = self.vms.lock().await;
-        vms.delete(&id).map_err(|e| {
-            Status::internal(format!("Failed to start VM: {:?}", e))
-        })?;
+        vms.delete(&id)
+            .map_err(|e| VmServiceError::FailedToFreeError { id, source: e })?;
 
-        Ok(Response::new(VmServiceFreeResponse {}))
+        Ok(VmServiceFreeResponse {})
     }
 
+    /// Starts a VM
+    ///
+    /// # Arguments
+    /// * `request` - An (unvalidated) request to start a VM
+    ///
+    /// # Returns
+    /// A result containing VmServiceStartResponse or an error.
+    #[tracing::instrument(skip(self))]
     async fn start(
         &self,
-        request: Request<VmServiceStartRequest>,
-    ) -> Result<Response<VmServiceStartResponse>, Status> {
-        let req = request.into_inner();
-        let id = VmID::new(req.vm_id);
+        request: VmServiceStartRequest,
+    ) -> Result<VmServiceStartResponse> {
+        let id = VmID::new(request.vm_id);
 
         let mut vms = self.vms.lock().await;
         let addr = vms.start(&id).map_err(|e| {
-            Status::internal(format!("Failed to start VM: {:?}", e))
+            VmServiceError::FailedToStartError { id, source: e }
         })?;
 
-        Ok(Response::new(VmServiceStartResponse { auraed_address: addr }))
+        Ok(VmServiceStartResponse { auraed_address: addr })
     }
 
+    /// Stops a VM
+    ///
+    /// # Arguments
+    /// * `request` - An (unvalidated) request to stop a VM
+    ///
+    /// # Returns
+    /// A result containing VmServiceStopResponse or an error.
+    #[tracing::instrument(skip(self))]
     async fn stop(
         &self,
-        request: Request<VmServiceStopRequest>,
-    ) -> Result<Response<VmServiceStopResponse>, Status> {
-        let req = request.into_inner();
-        let id = VmID::new(req.vm_id);
+        request: VmServiceStopRequest,
+    ) -> Result<VmServiceStopResponse> {
+        let id = VmID::new(request.vm_id);
 
         let mut vms = self.vms.lock().await;
-        vms.stop(&id).map_err(|e| {
-            Status::internal(format!("Failed to stop VM: {:?}", e))
-        })?;
+        vms.stop(&id)
+            .map_err(|e| VmServiceError::FailedToStopError { id, source: e })?;
 
-        Ok(Response::new(VmServiceStopResponse {}))
+        Ok(VmServiceStopResponse {})
     }
 
-    async fn list(
-        &self,
-        _request: Request<proto::vms::VmServiceListRequest>,
-    ) -> Result<Response<proto::vms::VmServiceListResponse>, Status> {
+    /// List VMs
+    ///
+    /// # Returns
+    /// A result containing VmServiceListResponse or an error.
+    #[tracing::instrument(skip(self))]
+    async fn list(&self) -> Result<VmServiceListResponse> {
         let vms = self.vms.lock().await;
-        Ok(Response::new(VmServiceListResponse {
+        Ok(VmServiceListResponse {
             machines: vms
                 .list()
                 .iter()
@@ -156,6 +186,50 @@ impl vm_service_server::VmService for VmService {
                     status: m.status.to_string(),
                 })
                 .collect(),
-        }))
+        })
+    }
+}
+
+#[tonic::async_trait]
+impl vm_service_server::VmService for VmService {
+    async fn allocate(
+        &self,
+        request: Request<VmServiceAllocateRequest>,
+    ) -> std::result::Result<Response<VmServiceAllocateResponse>, Status> {
+        let req = request.into_inner();
+        // TODO: validate the request
+        Ok(Response::new(self.allocate(req).await?))
+    }
+
+    async fn free(
+        &self,
+        request: Request<VmServiceFreeRequest>,
+    ) -> std::result::Result<Response<VmServiceFreeResponse>, Status> {
+        let req = request.into_inner();
+        // TODO: validate request
+        Ok(Response::new(self.free(req).await?))
+    }
+
+    async fn start(
+        &self,
+        request: Request<VmServiceStartRequest>,
+    ) -> std::result::Result<Response<VmServiceStartResponse>, Status> {
+        let req = request.into_inner();
+        Ok(Response::new(self.start(req).await?))
+    }
+
+    async fn stop(
+        &self,
+        request: Request<VmServiceStopRequest>,
+    ) -> std::result::Result<Response<VmServiceStopResponse>, Status> {
+        let req = request.into_inner();
+        Ok(Response::new(self.stop(req).await?))
+    }
+
+    async fn list(
+        &self,
+        _request: Request<VmServiceListRequest>,
+    ) -> std::result::Result<Response<VmServiceListResponse>, Status> {
+        Ok(Response::new(self.list().await?))
     }
 }

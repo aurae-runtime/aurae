@@ -53,18 +53,29 @@ pub(crate) enum NetworkError {
     Other(#[from] rtnetlink::Error),
 }
 
+pub(crate) struct Config {
+    pub device: String,
+    pub address: String,
+    pub gateway: String,
+    pub subnet: String,
+}
+
 pub(crate) struct Network(Handle);
 
 impl Network {
+    #[allow(clippy::result_large_err)]
     pub(crate) fn connect() -> Result<Network, NetworkError> {
         let (connection, handle, _) = rtnetlink::new_connection()?;
         let _ignored = tokio::spawn(connection);
         Ok(Self(handle))
     }
 
-    pub(crate) async fn init(&self) -> Result<(), NetworkError> {
+    pub(crate) async fn init(
+        &self,
+        config: &Config,
+    ) -> Result<(), NetworkError> {
         configure_loopback(&self.0).await?;
-        configure_nic(&self.0).await?;
+        configure_nic(&self.0, config).await?;
         Ok(())
     }
 
@@ -125,38 +136,32 @@ async fn configure_loopback(handle: &Handle) -> Result<(), NetworkError> {
     Ok(())
 }
 
-// TODO: design network config struct
-async fn configure_nic(handle: &Handle) -> Result<(), NetworkError> {
-    const DEFAULT_NET_DEV: &str = "eth0";
-    const DEFAULT_NET_DEV_IPV6: &str = "fe80::2";
-    const DEFAULT_NET_DEV_IPV6_GATEWAY: &str = "fe80::1";
-    const DEFAULT_NET_DEV_IPV6_SUBNET: &str = "/64";
+async fn configure_nic(
+    handle: &Handle,
+    config: &Config,
+) -> Result<(), NetworkError> {
+    trace!("configure {0}", config.device);
 
-    trace!("configure {DEFAULT_NET_DEV}");
-
-    let ipv6_addr =
-        format!("{DEFAULT_NET_DEV_IPV6}{DEFAULT_NET_DEV_IPV6_SUBNET}")
-            .parse::<Ipv6Network>()
-            .expect("valid ipv6 address");
-
-    let gateway = DEFAULT_NET_DEV_IPV6_GATEWAY
-        .to_string()
+    let ipv6_addr = format!("{0}{1}", config.address, config.subnet)
         .parse::<Ipv6Network>()
-        .expect("gateway");
+        .expect("valid ipv6 address");
 
-    add_address(handle, DEFAULT_NET_DEV.to_owned(), ipv6_addr).await?;
+    let gateway =
+        config.gateway.to_string().parse::<Ipv6Network>().expect("gateway");
 
-    set_link_up(handle, DEFAULT_NET_DEV.to_owned()).await?;
+    add_address(handle, config.device.clone(), ipv6_addr).await?;
+
+    set_link_up(handle, config.device.clone()).await?;
 
     add_route_v6(
         handle,
-        DEFAULT_NET_DEV.to_owned(),
+        config.device.clone(),
         "::/0".parse::<Ipv6Network>().expect("valid ipv6 address"),
         gateway,
     )
     .await?;
 
-    info!("Successfully configured {DEFAULT_NET_DEV}");
+    info!("Successfully configured {0}", config.device);
     Ok(())
 }
 

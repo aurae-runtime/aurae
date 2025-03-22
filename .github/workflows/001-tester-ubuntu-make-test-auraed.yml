@@ -41,7 +41,7 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
-          version: 1.32.0
+          version: 1.50.0
       - uses: actions/cache@v3
         with:
           path: |
@@ -53,11 +53,6 @@ jobs:
           key: 000-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             000-${{ runner.os }}-cargo-
-      - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          components: clippy, rustfmt
       - name: Auraed test [make os-deps auraed-test]
         # This should remain the only command we execute as this matches the title of the file.
         # The goal is for this to be easy to find from the GitHub dashboard.

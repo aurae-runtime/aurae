@@ -12,6 +12,7 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
+use crate::vms::manager::Manager;
 use anyhow::anyhow;
 use net_util::MacAddr;
 use std::{
@@ -20,18 +21,18 @@ use std::{
     path::PathBuf,
     sync::{Arc, Mutex},
 };
+#[cfg(target_arch = "x86_64")]
+use vmm::vm_config::DebugConsoleConfig;
 use vmm::{
     api::ApiAction,
-    config::{
+    vm::VmState,
+    vm_config::{
         default_console, default_serial, CpuFeatures, CpusConfig,
-        DebugConsoleConfig, HotplugMethod, MemoryConfig, PayloadConfig,
-        RngConfig, VhostMode, DEFAULT_DISK_NUM_QUEUES, DEFAULT_DISK_QUEUE_SIZE,
+        HotplugMethod, MemoryConfig, PayloadConfig, RngConfig, VhostMode,
+        DEFAULT_DISK_NUM_QUEUES, DEFAULT_DISK_QUEUE_SIZE,
         DEFAULT_MAX_PHYS_BITS, DEFAULT_NET_NUM_QUEUES, DEFAULT_NET_QUEUE_SIZE,
     },
-    vm::VmState,
 };
-
-use crate::vms::manager::Manager;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct VmID(String);
@@ -98,6 +99,7 @@ impl From<VmSpec> for vmm::vm_config::VmConfig {
             pmem: None,
             serial: default_serial(),
             console: default_console(),
+            #[cfg(target_arch = "x86_64")]
             debug_console: DebugConsoleConfig::default(),
             devices: None,
             user_devices: None,
@@ -105,6 +107,7 @@ impl From<VmSpec> for vmm::vm_config::VmConfig {
             vsock: None,
             pvpanic: false,
             iommu: false,
+            #[cfg(target_arch = "x86_64")]
             sgx_epc: None,
             numa: None,
             watchdog: false,
@@ -112,6 +115,8 @@ impl From<VmSpec> for vmm::vm_config::VmConfig {
             platform: None,
             tpm: None,
             preserved_fds: None,
+            landlock_enable: false,
+            landlock_rules: None,
         }
     }
 }
@@ -213,7 +218,7 @@ impl VirtualMachine {
                 .send(
                     manager.events.try_clone()?,
                     sender.clone(),
-                    Arc::new(Mutex::new(spec.clone().into())),
+                    Box::new(spec.clone().into()),
                 )
                 .expect("Failed to send create request");
         } else {
@@ -314,10 +319,7 @@ impl VirtualMachine {
             let res = vmm::api::VmInfo
                 .send(manager.events.try_clone()?, sender.clone(), ())
                 .map_err(|e| anyhow!("Failed to send info request: {e}"))?;
-            let config = res
-                .config
-                .lock()
-                .map_err(|_| anyhow!("Failed to aquire lock for vm config"))?;
+            let config = *res.config;
             return Ok(config.clone());
         }
         Err(anyhow!("Virtual machine manager not initialized"))
@@ -331,7 +333,7 @@ impl VirtualMachine {
         let res = vmm::api::VmInfo
             .send(manager.events.try_clone().ok()?, manager.sender.clone()?, ())
             .ok()?;
-        let config = res.config.lock().ok()?;
+        let config = *res.config;
         let net = config.net.clone()?;
 
         let iface = net.first()?.tap.clone()?;

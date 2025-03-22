@@ -19,8 +19,6 @@ use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::{parse_macro_input, Lit, Path, Token};
 
-#[allow(clippy::format_push_string)]
-
 struct ServiceInput {
     file_path: Lit,
     module: Path,
