@@ -43,12 +43,12 @@ use aya_ebpf::macros::tracepoint;
 use aya_ebpf::maps::PerfEventArray;
 use aya_ebpf::programs::TracePointContext;
 
-#[link_section = "license"]
+#[unsafe(link_section = "license")]
 #[used]
 pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 
 #[map(name = "SIGNALS")]
-static mut SIGNALS: PerfEventArray<Signal> = PerfEventArray::<Signal>::new(0);
+static SIGNALS: PerfEventArray<Signal> = PerfEventArray::<Signal>::new(0);
 
 // TODO (jeroensoeters): figure out how stable these offsets are and if we want
 //    to read from /sys/kernel/debug/tracing/events/signal/signal_generate/format
@@ -88,9 +88,7 @@ fn try_signals(ctx: TracePointContext) -> Result<u32, u32> {
     let cgroup_id = unsafe { helpers::bpf_get_current_cgroup_id() };
 
     let s = Signal { cgroup_id, signum, pid };
-    unsafe {
-        SIGNALS.output(&ctx, &s, 0);
-    }
+    SIGNALS.output(&ctx, &s, 0);
     Ok(0)
 }
 

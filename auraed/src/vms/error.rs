@@ -46,7 +46,7 @@ impl From<VmServiceError> for Status {
             | VmServiceError::FailedToFreeError { .. }
             | VmServiceError::FailedToStartError { .. }
             | VmServiceError::FailedToStopError { .. } => Status::internal(msg),
-            VmServiceError::MissingMachineConfig { .. }
+            VmServiceError::MissingMachineConfig
             | VmServiceError::MissingRootDrive { .. } => {
                 Status::failed_precondition(msg)
             }

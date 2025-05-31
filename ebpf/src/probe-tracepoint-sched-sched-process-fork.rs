@@ -42,12 +42,12 @@ use aya_ebpf::macros::tracepoint;
 use aya_ebpf::maps::PerfEventArray;
 use aya_ebpf::programs::TracePointContext;
 
-#[link_section = "license"]
+#[unsafe(link_section = "license")]
 #[used]
 pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 
 #[map(name = "FORKED_PROCESSES")]
-static mut FORKED_PROCESSES: PerfEventArray<ForkedProcess> =
+static FORKED_PROCESSES: PerfEventArray<ForkedProcess> =
     PerfEventArray::<ForkedProcess>::new(0);
 
 const PARENT_PID_OFFSET: usize = 24;
@@ -77,9 +77,7 @@ fn try_forked_process(ctx: TracePointContext) -> Result<i32, i32> {
     };
 
     let s = ForkedProcess { parent_pid, child_pid };
-    unsafe {
-        FORKED_PROCESSES.output(&ctx, &s, 0);
-    }
+    FORKED_PROCESSES.output(&ctx, &s, 0);
     Ok(0)
 }
 

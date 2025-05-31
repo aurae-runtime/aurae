@@ -159,7 +159,7 @@ impl NestedAuraed {
                 // parent
                 info!("Nested auraed running with host pid {}", pid.clone());
                 let process = procfs::process::Process::new(pid)
-                    .map_err(|e| io::Error::new(ErrorKind::Other, e))?;
+                    .map_err(io::Error::other)?;
 
                 Ok(Self { process, pidfd, iso_ctl, client_socket })
             }
