@@ -186,42 +186,44 @@ $(1): $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use
 
 .PHONY: $(1)-lint
 $(1)-lint: $(GEN_RS) $(GEN_TS)
-	$$(cargo) clippy  -p $(1) --all-features -- -D clippy::all -D warnings
+	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
 $(1)-test: $(GEN_RS) $(GEN_TS) $(1)-lint
-	$(cargo) test  -p $(1) --locked
+	$(cargo) test $(2) -p $(1) --locked
 
 .PHONY: $(1)-test-all
 $(1)-test-all: $(GEN_RS) $(GEN_TS) $(1)-lint
-	$(root_cargo) test  -p $(1) --locked -- --include-ignored
+	$(root_cargo) test $(2) -p $(1) --locked -- --include-ignored
 
 .PHONY: $(1)-test-integration
 $(1)-test-integration: $(GEN_RS) $(GEN_TS) $(1)-lint
-	$(root_cargo) test -p $(1) --locked --test '*' -- --include-ignored
+	$(root_cargo) test $(2) -p $(1) --locked --test '*' -- --include-ignored
 
 .PHONY: $(1)-test-watch
 $(1)-test-watch: $(GEN_RS) $(GEN_TS) $(1)-lint # Use cargo-watch to continuously run a test (e.g. make $(1)-test-watch name=path::to::test)
-	$(root_cargo) watch -- $(cargo) test -p $(1) --locked $(name) -- --include-ignored --nocapture
+	$(root_cargo) watch -- $(cargo) test $(2) -p $(1) --locked $(name) -- --include-ignored --nocapture
 
 .PHONY: $(1)-build
 $(1)-build: $(GEN_RS) $(GEN_TS)
-	$(cargo) build -p $(1) --locked
+	$(cargo) build $(2) -p $(1) --locked
 
 .PHONY: $(1)-build-release
 $(1)-build-release: $(GEN_RS) $(GEN_TS)
-	$(cargo) build -p $(1) --locked --release
+	$(cargo) build $(2) -p $(1) --locked --release
 
 .PHONY: $(1)-debug
 $(1)-debug: $(GEN_RS) $(GEN_TS) $(1)-lint
-	$(cargo) install --path ./$(1) --debug --force --locked
+	$(cargo) install $(2) --path ./$(1) --debug --force --locked
 
 .PHONY: $(1)-release
 $(1)-release: $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-test ## Lint, test, and install $(1)
-	$(cargo) install --path ./$(1) --force --locked
+	$(cargo) install $(2) --path ./$(1) --force --locked
 endef
 
-$(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,$(p)),))))
+MUSL_TARGET=--target $(uname_m)-unknown-linux-musl
+
+$(foreach p,$(PROGS),$(eval $(call AURAE_template,$(p),$(if $(findstring auraed,$(p)),$(MUSL_TARGET),))))
 
 #------------------------------------------------------------------------------#
 
