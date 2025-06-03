@@ -171,7 +171,7 @@ async fn handle_default(options: AuraedOptions) -> i32 {
     };
 
     // Run the auraed daemon with the configured runtime
-    if let Err(e) = run(runtime, socket, verbose, nested).await { 
+    if let Err(e) = run(runtime, socket, verbose, nested).await {
         error!("{:?}", e); // Log any errors that occur
         EXIT_ERROR // Return error exit code
     } else {

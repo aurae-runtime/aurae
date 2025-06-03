@@ -38,15 +38,19 @@ impl SandboxCache {
 
     pub fn get_mut(&mut self, sandbox_id: &String) -> Result<&mut Sandbox> {
         let Some(sandbox) = self.cache.get_mut(sandbox_id) else {
-                return Err(RuntimeServiceError::SandboxNotFound { sandbox_id: sandbox_id.clone() });
-            };
+            return Err(RuntimeServiceError::SandboxNotFound {
+                sandbox_id: sandbox_id.clone(),
+            });
+        };
         Ok(sandbox)
     }
 
     pub fn get(&self, sandbox_id: &String) -> Result<&Sandbox> {
         let Some(sandbox) = self.cache.get(sandbox_id) else {
-                return Err(RuntimeServiceError::SandboxNotFound { sandbox_id: sandbox_id.clone() });
-            };
+            return Err(RuntimeServiceError::SandboxNotFound {
+                sandbox_id: sandbox_id.clone(),
+            });
+        };
         Ok(sandbox)
     }
 

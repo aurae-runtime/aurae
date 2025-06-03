@@ -163,7 +163,7 @@ socket = "#;
     fn can_parse_toml_config_socket_ipv6_with_scope_id() {
         let input = get_input("[fe80::2%4]:8080");
         let config = AuraeConfig::parse_from_toml(&input).unwrap();
-        let AuraeSocket::Addr (addr) = config.system.socket else {
+        let AuraeSocket::Addr(addr) = config.system.socket else {
             panic!("expected AuraeSocket::Addr");
         };
 
@@ -180,7 +180,7 @@ socket = "#;
     fn can_parse_toml_config_socket_ipv6_without_scope_id() {
         let input = get_input("[fe80::2]:8080");
         let config = AuraeConfig::parse_from_toml(&input).unwrap();
-        let AuraeSocket::Addr (addr) = config.system.socket else {
+        let AuraeSocket::Addr(addr) = config.system.socket else {
             panic!("expected AuraeSocket::Addr");
         };
 
@@ -197,7 +197,7 @@ socket = "#;
     fn can_parse_toml_config_socket_ipv4() {
         let input = get_input("127.1.2.3:1234");
         let config = AuraeConfig::parse_from_toml(&input).unwrap();
-        let AuraeSocket::Addr (addr) = config.system.socket else {
+        let AuraeSocket::Addr(addr) = config.system.socket else {
             panic!("expected AuraeSocket::Addr");
         };
 

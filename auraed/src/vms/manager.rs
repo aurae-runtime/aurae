@@ -66,7 +66,7 @@ impl Manager {
                 self.debug.try_clone()?,
                 &seccompiler::SeccompAction::Allow,
                 self.hypervisor.clone(),
-                false
+                false,
             )
             .expect("Failed to start VMM thread"),
         );

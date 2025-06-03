@@ -71,7 +71,7 @@ include $(dir)/hack/_common.mk
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
 .PHONY: lint
-lint: auraed-lint not-auraed-lint ## Run all lints
+lint: fmt auraed-lint not-auraed-lint ## Run all lints
 
 .PHONY: test
 test: auraed-build auraed-test not-auraed-build not-auraed-test ## Builds, lints, and tests (does not include ignored tests)

@@ -32,7 +32,8 @@ EXPECTEDSOURCE=$(cat hack/.header.source)
 SCRIPTS=$(find . \( \
   -iname '*.sh' -or \
   -iname '*.toml' \
-    \) -not -path '*/ignore/*')
+    \) -not -path '*/ignore/*' \
+    -not -path './hypervisor/*' )
 
 ### HACK Dir Scripts
 HACKSCRIPTS=$(find -s hack -type f -not \( \
@@ -48,9 +49,13 @@ SOURCES=$(find . \( \
   -iname '*.go' -or \
   -iname '*.c' -or \
   -iname '*.h' \
-    \) -not -path '*/ignore/*')
+    \) -not -path '*/ignore/*' \
+    -not -path './hypervisor/*' )
 
 ### Rust Sources
 RUSTSOURCES=$(find . \( \
   -iname '*.rs' \
-    \) -not -path '*/ignore/*' -not -path -'*/gen/*')
+    \) -not -path '*/ignore/*' \
+    -not -path -'*/gen/*' \
+    -not -path -'.target/*' \
+    -not -path -'./hypervisor/*' )
