@@ -27,7 +27,7 @@ impl CellName {
     pub fn leaf(&self) -> Cow<str> {
         self.0
             .components()
-            .last()
+            .next_back()
             .expect("non empty path")
             .as_os_str()
             .to_string_lossy()
