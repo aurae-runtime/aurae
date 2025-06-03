@@ -285,6 +285,7 @@ pub async fn run(
         let graceful_shutdown = graceful_shutdown::GracefulShutdown::new(
             health_reporter,
             cell_service,
+            vm_service,
         );
         let graceful_shutdown_signal = graceful_shutdown.subscribe();
 
