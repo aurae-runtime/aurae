@@ -16,7 +16,7 @@
 [package]
 name = "auraescript"
 version = "0.0.0"
-edition = "2021"
+edition = "2024"
 authors = ["The Aurae Authors", "Kris Nóva <kris@nivenly.com>"]
 license = "Apache-2.0"
 
