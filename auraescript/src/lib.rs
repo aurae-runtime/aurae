@@ -51,13 +51,12 @@
 
 use deno_ast::{MediaType, ParseParams, SourceMapOption};
 use deno_core::{
-    self,
+    self, JsRuntime, ModuleLoadResponse, ModuleLoader, ModuleSource,
+    ModuleSourceCode, ModuleSpecifier, ModuleType, RequestedModuleType,
+    ResolutionKind, RuntimeOptions,
     error::{CoreError, ModuleLoaderError},
     resolve_import,
     url::Url,
-    JsRuntime, ModuleLoadResponse, ModuleLoader, ModuleSource,
-    ModuleSourceCode, ModuleSpecifier, ModuleType, RequestedModuleType,
-    ResolutionKind, RuntimeOptions,
 };
 use deno_error::JsErrorBox;
 use std::{
@@ -134,6 +133,8 @@ impl ModuleLoader for TypescriptModuleLoader {
         Ok(resolve_import(specifier, referrer)?)
     }
 
+    // Allow large error types in result here until deno is updated
+    #[allow(clippy::result_large_err)]
     fn load(
         &self,
         module_specifier: &ModuleSpecifier,
@@ -170,7 +171,7 @@ impl ModuleLoader for TypescriptModuleLoader {
                             "Unknown extension {:?}",
                             path.extension()
                         ))
-                        .into())
+                        .into());
                     }
                 };
 

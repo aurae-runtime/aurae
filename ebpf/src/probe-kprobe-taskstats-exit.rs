@@ -43,22 +43,19 @@ use aya_ebpf::macros::map;
 use aya_ebpf::maps::PerfEventArray;
 use aya_ebpf::programs::ProbeContext;
 
-#[link_section = "license"]
+#[unsafe(link_section = "license")]
 #[used]
 pub static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
 
 #[map(name = "PROCESS_EXITS")]
-static mut PROCESS_EXITS: PerfEventArray<ProcessExit> =
+static PROCESS_EXITS: PerfEventArray<ProcessExit> =
     PerfEventArray::<ProcessExit>::new(0);
 
 #[kprobe]
 pub fn kprobe_taskstats_exit(ctx: ProbeContext) -> u32 {
     let pid = helpers::bpf_get_current_pid_tgid() as i32;
     let e = ProcessExit { pid };
-
-    unsafe {
-        PROCESS_EXITS.output(&ctx, &e, 0);
-    }
+    PROCESS_EXITS.output(&ctx, &e, 0);
     0
 }
 

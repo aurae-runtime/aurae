@@ -114,7 +114,7 @@ mod tests {
         let res =
             visitor.visit_str::<toml::de::Error>("[fe80::2]:8080").unwrap();
 
-        let AuraeSocket::Addr (addr) = res else {
+        let AuraeSocket::Addr(addr) = res else {
             panic!("expected AuraeSocket::Addr");
         };
 
@@ -134,7 +134,7 @@ mod tests {
         let res =
             visitor.visit_str::<toml::de::Error>("[fe80::2%4]:8080").unwrap();
 
-        let AuraeSocket::Addr (addr) = res else {
+        let AuraeSocket::Addr(addr) = res else {
             panic!("expected AuraeSocket::Addr");
         };
 
@@ -154,7 +154,7 @@ mod tests {
         let res =
             visitor.visit_str::<toml::de::Error>("127.0.0.1:8081").unwrap();
 
-        let AuraeSocket::Addr (addr) = res else {
+        let AuraeSocket::Addr(addr) = res else {
             panic!("expected AuraeSocket::Addr");
         };
 
