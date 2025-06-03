@@ -1,32 +1,32 @@
 /* -------------------------------------------------------------------------- *\
- *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
- *                                                                            *
- *                +--------------------------------------------+              *
- *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
- *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
- *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
- *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
- *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
- *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
- *                +--------------------------------------------+              *
- *                                                                            *
- *                         Distributed Systems Runtime                        *
- *                                                                            *
- * -------------------------------------------------------------------------- *
- *                                                                            *
- *   Licensed under the Apache License, Version 2.0 (the "License");          *
- *   you may not use this file except in compliance with the License.         *
- *   You may obtain a copy of the License at                                  *
- *                                                                            *
- *       http://www.apache.org/licenses/LICENSE-2.0                           *
- *                                                                            *
- *   Unless required by applicable law or agreed to in writing, software      *
- *   distributed under the License is distributed on an "AS IS" BASIS,        *
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
- *   See the License for the specific language governing permissions and      *
- *   limitations under the License.                                           *
- *                                                                            *
-\* -------------------------------------------------------------------------- */
+    *        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+    *                                                                            *
+    *                +--------------------------------------------+              *
+    *                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+    *                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+    *                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+    *                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+    *                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+    *                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+    *                +--------------------------------------------+              *
+    *                                                                            *
+    *                         Distributed Systems Runtime                        *
+    *                                                                            *
+    * -------------------------------------------------------------------------- *
+    *                                                                            *
+    *   Licensed under the Apache License, Version 2.0 (the "License");          *
+    *   you may not use this file except in compliance with the License.         *
+    *   You may obtain a copy of the License at                                  *
+    *                                                                            *
+    *       http://www.apache.org/licenses/LICENSE-2.0                           *
+    *                                                                            *
+    *   Unless required by applicable law or agreed to in writing, software      *
+    *   distributed under the License is distributed on an "AS IS" BASIS,        *
+    *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+    *   See the License for the specific language governing permissions and      *
+    *   limitations under the License.                                           *
+    *                                                                            *
+   \* -------------------------------------------------------------------------- */
 
 syntax = "proto3";
 
@@ -71,8 +71,7 @@ service CellService {
   // Reserve requested system resources for a new cell.
   // For cells specifically this will allocate and reserve cgroup resources
   // only.
-  rpc Allocate(CellServiceAllocateRequest)
-      returns (CellServiceAllocateResponse) {}
+  rpc Allocate(CellServiceAllocateRequest) returns (CellServiceAllocateResponse) {}
 
   // Free up previously requested resources for an existing cell
   rpc Free(CellServiceFreeRequest) returns (CellServiceFreeResponse) {}
@@ -109,7 +108,9 @@ message CellServiceAllocateResponse {
 }
 
 // Used to remove or free a cell after it has been allocated.
-message CellServiceFreeRequest { string cell_name = 1; }
+message CellServiceFreeRequest {
+  string cell_name = 1;
+}
 
 // Response after removing or freeing a cell.
 message CellServiceFreeResponse {}
@@ -150,7 +151,9 @@ message CellServiceStopResponse {}
 
 message CellServiceListRequest {}
 
-message CellServiceListResponse { repeated CellGraphNode cells = 1; }
+message CellServiceListResponse {
+  repeated CellGraphNode cells = 1;
+}
 
 message CellGraphNode {
   Cell cell = 1;

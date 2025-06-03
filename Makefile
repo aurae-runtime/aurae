@@ -70,12 +70,8 @@ include $(dir)/hack/_common.mk
 .PHONY: clean
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
-.PHONY: format
-format:
-	$(cargo) fmt --all --check ## Check formatting
-
 .PHONY: lint
-lint: format auraed-lint not-auraed-lint ## Run all lints
+lint: fmt auraed-lint not-auraed-lint ## Run all lints
 
 .PHONY: test
 test: auraed-build auraed-test not-auraed-build not-auraed-test ## Builds, lints, and tests (does not include ignored tests)

@@ -20,9 +20,6 @@ if [[ $D == *"hack"* ]]; then
   echo "/hack is a special directory. These scripts should only be executed from the Makefile."
   echo "..or the directory above this one."
   echo ""
-  echo "We suggest using the github.com/aurae-runtime/environment repository for building aurae"
-  echo "projects from source."
-  echo ""
   exit 99
 fi
 
@@ -34,7 +31,7 @@ echo " [ Formatting Source Code ] "
 echo ""
 
 ## Rust
-rustfmt --edition=2021 ${RUSTSOURCES}
+cargo fmt --all --check
 
 ## Protobuf
-clang-format -i ./auraed/proto/*.proto
+buf format -w --exit-code
