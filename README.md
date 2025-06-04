@@ -1,6 +1,8 @@
 <!-- THE DOCUMENT -->
 
-![Workflow in progress: deploy] ![Workflow in progress: documentation] ![Workflow in progress: build]
+[![(001) [ubuntu:latest] make auraed-test](https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test-auraed.yml/badge.svg)](https://github.com/aurae-runtime/aurae/actions/workflows/001-tester-ubuntu-make-test-auraed.yml) 
+[![(002) [ubuntu:latest] make auraescript-test](https://github.com/aurae-runtime/aurae/actions/workflows/002-tester-ubuntu-make-test-auraescript.yml/badge.svg)](https://github.com/aurae-runtime/aurae/actions/workflows/002-tester-ubuntu-make-test-auraescript.yml)
+[![(003) [ubuntu:latest] make aer-test](https://github.com/aurae-runtime/aurae/actions/workflows/003-tester-ubuntu-make-test-aer.yml/badge.svg)](https://github.com/aurae-runtime/aurae/actions/workflows/003-tester-ubuntu-make-test-aer.yml)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/aurae-runtime/aurae/main/docs/assets/logo/aurae.png" width="450">
