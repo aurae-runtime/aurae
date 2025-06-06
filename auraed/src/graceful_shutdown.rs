@@ -13,7 +13,7 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-use crate::{cells::CellService, discovery::DiscoveryService, VmService};
+use crate::{VmService, cells::CellService, discovery::DiscoveryService};
 use proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
@@ -22,7 +22,7 @@ use proto::{
 use std::borrow::BorrowMut;
 use tokio::{
     signal::unix::SignalKind,
-    sync::watch::{channel, Receiver, Sender},
+    sync::watch::{Receiver, Sender, channel},
 };
 use tonic_health::server::HealthReporter;
 use tracing::error;
@@ -86,16 +86,18 @@ impl GracefulShutdown {
         // wait for all subscribers to drop
         self.shutdown_broadcaster.closed().await;
 
+        // Stop and free all cells. Only free if stopping succeeds.
         if let Err(e) = self.cell_service.stop_all().await {
-            error!("Attempt to stop all executables on terminate resulted in error: {e}")
-        }
-
-        if let Err(e) = self.cell_service.free_all().await {
+            error!(
+                "Attempt to stop all executables on terminate resulted in error: {e}"
+            )
+        } else if let Err(e) = self.cell_service.free_all().await {
             error!(
                 "Attempt to free all cells on terminate resulted in error: {e}"
             )
         }
 
+        // Stop and free all VMs. Always attempt to free even if stopping fails.
         if let Err(e) = self.vm_service.stop_all().await {
             error!(
                 "Attempt to stop all VMs on terminate resulted in error: {e}"
