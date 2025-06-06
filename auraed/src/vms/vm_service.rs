@@ -14,10 +14,10 @@
 \* -------------------------------------------------------------------------- */
 
 use proto::vms::{
-    vm_service_server, VirtualMachineSummary, VmServiceAllocateRequest,
-    VmServiceAllocateResponse, VmServiceFreeRequest, VmServiceFreeResponse,
-    VmServiceListRequest, VmServiceListResponse, VmServiceStartRequest,
-    VmServiceStartResponse, VmServiceStopRequest, VmServiceStopResponse,
+    VirtualMachineSummary, VmServiceAllocateRequest, VmServiceAllocateResponse,
+    VmServiceFreeRequest, VmServiceFreeResponse, VmServiceListRequest,
+    VmServiceListResponse, VmServiceStartRequest, VmServiceStartResponse,
+    VmServiceStopRequest, VmServiceStopResponse, vm_service_server,
 };
 use std::{path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;

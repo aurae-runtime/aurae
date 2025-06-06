@@ -13,7 +13,7 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-use super::{cgroups::Cgroup, Cell, CellName, CellSpec, CellsError, Result};
+use super::{Cell, CellName, CellSpec, CellsError, Result, cgroups::Cgroup};
 use crate::cells::cell_service::cells::cells_cache::CellsCache;
 use std::collections::HashMap;
 use tracing::warn;
@@ -82,7 +82,9 @@ impl Cells {
                 // TODO: Should we not remove the cell (that has no cgroup) from the cache and
                 //       force the user to call Free? Free will also return an error, but we may be
                 //       calling other logic in free that we want to run.
-                warn!("Found cached cell ('{cell_name}') without cgroup. Did you forget to call free on the cell?");
+                warn!(
+                    "Found cached cell ('{cell_name}') without cgroup. Did you forget to call free on the cell?"
+                );
             }
 
             let cell = self
@@ -268,7 +270,7 @@ impl CellsCache for Cells {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AuraedRuntime, AURAED_RUNTIME};
+    use crate::{AURAED_RUNTIME, AuraedRuntime};
     use test_helpers::*;
 
     #[test]

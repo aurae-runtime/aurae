@@ -42,6 +42,7 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use oci_spec::OciSpecError;
 use oci_spec::runtime::{
     Capability, LinuxBuilder, LinuxDeviceCgroupBuilder, LinuxNamespaceBuilder,
     LinuxNamespaceType, LinuxResourcesBuilder, PosixRlimitBuilder,
@@ -51,7 +52,6 @@ use oci_spec::runtime::{
     LinuxCapabilitiesBuilder, MountBuilder, ProcessBuilder, RootBuilder, Spec,
     SpecBuilder, UserBuilder,
 };
-use oci_spec::OciSpecError;
 use proto::cri::PodSandboxConfig;
 use std::collections::{HashMap, HashSet};
 

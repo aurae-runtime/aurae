@@ -16,7 +16,7 @@
 
 use anyhow::Result;
 use client::{AuraeConfig, Client};
-use deno_core::{self, op2, OpState, Resource, ResourceId};
+use deno_core::{self, OpState, Resource, ResourceId, op2};
 use deno_error::JsErrorBox;
 use std::{cell::RefCell, rc::Rc};
 

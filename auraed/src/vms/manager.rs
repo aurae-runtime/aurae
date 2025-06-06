@@ -13,13 +13,13 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 use std::sync::{
-    mpsc::{channel, Sender},
     Arc,
+    mpsc::{Sender, channel},
 };
 
 use hypervisor::Hypervisor;
 use libc::EFD_NONBLOCK;
-use vmm::{api::ApiRequest, VmmThreadHandle};
+use vmm::{VmmThreadHandle, api::ApiRequest};
 use vmm_sys_util::eventfd::EventFd;
 
 pub struct Manager {

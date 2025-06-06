@@ -75,7 +75,7 @@ use crate::{
     logging::log_channel::LogChannel, observe::ObserveService,
     spawn::spawn_auraed_oci_to,
 };
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use aurae_ebpf_shared::{ForkedProcess, ProcessExit, Signal};
 use once_cell::sync::OnceCell;
 use proto::{

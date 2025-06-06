@@ -40,7 +40,9 @@ impl From<DeriveInput> for ValidateInput {
         let DeriveInput { ident: validated_type_ident, data, .. } = input;
 
         if !validated_type_ident.to_string().starts_with("Validated") {
-            panic!("Validated type should be named the same as the unvalidated type with a `Validated` prefix");
+            panic!(
+                "Validated type should be named the same as the unvalidated type with a `Validated` prefix"
+            );
         }
 
         let type_ident = Ident::new(

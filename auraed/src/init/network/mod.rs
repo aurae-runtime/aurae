@@ -42,7 +42,9 @@ pub(crate) enum NetworkError {
     ErrorSettingLinkUp { iface: String, source: rtnetlink::Error },
     #[error("Failed to set link down for device `{iface}`: {source}")]
     ErrorSettingLinkDown { iface: String, source: rtnetlink::Error },
-    #[error("Error adding route from `{route_source}` to {route_destination}` for device `{iface}`: {source}")]
+    #[error(
+        "Error adding route from `{route_source}` to {route_destination}` for device `{iface}`: {source}"
+    )]
     ErrorAddingRoute {
         iface: String,
         route_source: IpNetwork,

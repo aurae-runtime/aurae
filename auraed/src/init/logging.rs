@@ -12,9 +12,9 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
-use tracing::{info, Level};
+use tracing::{Level, info};
 use tracing_subscriber::{
-    layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer,
+    EnvFilter, Layer, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
 #[derive(thiserror::Error, Debug)]

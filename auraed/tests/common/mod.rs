@@ -14,8 +14,8 @@
 \* -------------------------------------------------------------------------- */
 use auraed::{AuraedPath, AuraedRuntime};
 use backoff::{
-    backoff::Backoff, exponential::ExponentialBackoff,
-    ExponentialBackoffBuilder, SystemClock,
+    ExponentialBackoffBuilder, SystemClock, backoff::Backoff,
+    exponential::ExponentialBackoff,
 };
 use client::{
     AuraeConfig, AuraeSocket, AuthConfig, Client, ClientError, SystemConfig,

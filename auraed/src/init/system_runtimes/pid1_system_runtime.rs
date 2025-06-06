@@ -15,11 +15,11 @@
 
 use super::{SocketStream, SystemRuntime, SystemRuntimeError};
 use crate::init::{
-    fs::{FsError, MountSpec, CGROUP_MNT_FLAGS, CHMOD_0755, COMMON_MNT_FLAGS},
+    BANNER,
+    fs::{CGROUP_MNT_FLAGS, CHMOD_0755, COMMON_MNT_FLAGS, FsError, MountSpec},
     logging, network,
     power::spawn_thread_power_button_listener,
     system_runtimes::create_tcp_socket_stream,
-    BANNER,
 };
 use nix::{
     mount::MsFlags,

@@ -25,17 +25,16 @@ use crate::logging::log_channel::LogChannel;
 use aurae_ebpf_shared::{ForkedProcess, ProcessExit, Signal};
 use cgroup_cache::CgroupCache;
 use proto::observe::{
-    observe_service_server, GetAuraeDaemonLogStreamRequest,
-    GetAuraeDaemonLogStreamResponse, GetPosixSignalsStreamRequest,
-    GetPosixSignalsStreamResponse, GetSubProcessStreamRequest,
-    GetSubProcessStreamResponse, LogChannelType, LogItem,
-    Signal as PosixSignal, WorkloadType,
+    GetAuraeDaemonLogStreamRequest, GetAuraeDaemonLogStreamResponse,
+    GetPosixSignalsStreamRequest, GetPosixSignalsStreamResponse,
+    GetSubProcessStreamRequest, GetSubProcessStreamResponse, LogChannelType,
+    LogItem, Signal as PosixSignal, WorkloadType, observe_service_server,
 };
 use std::collections::HashMap;
 use std::time::Duration;
 use std::{ffi::OsString, sync::Arc};
 use tokio::sync::mpsc;
-use tokio::sync::{broadcast::Receiver, Mutex};
+use tokio::sync::{Mutex, broadcast::Receiver};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 use tracing::info;
@@ -250,7 +249,9 @@ impl observe_service_server::ObserveService for ObserveService {
         request: Request<GetPosixSignalsStreamRequest>,
     ) -> Result<Response<Self::GetPosixSignalsStreamStream>, Status> {
         if self.posix_signals.is_none() {
-            return Err(Status::unimplemented("GetPosixSignalStream is not implemented for nested Aurae daemons"));
+            return Err(Status::unimplemented(
+                "GetPosixSignalStream is not implemented for nested Aurae daemons",
+            ));
         }
 
         Ok(Response::new(
@@ -278,14 +279,15 @@ mod tests {
             Arc::new(LogChannel::new(String::from("auraed"))),
             (None, None, None),
         );
-        assert!(svc
-            .register_sub_process_channel(
+        assert!(
+            svc.register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
                 LogChannel::new(String::from("foo"))
             )
             .await
-            .is_ok());
+            .is_ok()
+        );
 
         svc.sub_process_consumer_list.lock().await.clear();
     }
@@ -296,22 +298,24 @@ mod tests {
             Arc::new(LogChannel::new(String::from("auraed"))),
             (None, None, None),
         );
-        assert!(svc
-            .register_sub_process_channel(
+        assert!(
+            svc.register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
                 LogChannel::new(String::from("foo"))
             )
             .await
-            .is_ok());
-        assert!(svc
-            .register_sub_process_channel(
+            .is_ok()
+        );
+        assert!(
+            svc.register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
                 LogChannel::new(String::from("bar"))
             )
             .await
-            .is_err());
+            .is_err()
+        );
 
         svc.sub_process_consumer_list.lock().await.clear();
     }
@@ -322,18 +326,20 @@ mod tests {
             Arc::new(LogChannel::new(String::from("auraed"))),
             (None, None, None),
         );
-        assert!(svc
-            .register_sub_process_channel(
+        assert!(
+            svc.register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
                 LogChannel::new(String::from("foo"))
             )
             .await
-            .is_ok());
-        assert!(svc
-            .unregister_sub_process_channel(42, LogChannelType::Stdout)
-            .await
-            .is_ok());
+            .is_ok()
+        );
+        assert!(
+            svc.unregister_sub_process_channel(42, LogChannelType::Stdout)
+                .await
+                .is_ok()
+        );
 
         svc.sub_process_consumer_list.lock().await.clear();
     }
@@ -344,10 +350,11 @@ mod tests {
             Arc::new(LogChannel::new(String::from("auraed"))),
             (None, None, None),
         );
-        assert!(svc
-            .unregister_sub_process_channel(42, LogChannelType::Stdout)
-            .await
-            .is_err());
+        assert!(
+            svc.unregister_sub_process_channel(42, LogChannelType::Stdout)
+                .await
+                .is_err()
+        );
 
         svc.sub_process_consumer_list.lock().await.clear();
     }
@@ -358,18 +365,20 @@ mod tests {
             Arc::new(LogChannel::new(String::from("auraed"))),
             (None, None, None),
         );
-        assert!(svc
-            .register_sub_process_channel(
+        assert!(
+            svc.register_sub_process_channel(
                 42,
                 LogChannelType::Stdout,
                 LogChannel::new(String::from("foo"))
             )
             .await
-            .is_ok());
-        assert!(svc
-            .unregister_sub_process_channel(42, LogChannelType::Stderr)
-            .await
-            .is_err());
+            .is_ok()
+        );
+        assert!(
+            svc.unregister_sub_process_channel(42, LogChannelType::Stderr)
+                .await
+                .is_err()
+        );
 
         svc.sub_process_consumer_list.lock().await.clear();
     }

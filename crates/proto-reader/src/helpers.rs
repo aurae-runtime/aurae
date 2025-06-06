@@ -14,8 +14,8 @@
 \* -------------------------------------------------------------------------- */
 
 use proc_macro2::Span;
-use protobuf::descriptor::field_descriptor_proto::Type;
 use protobuf::descriptor::DescriptorProto;
+use protobuf::descriptor::field_descriptor_proto::Type;
 use protobuf_parse::ParsedAndTypechecked;
 use syn::Ident;
 

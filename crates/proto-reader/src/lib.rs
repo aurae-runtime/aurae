@@ -23,7 +23,9 @@ use syn::Lit;
 pub fn parse(file_path: &Lit) -> (PathBuf, ParsedAndTypechecked) {
     let crate_root = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(dir) => PathBuf::from(dir),
-        _ => panic!("env variable 'CARGO_MANIFEST_DIR' was not set. Failed to find crate root"),
+        _ => panic!(
+            "env variable 'CARGO_MANIFEST_DIR' was not set. Failed to find crate root"
+        ),
     };
 
     let parsed_file_path = match file_path {
@@ -39,7 +41,9 @@ pub fn parse(file_path: &Lit) -> (PathBuf, ParsedAndTypechecked) {
                 )
             })
         }
-        _ => panic!("expected literal string with path to proto file in the api directory"),
+        _ => panic!(
+            "expected literal string with path to proto file in the api directory"
+        ),
     };
 
     let mut api_dir = parsed_file_path.clone();

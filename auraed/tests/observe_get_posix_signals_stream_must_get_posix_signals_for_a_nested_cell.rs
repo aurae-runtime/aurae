@@ -18,7 +18,7 @@ use common::{
         CellServiceAllocateRequestBuilder, CellServiceStartRequestBuilder,
     },
     observe::{
-        intercept_posix_signals_stream, GetPosixSignalsStreamRequestBuilder,
+        GetPosixSignalsStreamRequestBuilder, intercept_posix_signals_stream,
     },
 };
 use proto::{cells::CellServiceStopRequest, observe::Signal};
@@ -29,8 +29,8 @@ mod common;
 
 #[test_helpers_macros::shared_runtime_test]
 #[ignore = "we can not run eBPF tests in Github actions"]
-async fn observe_get_posix_signal_stream_must_get_posix_signals_for_a_nested_cell(
-) {
+async fn observe_get_posix_signal_stream_must_get_posix_signals_for_a_nested_cell()
+ {
     skip_if_not_root!("must_get_posix_signals_for_a_nested_cell");
     skip_if_seccomp!("must_get_posix_signals_for_a_nested_cell");
 

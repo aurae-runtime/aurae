@@ -193,7 +193,7 @@ mod test {
     use serial_test::serial;
     use test_helpers::assert_eventually_eq;
     use test_helpers::mock_time;
-    use tokio::sync::broadcast::{channel, Sender};
+    use tokio::sync::broadcast::{Sender, channel};
 
     struct TestProcessInfo {
         nspid_lookup: HashMap<i32, i32>,

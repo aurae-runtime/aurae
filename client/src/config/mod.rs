@@ -27,7 +27,7 @@ pub use self::{
     client_cert_details::ClientCertDetails, system_config::AuraeSocket,
     system_config::SystemConfig,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use serde::Deserialize;
 use std::fs::File;
 use std::io::prelude::*;

@@ -34,7 +34,7 @@
 )]
 #![warn(clippy::unwrap_used)]
 
-use auraed::{prep_oci_spec_for_spawn, run, AuraedRuntime};
+use auraed::{AuraedRuntime, prep_oci_spec_for_spawn, run};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use tracing::{error, info};

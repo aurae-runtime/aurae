@@ -12,8 +12,8 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
-use aya::programs::{KProbe, ProgramError};
 use aya::Ebpf;
+use aya::programs::{KProbe, ProgramError};
 use tracing::{trace, warn};
 
 pub trait KProbeProgram<T: Clone + Send + 'static> {

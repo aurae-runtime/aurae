@@ -18,7 +18,7 @@ use common::{
         CellServiceAllocateRequestBuilder, CellServiceStartRequestBuilder,
     },
     observe::{
-        intercept_posix_signals_stream, GetPosixSignalsStreamRequestBuilder,
+        GetPosixSignalsStreamRequestBuilder, intercept_posix_signals_stream,
     },
 };
 use proto::{cells::CellServiceStopRequest, observe::Signal};
