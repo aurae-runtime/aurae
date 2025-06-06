@@ -188,6 +188,24 @@ impl VmService {
                 .collect(),
         })
     }
+
+    /// Stop all VMs
+    #[tracing::instrument(skip(self))]
+    pub async fn stop_all(&self) -> Result<()> {
+        for vm in self.list().await?.machines {
+            let _ = self.stop(VmServiceStopRequest { vm_id: vm.id }).await?;
+        }
+        Ok(())
+    }
+
+    /// Free all VMs
+    #[tracing::instrument(skip(self))]
+    pub async fn free_all(&self) -> Result<()> {
+        for vm in self.list().await?.machines {
+            let _ = self.free(VmServiceFreeRequest { vm_id: vm.id }).await?;
+        }
+        Ok(())
+    }
 }
 
 #[tonic::async_trait]

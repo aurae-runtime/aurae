@@ -13,10 +13,11 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-use crate::{cells::CellService, discovery::DiscoveryService};
+use crate::{VmService, cells::CellService, discovery::DiscoveryService};
 use proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
+    vms::vm_service_server::VmServiceServer,
 };
 use std::borrow::BorrowMut;
 use tokio::{
@@ -29,6 +30,7 @@ use tracing::error;
 pub(crate) struct GracefulShutdown {
     health_reporter: HealthReporter,
     cell_service: CellService,
+    vm_service: VmService,
     shutdown_broadcaster: Sender<()>,
 }
 
@@ -36,9 +38,15 @@ impl GracefulShutdown {
     pub fn new(
         health_reporter: HealthReporter,
         cell_service: CellService,
+        vm_service: VmService,
     ) -> Self {
         let (tx, _) = channel(());
-        Self { health_reporter, cell_service, shutdown_broadcaster: tx }
+        Self {
+            health_reporter,
+            cell_service,
+            vm_service,
+            shutdown_broadcaster: tx,
+        }
     }
 
     /// Subscribe to the shutdown broadcast channel
@@ -67,6 +75,7 @@ impl GracefulShutdown {
         health_reporter
             .set_not_serving::<CellServiceServer<CellService>>()
             .await;
+        health_reporter.set_not_serving::<VmServiceServer<VmService>>().await;
         health_reporter
             .set_not_serving::<DiscoveryServiceServer<DiscoveryService>>()
             .await;
@@ -77,15 +86,27 @@ impl GracefulShutdown {
         // wait for all subscribers to drop
         self.shutdown_broadcaster.closed().await;
 
-        if let Err(e) = self.cell_service.free_all().await {
+        // Stop and free all cells. Only free if stopping succeeds.
+        if let Err(e) = self.cell_service.stop_all().await {
+            error!(
+                "Attempt to stop all executables on terminate resulted in error: {e}"
+            )
+        } else if let Err(e) = self.cell_service.free_all().await {
             error!(
                 "Attempt to free all cells on terminate resulted in error: {e}"
             )
         }
 
-        if let Err(e) = self.cell_service.stop_all().await {
+        // Stop and free all VMs. Always attempt to free even if stopping fails.
+        if let Err(e) = self.vm_service.stop_all().await {
             error!(
-                "Attempt to stop all executables on terminate resulted in error: {e}"
+                "Attempt to stop all VMs on terminate resulted in error: {e}"
+            )
+        }
+
+        if let Err(e) = self.vm_service.free_all().await {
+            error!(
+                "Attempt to free all VMs on terminate resulted in error: {e}"
             )
         }
     }
