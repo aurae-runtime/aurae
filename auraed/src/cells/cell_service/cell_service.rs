@@ -14,6 +14,7 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
+    Result,
     cells::{CellName, Cells, CellsCache},
     error::CellsServiceError,
     executables::Executables,
@@ -21,21 +22,20 @@ use super::{
         ValidatedCellServiceAllocateRequest, ValidatedCellServiceFreeRequest,
         ValidatedCellServiceStartRequest, ValidatedCellServiceStopRequest,
     },
-    Result,
 };
 use crate::{cells::cell_service::cells::CellsError, observe::ObserveService};
 use ::validation::ValidatedType;
 use backoff::backoff::Backoff;
-use client::{cells::cell_service::CellServiceClient, Client, ClientError};
+use client::{Client, ClientError, cells::cell_service::CellServiceClient};
 use proto::{
     cells::{
-        cell_service_server, Cell, CellGraphNode, CellServiceAllocateRequest,
+        Cell, CellGraphNode, CellServiceAllocateRequest,
         CellServiceAllocateResponse, CellServiceFreeRequest,
         CellServiceFreeResponse, CellServiceListRequest,
         CellServiceListResponse, CellServiceStartRequest,
         CellServiceStartResponse, CellServiceStopRequest,
         CellServiceStopResponse, CpuController, CpusetController,
-        MemoryController,
+        MemoryController, cell_service_server,
     },
     observe::LogChannelType,
 };
@@ -559,6 +559,7 @@ impl cell_service_server::CellService for CellService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{AURAED_RUNTIME, AuraedRuntime};
     use crate::{
         cells::cell_service::validation::{
             ValidatedCell, ValidatedCpuController, ValidatedCpusetController,
@@ -566,7 +567,6 @@ mod tests {
         },
         logging::log_channel::LogChannel,
     };
-    use crate::{AuraedRuntime, AURAED_RUNTIME};
     use iter_tools::Itertools;
     use test_helpers::*;
 
@@ -587,26 +587,26 @@ mod tests {
 
         // Allocate a parent cell for testing
         let parent_cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());
-        assert!(service
-            .allocate(allocate_request(&parent_cell_name))
-            .await
-            .is_ok());
+        assert!(
+            service.allocate(allocate_request(&parent_cell_name)).await.is_ok()
+        );
 
         // Allocate a nested cell within the parent cell for testing
         let nested_cell_name =
             format!("{}/ae-test-{}", &parent_cell_name, uuid::Uuid::new_v4());
-        assert!(service
-            .allocate(allocate_request(&nested_cell_name))
-            .await
-            .is_ok());
+        assert!(
+            service.allocate(allocate_request(&nested_cell_name)).await.is_ok()
+        );
 
         // Allocate a cell without children for testing
         let cell_without_children_name =
             format!("ae-test-{}", uuid::Uuid::new_v4());
-        assert!(service
-            .allocate(allocate_request(&cell_without_children_name))
-            .await
-            .is_ok());
+        assert!(
+            service
+                .allocate(allocate_request(&cell_without_children_name))
+                .await
+                .is_ok()
+        );
 
         // List all cells and verify the result
         let result = service.list().await;

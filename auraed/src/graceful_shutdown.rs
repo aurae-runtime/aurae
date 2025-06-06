@@ -21,7 +21,7 @@ use proto::{
 use std::borrow::BorrowMut;
 use tokio::{
     signal::unix::SignalKind,
-    sync::watch::{channel, Receiver, Sender},
+    sync::watch::{Receiver, Sender, channel},
 };
 use tonic_health::server::HealthReporter;
 use tracing::error;

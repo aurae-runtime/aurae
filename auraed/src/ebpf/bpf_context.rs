@@ -14,9 +14,8 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    kprobe::KProbeProgram, perf_buffer_reader::PerfBufferReader,
+    BpfFile, kprobe::KProbeProgram, perf_buffer_reader::PerfBufferReader,
     perf_event_broadcast::PerfEventBroadcast, tracepoint::TracepointProgram,
-    BpfFile,
 };
 
 use aya::Ebpf;

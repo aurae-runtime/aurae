@@ -14,8 +14,8 @@
 \* -------------------------------------------------------------------------- */
 
 use anyhow::Context;
-use aya::programs::{ProgramError, TracePoint};
 use aya::Ebpf;
+use aya::programs::{ProgramError, TracePoint};
 use tracing::{trace, warn};
 
 pub trait TracepointProgram<T: Clone + Send + 'static> {

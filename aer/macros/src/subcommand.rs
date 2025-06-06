@@ -23,13 +23,13 @@ use protobuf::descriptor::{
     DescriptorProto, FieldDescriptorProto, MethodDescriptorProto,
 };
 use protobuf_parse::ParsedAndTypechecked;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use std::collections::VecDeque;
 use std::str::FromStr;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::{Brace, Token};
-use syn::{braced, bracketed, parse_macro_input, Lit, Path, Token};
+use syn::{Lit, Path, Token, braced, bracketed, parse_macro_input};
 
 struct SubcommandInput {
     file_path: Lit,
@@ -320,7 +320,9 @@ impl FieldType {
                 let name = field.type_name();
                 if name.ends_with("Entry") {
                     if panic_on_issue {
-                        panic!("Map not supported by the macro. To generate code that is close to correct, use the `subcommand_for_dev_only` macro. The code will have compilation errors, but you can expand the macro and save some typing");
+                        panic!(
+                            "Map not supported by the macro. To generate code that is close to correct, use the `subcommand_for_dev_only` macro. The code will have compilation errors, but you can expand the macro and save some typing"
+                        );
                     }
                     Self::Map
                 } else {

@@ -15,7 +15,7 @@
 #![allow(unused)]
 
 use crate::retry;
-use client::{observe::observe_service::ObserveServiceClient, Client};
+use client::{Client, observe::observe_service::ObserveServiceClient};
 use proto::observe::{
     GetPosixSignalsStreamRequest, Signal, Workload, WorkloadType,
 };

@@ -43,10 +43,10 @@
 \* -------------------------------------------------------------------------- */
 
 use proto::cri::{
-    image_service_server, ImageFsInfoRequest, ImageFsInfoResponse,
-    ImageStatusRequest, ImageStatusResponse, ListImagesRequest,
-    ListImagesResponse, PullImageRequest, PullImageResponse,
-    RemoveImageRequest, RemoveImageResponse,
+    ImageFsInfoRequest, ImageFsInfoResponse, ImageStatusRequest,
+    ImageStatusResponse, ListImagesRequest, ListImagesResponse,
+    PullImageRequest, PullImageResponse, RemoveImageRequest,
+    RemoveImageResponse, image_service_server,
 };
 use tonic::{Request, Response, Status};
 

@@ -13,12 +13,11 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 use super::cells::{
-    cgroups::{
-        self,
-        cpuset::{Cpus, Mems},
-        CgroupSpec, Limit, Protection, Weight,
-    },
     IsolationControls,
+    cgroups::{
+        self, CgroupSpec, Limit, Protection, Weight,
+        cpuset::{Cpus, Mems},
+    },
 };
 use super::executables::ExecutableName;
 use crate::cells::cell_service::cells::CellName;
@@ -526,12 +525,14 @@ mod tests {
 
     #[test]
     fn test_executable_empty_command() {
-        assert!(ExecutableValidator::validate_command(
-            String::from(""),
-            "field",
-            Some("parent")
-        )
-        .is_err());
+        assert!(
+            ExecutableValidator::validate_command(
+                String::from(""),
+                "field",
+                Some("parent")
+            )
+            .is_err()
+        );
     }
 
     #[test]

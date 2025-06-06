@@ -27,10 +27,10 @@ use vmm::{
     api::ApiAction,
     vm::VmState,
     vm_config::{
-        default_console, default_serial, CpuFeatures, CpusConfig,
-        HotplugMethod, MemoryConfig, PayloadConfig, RngConfig, VhostMode,
-        DEFAULT_DISK_NUM_QUEUES, DEFAULT_DISK_QUEUE_SIZE,
-        DEFAULT_MAX_PHYS_BITS, DEFAULT_NET_NUM_QUEUES, DEFAULT_NET_QUEUE_SIZE,
+        CpuFeatures, CpusConfig, DEFAULT_DISK_NUM_QUEUES,
+        DEFAULT_DISK_QUEUE_SIZE, DEFAULT_MAX_PHYS_BITS, DEFAULT_NET_NUM_QUEUES,
+        DEFAULT_NET_QUEUE_SIZE, HotplugMethod, MemoryConfig, PayloadConfig,
+        RngConfig, VhostMode, default_console, default_serial,
     },
 };
 

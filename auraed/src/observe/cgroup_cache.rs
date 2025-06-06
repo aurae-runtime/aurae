@@ -111,16 +111,20 @@ mod test {
         let ino2 = create_file(&OsString::from(&file_name2));
 
         assert!(cache.get(ino1).is_some());
-        assert!(cache
-            .get(ino1)
-            .expect("should not happen")
-            .eq_ignore_ascii_case(format!("/tmp/{file_name1}")));
+        assert!(
+            cache
+                .get(ino1)
+                .expect("should not happen")
+                .eq_ignore_ascii_case(format!("/tmp/{file_name1}"))
+        );
 
         assert!(cache.get(ino2).is_some());
-        assert!(cache
-            .get(ino2)
-            .expect("should not happen")
-            .eq_ignore_ascii_case(format!("/tmp/{file_name2}")));
+        assert!(
+            cache
+                .get(ino2)
+                .expect("should not happen")
+                .eq_ignore_ascii_case(format!("/tmp/{file_name2}"))
+        );
     }
 
     fn create_file(file_name: &OsString) -> u64 {

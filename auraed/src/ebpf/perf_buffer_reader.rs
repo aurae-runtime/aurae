@@ -15,9 +15,9 @@
 
 use anyhow::Context;
 use aya::{
+    Ebpf,
     maps::perf::AsyncPerfEventArray,
     util::{nr_cpus, online_cpus},
-    Ebpf,
 };
 use bytes::BytesMut;
 use procfs::page_size;
@@ -108,7 +108,9 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
                     {
                         Ok(events) => events,
                         Err(error) => {
-                            error!("fail to read events from per-cpu perf buffer, bailing out: {error}");
+                            error!(
+                                "fail to read events from per-cpu perf buffer, bailing out: {error}"
+                            );
                             return;
                         }
                     };

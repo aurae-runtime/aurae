@@ -14,8 +14,8 @@
 \* -------------------------------------------------------------------------- */
 
 use super::{
-    cgroups::Cgroup, nested_auraed::NestedAuraed, CellName, CellSpec, Cells,
-    CellsCache, CellsError, Result,
+    CellName, CellSpec, Cells, CellsCache, CellsError, Result, cgroups::Cgroup,
+    nested_auraed::NestedAuraed,
 };
 use client::AuraeSocket;
 use tracing::info;
@@ -262,7 +262,7 @@ impl Drop for Cell {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AuraedRuntime, AURAED_RUNTIME};
+    use crate::{AURAED_RUNTIME, AuraedRuntime};
     use test_helpers::*;
 
     #[test]
