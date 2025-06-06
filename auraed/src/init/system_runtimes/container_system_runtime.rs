@@ -16,10 +16,10 @@
 use std::path::PathBuf;
 
 use super::{SocketStream, SystemRuntime, SystemRuntimeError};
-use crate::init::{
-    logging, system_runtimes::create_unix_socket_stream, BANNER,
-};
 use crate::AURAED_RUNTIME;
+use crate::init::{
+    BANNER, logging, system_runtimes::create_unix_socket_stream,
+};
 use tonic::async_trait;
 use tracing::info;
 

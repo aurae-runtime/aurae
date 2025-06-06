@@ -14,7 +14,7 @@
 \* -------------------------------------------------------------------------- */
 
 use proto::discovery::{
-    discovery_service_server, DiscoverRequest, DiscoverResponse,
+    DiscoverRequest, DiscoverResponse, discovery_service_server,
 };
 use thiserror::Error;
 use tonic::{Request, Response, Status};

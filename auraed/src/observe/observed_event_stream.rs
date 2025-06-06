@@ -18,8 +18,8 @@ use aurae_ebpf_shared::{HasCgroup, HasHostPid};
 use proto::observe::WorkloadType;
 use std::{ffi::OsString, sync::Arc};
 use tokio::sync::{
-    mpsc::{self, Receiver},
     Mutex,
+    mpsc::{self, Receiver},
 };
 use tonic::Status;
 

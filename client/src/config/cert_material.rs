@@ -42,9 +42,9 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+use crate::AuthConfig;
 use crate::config::client_cert_details::ClientCertDetails;
 use crate::config::x509_details::new_x509_details;
-use crate::AuthConfig;
 use anyhow::Context;
 
 pub struct CertMaterial {

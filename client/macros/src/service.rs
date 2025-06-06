@@ -17,7 +17,7 @@ use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::{parse_macro_input, Lit, Path, Token};
+use syn::{Lit, Path, Token, parse_macro_input};
 
 struct ServiceInput {
     file_path: Lit,

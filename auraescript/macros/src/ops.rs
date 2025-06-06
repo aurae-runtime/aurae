@@ -24,7 +24,7 @@ use std::path::PathBuf;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::{parse_macro_input, Lit, Path, Token};
+use syn::{Lit, Path, Token, parse_macro_input};
 
 struct OpsGeneratorInput {
     file_path: Lit,
@@ -189,7 +189,9 @@ fn typescript_generator(
             out_dir.push("gen");
             out_dir
         }
-        _ => panic!("Environment variable 'CARGO_MANIFEST_DIR' was not set. Unable to locate crate root"),
+        _ => panic!(
+            "Environment variable 'CARGO_MANIFEST_DIR' was not set. Unable to locate crate root"
+        ),
     };
 
     let file_path = file_path

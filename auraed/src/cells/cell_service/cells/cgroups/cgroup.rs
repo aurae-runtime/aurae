@@ -14,8 +14,8 @@
 \* -------------------------------------------------------------------------- */
 
 use crate::cells::cell_service::cells::{
-    cgroups::{CpuController, CpusetController, MemoryController},
     CellName, CgroupSpec,
+    cgroups::{CpuController, CpusetController, MemoryController},
 };
 use libcgroups::common::{CgroupManager, ControllerOpt, DEFAULT_CGROUP_ROOT};
 use libcgroups::stats::Stats;

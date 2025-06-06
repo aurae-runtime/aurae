@@ -18,8 +18,8 @@
 //! Manages authenticating with remote Aurae instances, as well as searching
 //! the local filesystem for configuration and authentication material.
 
-use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
 use crate::AuraeSocket;
+use crate::config::{AuraeConfig, CertMaterial, ClientCertDetails};
 use hyper_util::rt::TokioIo;
 use thiserror::Error;
 use tokio::net::{TcpStream, UnixStream};

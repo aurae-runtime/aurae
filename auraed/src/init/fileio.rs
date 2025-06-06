@@ -40,7 +40,7 @@ pub(crate) fn show_dir(
                     ))
                 } else {
                     Err(anyhow!("Error reading directory. Error: {}", e))
-                }
+                };
             }
         }
     }

@@ -13,7 +13,7 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-use super::{cgroups::error::CgroupsError, CellName};
+use super::{CellName, cgroups::error::CgroupsError};
 use std::io;
 use thiserror::Error;
 use tracing::error;

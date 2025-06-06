@@ -13,7 +13,7 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 use super::ValidationError;
-use validator::{validate_length, HasLen};
+use validator::{HasLen, validate_length};
 
 pub fn maximum_length<T: HasLen>(
     value: T,
