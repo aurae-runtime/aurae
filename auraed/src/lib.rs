@@ -349,10 +349,9 @@ pub async fn run(
 }
 
 /// Write the container OCI spec to the filesystem in preparation for spawning Auraed using a container runtime.
-pub fn prep_oci_spec_for_spawn(output: &str) {
-    spawn_auraed_oci_to(
-        PathBuf::from(output),
-        AuraeOCIBuilder::new().build().expect("building default oci spec"),
-    )
-    .expect("spawning");
+pub fn prep_oci_spec_for_spawn(output: &str) -> Result<(), anyhow::Error> {
+    let spec = AuraeOCIBuilder::new()
+        .build()
+        .map_err(|e| anyhow!("building default oci spec: {e}"))?;
+    spawn_auraed_oci_to(PathBuf::from(output), spec)
 }
