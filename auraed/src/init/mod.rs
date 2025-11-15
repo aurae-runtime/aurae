@@ -68,6 +68,7 @@ const BANNER: &str = "
 \n";
 
 #[derive(thiserror::Error, Debug)]
+#[allow(dead_code)]
 pub(crate) enum InitError {
     #[error(transparent)]
     SystemRuntimeError(#[from] SystemRuntimeError),

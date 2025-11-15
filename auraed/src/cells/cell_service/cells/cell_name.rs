@@ -24,7 +24,7 @@ pub const SEPARATOR: char = '/';
 pub struct CellName(PathBuf);
 
 impl CellName {
-    pub fn leaf(&self) -> Cow<str> {
+    pub fn leaf(&self) -> Cow<'_, str> {
         self.0
             .components()
             .next_back()
