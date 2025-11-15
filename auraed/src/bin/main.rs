@@ -14,16 +14,16 @@
 \* -------------------------------------------------------------------------- */
 
 // Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
-#![warn(future_incompatible, nonstandard_style, unused)]
 #![warn(
+    future_incompatible,
+    nonstandard_style,
+    unused,
     improper_ctypes,
     non_shorthand_field_patterns,
     no_mangle_generic_items,
     unconditional_recursion,
     unused_comparisons,
-    while_true
-)]
-#![warn(
+    while_true,
     missing_debug_implementations,
     // TODO: missing_docs,
     trivial_casts,
@@ -32,23 +32,19 @@
     unused_import_braces,
     unused_results
 )]
-#![warn(clippy::unwrap_used)]
+// Keep the entrypoint warnings clean even when clippy isn't run separately.
+#![warn(clippy::all, clippy::pedantic, clippy::unwrap_used)]
 
 use auraed::{AuraedRuntime, prep_oci_spec_for_spawn, run};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
+use std::process::ExitCode;
 use tracing::{error, info};
-
-/// Default exit code for successful termination of auraed.
-pub const EXIT_OKAY: i32 = 0;
-
-/// Default exit code for a runtime error of auraed.
-pub const EXIT_ERROR: i32 = 1;
 
 /// Command line options for auraed.
 ///
 /// Defines the configurable options which can be used to populate
-/// an AuraeRuntime structure.
+/// an `AuraeRuntime` structure.
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct AuraedOptions {
@@ -62,7 +58,7 @@ struct AuraedOptions {
     #[clap(long, value_parser)]
     ca_crt: Option<String>,
     /// Aurae socket address.  Depending on context, this should be a file or a network address.
-    /// Defaults to ${runtime_dir}/aurae.sock or [::1]:8080 respectively.
+    /// Defaults to ${`runtime_dir`}/aurae.sock or [`::1`]:8080 respectively.
     ///
     /// Warning: This socket is created (by default) with user
     /// mode 0o766 which allows for unprivileged access to the
@@ -114,22 +110,28 @@ enum SubCommands {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Parse command line arguments into AuraedOptions
-    let options = AuraedOptions::parse();
-
-    // Match on the subcommand and handle accordingly
-    let exit_code = match &options.subcmd {
-        Some(SubCommands::Spawn { output }) => {
-            handle_spawn_subcommand(output).await
+async fn main() -> ExitCode {
+    match dispatch().await {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            error!("{err:?}");
+            ExitCode::FAILURE
         }
-        None => handle_default(options).await,
-    };
-
-    std::process::exit(exit_code);
+    }
 }
 
-async fn handle_default(options: AuraedOptions) -> i32 {
+async fn dispatch() -> Result<(), Box<dyn std::error::Error>> {
+    let mut options = AuraedOptions::parse();
+
+    match options.subcmd.take() {
+        Some(SubCommands::Spawn { output }) => handle_spawn_subcommand(&output),
+        None => handle_default(options).await,
+    }
+}
+
+async fn handle_default(
+    options: AuraedOptions,
+) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting Aurae Daemon Runtime");
     info!("Aurae Daemon is pid {}", std::process::id());
 
@@ -159,28 +161,22 @@ async fn handle_default(options: AuraedOptions) -> i32 {
     // Create a new runtime configuration, using provided options or defaults
     let runtime = AuraedRuntime {
         auraed: default_auraed,
-        ca_crt: ca_crt.map(PathBuf::from).unwrap_or(default_ca_crt),
-        server_crt: server_crt.map(PathBuf::from).unwrap_or(default_server_crt),
-        server_key: server_key.map(PathBuf::from).unwrap_or(default_server_key),
-        runtime_dir: runtime_dir
-            .map(PathBuf::from)
-            .unwrap_or(default_runtime_dir),
-        library_dir: library_dir
-            .map(PathBuf::from)
-            .unwrap_or(default_library_dir),
+        ca_crt: ca_crt.map_or(default_ca_crt, PathBuf::from),
+        server_crt: server_crt.map_or(default_server_crt, PathBuf::from),
+        server_key: server_key.map_or(default_server_key, PathBuf::from),
+        runtime_dir: runtime_dir.map_or(default_runtime_dir, PathBuf::from),
+        library_dir: library_dir.map_or(default_library_dir, PathBuf::from),
     };
 
     // Run the auraed daemon with the configured runtime
-    if let Err(e) = run(runtime, socket, verbose, nested).await {
-        error!("{:?}", e); // Log any errors that occur
-        EXIT_ERROR // Return error exit code
-    } else {
-        EXIT_OKAY // Return success exit code
-    }
+    run(runtime, socket, verbose, nested).await?;
+    Ok(())
 }
 
-async fn handle_spawn_subcommand(output: &str) -> i32 {
+fn handle_spawn_subcommand(
+    output: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     info!("Spawning Auraed OCI bundle: {}", output);
-    prep_oci_spec_for_spawn(output); // Prepare the OCI spec for spawning
-    EXIT_OKAY // Return success exit code
+    prep_oci_spec_for_spawn(output)?; // Prepare the OCI spec for spawning
+    Ok(())
 }
