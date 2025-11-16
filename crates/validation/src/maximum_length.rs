@@ -13,16 +13,19 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 use super::ValidationError;
-use validator::{HasLen, validate_length};
+use validator::ValidateLength;
 
-pub fn maximum_length<T: HasLen>(
+pub fn maximum_length<T>(
     value: T,
     length: u64,
     units: &str,
     field_name: &str,
     parent_name: Option<&str>,
-) -> Result<(), ValidationError> {
-    match validate_length(value, None, Some(length), None) {
+) -> Result<(), ValidationError>
+where
+    T: ValidateLength<u64>,
+{
+    match value.validate_length(None, Some(length), None) {
         true => Ok(()),
         false => Err(ValidationError::Maximum {
             field: super::field_name(field_name, parent_name),
@@ -35,17 +38,18 @@ pub fn maximum_length<T: HasLen>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use validator::HasLen;
+    use validator::ValidateLength;
 
     #[test]
     fn test_maximum_length() {
         let value = vec![1, 2];
+        let current_length = value.length().expect("vector always has length");
 
-        let maximum = value.length() - 1;
+        let maximum = current_length - 1;
         let result = maximum_length(&value, maximum, "test", "test", None);
         assert!(matches!(result, Err(ValidationError::Maximum { .. })));
 
-        let maximum = value.length();
+        let maximum = current_length;
         let result = maximum_length(&value, maximum, "test", "test", None);
         assert!(matches!(result, Ok(..)));
     }

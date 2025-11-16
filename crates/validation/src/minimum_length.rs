@@ -13,16 +13,19 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 use super::ValidationError;
-use validator::{HasLen, validate_length};
+use validator::ValidateLength;
 
-pub fn minimum_length<T: HasLen>(
+pub fn minimum_length<T>(
     value: T,
     length: u64,
     units: &str,
     field_name: &str,
     parent_name: Option<&str>,
-) -> Result<(), ValidationError> {
-    match validate_length(value, Some(length), None, None) {
+) -> Result<(), ValidationError>
+where
+    T: ValidateLength<u64>,
+{
+    match value.validate_length(Some(length), None, None) {
         true => Ok(()),
         false => Err(ValidationError::Minimum {
             field: super::field_name(field_name, parent_name),
@@ -35,19 +38,20 @@ pub fn minimum_length<T: HasLen>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use validator::HasLen;
+    use validator::ValidateLength;
 
     #[test]
     fn test_minimum_length() {
         let value = "123456";
+        let current_length = value.length().expect("string always has length");
 
         assert!(matches!(
-            minimum_length(value, value.length() + 1, "test", "test", None),
+            minimum_length(value, current_length + 1, "test", "test", None),
             Err(ValidationError::Minimum { .. })
         ));
 
         assert!(matches!(
-            minimum_length(value, value.length() - 1, "test", "test", None),
+            minimum_length(value, current_length - 1, "test", "test", None),
             Ok(..)
         ));
     }

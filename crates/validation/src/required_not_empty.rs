@@ -15,16 +15,19 @@
 use super::ValidationError;
 #[cfg(feature = "secrecy")]
 use secrecy::{ExposeSecret, SecretString};
-use validator::HasLen;
+use validator::ValidateLength;
 
-pub fn required_not_empty<T: HasLen>(
+pub fn required_not_empty<T>(
     value: Option<T>,
     field_name: &str,
     parent_name: Option<&str>,
-) -> Result<T, ValidationError> {
+) -> Result<T, ValidationError>
+where
+    T: ValidateLength<u64>,
+{
     let value = super::required(value, field_name, parent_name)?;
 
-    if value.length() == 0 {
+    if value.length().is_some_and(|length| length == 0) {
         return Err(ValidationError::Required {
             field: super::field_name(field_name, parent_name),
         });

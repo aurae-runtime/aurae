@@ -32,7 +32,7 @@ url = ["dep:url"]
 fancy-regex = { workspace = true, optional = true }
 lazy_static = { workspace = true, optional = true }
 thiserror = { workspace = true }
-validator = "0.16.1"
+validator = "0.20.0"
 secrecy = { version = "0.10.3", optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }

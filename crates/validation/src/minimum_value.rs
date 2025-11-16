@@ -14,16 +14,19 @@
 \* -------------------------------------------------------------------------- */
 use super::ValidationError;
 use std::fmt::Display;
-use validator::validate_range;
+use validator::ValidateRange;
 
-pub fn minimum_value<T: PartialOrd + PartialEq + Display + Copy>(
+pub fn minimum_value<T>(
     value: T,
     minimum: T,
     units: &str,
     field_name: &str,
     parent_name: Option<&str>,
-) -> Result<(), ValidationError> {
-    match validate_range(value, Some(minimum), None) {
+) -> Result<(), ValidationError>
+where
+    T: ValidateRange<T> + PartialOrd + PartialEq + Display + Copy,
+{
+    match value.validate_range(Some(minimum), None, None, None) {
         true => Ok(()),
         false => Err(ValidationError::Minimum {
             field: super::field_name(field_name, parent_name),
