@@ -1,0 +1,30 @@
+[package]
+authors = ["The Chromium OS Authors"]
+edition = "2021"
+name = "net_util"
+version = "0.1.0"
+
+[dependencies]
+epoll = "4.3.3"
+getrandom = "0.2.15"
+libc = "0.2.167"
+log = "0.4.22"
+net_gen = { path = "../net_gen" }
+rate_limiter = { path = "../rate_limiter" }
+serde = { version = "1.0.208", features = ["derive"] }
+thiserror = "2.0.6"
+virtio-bindings = { workspace = true }
+virtio-queue = { workspace = true }
+vm-memory = { workspace = true, features = [
+  "backend-atomic",
+  "backend-bitmap",
+  "backend-mmap",
+] }
+vm-virtio = { path = "../vm-virtio" }
+vmm-sys-util = { workspace = true }
+
+[dev-dependencies]
+once_cell = "1.20.2"
+pnet = "0.35.0"
+pnet_datalink = "0.35.0"
+serde_json = "1.0.120"

@@ -1,0 +1,14 @@
+[advisories]
+ignore = [
+	# serde_cbor is an unmaintained dependency introduced by criterion.
+	# We are using criterion only for benchmarks, so we can ignore
+	# this vulnerability until criterion is fixing this.
+	# See https://github.com/bheisler/criterion.rs/issues/534.
+	"RUSTSEC-2021-0127",
+	# atty is unmaintained (the unsound problem doesn't seem to impact us).
+	# We are ignoring this advisory because it's only used by criterion,
+	# and we are using criterion for benchmarks. This is not a problem for
+	# production use cases. Also, criterion did not update the dependency,
+	# so there is not much else we can do.
+	"RUSTSEC-2021-0145"
+	]

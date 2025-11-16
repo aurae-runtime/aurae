@@ -1,0 +1,61 @@
+[package]
+authors = ["Microsoft Authors"]
+edition = "2021"
+license = "Apache-2.0 OR BSD-3-Clause"
+name = "hypervisor"
+version = "0.1.0"
+
+[features]
+kvm = ["kvm-bindings", "kvm-ioctls", "vfio-ioctls/kvm"]
+mshv = ["mshv-bindings", "mshv-ioctls", "mshv_emulator", "vfio-ioctls/mshv"]
+mshv_emulator = ["iced-x86", "mshv-bindings"]
+sev_snp = ["igvm", "igvm_defs"]
+tdx = []
+
+[dependencies]
+anyhow = "1.0.94"
+arc-swap = "1.7.1"
+byteorder = "1.5.0"
+cfg-if = "1.0.0"
+concat-idents = "1.1.5"
+igvm = { version = "0.3.3", optional = true }
+igvm_defs = { version = "0.3.1", optional = true }
+kvm-bindings = { workspace = true, optional = true, features = ["serde"] }
+kvm-ioctls = { workspace = true, optional = true }
+libc = "0.2.167"
+log = "0.4.22"
+mshv-bindings = { workspace = true, features = [
+  "fam-wrappers",
+  "with-serde",
+], optional = true }
+mshv-ioctls = { workspace = true, optional = true }
+serde = { version = "1.0.208", features = ["derive", "rc"] }
+serde_with = { version = "3.9.0", default-features = false, features = [
+  "macros",
+] }
+thiserror = "2.0.6"
+vfio-ioctls = { workspace = true, default-features = false }
+vm-memory = { workspace = true, features = [
+  "backend-atomic",
+  "backend-bitmap",
+  "backend-mmap",
+] }
+vmm-sys-util = { workspace = true, features = ["with-serde"] }
+
+[target.'cfg(target_arch = "x86_64")'.dependencies.iced-x86]
+default-features = false
+features = [
+  "decoder",
+  "instr_info",
+  "no_d3now",
+  "no_evex",
+  "no_vex",
+  "no_xop",
+  "op_code_info",
+  "std",
+]
+optional = true
+version = "1.21.0"
+
+[dev-dependencies]
+env_logger = "0.11.3"

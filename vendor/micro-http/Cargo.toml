@@ -1,0 +1,10 @@
+[package]
+name = "micro_http"
+version = "0.1.0"
+license = "Apache-2.0"
+authors = ["Amazon Firecracker team <firecracker-devel@amazon.com>"]
+edition = "2021"
+
+[dependencies]
+libc = "0.2.66"
+vmm-sys-util = "0.12.1"

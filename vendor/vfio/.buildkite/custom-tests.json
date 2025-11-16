@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "test_name": "build-mshv",
+      "command": "cargo build --release --no-default-features --features mshv",
+      "platform": ["x86_64"]
+    },
+    {
+      "test_name": "clippy-mshv",
+      "command": "cargo clippy --workspace --bins --examples --benches --no-default-features --features mshv --all-targets -- -D warnings",
+      "platform": ["x86_64"]
+    },
+    {
+      "test_name": "build-nohv",
+      "command": "cargo build --release --no-default-features",
+      "platform": ["x86_64"]
+    },
+    {
+      "test_name": "clippy-nohv",
+      "command": "cargo clippy --workspace --bins --examples --benches --no-default-features --all-targets -- -D warnings",
+      "platform": ["x86_64"]
+    }
+  ]
+}

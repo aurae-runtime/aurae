@@ -12,6 +12,35 @@
  * Copyright 2022 - 2024, the aurae contributors                              *
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- *\
+*        Apache 2.0 License Copyright © 2022-2023 The Aurae Authors          *
+*                                                                            *
+*                +--------------------------------------------+              *
+*                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |              *
+*                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |              *
+*                |  ███████║██║   ██║██████╔╝███████║█████╗   |              *
+*                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |              *
+*                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |              *
+*                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |              *
+*                +--------------------------------------------+              *
+*                                                                            *
+*                         Distributed Systems Runtime                        *
+*                                                                            *
+* -------------------------------------------------------------------------- *
+*                                                                            *
+*   Licensed under the Apache License, Version 2.0 (the "License");          *
+*   you may not use this file except in compliance with the License.         *
+*   You may obtain a copy of the License at                                  *
+*                                                                            *
+*       http://www.apache.org/licenses/LICENSE-2.0                           *
+*                                                                            *
+*   Unless required by applicable law or agreed to in writing, software      *
+*   distributed under the License is distributed on an "AS IS" BASIS,        *
+*   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+*   See the License for the specific language governing permissions and      *
+*   limitations under the License.                                           *
+*                                                                            *
+\* -------------------------------------------------------------------------- */
 //! # AuraeScript
 //!
 //! AuraeScript is a turing complete language for platform teams built on [Deno](https://deno.land).
@@ -49,19 +78,28 @@
 // TODO: need to figure out how to get tonic to allow this without allowing for whole crate
 #![allow(unused_qualifications)]
 
-use deno_ast::{MediaType, ParseParams, SourceMapOption};
+use deno_ast::{MediaType, ParseParams};
 use deno_core::{
-    self, JsRuntime, ModuleLoadResponse, ModuleLoader, ModuleSource,
+    ModuleLoadReferrer, ModuleLoadResponse, ModuleLoader, ModuleSource,
     ModuleSourceCode, ModuleSpecifier, ModuleType, RequestedModuleType,
-    ResolutionKind, RuntimeOptions,
-    error::{CoreError, ModuleLoaderError},
+    ResolutionKind,
+    error::{JsError, ModuleLoaderError},
     resolve_import,
     url::Url,
 };
 use deno_error::JsErrorBox;
-use std::{
-    borrow::Cow, cell::RefCell, collections::HashMap, future::Future, rc::Rc,
+use deno_resolver::npm::{DenoInNpmPackageChecker, NpmResolver};
+use deno_runtime::{
+    BootstrapOptions, FeatureChecker, WorkerLogLevel,
+    deno_broadcast_channel::InMemoryBroadcastChannel,
+    deno_fs::{FileSystem, RealFs},
+    deno_permissions::PermissionsContainer,
+    deno_web::BlobStore,
+    permissions::RuntimePermissionDescriptorParser,
+    worker::{MainWorker, WorkerOptions, WorkerServiceOptions},
 };
+use std::rc::Rc;
+use std::sync::Arc;
 
 mod builtin;
 mod cells;
@@ -71,27 +109,65 @@ mod health;
 mod observe;
 mod vms;
 
+// Load the snapshot of the Deno javascript runtime
+static RUNTIME_SNAPSHOT: &[u8] = include_bytes!("../gen/runtime.bin");
+
 deno_core::extension!(auraescript, ops_fn = stdlib);
 
-pub fn runtime(
-    main_module: Url,
-) -> impl Future<Output = Result<(), CoreError>> {
-    let source_map_store = Rc::new(RefCell::new(HashMap::new()));
+pub fn init(main_module: Url) -> MainWorker {
+    let permission_desc_parser = Arc::new(
+        RuntimePermissionDescriptorParser::new(sys_traits::impls::RealSys),
+    );
+    let permissions = PermissionsContainer::allow_all(permission_desc_parser);
 
-    let mut runtime = JsRuntime::new(RuntimeOptions {
-        module_loader: Some(Rc::new(TypescriptModuleLoader {
-            source_maps: source_map_store.clone(),
+    let fs: Arc<dyn FileSystem> = Arc::new(RealFs);
+    let worker_services = WorkerServiceOptions::<
+        DenoInNpmPackageChecker,
+        NpmResolver<sys_traits::impls::RealSys>,
+        sys_traits::impls::RealSys,
+    > {
+        blob_store: Arc::new(BlobStore::default()),
+        broadcast_channel: InMemoryBroadcastChannel::default(),
+        deno_rt_native_addon_loader: None,
+        feature_checker: Arc::new(FeatureChecker::default()),
+        fs,
+        module_loader: Rc::new(TypescriptModuleLoader),
+        node_services: None,
+        npm_process_state_provider: None,
+        permissions,
+        root_cert_store_provider: None,
+        fetch_dns_resolver: deno_runtime::deno_fetch::dns::Resolver::default(),
+        shared_array_buffer_store: None,
+        compiled_wasm_module_store: None,
+        v8_code_cache: None,
+        bundle_provider: None,
+    };
+
+    let worker_options = WorkerOptions {
+        bootstrap: BootstrapOptions {
+            args: vec![],
+            cpu_count: 1,
+            enable_testing_features: false,
+            locale: deno_core::v8::icu::get_language_tag(),
+            location: None,
+            log_level: WorkerLogLevel::Info,
+            user_agent: "".to_string(),
+            inspect: false,
+            ..Default::default()
+        },
+        extensions: vec![auraescript::init()],
+        startup_snapshot: Some(RUNTIME_SNAPSHOT),
+        format_js_error_fn: Some(Arc::new(|error: &JsError| {
+            deno_runtime::fmt_errors::format_js_error(error)
         })),
-        extensions: vec![auraescript::init_ops()],
         ..Default::default()
-    });
+    };
 
-    async move {
-        let mod_id = runtime.load_main_es_module(&main_module).await?;
-        let result = runtime.mod_evaluate(mod_id);
-        runtime.run_event_loop(Default::default()).await?;
-        result.await
-    }
+    MainWorker::bootstrap_from_options(
+        &main_module,
+        worker_services,
+        worker_options,
+    )
 }
 
 /// Standard Library Autogeneration Code
@@ -116,12 +192,8 @@ fn stdlib() -> Vec<deno_core::OpDecl> {
     ops
 }
 
-// From: https://github.com/denoland/deno_core/blob/main/core/examples/ts_module_loader.rs
-type SourceMapStore = Rc<RefCell<HashMap<String, Vec<u8>>>>;
-
-struct TypescriptModuleLoader {
-    source_maps: SourceMapStore,
-}
+// From: https://github.com/denoland/deno/blob/main/core/examples/ts_module_loader.rs
+struct TypescriptModuleLoader;
 
 impl ModuleLoader for TypescriptModuleLoader {
     fn resolve(
@@ -130,52 +202,48 @@ impl ModuleLoader for TypescriptModuleLoader {
         referrer: &str,
         _is_main: ResolutionKind,
     ) -> Result<ModuleSpecifier, ModuleLoaderError> {
-        Ok(resolve_import(specifier, referrer)?)
+        resolve_import(specifier, referrer)
+            .map_err(|err| JsErrorBox::generic(err.to_string()))
     }
 
-    // Allow large error types in result here until deno is updated
-    #[allow(clippy::result_large_err)]
     fn load(
         &self,
         module_specifier: &ModuleSpecifier,
-        _maybe_referrer: Option<&ModuleSpecifier>,
+        _maybe_referrer: Option<&ModuleLoadReferrer>,
         _is_dyn_import: bool,
         _requested_module_type: RequestedModuleType,
     ) -> ModuleLoadResponse {
-        let source_maps = self.source_maps.clone();
-        fn load(
-            source_maps: SourceMapStore,
+        fn load_specifier(
             module_specifier: &ModuleSpecifier,
         ) -> Result<ModuleSource, ModuleLoaderError> {
             let path = module_specifier.to_file_path().map_err(|_| {
-                JsErrorBox::generic("Only file:// URLs are supported.")
+                JsErrorBox::generic("Only file: URLs are supported.")
             })?;
 
             let media_type = MediaType::from_path(&path);
-            let (module_type, should_transpile) =
-                match MediaType::from_path(&path) {
-                    MediaType::JavaScript | MediaType::Mjs | MediaType::Cjs => {
-                        (ModuleType::JavaScript, false)
-                    }
-                    MediaType::Jsx => (ModuleType::JavaScript, true),
-                    MediaType::TypeScript
-                    | MediaType::Mts
-                    | MediaType::Cts
-                    | MediaType::Dts
-                    | MediaType::Dmts
-                    | MediaType::Dcts
-                    | MediaType::Tsx => (ModuleType::JavaScript, true),
-                    MediaType::Json => (ModuleType::Json, false),
-                    _ => {
-                        return Err(JsErrorBox::generic(format!(
-                            "Unknown extension {:?}",
-                            path.extension()
-                        ))
-                        .into());
-                    }
-                };
+            let (module_type, should_transpile) = match media_type {
+                MediaType::JavaScript | MediaType::Mjs | MediaType::Cjs => {
+                    (ModuleType::JavaScript, false)
+                }
+                MediaType::Jsx => (ModuleType::JavaScript, true),
+                MediaType::TypeScript
+                | MediaType::Mts
+                | MediaType::Cts
+                | MediaType::Dts
+                | MediaType::Dmts
+                | MediaType::Dcts
+                | MediaType::Tsx => (ModuleType::JavaScript, true),
+                MediaType::Json => (ModuleType::Json, false),
+                _ => {
+                    return Err(JsErrorBox::generic(format!(
+                        "Unknown extension {:?}",
+                        path.extension()
+                    )));
+                }
+            };
 
-            let code = std::fs::read_to_string(&path)?;
+            let code = std::fs::read_to_string(&path)
+                .map_err(|err| JsErrorBox::generic(err.to_string()))?;
             let code = if should_transpile {
                 let parsed = deno_ast::parse_module(ParseParams {
                     specifier: module_specifier.clone(),
@@ -185,47 +253,28 @@ impl ModuleLoader for TypescriptModuleLoader {
                     scope_analysis: false,
                     maybe_syntax: None,
                 })
-                .map_err(JsErrorBox::from_err)?;
-                let res = parsed
+                .map_err(|err| JsErrorBox::generic(err.to_string()))?;
+                parsed
                     .transpile(
-                        &deno_ast::TranspileOptions {
-                            imports_not_used_as_values:
-                                deno_ast::ImportsNotUsedAsValues::Remove,
-                            use_decorators_proposal: true,
-                            ..Default::default()
-                        },
-                        &deno_ast::TranspileModuleOptions { module_kind: None },
-                        &deno_ast::EmitOptions {
-                            source_map: SourceMapOption::Separate,
-                            inline_sources: true,
-                            ..Default::default()
-                        },
+                        &deno_ast::TranspileOptions::default(),
+                        &deno_ast::TranspileModuleOptions::default(),
+                        &deno_ast::EmitOptions::default(),
                     )
-                    .map_err(JsErrorBox::from_err)?;
-                let res = res.into_source();
-                let source_map = res
-                    .source_map
-                    .expect("Failed to get source_maps after transpile")
-                    .into_bytes();
-                let _ = source_maps
-                    .borrow_mut()
-                    .insert(module_specifier.to_string(), source_map);
-                res.text
+                    .map_err(|err| JsErrorBox::generic(err.to_string()))?
+                    .into_source()
+                    .text
             } else {
                 code
             };
-            Ok(ModuleSource::new(
+            Ok(ModuleSource::new_with_redirect(
                 module_type,
                 ModuleSourceCode::String(code.into()),
+                module_specifier,
                 module_specifier,
                 None,
             ))
         }
 
-        ModuleLoadResponse::Sync(load(source_maps, module_specifier))
-    }
-
-    fn get_source_map(&self, specifier: &str) -> Option<Cow<'_, [u8]>> {
-        self.source_maps.borrow().get(specifier).map(|v| v.clone().into())
+        ModuleLoadResponse::Sync(load_specifier(module_specifier))
     }
 }

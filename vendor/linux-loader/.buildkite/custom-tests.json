@@ -1,0 +1,26 @@
+{
+    "tests": [
+        {
+            "test_name": "build-gnu-bzimage",
+            "command": "cargo build --release --features bzimage",
+            "platform": [
+                "x86_64"
+            ]
+        },
+        {
+            "test_name": "build-musl-bzimage",
+            "command": "cargo build --release --features bzimage --target {target_platform}-unknown-linux-musl",
+            "platform": [
+                "x86_64"
+            ]
+        },
+        {
+            "test_name": "build-no-default-features",
+            "command": "cargo build --release --no-default-features",
+            "platform": [
+                "x86_64",
+                "aarch64"
+            ]
+        }
+    ]
+}

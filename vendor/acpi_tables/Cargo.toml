@@ -1,0 +1,13 @@
+[package]
+name = "acpi_tables"
+version = "0.1.0"
+authors = ["The Cloud Hypervisor Authors"]
+description = "Infrastructure for creating dynamic (via AML) and static ACPI tables"
+repository = "https://github.com/rust-vmm/acpi_tables"
+readme = "README.md"
+keywords = ["virt"]
+license = "Apache-2.0"
+edition = "2021"
+
+[dependencies]
+zerocopy = { version = "0.7.1", features = ["derive"] }

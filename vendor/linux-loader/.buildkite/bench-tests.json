@@ -1,0 +1,13 @@
+{
+    "tests": [
+        {
+            "test_name": "bench",
+            "command": "pytest rust-vmm-ci/integration_tests/test_benchmark.py -s",
+            "platform": [
+                "x86_64",
+                "aarch64"
+            ],
+            "timeout_in_minutes": 15
+        }
+    ]
+}

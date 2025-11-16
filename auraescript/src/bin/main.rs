@@ -35,11 +35,12 @@
 #![warn(clippy::unwrap_used)]
 
 use anyhow::Context;
-use auraescript::runtime;
-use deno_core::resolve_path;
+use auraescript::init;
+use deno_runtime::deno_core::resolve_path;
 use std::env::current_dir;
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
 
     // only supports a single script for now
@@ -48,15 +49,15 @@ fn main() -> anyhow::Result<()> {
         std::process::exit(1);
     }
 
-    let main_module = resolve_path(
-        &args[1].clone(),
-        current_dir().context("Unable to get CWD")?.as_path(),
-    )?;
+    let cwd = current_dir().context("failed to get current directory")?;
+    let main_module =
+        resolve_path(&args[1], cwd.as_path()).map_err(anyhow::Error::from)?;
+    let mut main_worker = init(main_module.clone());
 
-    let rt = runtime(main_module.clone());
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?
-        .block_on(rt)
-        .map_err(|e| e.into())
+    main_worker
+        .execute_main_module(&main_module)
+        .await
+        .map_err(anyhow::Error::from)?;
+    main_worker.run_event_loop(false).await.map_err(anyhow::Error::from)?;
+    Ok(())
 }

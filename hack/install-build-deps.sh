@@ -33,18 +33,32 @@
 sudo apt-get update &&
 	sudo apt-get install -y musl-tools
 
-# install buf 1.32.0
-if ! hash buf; then
+# install buf 1.60.0
+BUF_VERSION="1.60.0"
+INSTALL_BUF=false
+if ! hash buf 2>/dev/null; then
+	INSTALL_BUF=true
+else
+	CURRENT_BUF_VERSION=$(buf --version | tr -d ' \t\n')
+	if [ "$CURRENT_BUF_VERSION" != "$BUF_VERSION" ]; then
+		INSTALL_BUF=true
+	fi
+fi
+
+if [ "$INSTALL_BUF" = true ]; then
 	BUILD_PREFIX=$(mktemp -d)
 	PREFIX="/usr/local"
-	VERSION="1.50.0"
 	URL_BASE=https://github.com/bufbuild/buf/releases/download
-	DOWNLOAD_SLUG="v${VERSION}/buf-$(uname -s)-$(uname -m).tar.gz"
+	DOWNLOAD_SLUG="v${BUF_VERSION}/buf-$(uname -s)-$(uname -m).tar.gz"
 	pushd "$BUILD_PREFIX" &&
 		curl -sSL "${URL_BASE}/${DOWNLOAD_SLUG}" |
 		sudo tar -xvzf - -C "${PREFIX}" --strip-components 1 &&
 		popd &&
 		sudo rm -rf "$BUILD_PREFIX"
+fi
+
+if [ "$INSTALL_BUF" = true ]; then
+	hash -r buf 2>/dev/null || true
 fi
 
 # install protobuf deps

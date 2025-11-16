@@ -31,3 +31,4 @@ protobuf-parse = { workspace = true }
 proto-reader = { workspace = true }
 quote = { workspace = true }
 syn = { workspace = true }
+deno_error = "0.7.0"

@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "crates/vfio-bindings",
+    "crates/vfio-ioctls",
+]
+resolver = "2"

@@ -1,0 +1,23 @@
+[package]
+name = "vfio-bindings"
+version = "0.4.0"
+authors = ["The Cloud Hypervisor Authors"]
+license = "Apache-2.0 OR BSD-3-Clause"
+description = "Rust FFI bindings to vfio generated using bindgen."
+repository = "https://github.com/rust-vmm/vfio"
+readme = "README.md"
+edition = "2018"
+keywords = ["vfio"]
+
+[package.metadata.docs.rs]
+features = ["vfio-v5_0_0", "fam-wrappers"]
+
+[features]
+vfio-v5_0_0 = []
+fam-wrappers = ["vmm-sys-util"]
+
+[dependencies]
+vmm-sys-util = { version = "0.12.1", optional = true }
+
+[dev-dependencies]
+byteorder = "1.2.1"

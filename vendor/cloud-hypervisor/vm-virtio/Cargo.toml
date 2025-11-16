@@ -1,0 +1,17 @@
+[package]
+authors = ["The Cloud Hypervisor Authors"]
+edition = "2021"
+name = "vm-virtio"
+version = "0.1.0"
+
+[features]
+default = []
+
+[dependencies]
+log = "0.4.22"
+virtio-queue = { workspace = true }
+vm-memory = { workspace = true, features = [
+  "backend-atomic",
+  "backend-bitmap",
+  "backend-mmap",
+] }

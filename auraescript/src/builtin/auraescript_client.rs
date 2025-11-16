@@ -14,7 +14,6 @@
 \* -------------------------------------------------------------------------- */
 #![allow(non_snake_case)]
 
-use anyhow::Result;
 use client::{AuraeConfig, Client};
 use deno_core::{self, OpState, Resource, ResourceId, op2};
 use deno_error::JsErrorBox;
@@ -26,9 +25,8 @@ use std::{cell::RefCell, rc::Rc};
 pub(crate) fn as__aurae_config__try_default(
     op_state: &mut OpState,
 ) -> Result<ResourceId, JsErrorBox> {
-    let config = AuraeConfig::try_default().map_err(|err| {
-        JsErrorBox::new("Failed to get default AuraeConfig", err.to_string())
-    })?;
+    let config = AuraeConfig::try_default()
+        .map_err(|err| JsErrorBox::generic(err.to_string()))?;
     let rid = op_state.resource_table.add(AuraeScriptConfig(config));
     Ok(rid)
 }
@@ -55,12 +53,8 @@ pub(crate) fn as__aurae_config__parse_from_file(
     op_state: &mut OpState,
     #[string] path: String,
 ) -> Result<ResourceId, JsErrorBox> {
-    let config = AuraeConfig::parse_from_toml_file(path).map_err(|err| {
-        JsErrorBox::new(
-            "Failed to parse AuraeConfig from toml file",
-            err.to_string(),
-        )
-    })?;
+    let config = AuraeConfig::parse_from_toml_file(path)
+        .map_err(|err| JsErrorBox::generic(err.to_string()))?;
     let rid = op_state.resource_table.add(AuraeScriptConfig(config));
     Ok(rid)
 }
@@ -81,18 +75,13 @@ pub(crate) async fn as__client_new(
         let op_state = &op_state.borrow();
         let rt = &op_state.resource_table; // get `ResourceTable` from JsRuntime `OpState`
         rt.get::<AuraeScriptConfig>(config)
-            .map_err(|err| {
-                JsErrorBox::new(
-                    "Failed to get AuraeConfig from its resource id",
-                    err.to_string(),
-                )
-            })?
+            .map_err(|err| JsErrorBox::generic(err.to_string()))?
             .0
             .clone() // get `Config` from its rid
     };
-    let client = Client::new(config).await.map_err(|err| {
-        JsErrorBox::new("Failed to crate a client", err.to_string())
-    })?;
+    let client = Client::new(config)
+        .await
+        .map_err(|err| JsErrorBox::generic(err.to_string()))?;
     let mut op_state = op_state.borrow_mut();
     let rid = op_state.resource_table.add(AuraeScriptClient(client));
     Ok(rid)

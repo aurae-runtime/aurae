@@ -1,0 +1,6 @@
+{
+  "coverage_score": 74.02,
+  "exclude_path": "",
+  "crate_features": "bzimage,elf",
+  "exclude_path": "loader_gen"
+}

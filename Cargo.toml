@@ -55,3 +55,26 @@ uuid = { version = "1.2.2", features = ["v4"] }
 url = "2.3.1"
 validation = { path = "./crates/validation" }
 
+#[patch.crates-io]
+#remove_dir_all = "=0.8.0"
+#time = "0.2.23"
+
+[patch.crates-io]
+temporal_rs = { path = "vendor/temporal_rs" }
+vfio-bindings = { path = "vendor/vfio/crates/vfio-bindings" }
+vfio-ioctls = { path = "vendor/vfio/crates/vfio-ioctls" }
+linux-loader = { path = "vendor/linux-loader" }
+
+[patch."https://github.com/rust-vmm/acpi_tables"]
+acpi_tables = { path = "vendor/acpi_tables" }
+
+[patch."https://github.com/firecracker-microvm/micro-http"]
+micro_http = { path = "vendor/micro-http" }
+
+[patch."https://github.com/rust-vmm/vfio?branch=main"]
+vfio-bindings = { path = "vendor/vfio/crates/vfio-bindings" }
+vfio-ioctls = { path = "vendor/vfio/crates/vfio-ioctls" }
+
+[patch."https://github.com/rust-vmm/vfio"]
+vfio-bindings = { path = "vendor/vfio/crates/vfio-bindings" }
+vfio-ioctls = { path = "vendor/vfio/crates/vfio-ioctls" }

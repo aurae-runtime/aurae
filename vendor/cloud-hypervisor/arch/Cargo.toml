@@ -1,0 +1,29 @@
+[package]
+authors = ["The Chromium OS Authors"]
+edition = "2021"
+name = "arch"
+version = "0.1.0"
+
+[features]
+default = []
+kvm = ["hypervisor/kvm"]
+sev_snp = []
+tdx = []
+
+[dependencies]
+anyhow = "1.0.94"
+byteorder = "1.5.0"
+hypervisor = { path = "../hypervisor" }
+libc = "0.2.167"
+linux-loader = { workspace = true, features = ["bzimage", "elf", "pe"] }
+log = "0.4.22"
+serde = { version = "1.0.208", features = ["derive", "rc"] }
+thiserror = "2.0.6"
+uuid = "1.12.1"
+vm-memory = { workspace = true, features = ["backend-bitmap", "backend-mmap"] }
+vm-migration = { path = "../vm-migration" }
+vmm-sys-util = { workspace = true, features = ["with-serde"] }
+
+[target.'cfg(any(target_arch = "aarch64", target_arch = "riscv64"))'.dependencies]
+fdt_parser = { version = "0.1.5", package = "fdt" }
+vm-fdt = { workspace = true }
