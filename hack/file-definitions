@@ -33,7 +33,8 @@ SCRIPTS=$(find . \( \
   -iname '*.sh' -or \
   -iname '*.toml' \
     \) -not -path '*/ignore/*' \
-    -not -path './hypervisor/*' )
+    -not -path './hypervisor/*' \
+    -not -path './vendor/*' )
 
 ### HACK Dir Scripts
 HACKSCRIPTS=$(find -s hack -type f -not \( \
@@ -50,12 +51,14 @@ SOURCES=$(find . \( \
   -iname '*.c' -or \
   -iname '*.h' \
     \) -not -path '*/ignore/*' \
-    -not -path './hypervisor/*' )
+    -not -path './hypervisor/*' \
+    -not -path './vendor/*' )
 
 ### Rust Sources
 RUSTSOURCES=$(find . \( \
   -iname '*.rs' \
     \) -not -path '*/ignore/*' \
-    -not -path -'*/gen/*' \
-    -not -path -'.target/*' \
-    -not -path -'./hypervisor/*' )
+    -not -path '*/gen/*' \
+    -not -path './target/*' \
+    -not -path './hypervisor/*' \
+    -not -path './vendor/*' )

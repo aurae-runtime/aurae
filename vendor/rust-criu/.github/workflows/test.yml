@@ -1,0 +1,35 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+
+    steps:
+
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: install criu
+      run: |
+        # Latest development CRIU
+        sudo apt-get install -y libprotobuf-dev libprotobuf-c-dev protobuf-c-compiler protobuf-compiler python-protobuf libnl-3-dev libnet-dev libcap-dev
+        git clone --single-branch -b criu-dev https://github.com/checkpoint-restore/criu.git
+        make -C criu -j $(nproc)
+        # Latest CRIU release is already part of the github actions image
+
+    - name: Build
+      run: cargo build --verbose
+
+    - name: Run clippy
+      run: cargo clippy --verbose --all-targets --all-features -- -D warnings
+
+    - name: Run fmt
+      run: cargo fmt --all -- --check
+
+    - name: Build with generate enabled
+      run: GENERATE_PROTOBUF=1 GENERATE_TEST_PROCESS=1 cargo build --verbose
+
+    - name: Run tests
+      run: sudo target/debug/rust-criu-test criu/criu/criu

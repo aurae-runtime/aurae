@@ -15,7 +15,7 @@
 
 [workspace]
 members = ["aer", "auraed", "auraescript", "client", "ebpf-shared", "proto"]
-exclude = ["ebpf"]
+exclude = ["ebpf", "vendor/rust-criu"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -35,8 +35,8 @@ nix = "0.28.0"
 proc-macro2 = "1.0"
 proto = { path = "./proto" }
 proto-reader = { path = "./crates/proto-reader" }
-protobuf = "3.2.0"
-protobuf-parse = "=3.2.0" # This crate makes no promises of stabilty, so we pin to the exact version
+protobuf = "3.7.2"
+protobuf-parse = "=3.7.2" # This crate makes no promises of stabilty, so we pin to the exact version
 quote = "1.0"
 serial_test = "3.2.0"
 serde = "1.0.183"
@@ -55,3 +55,5 @@ uuid = { version = "1.2.2", features = ["v4"] }
 url = "2.3.1"
 validation = { path = "./crates/validation" }
 
+[patch.crates-io]
+rust-criu = { path = "vendor/rust-criu" }
