@@ -40,10 +40,10 @@ ipnetwork = "0.21.1"
 iter_tools = "0.24.0"
 libc = "0.2.169" # TODO: Nix comes with libc, can we rely on that?
 lazy_static = { workspace = true }
-libcgroups = { git = "https://github.com/containers/youki", tag = "v0.5.2", default-features = false, features = [
+libcgroups = { git = "https://github.com/containers/youki", tag = "v0.5.3", default-features = false, features = [
     "v2",
 ] }
-libcontainer = { git = "https://github.com/containers/youki", tag = "v0.5.2", default-features = false, features = [
+libcontainer = { git = "https://github.com/containers/youki", tag = "v0.5.3", default-features = false, features = [
     "v2",
 ] }
 log = "0.4.21"
