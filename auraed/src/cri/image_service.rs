@@ -50,6 +50,7 @@ use proto::cri::{
 };
 use tonic::{Request, Response, Status};
 
+#[allow(dead_code)]
 pub struct ImageService {}
 
 #[tonic::async_trait]

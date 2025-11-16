@@ -252,19 +252,19 @@ impl VirtualMachine {
         }
 
         // Update the VM with the network device information if it wasn't provided
-        if self.vm.net.is_empty() {
-            if let Some(net) = &self.info()?.net {
-                self.vm.net = net
-                    .iter()
-                    .map(|n| NetSpec {
-                        tap: n.tap.clone(),
-                        ip: n.ip,
-                        mask: n.mask,
-                        mac: n.mac,
-                        host_mac: n.host_mac,
-                    })
-                    .collect();
-            }
+        if self.vm.net.is_empty()
+            && let Some(net) = &self.info()?.net
+        {
+            self.vm.net = net
+                .iter()
+                .map(|n| NetSpec {
+                    tap: n.tap.clone(),
+                    ip: n.ip,
+                    mask: n.mask,
+                    mac: n.mac,
+                    host_mac: n.host_mac,
+                })
+                .collect();
         }
 
         Ok(())

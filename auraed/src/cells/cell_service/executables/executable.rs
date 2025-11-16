@@ -78,11 +78,11 @@ impl Executable {
             .current_dir("/")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
-        if uid.is_some() {
-            command = command.uid(uid.expect("uid"));
+        if let Some(uid) = uid {
+            command = command.uid(uid);
         }
-        if gid.is_some() {
-            command = command.gid(gid.expect("gid"));
+        if let Some(gid) = gid {
+            command = command.gid(gid);
         }
         let mut child = command.spawn()?;
 
