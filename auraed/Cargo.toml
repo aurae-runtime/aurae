@@ -72,7 +72,7 @@ tokio-stream = { version = "0.1.17", features = ["net", "sync"] }
 tonic = { workspace = true, features = ["tls"] }
 tonic-health = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
-tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter", "registry"] }
 uuid = { workspace = true }
 validation = { workspace = true, features = ["regex", "tonic"] }
 validation_macros = { path = "../crates/validation/macros" }
