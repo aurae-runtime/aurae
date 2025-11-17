@@ -15,7 +15,7 @@ commands provided below.
 
 - [Rust](https://rustup.rs)
 - [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/)
-- [buf](https://docs.buf.build/installation)
+- [buf](https://docs.buf.build/installation) (Aurae pins the CLI to **1.60.0**; run `hack/install-build-deps.sh` or `buf --version` if you’re unsure what you have installed)
 - [musl libc](https://musl.libc.org)
 - [BPF Linker](https://github.com/aya-rs/bpf-linker)
 
