@@ -82,7 +82,7 @@ pub fn runtime(
         module_loader: Some(Rc::new(TypescriptModuleLoader {
             source_maps: source_map_store.clone(),
         })),
-        extensions: vec![auraescript::init_ops()],
+        extensions: vec![auraescript::init()],
         ..Default::default()
     });
 
