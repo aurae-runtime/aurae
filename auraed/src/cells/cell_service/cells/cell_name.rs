@@ -226,4 +226,32 @@ mod tests {
 
         assert_eq!(child_of_grandparent, parent_cell_name);
     }
+
+    #[test]
+    fn test_to_child_invalid_cases() {
+        let grandparent_cell_name = CellName::from("grandparent-cell");
+        let parent_cell_name = CellName::from("grandparent-cell/parent-cell");
+        let child_cell_name =
+            CellName::from("grandparent-cell/parent-cell/child-cell");
+        let sibling_cell_name = CellName::from("grandparent-cell/sibling-cell");
+        let unrelated_cell_name = CellName::from("unrelated-cell");
+
+        // A cell is not a child of itself
+        assert!(
+            grandparent_cell_name.to_child(&grandparent_cell_name).is_none()
+        );
+        assert!(parent_cell_name.to_child(&parent_cell_name).is_none());
+        assert!(child_cell_name.to_child(&child_cell_name).is_none());
+
+        // A cell is not a child of a sibling
+        assert!(parent_cell_name.to_child(&sibling_cell_name).is_none());
+        assert!(sibling_cell_name.to_child(&parent_cell_name).is_none());
+
+        // A cell is not a child of a descendant
+        assert!(child_cell_name.to_child(&grandparent_cell_name).is_none());
+
+        // A cell is not a child of an unrelated cell
+        assert!(grandparent_cell_name.to_child(&unrelated_cell_name).is_none());
+        assert!(unrelated_cell_name.to_child(&grandparent_cell_name).is_none());
+    }
 }
