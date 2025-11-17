@@ -186,13 +186,13 @@ impl ModuleLoader for TypescriptModuleLoader {
                     scope_analysis: false,
                     maybe_syntax: None,
                 })
-                .map_err(JsErrorBox::from_err)?;
+                .map_err(|err| JsErrorBox::new("SyntaxError", err.to_string()))?;
                 let res = parsed
                     .transpile(
                         &deno_ast::TranspileOptions {
+                            decorators: deno_ast::DecoratorsTranspileOption::Ecma,
                             imports_not_used_as_values:
                                 deno_ast::ImportsNotUsedAsValues::Remove,
-                            use_decorators_proposal: true,
                             ..Default::default()
                         },
                         &deno_ast::TranspileModuleOptions { module_kind: None },
@@ -202,7 +202,7 @@ impl ModuleLoader for TypescriptModuleLoader {
                             ..Default::default()
                         },
                     )
-                    .map_err(JsErrorBox::from_err)?;
+                    .map_err(|err| JsErrorBox::type_error(err.to_string()))?;
                 let res = res.into_source();
                 let source_map = res
                     .source_map

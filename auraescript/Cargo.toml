@@ -27,9 +27,9 @@ path = "src/bin/main.rs"
 [dependencies]
 anyhow = { workspace = true }
 client = { workspace = true }
-deno_ast = { version = "0.46.0", features = ["transpiling"] }
-deno_core = "0.348.0"
-deno_error = "0.5.6"
+deno_ast = { version = "0.51.0", features = ["transpiling"] }
+deno_core = "0.349.0"
+deno_error = "0.6.1"
 macros = { package = "auraescript_macros", path = "./macros" }
 proto = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
