@@ -37,7 +37,7 @@ sudo apt-get update &&
 if ! hash buf; then
 	BUILD_PREFIX=$(mktemp -d)
 	PREFIX="/usr/local"
-	VERSION="1.50.0"
+	VERSION="1.60.0"
 	URL_BASE=https://github.com/bufbuild/buf/releases/download
 	DOWNLOAD_SLUG="v${VERSION}/buf-$(uname -s)-$(uname -m).tar.gz"
 	pushd "$BUILD_PREFIX" &&
