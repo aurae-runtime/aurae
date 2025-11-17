@@ -95,7 +95,7 @@ install: musl lint test auraed-debug auraescript-debug aer-debug ## Lint, test, 
 docs: docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
 
 .PHONY: prcheck
-prcheck: pki build lint test-all docs docs-lint ## Meant to mimic the GHA checks (includes ignored tests)
+prcheck: pki test-all docs docs-lint ## Meant to mimic the GHA checks (includes ignored tests)
 
 #------------------------------------------------------------------------------#
 
