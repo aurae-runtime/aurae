@@ -28,7 +28,7 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 client = { workspace = true }
 deno_ast = { version = "0.46.0", features = ["transpiling"] }
-deno_core = "0.342.0"
+deno_core = "0.343.0"
 deno_error = "0.5.6"
 macros = { package = "auraescript_macros", path = "./macros" }
 proto = { workspace = true }
