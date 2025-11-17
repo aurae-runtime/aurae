@@ -225,7 +225,7 @@ impl ModuleLoader for TypescriptModuleLoader {
         ModuleLoadResponse::Sync(load(source_maps, module_specifier))
     }
 
-    fn get_source_map(&self, specifier: &str) -> Option<Cow<[u8]>> {
+    fn get_source_map(&self, specifier: &str) -> Option<Cow<'_, [u8]>> {
         self.source_maps.borrow().get(specifier).map(|v| v.clone().into())
     }
 }

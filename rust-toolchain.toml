@@ -13,6 +13,6 @@
 # SPDX-License-Identifier: Apache-2.0                                          #
 # ---------------------------------------------------------------------------- #
 [toolchain]
-channel = "1.87.0"
+channel = "1.91.1"
 targets = ["x86_64-unknown-linux-musl"]
 profile = "default"

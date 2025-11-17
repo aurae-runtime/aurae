@@ -20,13 +20,13 @@ oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
 uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
-buf_version   =  1.50.0
+buf_version   =  1.60.0
 cri_version   =  release-1.26
 clh_version   =  30.0
 vm_kernel     =  6.1.6
 vm_image      =  https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
 ifeq ($(uid), 0)
-root_cargo    =  cargo
+root_cargo    =  $(cargo)
 else
 root_cargo    =  sudo -E `which cargo`
 endif
@@ -46,7 +46,7 @@ export GIT_PAGER = cat
 
 # Keep all as the first command to have it be the default as per convention
 .PHONY: all
-all: install ## alias for install
+all: build
 
 # ⚠️ DO NOT REMOVE ⚠️
 .PHONY: nova
@@ -70,26 +70,32 @@ include $(dir)/hack/_common.mk
 .PHONY: clean
 clean: clean-certs clean-gens clean-crates ## Clean the repo
 
+.PHONY: musl
+musl:
+	rustup target list | grep -qc '$(uname_m)-unknown-linux-musl (installed)' || \
+		rustup target add $(uname_m)-unknown-linux-musl
+
+
 .PHONY: lint
 lint: fmt auraed-lint not-auraed-lint ## Run all lints
 
 .PHONY: test
-test: auraed-build auraed-test not-auraed-build not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
+test: musl lint build auraed-test not-auraed-test ## Builds, lints, and tests (does not include ignored tests)
 
 .PHONY: test-all
-test-all: auraed-build auraed-test-all not-auraed-build not-auraed-test-all ## Run lints and tests (includes ignored tests)
+test-all: musl lint build auraed-test-all not-auraed-test-all ## Run lints and tests (includes ignored tests)
 
 .PHONY: build
-build: auraed-build auraed-lint not-auraed-build not-auraed-lint ## Build and lint
+build: musl auraed-build not-auraed-build ## Build
 
 .PHONY: install
-install: lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
+install: musl lint test auraed-debug auraescript-debug aer-debug ## Lint, test, and install (debug) 🎉
 
 .PHONY: docs
 docs: docs-crates docs-stdlib docs-other ## Assemble all the /docs for the website locally.
 
 .PHONY: prcheck
-prcheck: build lint test-all docs docs-lint ## Meant to mimic the GHA checks (includes ignored tests)
+prcheck: pki test-all docs docs-lint ## Meant to mimic the GHA checks (includes ignored tests)
 
 #------------------------------------------------------------------------------#
 
@@ -189,15 +195,15 @@ $(1)-lint: fmt $(GEN_RS) $(GEN_TS)
 	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
-$(1)-test: $(GEN_RS) $(GEN_TS) $(1)-lint
+$(1)-test: $(GEN_RS) $(GEN_TS) $(1)-lint auraed-debug
 	$(cargo) test $(2) -p $(1) --locked
 
 .PHONY: $(1)-test-all
-$(1)-test-all: $(GEN_RS) $(GEN_TS) $(1)-lint
+$(1)-test-all: $(GEN_RS) $(GEN_TS) $(1)-lint auraed-debug
 	$(root_cargo) test $(2) -p $(1) --locked -- --include-ignored
 
 .PHONY: $(1)-test-integration
-$(1)-test-integration: $(GEN_RS) $(GEN_TS) $(1)-lint
+$(1)-test-integration: $(GEN_RS) $(GEN_TS) $(1)-lint auraed-debug
 	$(root_cargo) test $(2) -p $(1) --locked --test '*' -- --include-ignored
 
 .PHONY: $(1)-test-watch

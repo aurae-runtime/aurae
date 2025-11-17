@@ -39,10 +39,7 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
         let num_cpus = nr_cpus().map_err(|(path, error)| {
             std::io::Error::new(
                 error.kind(),
-                format!(
-                    "Failed to get the number of CPUs at {}: {}",
-                    path, error
-                ),
+                format!("Failed to get the number of CPUs at {path}: {error}"),
             )
         })?;
 
@@ -77,7 +74,7 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
         let online_cpus = online_cpus().map_err(|(path, error)| {
             std::io::Error::new(
                 error.kind(),
-                format!("Failed to get online CPUs at {}: {}", path, error),
+                format!("Failed to get online CPUs at {path}: {error}"),
             )
         })?;
         // Spawn a thread per CPU to listen for events from the kernel.
