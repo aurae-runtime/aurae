@@ -13,6 +13,8 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
+//! Aurae daemon entrypoint wiring CLI parsing to the runtime launcher.
+
 // Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
 #![warn(
     future_incompatible,
@@ -25,7 +27,7 @@
     unused_comparisons,
     while_true,
     missing_debug_implementations,
-    // TODO: missing_docs,
+    missing_docs,
     trivial_casts,
     trivial_numeric_casts,
     unused_extern_crates,
