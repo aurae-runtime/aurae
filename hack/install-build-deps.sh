@@ -33,8 +33,12 @@
 sudo apt-get update &&
 	sudo apt-get install -y musl-tools
 
-# install buf 1.32.0
-if ! hash buf; then
+# install buf 1.60.0
+TARGET_BUF_VERSION="1.60.0"
+
+buf_version=$(buf --version 2>&1)
+
+install_buf() {
 	BUILD_PREFIX=$(mktemp -d)
 	PREFIX="/usr/local"
 	VERSION="1.60.0"
@@ -45,6 +49,18 @@ if ! hash buf; then
 		sudo tar -xvzf - -C "${PREFIX}" --strip-components 1 &&
 		popd &&
 		sudo rm -rf "$BUILD_PREFIX"
+}
+
+if [ $? -ne 0 ]; then
+	echo "buf not installed, installing $TARGET_BUF_VERSION"
+	install_buf
+fi
+
+current_buf_version=${buf_version##* }
+
+if [ "$current_buf_version" != "$TARGET_BUF_VERSION" ]; then
+	echo "buf is version $current_buf_version. installing $TARGET_BUF_VERSION"
+	install_buf
 fi
 
 # install protobuf deps
