@@ -1,0 +1,60 @@
+# ---------------------------------------------------------------------------- #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+# ---------------------------------------------------------------------------- #
+# Copyright 2022 - 2024, the aurae contributors                                #
+# SPDX-License-Identifier: Apache-2.0                                          #
+# ---------------------------------------------------------------------------- #
+#
+# This is the premerge test workflow for auraescript
+#
+# This check will introduce confidence for the following:
+#
+# - That the binary does not have unexpected dependencies.
+# - We intentionally build this on a clean ubuntu image, to prove that we can
+#   generate a static binary with minimal dependencies.
+# - That the code does not warn (due to clippy errors/warnings)
+# - That the behaviour works as per tests
+#
+name: "(004) [ubuntu:latest] make test-all"
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+          version: 1.50.0
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: 000-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            000-${{ runner.os }}-cargo-
+      - name: Test all [make test-all]
+        # This should remain the only command we execute as this matches the title of the file.
+        # The goal is for this to be easy to find from the GitHub dashboard.
+        # Instead of adding more commands here, consider another make target or a new YAML file
+        # named with a good name.
+        run: make os-deps test-all
+
