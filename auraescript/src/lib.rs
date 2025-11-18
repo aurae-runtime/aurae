@@ -82,7 +82,7 @@ pub fn runtime(
         module_loader: Some(Rc::new(TypescriptModuleLoader {
             source_maps: source_map_store.clone(),
         })),
-        extensions: vec![auraescript::init_ops()],
+        extensions: vec![auraescript::init()],
         ..Default::default()
     });
 
@@ -130,7 +130,8 @@ impl ModuleLoader for TypescriptModuleLoader {
         referrer: &str,
         _is_main: ResolutionKind,
     ) -> Result<ModuleSpecifier, ModuleLoaderError> {
-        Ok(resolve_import(specifier, referrer)?)
+        resolve_import(specifier, referrer)
+            .map_err(|err| JsErrorBox::type_error(err.to_string()))
     }
 
     // Allow large error types in result here until deno is updated
@@ -176,7 +177,8 @@ impl ModuleLoader for TypescriptModuleLoader {
                     }
                 };
 
-            let code = std::fs::read_to_string(&path)?;
+            let code = std::fs::read_to_string(&path)
+                .map_err(|err| JsErrorBox::type_error(err.to_string()))?;
             let code = if should_transpile {
                 let parsed = deno_ast::parse_module(ParseParams {
                     specifier: module_specifier.clone(),
@@ -186,13 +188,13 @@ impl ModuleLoader for TypescriptModuleLoader {
                     scope_analysis: false,
                     maybe_syntax: None,
                 })
-                .map_err(JsErrorBox::from_err)?;
+                .map_err(|err| JsErrorBox::new("SyntaxError", err.to_string()))?;
                 let res = parsed
                     .transpile(
                         &deno_ast::TranspileOptions {
+                            decorators: deno_ast::DecoratorsTranspileOption::Ecma,
                             imports_not_used_as_values:
                                 deno_ast::ImportsNotUsedAsValues::Remove,
-                            use_decorators_proposal: true,
                             ..Default::default()
                         },
                         &deno_ast::TranspileModuleOptions { module_kind: None },
@@ -202,7 +204,7 @@ impl ModuleLoader for TypescriptModuleLoader {
                             ..Default::default()
                         },
                     )
-                    .map_err(JsErrorBox::from_err)?;
+                    .map_err(|err| JsErrorBox::type_error(err.to_string()))?;
                 let res = res.into_source();
                 let source_map = res
                     .source_map
