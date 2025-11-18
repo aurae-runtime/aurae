@@ -130,7 +130,8 @@ impl ModuleLoader for TypescriptModuleLoader {
         referrer: &str,
         _is_main: ResolutionKind,
     ) -> Result<ModuleSpecifier, ModuleLoaderError> {
-        Ok(resolve_import(specifier, referrer)?)
+        resolve_import(specifier, referrer)
+            .map_err(|err| JsErrorBox::type_error(err.to_string()))
     }
 
     // Allow large error types in result here until deno is updated
@@ -176,7 +177,8 @@ impl ModuleLoader for TypescriptModuleLoader {
                     }
                 };
 
-            let code = std::fs::read_to_string(&path)?;
+            let code = std::fs::read_to_string(&path)
+                .map_err(|err| JsErrorBox::type_error(err.to_string()))?;
             let code = if should_transpile {
                 let parsed = deno_ast::parse_module(ParseParams {
                     specifier: module_specifier.clone(),
