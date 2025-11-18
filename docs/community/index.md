@@ -15,6 +15,11 @@ If you would like to get involved with Aurae development:
 - Read the [Contribution Guidelines](https://github.com/aurae-runtime/community/blob/main/CONTRIBUTING.md).
 - Sign the [CLA](https://cla.nivenly.org/) to begin contributing as an individual contributor.
 
+## Development workflow notes
+
+- AuraeCI and the Makefile expect the `buf` CLI at version **1.60.0**. You can confirm locally with `buf --version`, and `hack/install-build-deps.sh` will install/upgrade to the pinned version if needed.
+- The automatic license-header tooling (`make fmt` -> `hack/headers-write`) intentionally skips the `target/` and `vendor/` trees so Cargo caches are not mutated between builds. Please keep it that way when modifying helper scripts.
+
 # What is Aurae?
 
 [Aurae](https://github.com/aurae-runtime/aurae) is an opinionated turing complete scripting language built for the enterprise. Think of it like TypeScript for infrastructure platforms.
