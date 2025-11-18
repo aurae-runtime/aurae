@@ -27,7 +27,7 @@
 //! Download the static binary directly to your system, and you can begin writing AuraeScript programs directly against a running Aurae server.
 
 // Lint groups: https://doc.rust-lang.org/rustc/lints/groups.html
-#![warn(future_incompatible, nonstandard_style, unused)]
+#![warn(future_incompatible, nonstandard_style)]
 #![warn(
     improper_ctypes,
     non_shorthand_field_patterns,
@@ -51,12 +51,7 @@
 
 use deno_ast::{MediaType, ParseParams, SourceMapOption};
 use deno_core::{
-    self, JsRuntime, ModuleLoadResponse, ModuleLoader, ModuleSource,
-    ModuleSourceCode, ModuleSpecifier, ModuleType, RequestedModuleType,
-    ResolutionKind, RuntimeOptions,
-    error::{CoreError, ModuleLoaderError},
-    resolve_import,
-    url::Url,
+    self, JsRuntime, ModuleLoadOptions, ModuleLoadReferrer, ModuleLoadResponse, ModuleLoader, ModuleSource, ModuleSourceCode, ModuleSpecifier, ModuleType, ResolutionKind, RuntimeOptions, error::{CoreError, ModuleLoaderError}, resolve_import, url::Url
 };
 use deno_error::JsErrorBox;
 use std::{
@@ -139,9 +134,9 @@ impl ModuleLoader for TypescriptModuleLoader {
     fn load(
         &self,
         module_specifier: &ModuleSpecifier,
-        _maybe_referrer: Option<&ModuleSpecifier>,
-        _is_dyn_import: bool,
-        _requested_module_type: RequestedModuleType,
+        _maybe_referrer: Option<&ModuleLoadReferrer>,
+        // _is_dyn_import: bool,
+        _requested_module_type: ModuleLoadOptions,
     ) -> ModuleLoadResponse {
         let source_maps = self.source_maps.clone();
         fn load(
