@@ -97,3 +97,4 @@ simplelog = "0.12.0"
 simple_test_case = "1.1.0"
 test-helpers = { workspace = true }
 test-helpers-macros = { workspace = true }
+tempfile = "3.10.1"
