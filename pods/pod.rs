@@ -41,7 +41,7 @@ enum PodState {
 impl Pod {
     pub async fn new(name: PodName, spec: PodSpec) -> Result<Self> {
         // TODO: do we need to be concerned with collisions from a nested auraed
-        let root_path = PathBuf::from("/var/run/aurae/pods/{name}");
+        let root_path = PathBuf::from("/var/run/aurae/pods").join(name.to_string());
 
         if let Err(e) = tokio::fs::create_dir_all(&root_path).await {
             return Err(PodsError::FailedToCreateRootPathDirectory {
