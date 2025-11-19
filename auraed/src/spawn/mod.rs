@@ -92,3 +92,41 @@ pub fn spawn_auraed_oci_to(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cri::oci::AuraeOCIBuilder;
+    use std::os::unix::fs::MetadataExt;
+    use uuid::Uuid;
+
+    #[test]
+    fn spawn_auraed_oci_to_should_emit_bundle_layout() {
+        let output = std::env::temp_dir()
+            .join(format!("aurae-bundle-{}", Uuid::new_v4()));
+
+        let spec = AuraeOCIBuilder::new().build().expect("default OCI spec");
+
+        spawn_auraed_oci_to(output.clone(), spec)
+            .expect("failed to create OCI bundle");
+
+        let config = output.join("config.json");
+        assert!(config.is_file(), "expected {:?} to exist", config);
+
+        let auraed_bin = output.join("rootfs/bin/auraed");
+        assert!(auraed_bin.is_file(), "expected {:?} to exist", auraed_bin);
+
+        let init_link = output.join("rootfs/bin/init");
+        assert!(init_link.is_file(), "expected {:?} to exist", init_link);
+
+        let auraed_meta = std::fs::metadata(&auraed_bin).expect("metadata");
+        let init_meta = std::fs::metadata(&init_link).expect("metadata");
+        assert_eq!(
+            (auraed_meta.dev(), auraed_meta.ino()),
+            (init_meta.dev(), init_meta.ino()),
+            "init should be a hard link to auraed binary"
+        );
+
+        std::fs::remove_dir_all(&output).expect("remove test bundle");
+    }
+}
