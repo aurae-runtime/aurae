@@ -51,7 +51,12 @@
 
 use deno_ast::{MediaType, ParseParams, SourceMapOption};
 use deno_core::{
-    self, JsRuntime, ModuleLoadOptions, ModuleLoadReferrer, ModuleLoadResponse, ModuleLoader, ModuleSource, ModuleSourceCode, ModuleSpecifier, ModuleType, ResolutionKind, RuntimeOptions, error::{CoreError, ModuleLoaderError}, resolve_import, url::Url
+    self, JsRuntime, ModuleLoadOptions, ModuleLoadReferrer, ModuleLoadResponse,
+    ModuleLoader, ModuleSource, ModuleSourceCode, ModuleSpecifier, ModuleType,
+    ResolutionKind, RuntimeOptions,
+    error::{CoreError, ModuleLoaderError},
+    resolve_import,
+    url::Url,
 };
 use deno_error::JsErrorBox;
 use std::{
@@ -183,11 +188,14 @@ impl ModuleLoader for TypescriptModuleLoader {
                     scope_analysis: false,
                     maybe_syntax: None,
                 })
-                .map_err(|err| JsErrorBox::new("SyntaxError", err.to_string()))?;
+                .map_err(|err| {
+                    JsErrorBox::new("SyntaxError", err.to_string())
+                })?;
                 let res = parsed
                     .transpile(
                         &deno_ast::TranspileOptions {
-                            decorators: deno_ast::DecoratorsTranspileOption::Ecma,
+                            decorators:
+                                deno_ast::DecoratorsTranspileOption::Ecma,
                             imports_not_used_as_values:
                                 deno_ast::ImportsNotUsedAsValues::Remove,
                             ..Default::default()
