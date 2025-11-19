@@ -294,6 +294,7 @@ dependencies = [
  "simple_test_case",
  "simplelog",
  "syslog-tracing",
+ "tempfile",
  "test-helpers",
  "test-helpers-macros",
  "thiserror 2.0.12",
