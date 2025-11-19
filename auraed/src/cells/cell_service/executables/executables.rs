@@ -121,3 +121,51 @@ impl Executables {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::os::unix::process::ExitStatusExt;
+    use tokio::process::Command;
+
+    fn spec_for(name: &ExecutableName) -> ExecutableSpec {
+        let mut command = Command::new("sh");
+        let _ = command.arg("-c");
+        let _ = command.arg("sleep 60");
+        ExecutableSpec {
+            name: name.clone(),
+            description: format!("test executable {name}"),
+            command,
+        }
+    }
+
+    #[tokio::test]
+    async fn start_should_cache_pid_and_reject_duplicates() {
+        let mut executables = Executables::default();
+        let exe_name = ExecutableName::new(format!(
+            "unit-test-exe-{}",
+            uuid::Uuid::new_v4()
+        ));
+
+        let executable = executables
+            .start(spec_for(&exe_name), None, None)
+            .expect("start executable");
+        let pid = executable.pid().expect("read pid");
+        assert!(pid.is_some(), "expected spawned process to expose a pid");
+
+        let err = executables
+            .start(spec_for(&exe_name), None, None)
+            .expect_err("duplicate start should fail");
+        assert!(
+            matches!(err, ExecutablesError::ExecutableExists { .. }),
+            "expected ExecutableExists error, got {err:?}"
+        );
+
+        let status =
+            executables.stop(&exe_name).await.expect("stop executable");
+        assert!(
+            status.success() || status.signal() == Some(9),
+            "expected graceful stop or SIGKILL, got status {status:?}"
+        );
+    }
+}

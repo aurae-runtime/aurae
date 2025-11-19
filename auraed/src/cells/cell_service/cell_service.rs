@@ -568,6 +568,11 @@ mod tests {
         logging::log_channel::LogChannel,
     };
     use iter_tools::Itertools;
+    use proto::{
+        cells::{CellServiceStartRequest, CellServiceStopRequest, Executable},
+        observe::LogChannelType,
+    };
+    use std::os::unix::fs::MetadataExt;
     use test_helpers::*;
 
     /// Test for the list function.
@@ -675,5 +680,87 @@ mod tests {
         };
         // Return the validated allocate request
         ValidatedCellServiceAllocateRequest { cell }
+    }
+
+    #[tokio::test]
+    async fn start_registers_log_channels_and_returns_uid_gid() {
+        let observe_service = ObserveService::new(
+            Arc::new(LogChannel::new(String::from("test"))),
+            (None, None, None),
+        );
+        let service = CellService::new(observe_service.clone());
+
+        let executable_name = format!("exec-{}", uuid::Uuid::new_v4().simple());
+
+        let start_request = CellServiceStartRequest {
+            cell_name: None,
+            executable: Some(Executable {
+                name: executable_name.clone(),
+                command: "sleep 30".into(),
+                description: "test executable".into(),
+            }),
+            uid: None,
+            gid: None,
+        };
+
+        let validated =
+            ValidatedCellServiceStartRequest::validate(start_request, None)
+                .expect("validated start request");
+
+        let (expected_uid, expected_gid) = std::fs::metadata("/proc/self")
+            .map(|m| (m.uid(), m.gid()))
+            .expect("failed to read current process metadata for uid/gid");
+
+        let response =
+            service.start(validated).await.expect("start request failed");
+        let response = response.into_inner();
+
+        assert!(response.pid > 0, "expected pid to be recorded");
+        assert_eq!(
+            response.uid, expected_uid,
+            "start should inherit current uid when unset"
+        );
+        assert_eq!(
+            response.gid, expected_gid,
+            "start should inherit current gid when unset"
+        );
+
+        assert!(
+            observe_service
+                .has_sub_process_channel(response.pid, LogChannelType::Stdout)
+                .await,
+            "stdout channel should be registered for pid {}",
+            response.pid
+        );
+        assert!(
+            observe_service
+                .has_sub_process_channel(response.pid, LogChannelType::Stderr)
+                .await,
+            "stderr channel should be registered for pid {}",
+            response.pid
+        );
+
+        let stop_request = CellServiceStopRequest {
+            cell_name: None,
+            executable_name: executable_name.clone(),
+        };
+        let validated_stop =
+            ValidatedCellServiceStopRequest::validate(stop_request, None)
+                .expect("validated stop request");
+        let _ =
+            service.stop(validated_stop).await.expect("stop request failed");
+
+        assert!(
+            !observe_service
+                .has_sub_process_channel(response.pid, LogChannelType::Stdout)
+                .await,
+            "stdout channel should be removed after stop"
+        );
+        assert!(
+            !observe_service
+                .has_sub_process_channel(response.pid, LogChannelType::Stderr)
+                .await,
+            "stderr channel should be removed after stop"
+        );
     }
 }
