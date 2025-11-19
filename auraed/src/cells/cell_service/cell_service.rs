@@ -569,6 +569,7 @@ mod tests {
         logging::log_channel::LogChannel,
     };
     use iter_tools::Itertools;
+    use proto::cells::Executable;
     use std::ffi::OsString;
     use test_helpers::*;
 
@@ -659,21 +660,47 @@ mod tests {
             (None, None, None),
         ));
 
-        let cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());
-        assert!(service.allocate(allocate_request(&cell_name)).await.is_ok());
-
-        let executable_name = format!("ae-exec-{}", uuid::Uuid::new_v4());
         let command = "tail -f /dev/null";
-        let result =
-            service.start(start_request(&executable_name, command)).await;
+
+        // Cover the default root cell start/stop entry points.
+        let root_executable_name =
+            format!("ae-exec-root-{}", uuid::Uuid::new_v4());
+        let result = service
+            .start(validated_start_request(&root_executable_name, command))
+            .await;
         assert!(result.is_ok());
 
         let response = result.unwrap().into_inner();
         assert!(response.pid != 0);
 
-        assert!(service.stop(stop_request(&executable_name)).await.is_ok());
+        assert!(service
+            .stop(validated_stop_request(&root_executable_name))
+            .await
+            .is_ok());
 
-        assert!(service.free(free_request(&cell_name)).await.is_ok());
+        let cell_name = format!("ae-test-{}", uuid::Uuid::new_v4());
+        assert!(service.allocate(allocate_request(&cell_name)).await.is_ok());
+        let cell_name_ref = CellName::from(cell_name.as_str());
+
+        let executable_name = format!("ae-exec-{}", uuid::Uuid::new_v4());
+        // start/stop/free need to run within the allocated cell
+        let result = service
+            .start_in_cell(&cell_name_ref, start_request(&executable_name, command))
+            .await;
+        assert!(result.is_ok());
+
+        let response = result.unwrap().into_inner();
+        assert!(response.pid != 0);
+
+        assert!(service
+            .stop_in_cell(&cell_name_ref, stop_request(&executable_name))
+            .await
+            .is_ok());
+
+        assert!(service
+            .free(free_request(&cell_name))
+            .await
+            .is_ok());
     }
 
     /// Helper function to create a ValidatedCellServiceAllocateRequest.
@@ -708,7 +735,7 @@ mod tests {
         ValidatedCellServiceAllocateRequest { cell }
     }
 
-    fn start_request(
+    fn validated_start_request(
         executable_name: &str,
         command: &str,
     ) -> ValidatedCellServiceStartRequest {
@@ -726,10 +753,37 @@ mod tests {
         }
     }
 
-    fn stop_request(executable_name: &str) -> ValidatedCellServiceStopRequest {
+    fn validated_stop_request(
+        executable_name: &str,
+    ) -> ValidatedCellServiceStopRequest {
         ValidatedCellServiceStopRequest {
             cell_name: None,
             executable_name: ExecutableName::new(String::from(executable_name)),
+        }
+    }
+
+    fn start_request(
+        executable_name: &str,
+        command: &str,
+    ) -> CellServiceStartRequest {
+        let executable = Executable {
+            name: executable_name.to_string(),
+            command: command.to_string(),
+            description: String::new(),
+        };
+
+        CellServiceStartRequest {
+            cell_name: None,
+            executable: Some(executable),
+            uid: None,
+            gid: None,
+        }
+    }
+
+    fn stop_request(executable_name: &str) -> CellServiceStopRequest {
+        CellServiceStopRequest {
+            cell_name: None,
+            executable_name: executable_name.to_string(),
         }
     }
 
