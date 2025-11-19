@@ -158,6 +158,21 @@ fn map_get_posix_signals_stream_response(
     }
 }
 
+#[cfg(test)]
+impl ObserveService {
+    pub async fn has_sub_process_channel(
+        &self,
+        pid: i32,
+        channel_type: LogChannelType,
+    ) -> bool {
+        let consumer_list = self.sub_process_consumer_list.lock().await;
+        consumer_list
+            .get(&pid)
+            .and_then(|channels| channels.get(&channel_type))
+            .is_some()
+    }
+}
+
 #[tonic::async_trait]
 impl observe_service_server::ObserveService for ObserveService {
     type GetAuraeDaemonLogStreamStream =
