@@ -27,11 +27,13 @@ use tokio::sync::OnceCell;
 pub mod cells;
 pub mod observe;
 
+#[allow(dead_code)]
 pub struct ChildGuard {
     child: Option<std::process::Child>,
 }
 
 impl ChildGuard {
+    #[allow(dead_code)]
     pub fn new(child: std::process::Child) -> Self {
         Self { child: Some(child) }
     }
@@ -86,6 +88,7 @@ where
     futures::executor::block_on(f)
 }
 
+#[allow(dead_code)]
 async fn run_auraed() -> Client {
     let socket = std::env::temp_dir()
         .join(format!("{}.socket", uuid::Uuid::new_v4()))
@@ -131,8 +134,10 @@ async fn run_auraed() -> Client {
     .expect("failed to create client")
 }
 
+#[allow(dead_code)]
 static CLIENT: OnceCell<Client> = OnceCell::const_new();
 
+#[allow(dead_code)]
 pub async fn auraed_client() -> Client {
     async fn inner() -> Client {
         run_auraed().await
