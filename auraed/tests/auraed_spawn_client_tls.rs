@@ -14,9 +14,7 @@
 \* -------------------------------------------------------------------------- */
 
 use client::discovery::discovery_service::DiscoveryServiceClient;
-use client::{
-    AuraeConfig, AuraeSocket, AuthConfig, Client, ClientError, SystemConfig,
-};
+use client::{AuraeConfig, AuraeSocket, AuthConfig, Client, SystemConfig};
 use proto::discovery::DiscoverRequest;
 use std::io::Read;
 use std::net::{SocketAddr, TcpListener, TcpStream};
