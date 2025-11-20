@@ -264,14 +264,20 @@ mod tests {
         assert_eq!(
             Context::get_with_detectors(
                 false,
-                ContextDetectors { pid_fn: pid_42, in_cgroup_fn: in_cgroup_true }
+                ContextDetectors {
+                    pid_fn: pid_42,
+                    in_cgroup_fn: in_cgroup_true
+                }
             ),
             Context::Container
         );
         assert_eq!(
             Context::get_with_detectors(
                 true,
-                ContextDetectors { pid_fn: pid_42, in_cgroup_fn: in_cgroup_true }
+                ContextDetectors {
+                    pid_fn: pid_42,
+                    in_cgroup_fn: in_cgroup_true
+                }
             ),
             Context::Cell
         );

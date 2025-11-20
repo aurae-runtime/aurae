@@ -25,8 +25,7 @@ use std::{
 
 use hyper_util::rt::TokioIo;
 use proto::discovery::{
-    DiscoverRequest,
-    discovery_service_client::DiscoveryServiceClient,
+    DiscoverRequest, discovery_service_client::DiscoveryServiceClient,
 };
 use test_helpers::*;
 use test_helpers_macros::shared_runtime_test;
