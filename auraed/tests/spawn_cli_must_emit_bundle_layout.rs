@@ -51,9 +51,5 @@ fn spawn_cli_must_emit_bundle_layout() {
 }
 
 fn assert_file(path: &PathBuf) {
-    assert!(
-        path.is_file(),
-        "expected {:?} to be a regular file",
-        path
-    );
+    assert!(path.is_file(), "expected {:?} to be a regular file", path);
 }
