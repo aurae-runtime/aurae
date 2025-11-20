@@ -74,9 +74,11 @@ macro_rules! retry {
     }};
 }
 
+#[allow(dead_code)]
 static RT: Lazy<tokio::runtime::Runtime> =
     Lazy::new(|| tokio::runtime::Runtime::new().unwrap());
 
+#[allow(dead_code)]
 pub fn test<F>(f: F) -> F::Output
 where
     F: Future + Send + 'static,
