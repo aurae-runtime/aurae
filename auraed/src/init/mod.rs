@@ -97,7 +97,7 @@ pub async fn init(
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Context {
     /// auraed is running as true PID 1
     Pid1,
@@ -112,18 +112,46 @@ pub enum Context {
 impl Context {
     pub fn get(nested: bool) -> Self {
         // TODO: Manage nested bool without passing --nested
-        let in_cgroup = in_new_cgroup_namespace();
-        if in_cgroup && !nested {
-            // If we are in a container, we should always run this setup no matter pid 1 or not
-            Self::Container
-        } else if nested {
-            // If we are nested, we should always run this setup no matter pid 1 or not
-            Self::Cell
-        } else if std::process::id() == 1 {
-            Self::Pid1
-        } else {
-            Self::Daemon
+        Self::get_with_detectors(nested, ContextDetectors::default())
+    }
+
+    fn get_with_detectors(nested: bool, detectors: ContextDetectors) -> Self {
+        let pid = (detectors.pid_fn)();
+        let in_cgroup = (detectors.in_cgroup_fn)();
+        derive_context(nested, pid, in_cgroup)
+    }
+}
+
+#[derive(Clone, Copy)]
+struct ContextDetectors {
+    pid_fn: fn() -> u32,
+    in_cgroup_fn: fn() -> bool,
+}
+
+impl Default for ContextDetectors {
+    fn default() -> Self {
+        ContextDetectors {
+            pid_fn: std::process::id,
+            in_cgroup_fn: in_new_cgroup_namespace,
         }
+    }
+}
+
+fn derive_context(
+    nested: bool,
+    pid: u32,
+    in_cgroup_namespace: bool,
+) -> Context {
+    if in_cgroup_namespace && !nested {
+        // If we are in a container, we should always run this setup no matter pid 1 or not
+        Context::Container
+    } else if nested {
+        // If we are nested, we should always run this setup no matter pid 1 or not
+        Context::Cell
+    } else if pid == 1 {
+        Context::Pid1
+    } else {
+        Context::Daemon
     }
 }
 
@@ -181,5 +209,71 @@ fn in_new_cgroup_namespace() -> bool {
             // TODO Consider moving the const to a better home :)
         }
         Err(_) => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn pid_one() -> u32 {
+        1
+    }
+
+    fn pid_42() -> u32 {
+        42
+    }
+
+    fn in_cgroup_true() -> bool {
+        true
+    }
+
+    fn in_cgroup_false() -> bool {
+        false
+    }
+
+    #[test]
+    fn context_get_should_respect_pid_and_nested_flag() {
+        type PidFn = fn() -> u32;
+        type CgroupFn = fn() -> bool;
+
+        let cases: &[(bool, PidFn, CgroupFn, Context)] = &[
+            (false, pid_one, in_cgroup_false, Context::Pid1),
+            (true, pid_one, in_cgroup_false, Context::Cell),
+            (false, pid_42, in_cgroup_true, Context::Container),
+            (true, pid_42, in_cgroup_true, Context::Cell),
+            (false, pid_42, in_cgroup_false, Context::Daemon),
+        ];
+
+        for &(nested, pid_fn, in_cgroup_fn, expected) in cases {
+            assert_eq!(
+                Context::get_with_detectors(
+                    nested,
+                    ContextDetectors { pid_fn, in_cgroup_fn }
+                ),
+                expected,
+                "nested={nested} pid_fn_ptr={:p} in_cgroup_fn_ptr={:p}",
+                pid_fn as *const (),
+                in_cgroup_fn as *const ()
+            );
+        }
+    }
+
+    #[test]
+    fn context_get_prefers_container_when_in_cgroup_namespace() {
+        assert_eq!(
+            Context::get_with_detectors(
+                false,
+                ContextDetectors { pid_fn: pid_42, in_cgroup_fn: in_cgroup_true }
+            ),
+            Context::Container
+        );
+        assert_eq!(
+            Context::get_with_detectors(
+                true,
+                ContextDetectors { pid_fn: pid_42, in_cgroup_fn: in_cgroup_true }
+            ),
+            Context::Cell
+        );
     }
 }
