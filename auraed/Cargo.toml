@@ -98,3 +98,5 @@ simple_test_case = "1.1.0"
 test-helpers = { workspace = true }
 test-helpers-macros = { workspace = true }
 tempfile = "3.10.1"
+tower = { version = "0.4", default-features = false, features = ["util"] }
+hyper-util = { version = "0.1", features = ["tokio"] }

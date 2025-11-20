@@ -27,6 +27,29 @@ use tokio::sync::OnceCell;
 pub mod cells;
 pub mod observe;
 
+pub struct ChildGuard {
+    child: Option<std::process::Child>,
+}
+
+impl ChildGuard {
+    pub fn new(child: std::process::Child) -> Self {
+        Self { child: Some(child) }
+    }
+}
+
+impl Drop for ChildGuard {
+    fn drop(&mut self) {
+        if let Some(mut child) = self.child.take() {
+            match child.kill() {
+                Ok(()) => {}
+                Err(ref e) if e.kind() == std::io::ErrorKind::InvalidInput => {}
+                Err(e) => panic!("failed to kill auraed child: {e}"),
+            }
+            let _ = child.wait();
+        }
+    }
+}
+
 #[macro_export]
 macro_rules! retry {
     ($function:expr) => {{
