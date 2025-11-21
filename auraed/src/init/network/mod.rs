@@ -191,7 +191,7 @@ async fn add_address(
                     .map(|c| c == dup_code)
                     .unwrap_or(false)
                 {
-                    trace!("Address {ip} already present on {iface}, ignoring");
+                    warn!("Address {ip} already present on {iface}, ignoring");
                     return Ok(());
                 }
             }
