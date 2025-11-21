@@ -16,7 +16,7 @@
 use lazy_static::lazy_static;
 use nix::{mount::MsFlags, sys::stat::Mode};
 use std::io;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum FsError {
@@ -61,20 +61,45 @@ impl MountSpec {
     pub fn mount(self) -> Result<(), FsError> {
         info!("Mounting {}", self.target);
 
-        if let Err(e) = nix::mount::mount(
-            self.source,
-            self.target,
-            self.fstype,
-            self.flags,
-            self.data,
-        ) {
-            error!("Failed to mount {:?}", self);
-            return Err(FsError::MountFailure {
-                spec: self,
-                source: io::Error::from_raw_os_error(e as i32),
-            });
-        }
+        let attempt = |spec: &MountSpec| {
+            nix::mount::mount(
+                spec.source,
+                spec.target,
+                spec.fstype,
+                spec.flags,
+                spec.data,
+            )
+        };
 
-        Ok(())
+        match attempt(&self) {
+            Ok(()) => Ok(()),
+            Err(err)
+                if self.fstype == Some("devpts")
+                    && matches!(
+                        err,
+                        nix::Error::EINVAL | nix::Error::EPERM
+                    ) =>
+            {
+                // In user namespaces without gid/ptmxmode mappings, devpts with those options can
+                // fail (EINVAL/EPERM). Retrying without mount data uses kernel defaults (mode/gid),
+                // which succeeds under restricted capabilities so PID1 can still get /dev/pts.
+                warn!(
+                    "devpts mount failed with {:?}, retrying without mount data",
+                    err
+                );
+                let fallback = MountSpec { data: None, ..self };
+                attempt(&fallback).map_err(|e| FsError::MountFailure {
+                    spec: fallback,
+                    source: io::Error::from_raw_os_error(e as i32),
+                })
+            }
+            Err(e) => {
+                error!("Failed to mount {:?}", self);
+                Err(FsError::MountFailure {
+                    spec: self,
+                    source: io::Error::from_raw_os_error(e as i32),
+                })
+            }
+        }
     }
 }

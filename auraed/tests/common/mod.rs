@@ -26,6 +26,7 @@ use tokio::sync::OnceCell;
 
 pub mod cells;
 pub mod observe;
+pub mod tls;
 
 #[allow(dead_code)]
 pub struct ChildGuard {
