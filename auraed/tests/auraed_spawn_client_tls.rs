@@ -24,6 +24,7 @@ use test_helpers::*;
 use tokio::time::{Duration, sleep};
 
 mod common;
+use crate::common::tls::{TlsMaterial, generate_server_and_client_tls};
 
 #[test_helpers_macros::shared_runtime_test]
 async fn auraed_spawn_client_tls_enforces_mtls() {
@@ -72,8 +73,18 @@ async fn auraed_spawn_client_tls_enforces_mtls() {
     let client_config = AuraeConfig {
         auth: AuthConfig {
             ca_crt: material.ca_crt.to_string_lossy().into_owned(),
-            client_crt: material.client_crt.to_string_lossy().into_owned(),
-            client_key: material.client_key.to_string_lossy().into_owned(),
+            client_crt: material
+                .client_crt
+                .as_ref()
+                .expect("client crt")
+                .to_string_lossy()
+                .into_owned(),
+            client_key: material
+                .client_key
+                .as_ref()
+                .expect("client key")
+                .to_string_lossy()
+                .into_owned(),
         },
         system: SystemConfig { socket: AuraeSocket::Addr(socket_addr) },
     };
@@ -89,126 +100,8 @@ async fn auraed_spawn_client_tls_enforces_mtls() {
     teardown_child(&mut auraed_child);
 }
 
-struct TlsMaterial {
-    ca_crt: PathBuf,
-    server_crt: PathBuf,
-    server_key: PathBuf,
-    client_crt: PathBuf,
-    client_key: PathBuf,
-}
-
 fn generate_tls_material(dir: &Path) -> TlsMaterial {
-    let ca_crt = dir.join("ca.crt");
-    let ca_key = dir.join("ca.key");
-    let mut ca_cmd = Command::new("openssl");
-    ca_cmd
-        .arg("req")
-        .arg("-x509")
-        .arg("-nodes")
-        .arg("-newkey")
-        .arg("rsa:2048")
-        .arg("-sha256")
-        .arg("-days")
-        .arg("365")
-        .arg("-keyout")
-        .arg(&ca_key)
-        .arg("-out")
-        .arg(&ca_crt)
-        .arg("-subj")
-        .arg("/CN=AuraeTestCA");
-    run_openssl(ca_cmd);
-
-    let server_key = dir.join("server.key");
-    let server_csr = dir.join("server.csr");
-    let mut server_req = Command::new("openssl");
-    server_req
-        .arg("req")
-        .arg("-new")
-        .arg("-newkey")
-        .arg("rsa:2048")
-        .arg("-nodes")
-        .arg("-keyout")
-        .arg(&server_key)
-        .arg("-out")
-        .arg(&server_csr)
-        .arg("-subj")
-        .arg("/CN=server.unsafe.aurae.io")
-        .arg("-addext")
-        .arg("subjectAltName = DNS:server.unsafe.aurae.io");
-    run_openssl(server_req);
-
-    let server_crt = dir.join("_signed.server.crt");
-    let server_ext = dir.join("server.ext");
-    std::fs::write(
-        &server_ext,
-        "subjectAltName = DNS:server.unsafe.aurae.io\nextendedKeyUsage = serverAuth\n",
-    )
-    .expect("write server ext");
-    let mut server_sign = Command::new("openssl");
-    server_sign
-        .arg("x509")
-        .arg("-req")
-        .arg("-days")
-        .arg("365")
-        .arg("-in")
-        .arg(&server_csr)
-        .arg("-CA")
-        .arg(&ca_crt)
-        .arg("-CAkey")
-        .arg(&ca_key)
-        .arg("-CAcreateserial")
-        .arg("-out")
-        .arg(&server_crt)
-        .arg("-extfile")
-        .arg(&server_ext);
-    run_openssl(server_sign);
-
-    let client_key = dir.join("client.key");
-    let client_csr = dir.join("client.csr");
-    let mut client_req = Command::new("openssl");
-    client_req
-        .arg("req")
-        .arg("-new")
-        .arg("-newkey")
-        .arg("rsa:2048")
-        .arg("-nodes")
-        .arg("-keyout")
-        .arg(&client_key)
-        .arg("-out")
-        .arg(&client_csr)
-        .arg("-subj")
-        .arg("/CN=client.unsafe.aurae.io")
-        .arg("-addext")
-        .arg("subjectAltName = DNS:client.unsafe.aurae.io");
-    run_openssl(client_req);
-
-    let client_crt = dir.join("_signed.client.crt");
-    let client_ext = dir.join("client.ext");
-    std::fs::write(
-        &client_ext,
-        "subjectAltName = DNS:client.unsafe.aurae.io\nextendedKeyUsage = clientAuth\n",
-    )
-    .expect("write client ext");
-    let mut client_sign = Command::new("openssl");
-    client_sign
-        .arg("x509")
-        .arg("-req")
-        .arg("-days")
-        .arg("365")
-        .arg("-in")
-        .arg(&client_csr)
-        .arg("-CA")
-        .arg(&ca_crt)
-        .arg("-CAkey")
-        .arg(&ca_key)
-        .arg("-CAcreateserial")
-        .arg("-out")
-        .arg(&client_crt)
-        .arg("-extfile")
-        .arg(&client_ext);
-    run_openssl(client_sign);
-
-    TlsMaterial { ca_crt, server_crt, server_key, client_crt, client_key }
+    generate_server_and_client_tls(dir)
 }
 
 fn spawn_auraed(
@@ -262,13 +155,4 @@ fn teardown_child(child: &mut Child) {
         }
     }
     let _ = child.wait();
-}
-
-fn run_openssl(mut cmd: Command) {
-    let status = cmd.status().expect("failed to run openssl");
-    assert!(
-        status.success(),
-        "openssl command {:?} failed with status {status:?}",
-        cmd
-    );
 }
