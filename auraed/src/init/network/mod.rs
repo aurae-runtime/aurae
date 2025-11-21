@@ -197,7 +197,7 @@ async fn add_address(
             }
             Err(NetworkError::ErrorAddingAddress {
                 iface,
-                ip: ip.clone(),
+                ip,
                 source: e,
             })
         })?;
