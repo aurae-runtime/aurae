@@ -113,24 +113,14 @@ mod test {
         let file_name2 = uuid::Uuid::new_v4().to_string();
         let ino2 = create_file(&tempdir, &OsString::from(&file_name2));
 
-        assert!(cache.get(ino1).is_some());
         assert!(
-            cache
-                .get(ino1)
-                .expect("should not happen")
-                .eq_ignore_ascii_case(
-                    tempdir.path().join(&file_name1).to_string_lossy()
-                )
+            cache.get(ino1).as_deref()
+                == Some(tempdir.path().join(&file_name1).as_os_str())
         );
 
-        assert!(cache.get(ino2).is_some());
         assert!(
-            cache
-                .get(ino2)
-                .expect("should not happen")
-                .eq_ignore_ascii_case(
-                    tempdir.path().join(&file_name2).to_string_lossy()
-                )
+            cache.get(ino2).as_deref()
+                == Some(tempdir.path().join(&file_name2).as_os_str())
         );
     }
 
