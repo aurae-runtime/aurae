@@ -111,7 +111,7 @@ async fn create_tcp_socket_stream(
 
 #[cfg(test)]
 mod tests {
-    use super::{DaemonSystemRuntime, SocketStream};
+    use super::{DaemonSystemRuntime, SocketStream, SystemRuntime};
     use crate::{AURAED_RUNTIME, AuraedRuntime};
     use std::os::unix::fs::{FileTypeExt, PermissionsExt};
 
