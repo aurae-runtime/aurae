@@ -14,8 +14,14 @@
 \* -------------------------------------------------------------------------- */
 
 use anyhow::anyhow;
-use std::{fs::OpenOptions, io::Read, mem, path::Path, slice};
-use tracing::{info, trace};
+use std::{
+    fs::OpenOptions,
+    io::{ErrorKind, Read},
+    mem,
+    path::Path,
+    slice,
+};
+use tracing::{info, trace, warn};
 
 use ::libc;
 
@@ -64,11 +70,21 @@ pub(crate) fn spawn_thread_power_button_listener(
     {
         Ok(file) => file,
         Err(e) => {
-            return Err(anyhow!(
-                "Could not open power button device {}. {:?}",
-                power_btn_device_path.as_ref().display(),
-                e
-            ));
+            return match e.kind() {
+                ErrorKind::NotFound | ErrorKind::PermissionDenied => {
+                    warn!(
+                        "Power button device {} unavailable ({}); skipping listener",
+                        power_btn_device_path.as_ref().display(),
+                        e
+                    );
+                    Ok(())
+                }
+                _ => Err(anyhow!(
+                    "Could not open power button device {}. {:?}",
+                    power_btn_device_path.as_ref().display(),
+                    e
+                )),
+            };
         }
     };
 
