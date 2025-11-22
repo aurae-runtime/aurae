@@ -121,12 +121,17 @@ mod tests {
     #[tokio::test]
     async fn daemon_system_runtime_should_default_to_unix_socket_when_no_address(
     ) {
-        let tempdir = tempfile::tempdir().expect("tempdir");
-        let mut runtime = AuraedRuntime::default();
-        runtime.runtime_dir = tempdir.path().join("runtime");
-        runtime.library_dir = tempdir.path().join("library");
+        let runtime = if let Some(runtime) = AURAED_RUNTIME.get() {
+            runtime
+        } else {
+            let tempdir = tempfile::tempdir().expect("tempdir");
+            let mut runtime = AuraedRuntime::default();
+            runtime.runtime_dir = tempdir.into_path().join("runtime");
+            runtime.library_dir = runtime.runtime_dir.join("library");
+            AURAED_RUNTIME.set(runtime).expect("set runtime");
+            AURAED_RUNTIME.get().expect("runtime set")
+        };
 
-        let runtime = AURAED_RUNTIME.get_or_init(|| runtime);
         let expected_socket = runtime.default_socket_address();
 
         let stream = match DaemonSystemRuntime.init(false, None).await {
