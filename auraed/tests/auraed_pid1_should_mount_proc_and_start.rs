@@ -55,8 +55,7 @@ fn auraed_pid1_should_mount_proc_and_start() {
             Err(e) => panic!("failed to spawn auraed as pid1: {e}"),
         };
     let Some(child) = child else { return };
-    let auraed_pid =
-        wait_for_pid_file(tempdir.path(), Duration::from_secs(5));
+    let auraed_pid = wait_for_pid_file(tempdir.path(), Duration::from_secs(5));
     let _guard = common::ChildGuard::new(child);
 
     if !wait_for_tcp_listener(auraed_pid, &log_path, Duration::from_secs(20)) {
@@ -138,10 +137,7 @@ fn wait_for_tcp_listener(pid: u32, log_path: &Path, timeout: Duration) -> bool {
             return true;
         }
         if !std::fs::metadata(format!("/proc/{pid}")).is_ok() {
-            panic!(
-                "auraed pid {pid} exited early. logs:\n{}",
-                logs
-            );
+            panic!("auraed pid {pid} exited early. logs:\n{}", logs);
         }
         thread::sleep(Duration::from_millis(50));
     }
