@@ -195,11 +195,7 @@ async fn add_address(
                     return Ok(());
                 }
             }
-            Err(NetworkError::ErrorAddingAddress {
-                iface,
-                ip,
-                source: e,
-            })
+            Err(NetworkError::ErrorAddingAddress { iface, ip, source: e })
         })?;
 
     Ok(())
