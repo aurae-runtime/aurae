@@ -108,3 +108,57 @@ async fn create_tcp_socket_stream(
     info!("TCP Access Socket created: {:?}", socket_addr);
     Ok(SocketStream::Tcp(TcpListenerStream::new(sock)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        DaemonSystemRuntime, SocketStream, SystemRuntime, SystemRuntimeError,
+    };
+    use crate::init::logging::LoggingError;
+    use crate::{AURAED_RUNTIME, AuraedRuntime};
+    use std::os::unix::fs::{FileTypeExt, PermissionsExt};
+
+    #[tokio::test]
+    async fn daemon_system_runtime_should_default_to_unix_socket_when_no_address()
+     {
+        let runtime = if let Some(runtime) = AURAED_RUNTIME.get() {
+            runtime
+        } else {
+            let tempdir = tempfile::tempdir().expect("tempdir");
+            let mut runtime = AuraedRuntime::default();
+            runtime.runtime_dir = tempdir.into_path().join("runtime");
+            runtime.library_dir = runtime.runtime_dir.join("library");
+            AURAED_RUNTIME.set(runtime).expect("set runtime");
+            AURAED_RUNTIME.get().expect("runtime set")
+        };
+
+        let expected_socket = runtime.default_socket_address();
+
+        let stream = match DaemonSystemRuntime.init(false, None).await {
+            Ok(stream) => stream,
+            // Another test may have already installed a global logger; if so, skip
+            // rather than failing on a logging init error.
+            Err(SystemRuntimeError::Logging(LoggingError::TryInitError(_))) => {
+                return;
+            }
+            Err(e) => panic!("init daemon system runtime: {e:?}"),
+        };
+
+        let parent = expected_socket.parent().expect("socket parent");
+        assert!(parent.is_dir(), "expected parent dir to exist");
+
+        let meta = std::fs::symlink_metadata(&expected_socket)
+            .expect("socket metadata");
+        assert!(meta.file_type().is_socket(), "expected a unix socket file");
+        assert_eq!(
+            meta.permissions().mode() & 0o777,
+            0o766,
+            "expected socket mode 0o766"
+        );
+
+        match stream {
+            SocketStream::Unix(_) => {}
+            other => panic!("expected Unix listener, got {:?}", other),
+        }
+    }
+}
