@@ -15,6 +15,7 @@
 
 use futures::stream::TryStreamExt;
 use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
+use libc::EEXIST;
 use netlink_packet_route::rtnl::link::nlas::Nla;
 use rtnetlink::Handle;
 use std::collections::HashMap;
@@ -180,13 +181,21 @@ async fn add_address(
         .add(link_index, ip.ip(), ip.prefix())
         .execute()
         .await
-        .map(|_| {
-            trace!("Added address to link {iface}");
-        })
-        .map_err(|e| NetworkError::ErrorAddingAddress {
-            iface,
-            ip,
-            source: e,
+        .map(|_| trace!("Added address to link {iface}"))
+        .or_else(|e| {
+            if let rtnetlink::Error::NetlinkError(msg) = &e {
+                let dup_code: i32 = -EEXIST;
+                if msg
+                    .code
+                    .map(|c| c.get())
+                    .map(|c| c == dup_code)
+                    .unwrap_or(false)
+                {
+                    warn!("Address {ip} already present on {iface}, ignoring");
+                    return Ok(());
+                }
+            }
+            Err(NetworkError::ErrorAddingAddress { iface, ip, source: e })
         })?;
 
     Ok(())
