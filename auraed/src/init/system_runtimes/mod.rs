@@ -108,3 +108,44 @@ async fn create_tcp_socket_stream(
     info!("TCP Access Socket created: {:?}", socket_addr);
     Ok(SocketStream::Tcp(TcpListenerStream::new(sock)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{DaemonSystemRuntime, SocketStream};
+    use crate::{AURAED_RUNTIME, AuraedRuntime};
+    use std::os::unix::fs::{FileTypeExt, PermissionsExt};
+
+    #[tokio::test]
+    async fn daemon_system_runtime_should_default_to_unix_socket_when_no_address(
+    ) {
+        let tempdir = tempfile::tempdir().expect("tempdir");
+        let mut runtime = AuraedRuntime::default();
+        runtime.runtime_dir = tempdir.path().join("runtime");
+        runtime.library_dir = tempdir.path().join("library");
+
+        let runtime = AURAED_RUNTIME.get_or_init(|| runtime);
+        let expected_socket = runtime.default_socket_address();
+
+        let stream = DaemonSystemRuntime
+            .init(false, None)
+            .await
+            .expect("init daemon system runtime");
+
+        let parent = expected_socket.parent().expect("socket parent");
+        assert!(parent.is_dir(), "expected parent dir to exist");
+
+        let meta = std::fs::symlink_metadata(&expected_socket)
+            .expect("socket metadata");
+        assert!(meta.file_type().is_socket(), "expected a unix socket file");
+        assert_eq!(
+            meta.permissions().mode() & 0o777,
+            0o766,
+            "expected socket mode 0o766"
+        );
+
+        match stream {
+            SocketStream::Unix(_) => {}
+            other => panic!("expected Unix listener, got {:?}", other),
+        }
+    }
+}
