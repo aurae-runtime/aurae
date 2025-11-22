@@ -111,8 +111,11 @@ async fn create_tcp_socket_stream(
 
 #[cfg(test)]
 mod tests {
-    use super::{DaemonSystemRuntime, SocketStream, SystemRuntime};
+    use super::{
+        DaemonSystemRuntime, SocketStream, SystemRuntime, SystemRuntimeError,
+    };
     use crate::{AURAED_RUNTIME, AuraedRuntime};
+    use crate::init::logging::LoggingError;
     use std::os::unix::fs::{FileTypeExt, PermissionsExt};
 
     #[tokio::test]
@@ -126,10 +129,15 @@ mod tests {
         let runtime = AURAED_RUNTIME.get_or_init(|| runtime);
         let expected_socket = runtime.default_socket_address();
 
-        let stream = DaemonSystemRuntime
-            .init(false, None)
-            .await
-            .expect("init daemon system runtime");
+        let stream = match DaemonSystemRuntime.init(false, None).await {
+            Ok(stream) => stream,
+            // Another test may have already installed a global logger; if so, skip
+            // rather than failing on a logging init error.
+            Err(SystemRuntimeError::Logging(LoggingError::TryInitError(_))) => {
+                return;
+            }
+            Err(e) => panic!("init daemon system runtime: {e:?}"),
+        };
 
         let parent = expected_socket.parent().expect("socket parent");
         assert!(parent.is_dir(), "expected parent dir to exist");

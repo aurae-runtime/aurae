@@ -90,32 +90,37 @@ mod test {
     use std::fs;
     use std::fs::File;
     use std::os::unix::fs::DirEntryExt;
+    use tempfile::TempDir;
 
     use super::*;
 
     #[test]
     fn get_must_return_none_when_file_doesnt_exist() {
-        let mut cache = CgroupCache::new(OsString::from("/tmp"));
+        let tempdir = TempDir::new().expect("tempdir");
+        let mut cache = CgroupCache::new(tempdir.path().into());
 
         assert_eq!(cache.get(123), None);
     }
 
     #[test]
     fn get_must_return_file_for_ino() {
-        let mut cache = CgroupCache::new(OsString::from("/tmp"));
+        let tempdir = TempDir::new().expect("tempdir");
+        let mut cache = CgroupCache::new(tempdir.path().into());
 
         let file_name1 = uuid::Uuid::new_v4().to_string();
-        let ino1 = create_file(&OsString::from(&file_name1));
+        let ino1 = create_file(&tempdir, &OsString::from(&file_name1));
 
         let file_name2 = uuid::Uuid::new_v4().to_string();
-        let ino2 = create_file(&OsString::from(&file_name2));
+        let ino2 = create_file(&tempdir, &OsString::from(&file_name2));
 
         assert!(cache.get(ino1).is_some());
         assert!(
             cache
                 .get(ino1)
                 .expect("should not happen")
-                .eq_ignore_ascii_case(format!("/tmp/{file_name1}"))
+                .eq_ignore_ascii_case(
+                    tempdir.path().join(&file_name1).to_string_lossy()
+                )
         );
 
         assert!(cache.get(ino2).is_some());
@@ -123,20 +128,23 @@ mod test {
             cache
                 .get(ino2)
                 .expect("should not happen")
-                .eq_ignore_ascii_case(format!("/tmp/{file_name2}"))
+                .eq_ignore_ascii_case(
+                    tempdir.path().join(&file_name2).to_string_lossy()
+                )
         );
     }
 
-    fn create_file(file_name: &OsString) -> u64 {
+    fn create_file(dir: &TempDir, file_name: &OsString) -> u64 {
         let _file = File::create(format!(
-            "/tmp/{}",
+            "{}/{}",
+            dir.path().display(),
             file_name
                 .to_ascii_lowercase()
                 .to_str()
                 .expect("couldn't convert filename")
         ))
         .expect("couldn't create file");
-        let dir_entry = fs::read_dir("/tmp")
+        let dir_entry = fs::read_dir(dir.path())
             .expect("tmp dir entries")
             .find(|e| {
                 println!("{:?}", e.as_ref().expect("").file_name());
