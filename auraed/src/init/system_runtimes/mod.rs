@@ -114,13 +114,13 @@ mod tests {
     use super::{
         DaemonSystemRuntime, SocketStream, SystemRuntime, SystemRuntimeError,
     };
-    use crate::{AURAED_RUNTIME, AuraedRuntime};
     use crate::init::logging::LoggingError;
+    use crate::{AURAED_RUNTIME, AuraedRuntime};
     use std::os::unix::fs::{FileTypeExt, PermissionsExt};
 
     #[tokio::test]
-    async fn daemon_system_runtime_should_default_to_unix_socket_when_no_address(
-    ) {
+    async fn daemon_system_runtime_should_default_to_unix_socket_when_no_address()
+     {
         let runtime = if let Some(runtime) = AURAED_RUNTIME.get() {
             runtime
         } else {

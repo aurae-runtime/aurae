@@ -113,14 +113,14 @@ mod test {
         let file_name2 = uuid::Uuid::new_v4().to_string();
         let ino2 = create_file(&tempdir, &OsString::from(&file_name2));
 
-        assert!(
-            cache.get(ino1).as_deref()
-                == Some(tempdir.path().join(&file_name1).as_os_str())
+        assert_eq!(
+            cache.get(ino1).as_ref().map(|s| s.as_os_str()),
+            Some(tempdir.path().join(&file_name1).as_os_str())
         );
 
-        assert!(
-            cache.get(ino2).as_deref()
-                == Some(tempdir.path().join(&file_name2).as_os_str())
+        assert_eq!(
+            cache.get(ino2).as_ref().map(|s| s.as_os_str()),
+            Some(tempdir.path().join(&file_name2).as_os_str())
         );
     }
 
