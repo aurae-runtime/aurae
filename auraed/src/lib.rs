@@ -355,3 +355,25 @@ pub fn prep_oci_spec_for_spawn(output: &str) -> Result<(), anyhow::Error> {
         .map_err(|e| anyhow!("building default oci spec: {e}"))?;
     spawn_auraed_oci_to(PathBuf::from(output), spec)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn auraed_runtime_default_socket_address_should_use_runtime_dir() {
+        let default_runtime = AuraedRuntime::default();
+        assert_eq!(
+            default_runtime.default_socket_address(),
+            PathBuf::from("/var/run/aurae/aurae.sock")
+        );
+
+        let custom_runtime_dir = PathBuf::from("/tmp/aurae-test-runtime");
+        let mut runtime = AuraedRuntime::default();
+        runtime.runtime_dir = custom_runtime_dir.clone();
+        assert_eq!(
+            runtime.default_socket_address(),
+            custom_runtime_dir.join("aurae.sock")
+        );
+    }
+}
