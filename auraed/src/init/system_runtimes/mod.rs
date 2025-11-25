@@ -108,3 +108,31 @@ async fn create_tcp_socket_stream(
     info!("TCP Access Socket created: {:?}", socket_addr);
     Ok(SocketStream::Tcp(TcpListenerStream::new(sock)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::create_unix_socket_stream;
+    use std::os::unix::fs::{FileTypeExt, PermissionsExt};
+
+    #[tokio::test]
+    async fn create_unix_socket_stream_should_create_dir_and_set_mode_766() {
+        let tempdir = tempfile::tempdir().expect("tempdir");
+        let sock_path = tempdir.path().join("nested").join("aurae.sock");
+
+        let _stream = create_unix_socket_stream(sock_path.clone())
+            .await
+            .expect("create unix socket stream");
+
+        let parent = sock_path.parent().expect("has parent directory");
+        assert!(parent.is_dir(), "expected parent dir to be created");
+
+        let meta =
+            std::fs::symlink_metadata(&sock_path).expect("socket metadata");
+        assert!(meta.file_type().is_socket(), "expected a unix socket file");
+        assert_eq!(
+            meta.permissions().mode() & 0o777,
+            0o766,
+            "expected socket mode 0o766"
+        );
+    }
+}
