@@ -43,6 +43,7 @@
 \* -------------------------------------------------------------------------- */
 use std::collections::HashMap;
 use std::ffi::OsString;
+use std::sync::{Arc, Mutex};
 use tracing::warn;
 use walkdir::DirEntryExt;
 use walkdir::WalkDir;
@@ -53,30 +54,40 @@ use walkdir::WalkDir;
 /// we should think if inode wraparound is a potential issue. We could look at
 /// how the Linux inode cache is implemented:
 /// https://elixir.bootlin.com/linux/latest/source/fs/inode.c
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct CgroupCache {
     root: OsString,
-    cache: HashMap<u64, OsString>,
+    cache: Arc<Mutex<HashMap<u64, OsString>>>,
 }
 
 impl CgroupCache {
     pub fn new(root: OsString) -> Self {
-        Self { root, cache: HashMap::new() }
+        Self { root, cache: Arc::new(Mutex::new(HashMap::new())) }
     }
 
     pub fn get(&mut self, ino: u64) -> Option<OsString> {
-        if let Some(path) = self.cache.get(&ino) {
-            Some(path.clone())
-        } else {
-            self.refresh_cache();
-            self.cache.get(&ino).cloned()
+        {
+            let cache =
+                self.cache.lock().expect("failed to acquire cgroup lock");
+            if let Some(path) = cache.get(&ino) {
+                return Some(path.clone());
+            }
         }
+
+        self.refresh_cache();
+        self.cache
+            .lock()
+            .expect("failed to acquire cgroup lock")
+            .get(&ino)
+            .cloned()
     }
 
     fn refresh_cache(&mut self) {
+        let mut cache =
+            self.cache.lock().expect("failed to acquire cgroup lock");
         WalkDir::new(&self.root).into_iter().for_each(|res| match res {
             Ok(dir_entry) => {
-                _ = self.cache.insert(dir_entry.ino(), dir_entry.path().into());
+                _ = cache.insert(dir_entry.ino(), dir_entry.path().into());
             }
             Err(e) => {
                 warn!("could not read from {:?}: {}", self.root, e);
