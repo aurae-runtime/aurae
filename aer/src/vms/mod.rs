@@ -13,6 +13,6 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-pub use cell_service::CellServiceCommands;
+pub use vm_service::VmServiceCommands;
 
-mod cell_service;
+mod vm_service;
