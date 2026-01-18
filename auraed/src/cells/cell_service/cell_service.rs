@@ -44,7 +44,7 @@ use std::time::Duration;
 use std::{process::ExitStatus, sync::Arc};
 use tokio::sync::Mutex;
 use tonic::{Code, Request, Response, Status};
-use tracing::{info, trace, warn};
+use tracing::{info, instrument, trace, warn};
 
 /**
  * Macro to perform an operation within a cell.
@@ -52,12 +52,13 @@ use tracing::{info, trace, warn};
  */
 macro_rules! do_in_cell {
     ($self:ident, $cell_name:ident, $function:ident, $request:ident) => {{
-        let mut cells = $self.cells.lock().await;
-
         // Retrieve the client socket for the specified cell
-        let client_socket = cells
+        let client_socket = {
+            let mut cells = $self.cells.lock().await;
+            cells
             .get(&$cell_name, |cell| cell.client_socket())
-            .map_err(CellsServiceError::CellsError)?;
+            .map_err(CellsServiceError::CellsError)?
+        };
 
         // Initialize the exponential backoff strategy for retrying the operation
         let mut retry_strategy = backoff::ExponentialBackoffBuilder::new()
@@ -289,22 +290,26 @@ impl CellService {
         assert!(cell_name.is_none());
         info!("CellService: stop() executable_name={:?}", executable_name,);
 
-        let mut executables = self.executables.lock().await;
+        let pid = {
+            let mut executables = self.executables.lock().await;
 
-        // Retrieve the process ID (PID) of the executable to be stopped
-        let pid = executables
-            .get(&executable_name)
-            .map_err(CellsServiceError::ExecutablesError)?
-            .pid()
-            .map_err(CellsServiceError::Io)?
-            .expect("pid")
-            .as_raw();
+            // Retrieve the process ID (PID) of the executable to be stopped
+            let pid = executables
+                .get(&executable_name)
+                .map_err(CellsServiceError::ExecutablesError)?
+                .pid()
+                .map_err(CellsServiceError::Io)?
+                .expect("pid")
+                .as_raw();
 
-        // Stop the executable and handle any errors
-        let _: ExitStatus = executables
-            .stop(&executable_name)
-            .await
-            .map_err(CellsServiceError::ExecutablesError)?;
+            // Stop the executable and handle any errors
+            let _: ExitStatus = executables
+                .stop(&executable_name)
+                .await
+                .map_err(CellsServiceError::ExecutablesError)?;
+
+            pid
+        };
 
         // Remove the executable's logs from the observe service.
         if let Err(e) = self
@@ -472,6 +477,7 @@ impl cell_service_server::CellService for CellService {
         Ok(Response::new(self.allocate(request).await?))
     }
 
+    #[instrument(skip(self))]
     async fn free(
         &self,
         request: Request<CellServiceFreeRequest>,
@@ -485,6 +491,7 @@ impl cell_service_server::CellService for CellService {
         Ok(Response::new(self.free(request).await?))
     }
 
+    #[instrument(skip(self))]
     async fn start(
         &self,
         request: Request<CellServiceStartRequest>,
@@ -513,6 +520,7 @@ impl cell_service_server::CellService for CellService {
         }
     }
 
+    #[instrument(skip(self))]
     async fn stop(
         &self,
         request: Request<CellServiceStopRequest>,
@@ -586,7 +594,7 @@ mod tests {
 
         // Create a new instance of CellService for testing
         let service = CellService::new(ObserveService::new(
-            Arc::new(LogChannel::new(String::from("test"))),
+            LogChannel::new(String::from("test")),
             (None, None, None),
         ));
 
@@ -685,7 +693,7 @@ mod tests {
     #[tokio::test]
     async fn start_registers_log_channels_and_returns_uid_gid() {
         let observe_service = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("test"))),
+            LogChannel::new(String::from("test")),
             (None, None, None),
         );
         let service = CellService::new(observe_service.clone());

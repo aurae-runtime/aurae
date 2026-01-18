@@ -31,19 +31,19 @@ use proto::observe::{
     LogItem, Signal as PosixSignal, WorkloadType, observe_service_server,
 };
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
-use std::{ffi::OsString, sync::Arc};
 use tokio::sync::mpsc;
 use tokio::sync::{Mutex, broadcast::Receiver};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
-use tracing::info;
+use tracing::{info, instrument};
 
 #[derive(Debug, Clone)]
 pub struct ObserveService {
-    aurae_logger: Arc<LogChannel>,
-    cgroup_cache: Arc<Mutex<CgroupCache>>,
-    proc_cache: Option<Arc<Mutex<ProcCache>>>,
+    aurae_logger: LogChannel,
+    cgroup_cache: CgroupCache,
+    proc_cache: Option<ProcCache>,
     posix_signals: Option<PerfEventBroadcast<Signal>>,
     sub_process_consumer_list:
         Arc<Mutex<HashMap<i32, HashMap<LogChannelType, LogChannel>>>>,
@@ -56,24 +56,20 @@ type PerfEvents = (
 );
 
 impl ObserveService {
-    pub fn new(aurae_logger: Arc<LogChannel>, perf_events: PerfEvents) -> Self {
+    pub fn new(aurae_logger: LogChannel, perf_events: PerfEvents) -> Self {
         let proc_cache = match perf_events {
-            (Some(f), Some(e), _) => {
-                Some(Arc::new(Mutex::new(ProcCache::new(
-                    Duration::from_secs(60),
-                    Duration::from_secs(60),
-                    f,
-                    e,
-                    ProcfsProcessInfo {},
-                ))))
-            }
+            (Some(f), Some(e), _) => Some(ProcCache::new(
+                Duration::from_secs(60),
+                Duration::from_secs(60),
+                f,
+                e,
+                ProcfsProcessInfo {},
+            )),
             _ => None,
         };
         Self {
             aurae_logger,
-            cgroup_cache: Arc::new(Mutex::new(CgroupCache::new(
-                OsString::from("/sys/fs/cgroup"),
-            ))),
+            cgroup_cache: CgroupCache::new("/sys/fs/cgroup".into()),
             proc_cache,
             posix_signals: perf_events.2,
             sub_process_consumer_list: Arc::new(Mutex::new(HashMap::new())),
@@ -133,7 +129,8 @@ impl ObserveService {
         self.aurae_logger.subscribe()
     }
 
-    async fn get_posix_signals_stream(
+    #[instrument(skip(self))]
+    fn get_posix_signals_stream(
         &self,
         filter: Option<(WorkloadType, String)>,
     ) -> ReceiverStream<Result<GetPosixSignalsStreamResponse, Status>> {
@@ -212,11 +209,11 @@ impl observe_service_server::ObserveService for ObserveService {
         &self,
         request: Request<GetSubProcessStreamRequest>,
     ) -> Result<Response<Self::GetSubProcessStreamStream>, Status> {
-        let channel = LogChannelType::try_from(request.get_ref().channel_type)
-            .map_err(|_| ObserveServiceError::InvalidLogChannelType {
-                channel_type: request.get_ref().channel_type,
-            })?;
-        let pid: i32 = request.get_ref().process_id;
+        let GetSubProcessStreamRequest { process_id: pid, channel_type } =
+            request.into_inner();
+        let channel = LogChannelType::try_from(channel_type).map_err(|_| {
+            ObserveServiceError::InvalidLogChannelType { channel_type }
+        })?;
 
         println!("Requested Channel {channel:?}");
         println!("Requested Process ID {pid}");
@@ -269,15 +266,9 @@ impl observe_service_server::ObserveService for ObserveService {
             ));
         }
 
-        Ok(Response::new(
-            self.get_posix_signals_stream(
-                request
-                    .into_inner()
-                    .workload
-                    .map(|w| (w.workload_type(), w.id)),
-            )
-            .await,
-        ))
+        Ok(Response::new(self.get_posix_signals_stream(
+            request.into_inner().workload.map(|w| (w.workload_type(), w.id)),
+        )))
     }
 }
 
@@ -286,12 +277,11 @@ mod tests {
     use super::ObserveService;
     use crate::logging::log_channel::LogChannel;
     use proto::observe::LogChannelType;
-    use std::sync::Arc;
 
     #[tokio::test]
     async fn test_register_sub_process_channel_success() {
         let svc = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("auraed"))),
+            LogChannel::new(String::from("auraed")),
             (None, None, None),
         );
         assert!(
@@ -310,7 +300,7 @@ mod tests {
     #[tokio::test]
     async fn test_register_sub_process_channel_duplicate_error() {
         let svc = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("auraed"))),
+            LogChannel::new(String::from("auraed")),
             (None, None, None),
         );
         assert!(
@@ -338,7 +328,7 @@ mod tests {
     #[tokio::test]
     async fn test_unregister_sub_process_channel_success() {
         let svc = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("auraed"))),
+            LogChannel::new(String::from("auraed")),
             (None, None, None),
         );
         assert!(
@@ -362,7 +352,7 @@ mod tests {
     #[tokio::test]
     async fn test_unregister_sub_process_channel_no_pid_error() {
         let svc = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("auraed"))),
+            LogChannel::new(String::from("auraed")),
             (None, None, None),
         );
         assert!(
@@ -377,7 +367,7 @@ mod tests {
     #[tokio::test]
     async fn test_unregister_sub_process_channel_no_channel_type_error() {
         let svc = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("auraed"))),
+            LogChannel::new(String::from("auraed")),
             (None, None, None),
         );
         assert!(

@@ -92,7 +92,7 @@ struct Eviction {
 ///
 /// mention eBPF events
 /// mention eviction strategy
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ProcCache {
     cache: Arc<Mutex<HashMap<i32, i32>>>,
     evict_every: Duration,

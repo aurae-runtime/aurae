@@ -86,7 +86,6 @@ use proto::{
     vms::vm_service_server::VmServiceServer,
 };
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use tokio::io::AsyncRead;
 use tokio::io::AsyncWrite;
 use tokio::task::JoinHandle;
@@ -247,7 +246,7 @@ pub async fn run(
             tonic_health::server::health_reporter();
 
         let observe_service = ObserveService::new(
-            Arc::new(LogChannel::new(String::from("auraed"))),
+            LogChannel::new(String::from("auraed")),
             perf_events,
         );
         let observe_service_server =
