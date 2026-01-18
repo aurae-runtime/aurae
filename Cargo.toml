@@ -48,8 +48,10 @@ test-helpers = { path = "./crates/test-helpers" }
 test-helpers-macros = { path = "./crates/test-helpers-macros" }
 thiserror = "2.0"
 tokio = "1.43.0"
-tonic = "0.12.3"
-tonic-health = "0.12.3"
+prost = "0.14.2"
+tonic = "0.14.2"
+tonic-prost = "0.14.2"
+tonic-health = "0.14.2"
 tracing = "0.1"
 uuid = { version = "1.2.2", features = ["v4"] }
 url = "2.3.1"
