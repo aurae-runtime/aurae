@@ -93,17 +93,17 @@ async fn wait_for_socket_and_connect(
 ) -> Channel {
     let deadline = tokio::time::Instant::now() + timeout;
     while tokio::time::Instant::now() < deadline {
-        if path.exists() {
-            if let Ok(channel) = connect_unix(path).await {
-                let meta = std::fs::symlink_metadata(path)
-                    .expect("metadata for socket");
-                assert!(
-                    meta.file_type().is_socket(),
-                    "expected {:?} to be a Unix socket",
-                    path
-                );
-                return channel;
-            }
+        if path.exists()
+            && let Ok(channel) = connect_unix(path).await
+        {
+            let meta =
+                std::fs::symlink_metadata(path).expect("metadata for socket");
+            assert!(
+                meta.file_type().is_socket(),
+                "expected {:?} to be a Unix socket",
+                path
+            );
+            return channel;
         }
         sleep(Duration::from_millis(100)).await;
     }

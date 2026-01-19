@@ -149,10 +149,10 @@ async fn wait_for_listener(addr: SocketAddr, child: &mut Child) {
 }
 
 fn teardown_child(child: &mut Child) {
-    if let Err(e) = child.kill() {
-        if e.kind() != std::io::ErrorKind::InvalidInput {
-            panic!("failed to kill auraed child: {e}");
-        }
+    if let Err(e) = child.kill()
+        && e.kind() != std::io::ErrorKind::InvalidInput
+    {
+        panic!("failed to kill auraed child: {e}");
     }
     let _ = child.wait();
 }
