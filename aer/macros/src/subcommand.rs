@@ -383,7 +383,7 @@ fn resolve_fields<'a>(
             let field_ident = Ident::new(f.name(), span);
 
             match FieldType::resolve(f, panic_on_issue) {
-                FieldType::Primitive | FieldType::VecPrimitive => {
+                FieldType::Primitive => {
                     let type_ident =
                         proto_reader::helpers::to_rust_type(f.type_(), span);
 
@@ -397,6 +397,19 @@ fn resolve_fields<'a>(
                         attribute: quote! { #[arg(long)] },
                         field_ident: vec![field_ident].into(),
                         type_ident,
+                    }]
+                }
+                FieldType::VecPrimitive => {
+                    // For repeated primitive fields (e.g., `repeated string kernel_args`),
+                    // generate a Vec<T> type and use clap's Append action to allow
+                    // multiple values: --kernel-args "arg1" --kernel-args "arg2"
+                    let inner_type =
+                        proto_reader::helpers::to_rust_type(f.type_(), span);
+
+                    vec![ResolvedField {
+                        attribute: quote! { #[arg(long, action = clap::ArgAction::Append)] },
+                        field_ident: vec![field_ident].into(),
+                        type_ident: quote! { Vec<#inner_type> },
                     }]
                 }
                 FieldType::Message | FieldType::VecMessage => {
@@ -438,23 +451,61 @@ fn write_mapping(
     fn write_value_from_field(
         command_field_parts: &mut VecDeque<String>,
         mapping: &mut String,
-        field: &FieldDescriptorProto,
-        panic_on_issue: bool,
+        _field: &FieldDescriptorProto,
+        _panic_on_issue: bool,
     ) {
-        let field_type = FieldType::resolve(field, panic_on_issue);
-        if let FieldType::VecPrimitive = field_type {
-            mapping.push_str("vec![");
-        }
-
+        // For VecPrimitive fields, the CLI arg is already a Vec<T> (via ArgAction::Append),
+        // so we can pass it directly without wrapping in vec![].
+        // For Primitive fields, we just pass the value as-is.
         mapping.push_str(&command_field_parts.iter().join("_"));
-
-        if let FieldType::VecPrimitive = field_type {
-            mapping.push(']');
-        }
-
         mapping.push(',');
     }
 
+    /// Generates code to construct a nested message type from CLI arguments.
+    ///
+    /// For `Message` types: generates `Some(MessageType { field: value, ... })`
+    /// For `VecMessage` types (repeated messages): generates either:
+    ///   - `vec![MessageType { ... }]` if values are provided, OR
+    ///   - `vec![]` if the first string field is empty (see below)
+    ///
+    /// ## VecMessage Empty Check
+    ///
+    /// Proto `repeated` message fields (e.g., `repeated DriveMount drive_mounts`)
+    /// are flattened into individual CLI args with default values. Without special
+    /// handling, this creates a problem:
+    ///
+    /// ```text
+    /// // Proto definition:
+    /// message VirtualMachine {
+    ///     repeated DriveMount drive_mounts = 7;
+    /// }
+    /// message DriveMount {
+    ///     string image_path = 1;  // CLI: --machine-drive-mounts-image-path ""
+    ///     string vm_path = 2;     // CLI: --machine-drive-mounts-vm-path ""
+    ///     ...
+    /// }
+    /// ```
+    ///
+    /// Without the empty check, the generated code would be:
+    /// ```text
+    /// drive_mounts: vec![DriveMount { image_path: "", vm_path: "", ... }]
+    /// ```
+    ///
+    /// This creates a vec with ONE invalid entry (empty paths), causing the server
+    /// to fail when it tries to use the empty path. The fix generates conditional
+    /// code that checks if the first string field is empty:
+    ///
+    /// ```text
+    /// drive_mounts: if machine_drive_mounts_image_path.is_empty() {
+    ///     vec![]  // No drive mounts specified - empty vec is correct
+    /// } else {
+    ///     vec![DriveMount { image_path: machine_drive_mounts_image_path, ... }]
+    /// }
+    /// ```
+    ///
+    /// This allows optional repeated message fields to work correctly when the
+    /// user doesn't provide values via CLI - they get an empty vec instead of
+    /// a vec containing an invalid/empty message.
     fn write_value_from_type(
         module_path: &str,
         proto: &ParsedAndTypechecked,
@@ -464,26 +515,60 @@ fn write_mapping(
         panic_on_issue: bool,
     ) {
         let field_type = FieldType::resolve(field, panic_on_issue);
+
+        let field_type_name =
+            proto_reader::helpers::to_unqualified_type(field.type_name());
+
+        let field_type_message =
+            proto_reader::helpers::find_message(proto, field_type_name)
+                .expect("failed to find message for field");
+
+        // For VecMessage types, find the first non-repeated string field.
+        // This field will be used to determine if the user provided any values.
+        // If it's empty (default), we generate an empty vec instead of a vec
+        // with one invalid/empty message entry.
+        let first_string_field = if matches!(field_type, FieldType::VecMessage)
+        {
+            field_type_message.field.iter().find(|f| {
+                matches!(f.type_(), Type::TYPE_STRING)
+                    && !matches!(f.label, Some(l) if l == LABEL_REPEATED.into())
+            })
+        } else {
+            None
+        };
+
         match field_type {
             FieldType::VecMessage => {
-                mapping.push_str("vec![");
+                if let Some(check_field) = first_string_field {
+                    // Generate conditional: check if the first string field is empty.
+                    // Build the full CLI arg name (e.g., "machine_drive_mounts_image_path")
+                    let check_field_name = check_field.name();
+                    let mut check_path = command_field_parts.iter().join("_");
+                    if !check_path.is_empty() {
+                        check_path.push('_');
+                    }
+                    check_path.push_str(check_field_name);
+
+                    // Generate: `if <field>.is_empty() { vec![] } else { vec![`
+                    mapping.push_str("if ");
+                    mapping.push_str(&check_path);
+                    mapping.push_str(".is_empty() { vec![] } else { vec![");
+                } else {
+                    // No string field to check - fall back to always creating the vec
+                    mapping.push_str("vec![");
+                }
             }
             _ => {
                 mapping.push_str("Some(");
             }
         };
 
-        let field_type_name =
-            proto_reader::helpers::to_unqualified_type(field.type_name());
-
+        // Generate the message type and opening brace: `ModulePath::MessageType {`
         mapping.push_str(module_path);
         mapping.push_str(field_type_name);
         mapping.push('{');
 
-        let field_type_message =
-            proto_reader::helpers::find_message(proto, field_type_name)
-                .expect("failed to find message for field");
-
+        // Recursively generate all field assignments
         for field in &field_type_message.field {
             write_field(
                 module_path,
@@ -495,11 +580,19 @@ fn write_mapping(
             )
         }
 
+        // Close the message and vec/option
         match field_type {
             FieldType::VecMessage => {
-                mapping.push_str("}],");
+                if first_string_field.is_some() {
+                    // Close: `}] },` (message, vec, conditional block, field separator)
+                    mapping.push_str("}] },");
+                } else {
+                    // Close: `}],` (message, vec, field separator)
+                    mapping.push_str("}],");
+                }
             }
             _ => {
+                // Close: `}),` (message, Some(), field separator)
                 mapping.push_str("}),");
             }
         };
