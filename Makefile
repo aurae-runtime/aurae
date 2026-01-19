@@ -20,7 +20,7 @@ oci           =  docker
 ociopts       =  DOCKER_BUILDKIT=1
 uid           =  $(shell id -u)
 uname_m       =  $(shell uname -m)
-buf_version   =  1.60.0
+buf_version   =  1.63.0
 cri_version   =  release-1.26
 clh_version   =  30.0
 vm_kernel     =  6.1.6

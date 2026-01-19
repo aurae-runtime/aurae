@@ -27,7 +27,7 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread"] }
 toml = "0.8.20"
-tonic = { workspace = true, features = ["tls"] }
+tonic = { workspace = true, features = ["tls-ring"] }
 tower = { version = "0.5.2", features = ["util"] }
 x509-certificate = "0.24.0"
 hyper-util = "0.1.6"

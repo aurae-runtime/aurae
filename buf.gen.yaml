@@ -1,24 +1,28 @@
-version: v1
+version: v2
 plugins:
-  - plugin: buf.build/community/neoeinstein-prost:v0.4.0
+  - remote: buf.build/community/neoeinstein-prost:v0.5.0
     out: proto/gen
     opt:
       - bytes=.
       - file_descriptor_set
       - compile_well_known_types
+      - flat_output_dir
       - extern_path=.google.protobuf=::pbjson_types
-  - plugin: buf.build/community/neoeinstein-prost-serde:v0.3.1
+  - remote: buf.build/community/neoeinstein-prost-serde:v0.4.0
     out: proto/gen
     opt:
+      - flat_output_dir
       - extern_path=.google.protobuf=::pbjson_types
-  - plugin: buf.build/community/neoeinstein-tonic:v0.4.1
+  - remote: buf.build/community/neoeinstein-tonic:v0.5.0
     out: proto/gen
     opt:
       - compile_well_known_types
+      - flat_output_dir
       - extern_path=.google.protobuf=::pbjson_types
-  - plugin: buf.build/community/stephenh-ts-proto:v2.3.0
+  - remote: buf.build/community/stephenh-ts-proto:v2.3.0
     out: auraescript/gen
     opt:
+      - flat_output_dir
       - outputEncodeMethods=false
       - outputClientImpl=false
       - lowerCaseServiceMethods=true
