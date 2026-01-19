@@ -18,13 +18,17 @@ use crate::AURAED_RUNTIME;
 use client::AuraeSocket;
 use clone3::Flags;
 use nix::{
+    errno::Errno,
     libc::SIGCHLD,
-    sys::signal::{Signal, Signal::SIGKILL, Signal::SIGTERM},
+    sys::{
+        signal::{Signal, Signal::SIGKILL, Signal::SIGTERM},
+        wait::{WaitStatus, waitpid},
+    },
     unistd::Pid,
 };
 use std::path::PathBuf;
 use std::{
-    io::{self, ErrorKind},
+    io,
     os::unix::process::{CommandExt, ExitStatusExt},
     process::{Command, ExitStatus},
 };
@@ -136,9 +140,7 @@ impl NestedAuraed {
         }
 
         // Execute the clone system call and create the new process with the relevant namespaces.
-        match unsafe { clone.call() }
-            .map_err(|e| io::Error::from_raw_os_error(e.0))?
-        {
+        match unsafe { clone.call() }? {
             0 => {
                 // child
                 let command = {
@@ -187,33 +189,67 @@ impl NestedAuraed {
     ) -> io::Result<()> {
         let signal = signal.into();
         let pid = Pid::from_raw(self.process.pid);
-
-        nix::sys::signal::kill(pid, signal)
-            .map_err(|e| io::Error::from_raw_os_error(e as i32))
+        nix::sys::signal::kill(pid, signal)?;
+        Ok(())
     }
 
     fn wait(&mut self) -> io::Result<ExitStatus> {
         let pid = Pid::from_raw(self.process.pid);
 
-        let mut exit_status = 0;
-        let _child_pid = loop {
-            let res =
-                unsafe { libc::waitpid(pid.as_raw(), &mut exit_status, 0) };
-
-            if res == -1 {
-                let err = io::Error::last_os_error();
-                match err.kind() {
-                    ErrorKind::Interrupted => continue,
-                    _ => break Err(err),
-                }
+        let status = loop {
+            match waitpid(pid, None) {
+                Ok(status) => break status,
+                Err(Errno::EINTR) => continue,
+                Err(e) => return Err(e.into()),
             }
+        };
 
-            break Ok(res);
-        }?;
-
-        let exit_status = ExitStatus::from_raw(exit_status);
-
-        trace!("Pid {pid} exited with status {exit_status}");
+        let exit_status = match status {
+            WaitStatus::Exited(_, code) => {
+                trace!("Pid {pid} exited with code {code}");
+                ExitStatus::from_raw(code << 8)
+            }
+            WaitStatus::Signaled(_, sig, core_dumped) => {
+                if core_dumped {
+                    error!("Pid {pid} killed by signal {sig} (core dumped)");
+                } else {
+                    trace!("Pid {pid} killed by signal {sig}");
+                }
+                ExitStatus::from_raw(sig as i32)
+            }
+            WaitStatus::Stopped(_, sig) => {
+                error!("Pid {pid} unexpectedly stopped by signal {sig}");
+                return Err(io::Error::other(format!(
+                    "process {pid} stopped by signal {sig}"
+                )));
+            }
+            WaitStatus::Continued(_) => {
+                error!("Pid {pid} unexpectedly continued");
+                return Err(io::Error::other(format!(
+                    "process {pid} continued unexpectedly"
+                )));
+            }
+            WaitStatus::PtraceEvent(_, sig, event) => {
+                error!(
+                    "Pid {pid} unexpected ptrace event {event} (signal {sig})"
+                );
+                return Err(io::Error::other(format!(
+                    "unexpected ptrace event for process {pid}"
+                )));
+            }
+            WaitStatus::PtraceSyscall(_) => {
+                error!("Pid {pid} unexpected ptrace syscall-stop");
+                return Err(io::Error::other(format!(
+                    "unexpected ptrace syscall-stop for process {pid}"
+                )));
+            }
+            WaitStatus::StillAlive => {
+                error!("Pid {pid} still alive after waitpid");
+                return Err(io::Error::other(format!(
+                    "process {pid} still alive after waitpid"
+                )));
+            }
+        };
 
         Ok(exit_status)
     }

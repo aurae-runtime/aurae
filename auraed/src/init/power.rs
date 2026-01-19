@@ -23,7 +23,7 @@ use std::{
 };
 use tracing::{info, trace, warn};
 
-use ::libc;
+use nix::libc;
 
 pub(crate) fn syscall_reboot(action: i32) {
     unsafe {

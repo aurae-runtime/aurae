@@ -16,6 +16,7 @@ use std::{collections::HashMap, net::Ipv4Addr};
 
 use anyhow::anyhow;
 use net_util::MacAddr;
+use nix::libc;
 use tracing::error;
 use vmm_sys_util::{rand, signal::block_signal};
 

@@ -18,7 +18,7 @@ use std::sync::{
 };
 
 use hypervisor::Hypervisor;
-use libc::EFD_NONBLOCK;
+use nix::libc::EFD_NONBLOCK;
 use vmm::{VmmThreadHandle, api::ApiRequest};
 use vmm_sys_util::eventfd::EventFd;
 

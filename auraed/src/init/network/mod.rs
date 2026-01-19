@@ -15,9 +15,9 @@
 
 use futures::stream::TryStreamExt;
 use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
-use libc::EEXIST;
 use netlink_packet_route::address::AddressAttribute;
 use netlink_packet_route::link::LinkAttribute;
+use nix::libc::EEXIST;
 use rtnetlink::{Handle, LinkUnspec, RouteMessageBuilder};
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
