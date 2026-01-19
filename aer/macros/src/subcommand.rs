@@ -383,7 +383,7 @@ fn resolve_fields<'a>(
             let field_ident = Ident::new(f.name(), span);
 
             match FieldType::resolve(f, panic_on_issue) {
-                FieldType::Primitive | FieldType::VecPrimitive => {
+                FieldType::Primitive => {
                     let type_ident =
                         proto_reader::helpers::to_rust_type(f.type_(), span);
 
@@ -397,6 +397,19 @@ fn resolve_fields<'a>(
                         attribute: quote! { #[arg(long)] },
                         field_ident: vec![field_ident].into(),
                         type_ident,
+                    }]
+                }
+                FieldType::VecPrimitive => {
+                    // For repeated primitive fields (e.g., `repeated string kernel_args`),
+                    // generate a Vec<T> type and use clap's Append action to allow
+                    // multiple values: --kernel-args "arg1" --kernel-args "arg2"
+                    let inner_type =
+                        proto_reader::helpers::to_rust_type(f.type_(), span);
+
+                    vec![ResolvedField {
+                        attribute: quote! { #[arg(long, action = clap::ArgAction::Append)] },
+                        field_ident: vec![field_ident].into(),
+                        type_ident: quote! { Vec<#inner_type> },
                     }]
                 }
                 FieldType::Message | FieldType::VecMessage => {
@@ -438,20 +451,13 @@ fn write_mapping(
     fn write_value_from_field(
         command_field_parts: &mut VecDeque<String>,
         mapping: &mut String,
-        field: &FieldDescriptorProto,
-        panic_on_issue: bool,
+        _field: &FieldDescriptorProto,
+        _panic_on_issue: bool,
     ) {
-        let field_type = FieldType::resolve(field, panic_on_issue);
-        if let FieldType::VecPrimitive = field_type {
-            mapping.push_str("vec![");
-        }
-
+        // For VecPrimitive fields, the CLI arg is already a Vec<T> (via ArgAction::Append),
+        // so we can pass it directly without wrapping in vec![].
+        // For Primitive fields, we just pass the value as-is.
         mapping.push_str(&command_field_parts.iter().join("_"));
-
-        if let FieldType::VecPrimitive = field_type {
-            mapping.push(']');
-        }
-
         mapping.push(',');
     }
 
