@@ -242,7 +242,7 @@ pub async fn run(
         };
 
         // Build gRPC Services
-        let (mut health_reporter, health_service) =
+        let (health_reporter, health_service) =
             tonic_health::server::health_reporter();
 
         let observe_service = ObserveService::new(
