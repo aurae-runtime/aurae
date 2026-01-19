@@ -368,8 +368,10 @@ mod tests {
         );
 
         let custom_runtime_dir = PathBuf::from("/tmp/aurae-test-runtime");
-        let mut runtime = AuraedRuntime::default();
-        runtime.runtime_dir = custom_runtime_dir.clone();
+        let runtime = AuraedRuntime {
+            runtime_dir: custom_runtime_dir.clone(),
+            ..Default::default()
+        };
         assert_eq!(
             runtime.default_socket_address(),
             custom_runtime_dir.join("aurae.sock")

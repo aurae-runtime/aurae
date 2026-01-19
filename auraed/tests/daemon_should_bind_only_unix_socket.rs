@@ -31,15 +31,17 @@ use test_helpers::*;
 fn tcp_addrs_available_before_spawn() -> Vec<SocketAddr> {
     ["127.0.0.1:8080", "[::1]:8080"]
         .into_iter()
-        .filter_map(|addr| addr.parse::<SocketAddr>().ok())
-        .filter_map(|addr| match TcpListener::bind(addr) {
-            Ok(listener) => {
-                drop(listener);
-                Some(addr)
+        .filter_map(|addr| {
+            let addr = addr.parse::<SocketAddr>().ok()?;
+            match TcpListener::bind(addr) {
+                Ok(listener) => {
+                    drop(listener);
+                    Some(addr)
+                }
+                Err(e) if e.kind() == io::ErrorKind::AddrInUse => None,
+                Err(e) if e.kind() == io::ErrorKind::AddrNotAvailable => None,
+                Err(e) => panic!("unexpected error probing {addr}: {e}"),
             }
-            Err(e) if e.kind() == io::ErrorKind::AddrInUse => None,
-            Err(e) if e.kind() == io::ErrorKind::AddrNotAvailable => None,
-            Err(e) => panic!("unexpected error probing {addr}: {e}"),
         })
         .collect()
 }
@@ -90,7 +92,7 @@ fn auraed_daemon_mode_should_bind_only_unix_socket() {
     // Default daemon mode should not open the documented TCP endpoint ([::1]:8080 or 127.0.0.1:8080).
     // Only check addresses that were free before spawning auraed to avoid false positives from other services.
     for addr in tcp_addrs {
-        let tcp_result = TcpListener::bind(addr).map(|listener| drop(listener));
+        let tcp_result = TcpListener::bind(addr).map(drop);
         assert!(
             tcp_result.is_ok(),
             "expected no TCP listener at {addr}, but binding failed after starting auraed"

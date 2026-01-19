@@ -136,7 +136,7 @@ fn wait_for_tcp_listener(pid: u32, log_path: &Path, timeout: Duration) -> bool {
         if logs.contains("TCP Access Socket created") {
             return true;
         }
-        if !std::fs::metadata(format!("/proc/{pid}")).is_ok() {
+        if std::fs::metadata(format!("/proc/{pid}")).is_err() {
             panic!("auraed pid {pid} exited early. logs:\n{}", logs);
         }
         thread::sleep(Duration::from_millis(50));
@@ -150,10 +150,10 @@ fn wait_for_pid_file(dir: &Path, timeout: Duration) -> u32 {
     let pidfile = dir.join("runtime").join("auraed.pid");
     let start = Instant::now();
     while start.elapsed() < timeout {
-        if let Ok(contents) = std::fs::read_to_string(&pidfile) {
-            if let Ok(pid) = contents.trim().parse::<u32>() {
-                return pid;
-            }
+        if let Ok(contents) = std::fs::read_to_string(&pidfile)
+            && let Ok(pid) = contents.trim().parse::<u32>()
+        {
+            return pid;
         }
         thread::sleep(Duration::from_millis(50));
     }
@@ -167,15 +167,13 @@ fn assert_ns_pid1(pid: u32) {
     if status.is_empty() {
         panic!("status file {status_path} empty or missing");
     }
-    if !std::fs::metadata(format!("/proc/{pid}")).is_ok() {
+    if std::fs::metadata(format!("/proc/{pid}")).is_err() {
         panic!("process {pid} not alive");
     }
-    if let Some(ns_line) = status.lines().find(|l| l.starts_with("NSpid:")) {
-        if ns_line.split_whitespace().last() != Some("1") {
-            panic!(
-                "expected auraed to be pid 1 in its namespace, got {ns_line}"
-            );
-        }
+    if let Some(ns_line) = status.lines().find(|l| l.starts_with("NSpid:"))
+        && ns_line.split_whitespace().last() != Some("1")
+    {
+        panic!("expected auraed to be pid 1 in its namespace, got {ns_line}");
     }
     // If NSpid missing, we accept the process as long as it is alive; some kernels omit NSpid.
 }

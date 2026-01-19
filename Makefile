@@ -192,7 +192,7 @@ $(1): $(GEN_RS) $(GEN_TS) $(1)-lint $(1)-debug ## Lint and install $(1) (for use
 
 .PHONY: $(1)-lint
 $(1)-lint: fmt $(GEN_RS) $(GEN_TS)
-	$$(cargo) clippy $(2) -p $(1) --all-features -- -D clippy::all -D warnings
+	$$(cargo) clippy $(2) -p $(1) --all-features --all-targets -- -D clippy::all -D warnings
 
 .PHONY: $(1)-test
 $(1)-test: $(GEN_RS) $(GEN_TS) $(1)-lint auraed-debug
