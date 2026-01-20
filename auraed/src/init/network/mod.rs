@@ -16,10 +16,11 @@
 use futures::stream::TryStreamExt;
 use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
 use libc::EEXIST;
-use netlink_packet_route::rtnl::link::nlas::Nla;
-use rtnetlink::Handle;
+use netlink_packet_route::address::AddressAttribute;
+use netlink_packet_route::link::LinkAttribute;
+use rtnetlink::{Handle, LinkUnspec, RouteMessageBuilder};
 use std::collections::HashMap;
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str;
 use std::thread;
 use std::time::Duration;
@@ -159,8 +160,8 @@ async fn configure_nic(
     add_route_v6(
         handle,
         config.device.clone(),
-        "::/0".parse::<Ipv6Network>().expect("valid ipv6 address"),
-        gateway,
+        &"::/0".parse::<Ipv6Network>().expect("valid ipv6 address"),
+        &gateway,
     )
     .await?;
 
@@ -206,11 +207,11 @@ async fn set_link_up(
     iface: String,
 ) -> Result<(), NetworkError> {
     let link_index = get_link_index(handle, iface.clone()).await?;
+    let msg = LinkUnspec::new_with_index(link_index).up().build();
 
     handle
         .link()
-        .set(link_index)
-        .up()
+        .set(msg)
         .execute()
         .await
         .map(|_| {
@@ -229,11 +230,11 @@ async fn set_link_down(
     iface: String,
 ) -> Result<(), NetworkError> {
     let link_index = get_link_index(handle, iface.clone()).await?;
+    let msg = LinkUnspec::new_with_index(link_index).down().build();
 
     handle
         .link()
-        .set(link_index)
-        .down()
+        .set(msg)
         .execute()
         .await
         .map(|_| {
@@ -265,26 +266,24 @@ async fn get_link_index(
 async fn add_route_v4(
     handle: &Handle,
     iface: String,
-    source: Ipv4Network,
-    dest: Ipv4Network,
+    source: &Ipv4Network,
+    dest: &Ipv4Network,
 ) -> Result<(), NetworkError> {
     let link_index = get_link_index(handle, iface.clone()).await?;
 
-    handle
-        .route()
-        .add()
-        .v4()
+    let route = RouteMessageBuilder::<Ipv4Addr>::new()
         .destination_prefix(dest.ip(), dest.prefix())
         .output_interface(link_index)
         .pref_source(source.ip())
-        .execute()
-        .await
-        .map_err(|e| NetworkError::ErrorAddingRoute {
+        .build();
+    handle.route().add(route).execute().await.map_err(|e| {
+        NetworkError::ErrorAddingRoute {
             iface,
-            route_source: source.into(),
-            route_destination: dest.into(),
+            route_source: IpNetwork::V4(*source),
+            route_destination: IpNetwork::V4(*dest),
             source: e,
-        })?;
+        }
+    })?;
 
     Ok(())
 }
@@ -292,26 +291,24 @@ async fn add_route_v4(
 async fn add_route_v6(
     handle: &Handle,
     iface: String,
-    source: Ipv6Network,
-    dest: Ipv6Network,
+    source: &Ipv6Network,
+    dest: &Ipv6Network,
 ) -> Result<(), NetworkError> {
     let link_index = get_link_index(handle, iface.clone()).await?;
 
-    handle
-        .route()
-        .add()
-        .v6()
-        .source_prefix(source.ip(), source.prefix())
-        .gateway(dest.ip())
+    let route = RouteMessageBuilder::<Ipv6Addr>::new()
+        .destination_prefix(dest.ip(), dest.prefix())
         .output_interface(link_index)
-        .execute()
-        .await
-        .map_err(|e| NetworkError::ErrorAddingRoute {
+        .pref_source(source.ip())
+        .build();
+    handle.route().add(route).execute().await.map_err(|e| {
+        NetworkError::ErrorAddingRoute {
             iface,
-            route_source: source.into(),
-            route_destination: dest.into(),
+            route_source: IpNetwork::V6(*source),
+            route_destination: IpNetwork::V6(*dest),
             source: e,
-        })?;
+        }
+    })?;
 
     Ok(())
 }
@@ -323,8 +320,8 @@ async fn get_links(
     let mut links = handle.link().get().execute();
 
     'outer: while let Some(link_msg) = links.try_next().await? {
-        for nla in link_msg.nlas.into_iter() {
-            if let Nla::IfName(name) = nla {
+        for nla in link_msg.attributes.into_iter() {
+            if let LinkAttribute::IfName(name) = nla {
                 let _ = result.insert(link_msg.header.index, name);
                 continue 'outer;
             }
@@ -342,8 +339,8 @@ async fn dump_addresses(
     let mut links = handle.link().get().match_name(iface.to_string()).execute();
     if let Some(link_msg) = links.try_next().await? {
         info!("{}:", iface);
-        for nla in link_msg.nlas.into_iter() {
-            if let Nla::IfName(name) = nla {
+        for nla in link_msg.attributes.into_iter() {
+            if let LinkAttribute::IfName(name) = nla {
                 info!("\tindex: {}", link_msg.header.index);
                 info!("\tname: {name}");
             }
@@ -356,29 +353,15 @@ async fn dump_addresses(
             .execute();
 
         while let Some(msg) = address_msg.try_next().await? {
-            for nla_address in msg.nlas.into_iter() {
-                if let netlink_packet_route::address::Nla::Address(addr) =
-                    nla_address
-                {
-                    let ip_addr = addr.try_into()
-                        .map(|ip: [u8; 4]| Some(IpAddr::from(ip)))
-                        .unwrap_or_else(|addr| {
-                            addr.try_into()
-                                .map(|ip: [u8; 16]| Some(IpAddr::from(ip)))
-                                .unwrap_or_else(|addr| {
-                                    warn!("Could not Convert vec: {addr:?} to ipv4 or ipv6");
-                                    None
-                                })
-                        });
-
-                    match &ip_addr {
-                        Some(IpAddr::V4(ip_addr)) => {
+            for nla_address in msg.attributes.into_iter() {
+                if let AddressAttribute::Address(addr) = nla_address {
+                    match &addr {
+                        IpAddr::V4(ip_addr) => {
                             info!("\t ipv4: {ip_addr}");
                         }
-                        Some(IpAddr::V6(ip_addr)) => {
+                        IpAddr::V6(ip_addr) => {
                             info!("\t ipv6: {ip_addr}");
                         }
-                        None => {}
                     }
                 }
             }
