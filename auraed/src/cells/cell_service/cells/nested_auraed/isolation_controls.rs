@@ -13,8 +13,8 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-use libc::c_char;
-use std::io::{self};
+use nix::libc::{c_char, setdomainname};
+use std::io;
 use std::path::PathBuf;
 use tracing::info;
 
@@ -43,13 +43,12 @@ impl Isolation {
         // Bind mount root:root with MS_REC and MS_PRIVATE flags
         // We are not sharing the mounts at this point (in other words we are in a new mount namespace)
         nix::mount::mount(
-            None::<&str>, // ignored
+            None::<&str>,
             "/",
-            None::<&str>, // ignored
+            None::<&str>,
             nix::mount::MsFlags::MS_PRIVATE | nix::mount::MsFlags::MS_REC,
-            None::<&str>, // ignored
-        )
-        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+            None::<&str>,
+        )?;
         info!("Isolation: Mounted root dir (/) in cell");
         Ok(())
     }
@@ -62,7 +61,7 @@ impl Isolation {
             return Ok(());
         }
 
-        //Mount proc in the new pid and mount namespace
+        // Mount proc in the new pid and mount namespace
         let target = PathBuf::from("/proc");
         nix::mount::mount(
             Some("/proc"),
@@ -70,29 +69,15 @@ impl Isolation {
             Some("proc"),
             nix::mount::MsFlags::empty(),
             None::<&str>,
-        )
-        .map_err(|e| io::Error::from_raw_os_error(e as i32))?;
+        )?;
 
         // We are in a new UTS namespace so we manage hostname and domainname.
-        // hostname and domainname both allow null bytes and are not required to be null terminated.
-        if unsafe {
-            #[allow(trivial_casts)]
-            libc::sethostname(
-                self.name.as_ptr() as *const c_char,
-                self.name.len(),
-            )
-        } == -1
-        {
-            return Err(io::Error::last_os_error());
-        }
+        nix::unistd::sethostname(&self.name)?;
 
         // Set domainname
         if unsafe {
             #[allow(trivial_casts)]
-            libc::setdomainname(
-                self.name.as_ptr() as *const c_char,
-                self.name.len(),
-            )
+            setdomainname(self.name.as_ptr() as *const c_char, self.name.len())
         } == -1
         {
             return Err(io::Error::last_os_error());

@@ -31,7 +31,7 @@ fancy-regex = "0.14.0"
 futures-util = "0.3.28"
 heck = "0.5.0"
 lazy_static = "1.4.0"
-nix = "0.28.0"
+nix = "0.29.0"
 proc-macro2 = "1.0"
 proto = { path = "./proto" }
 proto-reader = { path = "./crates/proto-reader" }
