@@ -16,7 +16,6 @@ use std::{collections::HashMap, net::Ipv4Addr};
 
 use anyhow::anyhow;
 use net_util::MacAddr;
-use nix::libc;
 use tracing::error;
 use vmm_sys_util::{rand, signal::block_signal};
 
@@ -39,10 +38,6 @@ impl Default for VirtualMachines {
 impl VirtualMachines {
     /// Create a new instance of the virtual machines cache.
     pub fn new() -> Self {
-        unsafe {
-            let _ = libc::signal(libc::SIGCHLD, libc::SIG_IGN);
-        }
-
         // Mask the signals handled by the Cloud Hyupervisor VMM so they only run on the dedicated signal handling thread
         for sig in &vmm::vm::Vm::HANDLED_SIGNALS {
             if let Err(e) = block_signal(*sig) {
