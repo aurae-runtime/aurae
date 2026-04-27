@@ -39,9 +39,7 @@ use proto::{
     },
     observe::LogChannelType,
 };
-use std::os::unix::fs::MetadataExt;
-use std::time::Duration;
-use std::{process::ExitStatus, sync::Arc};
+use std::{os::unix::fs::MetadataExt, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 use tonic::{Code, Request, Response, Status};
 use tracing::{info, instrument, trace, warn};
@@ -223,8 +221,7 @@ impl CellService {
         // Retrieve the process ID (PID) of the started executable
         let pid = executable
             .pid()
-            .map_err(CellsServiceError::Io)?
-            .expect("pid")
+            .expect("started executable has captured pid")
             .as_raw();
 
         // Register the stdout log channel for the executable's PID
@@ -290,28 +287,24 @@ impl CellService {
         assert!(cell_name.is_none());
         info!("CellService: stop() executable_name={:?}", executable_name,);
 
-        let pid = {
+        let (pid, stop_result) = {
             let mut executables = self.executables.lock().await;
 
-            // Retrieve the process ID (PID) of the executable to be stopped
+            // pid is captured at spawn (see Executable::start), so it is
+            // available for cache entries regardless of whether Tokio has
+            // already reaped the leader.
             let pid = executables
                 .get(&executable_name)
                 .map_err(CellsServiceError::ExecutablesError)?
                 .pid()
-                .map_err(CellsServiceError::Io)?
-                .expect("pid")
+                .expect("started executable has captured pid")
                 .as_raw();
 
-            // Stop the executable and handle any errors
-            let _: ExitStatus = executables
-                .stop(&executable_name)
-                .await
-                .map_err(CellsServiceError::ExecutablesError)?;
+            let result = executables.stop(&executable_name).await;
 
-            pid
+            (pid, result)
         };
 
-        // Remove the executable's logs from the observe service.
         if let Err(e) = self
             .observe_service
             .unregister_sub_process_channel(pid, LogChannelType::Stdout)
@@ -327,7 +320,18 @@ impl CellService {
             warn!("failed to unregister stderr channel for pid {pid}: {e}");
         }
 
-        Ok(Response::new(CellServiceStopResponse::default()))
+        use super::executables::ExecutablesError;
+        match stop_result {
+            Ok(_)
+            | Err(ExecutablesError::ExecutableNotFound { .. })
+            | Err(ExecutablesError::ExecutableAlreadyExited { .. }) => {
+                Ok(Response::new(CellServiceStopResponse::default()))
+            }
+            Err(e) => Err(Status::internal(format!(
+                "executable '{}' failed to stop: {}",
+                executable_name, e
+            ))),
+        }
     }
 
     #[tracing::instrument(skip(self))]

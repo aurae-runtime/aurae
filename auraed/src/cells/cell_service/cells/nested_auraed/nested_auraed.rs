@@ -189,8 +189,11 @@ impl NestedAuraed {
     ) -> io::Result<()> {
         let signal = signal.into();
         let pid = Pid::from_raw(self.process.pid);
-        nix::sys::signal::kill(pid, signal)?;
-        Ok(())
+
+        match nix::sys::signal::kill(pid, signal) {
+            Ok(()) | Err(Errno::ESRCH) => Ok(()),
+            Err(e) => Err(io::Error::from(e)),
+        }
     }
 
     fn wait(&mut self) -> io::Result<ExitStatus> {

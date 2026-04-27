@@ -14,6 +14,7 @@
 \* -------------------------------------------------------------------------- */
 use super::{ExecutableName, ExecutableSpec};
 use crate::logging::log_channel::LogChannel;
+use nix::sys::signal::{Signal, killpg};
 use nix::unistd::Pid;
 use std::{
     ffi::OsString,
@@ -34,6 +35,9 @@ pub struct Executable {
     pub stdout: LogChannel,
     pub stderr: LogChannel,
     state: ExecutableState,
+    // Captured at spawn so killpg targets the right group even after Tokio
+    // internally reaps the leader (which clears `Child::id()`).
+    pid: Option<Pid>,
 }
 
 #[derive(Debug)]
@@ -59,7 +63,7 @@ impl Executable {
         let state = ExecutableState::Init { command };
         let stdout = LogChannel::new(format!("{name}::stdout"));
         let stderr = LogChannel::new(format!("{name}::stderr"));
-        Self { name, description, stdout, stderr, state }
+        Self { name, description, stdout, stderr, state, pid: None }
     }
 
     /// Starts the underlying process.
@@ -77,7 +81,9 @@ impl Executable {
             .kill_on_drop(true)
             .current_dir("/")
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+            .stderr(Stdio::piped())
+            .process_group(0);
+
         if let Some(uid) = uid {
             command = command.uid(uid);
         }
@@ -85,6 +91,7 @@ impl Executable {
             command = command.gid(gid);
         }
         let mut child = command.spawn()?;
+        self.pid = child.id().map(|id| Pid::from_raw(id as i32));
 
         let log_channel = self.stdout.clone();
         let stdout = child.stdout.take().expect("stdout");
@@ -140,26 +147,36 @@ impl Executable {
     /// Stops the executable and returns the [ExitStatus].
     /// If the executable has never been started, returns [None].
     pub async fn kill(&mut self) -> io::Result<Option<ExitStatus>> {
+        // Pid is captured at spawn (Pid is Copy), so we can use it even
+        // after Tokio internally reaps the leader.
+        let captured_pid = self.pid;
         Ok(match &mut self.state {
             ExecutableState::Init { .. } => None,
             ExecutableState::Started { child, stdout, stderr, .. } => {
-                child.kill().await?;
+                // killpg the whole group (PGID == child PID via
+                // process_group(0)); child.kill() would only signal the
+                // leader and orphan grandchildren that joined the group.
+                let killpg_result = killpg(
+                    captured_pid.expect("started exe has captured pid"),
+                    Signal::SIGKILL,
+                )
+                .map_err(io::Error::from);
+                // Always reap and join the reader tasks, even if killpg
+                // failed — otherwise the Child stays un-awaited and the
+                // stdout/stderr handles leak until their pipes close.
                 let exit_status = child.wait().await?;
                 let _ = tokio::join!(stdout, stderr);
                 self.state = ExecutableState::Stopped(exit_status);
+                killpg_result?;
                 Some(exit_status)
             }
             ExecutableState::Stopped(status) => Some(*status),
         })
     }
 
-    /// Returns the [Pid] while [Executable] is running, otherwise returns [None].
-    pub fn pid(&self) -> io::Result<Option<Pid>> {
-        let ExecutableState::Started { child: process, .. } = &self.state
-        else {
-            return Ok(None);
-        };
-
-        Ok(process.id().map(|id| Pid::from_raw(id as i32)))
+    /// Returns the captured [Pid] for executables that have been started.
+    /// Returns [None] before [Executable::start] has been called.
+    pub fn pid(&self) -> Option<Pid> {
+        self.pid
     }
 }

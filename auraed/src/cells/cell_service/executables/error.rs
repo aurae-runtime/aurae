@@ -25,6 +25,8 @@ pub enum ExecutablesError {
     ExecutableExists { executable_name: ExecutableName },
     #[error("executable '{executable_name}' not found")]
     ExecutableNotFound { executable_name: ExecutableName },
+    #[error("executable '{executable_name}' had already exited before stop")]
+    ExecutableAlreadyExited { executable_name: ExecutableName },
     #[error("executable '{executable_name}' failed to start: {source}")]
     FailedToStartExecutable {
         executable_name: ExecutableName,
