@@ -83,7 +83,7 @@ impl CellServiceAllocateRequestBuilder {
     }
 }
 
-struct ExecutableBuilder {
+pub struct ExecutableBuilder {
     name: String,
     command: String,
     description: String,
@@ -100,6 +100,11 @@ impl ExecutableBuilder {
 
     pub fn executable_name(&mut self, name: String) -> &mut Self {
         self.name = name;
+        self
+    }
+
+    pub fn command(&mut self, command: String) -> &mut Self {
+        self.command = command;
         self
     }
 
@@ -136,6 +141,11 @@ impl CellServiceStartRequestBuilder {
 
     pub fn executable_name(&mut self, name: String) -> &mut Self {
         let _ = self.executable_builder.executable_name(name);
+        self
+    }
+
+    pub fn command(&mut self, command: String) -> &mut Self {
+        let _ = self.executable_builder.command(command);
         self
     }
 

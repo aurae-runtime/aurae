@@ -63,7 +63,8 @@ impl From<CellsServiceError> for Status {
                 ExecutablesError::ExecutableExists { .. } => {
                     Status::already_exists(msg)
                 }
-                ExecutablesError::ExecutableNotFound { .. } => {
+                ExecutablesError::ExecutableNotFound { .. }
+                | ExecutablesError::ExecutableAlreadyExited { .. } => {
                     Status::not_found(msg)
                 }
                 ExecutablesError::FailedToStartExecutable { .. }

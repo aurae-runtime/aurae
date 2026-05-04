@@ -16,7 +16,9 @@
 use super::{
     Executable, ExecutableName, ExecutableSpec, ExecutablesError, Result,
 };
+use nix::libc;
 use std::{collections::HashMap, process::ExitStatus};
+use tracing::warn;
 
 type Cache = HashMap<ExecutableName, Executable>;
 
@@ -82,37 +84,53 @@ impl Executables {
             });
         };
 
-        let exit_status = executable.kill().await.map_err(|e| {
-            ExecutablesError::FailedToStopExecutable {
+        match executable.kill().await {
+            Ok(Some(status)) => {
+                let _ = self.cache.remove(executable_name);
+                Ok(status)
+            }
+            Ok(None) => {
+                // Cache invariant: only started executables are inserted
+                // into the cache (see `start` above), so kill() on a cached
+                // entry cannot return Ok(None).
+                unreachable!(
+                    "executable {executable_name:?} is in cache without \
+                     having been started"
+                );
+            }
+            Err(e)
+                if matches!(
+                    e.raw_os_error(),
+                    Some(libc::ESRCH) | Some(libc::ECHILD)
+                ) =>
+            {
+                // killpg ESRCH (group already empty) or wait ECHILD (kernel
+                // already reaped). Process is gone; evict and report
+                // distinctly so callers can render stop idempotent without
+                // collapsing this with "name not in cache".
+                warn!(
+                    "executable {executable_name:?} already exited before \
+                     stop: {e}"
+                );
+                let _ = self.cache.remove(executable_name);
+                Err(ExecutablesError::ExecutableAlreadyExited {
+                    executable_name: executable_name.clone(),
+                })
+            }
+            Err(e) => Err(ExecutablesError::FailedToStopExecutable {
                 executable_name: executable_name.clone(),
                 source: e,
-            }
-        })?;
-
-        let Some(exit_status) = exit_status else {
-            // Exes that never started return None
-            let executable =
-                self.cache.remove(executable_name).expect("exe in cache");
-            return Err(ExecutablesError::ExecutableNotFound {
-                executable_name: executable.name,
-            });
-        };
-
-        let _ = self.cache.remove(executable_name).ok_or_else(|| {
-            // get_mut would have already thrown this error, so we should never reach here
-            ExecutablesError::ExecutableNotFound {
-                executable_name: executable_name.clone(),
-            }
-        })?;
-
-        Ok(exit_status)
+            }),
+        }
     }
 
     /// Stops all executables concurrently
     pub async fn broadcast_stop(&mut self) {
         let mut names = vec![];
         for exe in self.cache.values_mut() {
-            let _ = exe.kill().await;
+            if let Err(e) = exe.kill().await {
+                warn!("broadcast_stop: failed to kill {:?}: {e}", exe.name);
+            }
             names.push(exe.name.clone())
         }
 
@@ -129,9 +147,16 @@ mod tests {
     use tokio::process::Command;
 
     fn spec_for(name: &ExecutableName) -> ExecutableSpec {
+        spec_with_command(name, "sleep 60")
+    }
+
+    fn spec_with_command(
+        name: &ExecutableName,
+        sh_arg: &str,
+    ) -> ExecutableSpec {
         let mut command = Command::new("sh");
         let _ = command.arg("-c");
-        let _ = command.arg("sleep 60");
+        let _ = command.arg(sh_arg);
         ExecutableSpec {
             name: name.clone(),
             description: format!("test executable {name}"),
@@ -150,8 +175,10 @@ mod tests {
         let executable = executables
             .start(spec_for(&exe_name), None, None)
             .expect("start executable");
-        let pid = executable.pid().expect("read pid");
-        assert!(pid.is_some(), "expected spawned process to expose a pid");
+        assert!(
+            executable.pid().is_some(),
+            "expected spawned process to expose a pid"
+        );
 
         let err = executables
             .start(spec_for(&exe_name), None, None)
@@ -166,6 +193,72 @@ mod tests {
         assert!(
             status.success() || status.signal() == Some(9),
             "expected graceful stop or SIGKILL, got status {status:?}"
+        );
+    }
+
+    /// Stopping a short-lived executable that has already finished running
+    /// must still return Ok (the cache holds the Stopped state) and must
+    /// evict the cache entry.
+    #[tokio::test]
+    async fn stop_after_natural_exit_returns_ok_and_evicts() {
+        let mut executables = Executables::default();
+        let exe_name = ExecutableName::new(format!(
+            "unit-test-self-exit-{}",
+            uuid::Uuid::new_v4()
+        ));
+
+        let pid = executables
+            .start(spec_with_command(&exe_name, "true"), None, None)
+            .expect("start executable")
+            .pid()
+            .expect("captured pid")
+            .as_raw();
+
+        // Give the leader time to exit. It will sit as a zombie until
+        // child.wait() is called inside stop(); we just need to ensure the
+        // process has actually finished its work before we test stop().
+        let deadline =
+            std::time::Instant::now() + std::time::Duration::from_secs(5);
+        while std::fs::metadata(format!("/proc/{pid}/cmdline"))
+            .map(|_| true)
+            .unwrap_or(false)
+            && std::time::Instant::now() < deadline
+        {
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+
+        let _ = executables
+            .stop(&exe_name)
+            .await
+            .expect("stop after natural exit should be Ok");
+
+        // Cache must have been evicted, so a second stop reports
+        // ExecutableNotFound (the cache-miss variant), distinct from
+        // ExecutableAlreadyExited.
+        let err = executables
+            .stop(&exe_name)
+            .await
+            .expect_err("second stop should report ExecutableNotFound");
+        assert!(
+            matches!(err, ExecutablesError::ExecutableNotFound { .. }),
+            "expected ExecutableNotFound after eviction, got {err:?}"
+        );
+    }
+
+    /// Stopping a name that was never inserted must return ExecutableNotFound,
+    /// not the already-exited variant.
+    #[tokio::test]
+    async fn stop_unknown_name_returns_not_found() {
+        let mut executables = Executables::default();
+        let exe_name = ExecutableName::new("never-started".to_string());
+
+        let err = executables
+            .stop(&exe_name)
+            .await
+            .expect_err("stop on unknown name should fail");
+        assert!(
+            matches!(err, ExecutablesError::ExecutableNotFound { .. }),
+            "expected ExecutableNotFound, got {err:?}"
         );
     }
 }
