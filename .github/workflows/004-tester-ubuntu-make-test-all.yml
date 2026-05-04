@@ -35,12 +35,13 @@
 #   build:
 #     runs-on: ubuntu-latest
 #     steps:
-#       - uses: actions/checkout@v3
-#       - uses: bufbuild/buf-setup-action@v1
+#       - uses: actions/checkout@v6
+#       - uses: bufbuild/buf-action@v1
 #         with:
+#           setup_only: true
 #           github_token: ${{ github.token }}
 #           version: 1.63.0
-#       - uses: actions/cache@v3
+#       - uses: actions/cache@v5
 #         with:
 #           path: |
 #             ~/.cargo/bin/
