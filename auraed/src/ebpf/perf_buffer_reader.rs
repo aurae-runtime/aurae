@@ -16,13 +16,16 @@
 use anyhow::Context;
 use aya::{
     Ebpf,
-    maps::perf::AsyncPerfEventArray,
+    maps::perf::PerfEventArray,
     util::{nr_cpus, online_cpus},
 };
 use bytes::BytesMut;
 use procfs::page_size;
 use std::mem::size_of;
-use tokio::sync::broadcast;
+use tokio::{
+    io::{Interest, unix::AsyncFd},
+    sync::broadcast,
+};
 use tracing::{error, trace};
 
 use super::perf_event_broadcast::PerfEventBroadcast;
@@ -66,7 +69,7 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
         // kernel to userspace. This array contains the per-CPU buffers and is
         // indexed by CPU id.
         // https://libbpf.readthedocs.io/en/latest/api.html
-        let mut perf_array = AsyncPerfEventArray::try_from(
+        let mut perf_array = PerfEventArray::try_from(
             bpf.take_map(perf_buffer)
                 .context("Failed to find '{perf_buffer}' perf event array")?,
         )?;
@@ -81,8 +84,10 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
         for cpu_id in online_cpus {
             trace!("spawning task for cpu {cpu_id}");
             // Open the per-CPU buffer for the current CPU id
-            let mut per_cpu_buffer =
+            let per_cpu_buffer =
                 perf_array.open(cpu_id, Some(PER_CPU_BUFFER_SIZE_IN_PAGES))?;
+            let mut fd =
+                AsyncFd::with_interest(per_cpu_buffer, Interest::READABLE)?;
 
             // Clone the sender of the event broadcast channel
             let per_cpu_tx = tx.clone();
@@ -99,9 +104,13 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
 
                 // Start polling the per-CPU buffer for events
                 loop {
-                    let events = match per_cpu_buffer
-                        .read_events(&mut buffers)
+                    let mut guard = fd
+                        .readable_mut()
                         .await
+                        .expect("Failed to read from per-CPU event buffer");
+                    let events = match guard
+                        .get_inner_mut()
+                        .read_events(&mut buffers)
                     {
                         Ok(events) => events,
                         Err(error) => {
