@@ -16,7 +16,7 @@
 pub use cell::Cell;
 pub use cell_name::CellName;
 pub use cells::Cells;
-pub use cells_cache::CellsCache;
+pub(crate) use cells_cache::CellsCache;
 use cgroups::CgroupSpec;
 pub use error::{CellsError, Result};
 pub use nested_auraed::IsolationControls;

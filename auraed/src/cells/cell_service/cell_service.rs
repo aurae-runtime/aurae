@@ -144,10 +144,10 @@ impl CellService {
 
         let mut cells = self.cells.lock().await;
 
-        let cell = cells.allocate(cell_name, cell_spec)?;
+        let cell = cells.allocate(cell_name, cell_spec).await?;
 
         Ok(CellServiceAllocateResponse {
-            cell_name: cell.name().clone().to_string(),
+            cell_name: cell.name().to_string(),
             cgroup_v2: cell.v2().expect("allocated cell returns `Some`"),
         })
     }
@@ -170,7 +170,7 @@ impl CellService {
 
         let mut cells = self.cells.lock().await;
 
-        cells.free(&cell_name)?;
+        cells.free(&cell_name).await?;
 
         Ok(CellServiceFreeResponse::default())
     }
@@ -180,7 +180,7 @@ impl CellService {
         let mut cells = self.cells.lock().await;
 
         // Attempt to gracefully free all cells
-        cells.broadcast_free();
+        cells.broadcast_free().await;
 
         // The cells that remain failed to shut down for some reason.
         // Forcefully kill any remaining cells that failed to shut down
