@@ -18,44 +18,12 @@ use super::{
     nested_auraed::NestedAuraed,
 };
 use client::AuraeSocket;
+use std::io;
 use tracing::info;
 
 // TODO https://github.com/aurae-runtime/aurae/issues/199 &&
 //      aurae.io/signals, which is more accurate
 // TODO nested auraed should proxy (bus) POSIX signals to child executables
-
-macro_rules! do_free {
-    (
-        $self:ident,
-        $nested_auraed_call:ident($($nested_auraed_call_arg:ident),*),
-        $($children_call:ident($($children_call_arg:ident),*)),*
-    ) => {{
-        if let CellState::Allocated { cgroup, nested_auraed, children } =
-            &mut $self.state
-        {
-            $(children.$children_call($($children_call_arg),*));*;
-
-            let _exit_status = nested_auraed
-                .$nested_auraed_call($($nested_auraed_call_arg),*)
-                .map_err(|e| {
-                    CellsError::FailedToKillCellChildren {
-                        cell_name: $self.cell_name.clone(),
-                        source: e,
-                    }
-                })?;
-
-            cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
-                cell_name: $self.cell_name.clone(),
-                source: e,
-            })?;
-        }
-
-        // set cell state to freed, independent of the current state
-        $self.state = CellState::Freed;
-
-        Ok(())
-    }};
-}
 
 // We should not be able to change a cell after it has been created.
 // You must free the cell and create a new one if you want to change anything about the cell.
@@ -81,10 +49,30 @@ impl Cell {
         Self { cell_name, spec: cell_spec, state: CellState::Unallocated }
     }
 
+    /// Signal the nested auraed and delete the cgroup. Shared by
+    /// `free` (graceful `shutdown`) and `kill` (forceful `kill`).
+    fn teardown_process_and_cgroup(
+        cell_name: &CellName,
+        cgroup: &Cgroup,
+        signal: impl FnOnce() -> io::Result<std::process::ExitStatus>,
+    ) -> Result<()> {
+        let _exit_status =
+            signal().map_err(|e| CellsError::FailedToKillCellChildren {
+                cell_name: cell_name.clone(),
+                source: e,
+            })?;
+
+        cgroup.delete().map_err(|e| CellsError::FailedToFreeCell {
+            cell_name: cell_name.clone(),
+            source: e,
+        })?;
+        Ok(())
+    }
+
     /// Creates the underlying cgroup.
     /// Does nothing if [Cell] has been previously allocated.
     // Here is where we define the "default" cgroup parameters for Aurae cells
-    pub fn allocate(&mut self) -> Result<()> {
+    pub(crate) async fn allocate(&mut self) -> Result<()> {
         let CellState::Unallocated = &self.state else {
             return Ok(());
         };
@@ -141,15 +129,39 @@ impl Cell {
     /// The [Cell::state] will be set to [CellState::Freed] regardless of it's state prior to this call.
     ///
     /// A [Cell] should never be reused once in the [CellState::Freed] state.
-    pub fn free(&mut self) -> Result<()> {
-        do_free!(self, shutdown(), broadcast_free())
+    pub(crate) async fn free(&mut self) -> Result<()> {
+        if let CellState::Allocated { cgroup, nested_auraed, children } =
+            &mut self.state
+        {
+            children.broadcast_free().await;
+            Self::teardown_process_and_cgroup(&self.cell_name, cgroup, || {
+                nested_auraed.shutdown()
+            })?;
+        }
+
+        // set cell state to freed, independent of the current state
+        self.state = CellState::Freed;
+        Ok(())
     }
 
     /// Sends a [SIGKILL] to the [NestedAuraed], and deletes the underlying cgroup.
     /// The [Cell::state] will be set to [CellState::Freed] regardless of it's state prior to this call.
     /// A [Cell] should never be reused once in the [CellState::Freed] state.
+    ///
+    /// Stays synchronous so [`Drop`] can call it.
     pub fn kill(&mut self) -> Result<()> {
-        do_free!(self, kill(), broadcast_kill())
+        if let CellState::Allocated { cgroup, nested_auraed, children } =
+            &mut self.state
+        {
+            children.broadcast_kill();
+            Self::teardown_process_and_cgroup(&self.cell_name, cgroup, || {
+                nested_auraed.kill()
+            })?;
+        }
+
+        // set cell state to freed, independent of the current state
+        self.state = CellState::Freed;
+        Ok(())
     }
 
     pub fn client_socket(&self) -> Result<AuraeSocket> {
@@ -182,7 +194,7 @@ impl Cell {
 }
 
 impl CellsCache for Cell {
-    fn allocate(
+    async fn allocate(
         &mut self,
         cell_name: CellName,
         cell_spec: CellSpec,
@@ -193,17 +205,17 @@ impl CellsCache for Cell {
             });
         };
 
-        children.allocate(cell_name, cell_spec)
+        children.allocate(cell_name, cell_spec).await
     }
 
-    fn free(&mut self, cell_name: &CellName) -> Result<()> {
+    async fn free(&mut self, cell_name: &CellName) -> Result<()> {
         let CellState::Allocated { children, .. } = &mut self.state else {
             return Err(CellsError::CellNotAllocated {
                 cell_name: self.cell_name.clone(),
             });
         };
 
-        children.free(cell_name)
+        children.free(cell_name).await
     }
 
     fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
@@ -231,22 +243,6 @@ impl CellsCache for Cell {
 
         children.get_all(f)
     }
-
-    fn broadcast_free(&mut self) {
-        let CellState::Allocated { children, .. } = &mut self.state else {
-            return;
-        };
-
-        children.broadcast_free()
-    }
-
-    fn broadcast_kill(&mut self) {
-        let CellState::Allocated { children, .. } = &mut self.state else {
-            return;
-        };
-
-        children.broadcast_kill()
-    }
 }
 
 impl Drop for Cell {
@@ -265,8 +261,8 @@ mod tests {
     use crate::{AURAED_RUNTIME, AuraedRuntime};
     use test_helpers::*;
 
-    #[test]
-    fn test_cant_unfree() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_cant_unfree() {
         skip_if_not_root!("test_cant_unfree");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_cant_unfree");
@@ -277,14 +273,14 @@ mod tests {
         let mut cell = Cell::new(cell_name, CellSpec::new_for_tests());
         assert!(matches!(cell.state, CellState::Unallocated));
 
-        cell.allocate().expect("failed to allocate");
+        cell.allocate().await.expect("failed to allocate");
         assert!(matches!(cell.state, CellState::Allocated { .. }));
 
-        cell.free().expect("failed to free");
+        cell.free().await.expect("failed to free");
         assert!(matches!(cell.state, CellState::Freed));
 
         // Calling allocate again should do nothing
-        cell.allocate().expect("failed to allocate 2");
+        cell.allocate().await.expect("failed to allocate 2");
         assert!(matches!(cell.state, CellState::Freed));
     }
 }

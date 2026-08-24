@@ -182,27 +182,36 @@ impl Cgroup {
     }
 
     pub fn delete(&self) -> Result<()> {
-        let leaf = v2::manager::Manager::new(
-            DEFAULT_CGROUP_ROOT.into(),
-            get_leaf_path(&self.cell_name),
-        )
-        .expect("valid cgroup");
+        let leaf_path = get_leaf_path(&self.cell_name);
+        let mut absolute_leaf_path = PathBuf::from(DEFAULT_CGROUP_ROOT);
+        absolute_leaf_path.push(&leaf_path);
+        if absolute_leaf_path.exists() {
+            let leaf = v2::manager::Manager::new(
+                DEFAULT_CGROUP_ROOT.into(),
+                leaf_path,
+            )
+            .expect("valid cgroup");
+            leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
+                cell_name: self.cell_name.clone(),
+                source: e.into(),
+            })?;
+        }
 
-        leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
-            cell_name: self.cell_name.clone(),
-            source: e.into(),
-        })?;
-
-        let non_leaf = v2::manager::Manager::new(
-            DEFAULT_CGROUP_ROOT.into(),
-            self.cell_name.clone().into_inner(),
-        )
-        .expect("valid cgroup");
-
-        non_leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
-            cell_name: self.cell_name.clone(),
-            source: e.into(),
-        })
+        let non_leaf_path = self.cell_name.clone().into_inner();
+        let mut absolute_non_leaf_path = PathBuf::from(DEFAULT_CGROUP_ROOT);
+        absolute_non_leaf_path.push(&non_leaf_path);
+        if absolute_non_leaf_path.exists() {
+            let non_leaf = v2::manager::Manager::new(
+                DEFAULT_CGROUP_ROOT.into(),
+                non_leaf_path,
+            )
+            .expect("valid cgroup");
+            non_leaf.remove().map_err(|e| CgroupsError::DeleteCgroup {
+                cell_name: self.cell_name.clone(),
+                source: e.into(),
+            })?;
+        }
+        Ok(())
     }
 
     pub fn v2(&self) -> bool {

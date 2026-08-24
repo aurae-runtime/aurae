@@ -18,29 +18,6 @@ use crate::cells::cell_service::cells::cells_cache::CellsCache;
 use std::collections::HashMap;
 use tracing::warn;
 
-macro_rules! proxy_if_needed {
-    ($self:ident, $cell_name:ident, $call:ident($($arg:ident),*), $expr:expr) => {
-        if !$cell_name.is_child($self.parent.as_ref()) {
-            // we are not in the direct parent
-            let child_cell_name = match &$self.parent {
-                None => $cell_name.to_root(),
-                Some(parent) => parent.to_child(&$cell_name).expect("child CellName"),
-            };
-
-            // we require that all ancestor cells exist
-            let Some(child) = $self.cache.get_mut(&child_cell_name) else {
-                                        return Err(CellsError::CellNotFound {
-                                            cell_name: child_cell_name,
-                                        })
-                                    };
-
-            CellsCache::$call(child, $($arg),*)
-        } else {
-            $expr
-        }
-    };
-}
-
 type Cache = HashMap<CellName, Cell>;
 
 /// The in-memory cache of cells ([Cell]) created with Aurae.
@@ -61,77 +38,134 @@ impl Cells {
         Self { parent: Some(parent), ..Self::default() }
     }
 
-    fn allocate(
+    /// If `cell_name` does not sit directly under our `parent`, return the
+    /// name of the immediate child cell the operation should be forwarded
+    /// to. Returns `None` when the name belongs directly to this
+    /// collection (the caller handles it locally).
+    fn child_to_forward(&self, cell_name: &CellName) -> Option<CellName> {
+        if cell_name.is_child(self.parent.as_ref()) {
+            return None;
+        }
+
+        Some(match &self.parent {
+            None => cell_name.to_root(),
+            Some(parent) => parent.to_child(cell_name).expect("child CellName"),
+        })
+    }
+
+    pub(crate) async fn allocate(
         &mut self,
         cell_name: CellName,
         cell_spec: CellSpec,
     ) -> Result<&Cell> {
-        proxy_if_needed!(self, cell_name, allocate(cell_name, cell_spec), {
-            if Cgroup::exists(&cell_name) {
-                return if self.cache.contains_key(&cell_name) {
-                    Err(CellsError::CellExists { cell_name })
-                } else {
-                    Err(CellsError::CgroupIsNotACell {
-                        cell_name: cell_name.clone(),
-                    })
-                };
-            }
+        // If the requested name doesn't sit directly under our `parent`,
+        // walk down to the right child cell and forward the call.
+        if let Some(child_cell_name) = self.child_to_forward(&cell_name) {
+            let Some(child) = self.cache.get_mut(&child_cell_name) else {
+                return Err(CellsError::CellNotFound {
+                    cell_name: child_cell_name,
+                });
+            };
+            return Box::pin(CellsCache::allocate(child, cell_name, cell_spec))
+                .await;
+        }
 
-            // From here, we know the cgroup doesn't exist, so remove from cache if it does
-            if let Some(_removed) = self.cache.remove(&cell_name) {
-                // TODO: Should we not remove the cell (that has no cgroup) from the cache and
-                //       force the user to call Free? Free will also return an error, but we may be
-                //       calling other logic in free that we want to run.
-                warn!(
-                    "Found cached cell ('{cell_name}') without cgroup. Did you forget to call free on the cell?"
-                );
-            }
+        if Cgroup::exists(&cell_name) {
+            return if self.cache.contains_key(&cell_name) {
+                Err(CellsError::CellExists { cell_name })
+            } else {
+                Err(CellsError::CgroupIsNotACell {
+                    cell_name: cell_name.clone(),
+                })
+            };
+        }
 
-            let cell = self
-                .cache
-                .entry(cell_name.clone())
-                .or_insert_with(|| Cell::new(cell_name, cell_spec));
+        // From here, we know the cgroup doesn't exist, so remove from cache
+        // if it does
+        if let Some(_removed) = self.cache.remove(&cell_name) {
+            // TODO: Should we not remove the cell (that has no cgroup) from
+            //       the cache and force the user to call Free? Free will also
+            //       return an error, but we may be calling other logic in
+            //       free that we want to run.
+            warn!(
+                "Found cached cell ('{cell_name}') without cgroup. Did you forget to call free on the cell?"
+            );
+        }
 
-            // TODO: Should we remove the cell from the cache here if the call to allocate fails?
-            cell.allocate()?;
+        let cell = self
+            .cache
+            .entry(cell_name.clone())
+            .or_insert_with(|| Cell::new(cell_name, cell_spec));
 
-            Ok(cell)
-        })
+        // TODO: Should we remove the cell from the cache here if the call to
+        //       allocate fails?
+        cell.allocate().await?;
+
+        Ok(cell)
     }
 
-    fn free(&mut self, cell_name: &CellName) -> Result<()> {
-        proxy_if_needed!(self, cell_name, free(cell_name), {
-            self.handle_cgroup_does_not_exist(cell_name)?;
-            self.get_mut(cell_name, |cell| cell.free())?;
-            let _ = self.cache.remove(cell_name);
-            Ok(())
-        })
-    }
+    pub(crate) async fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        if let Some(child_cell_name) = self.child_to_forward(cell_name) {
+            let Some(child) = self.cache.get_mut(&child_cell_name) else {
+                return Err(CellsError::CellNotFound {
+                    cell_name: child_cell_name,
+                });
+            };
+            return Box::pin(CellsCache::free(child, cell_name)).await;
+        }
 
-    fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
-    where
-        F: Fn(&Cell) -> Result<R>,
-    {
-        proxy_if_needed!(self, cell_name, get(cell_name, f), {
-            self.handle_cgroup_does_not_exist(cell_name)?;
+        self.handle_cgroup_does_not_exist(cell_name)?;
 
-            let Some(cell) = self.cache.get(cell_name) else {
+        let res = match self.cache.get_mut(cell_name) {
+            Some(cell) => cell.free().await,
+            None => {
                 return Err(CellsError::CgroupIsNotACell {
                     cell_name: cell_name.clone(),
                 });
-            };
-
-            let res = f(cell);
-
-            if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
-                let _ = self.cache.remove(cell_name);
             }
+        };
 
-            res
-        })
+        if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
+            let _ = self.cache.remove(cell_name);
+            return res;
+        }
+
+        res?;
+        let _ = self.cache.remove(cell_name);
+        Ok(())
     }
 
-    fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
+    pub(crate) fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
+    where
+        F: Fn(&Cell) -> Result<R>,
+    {
+        if let Some(child_cell_name) = self.child_to_forward(cell_name) {
+            let Some(child) = self.cache.get_mut(&child_cell_name) else {
+                return Err(CellsError::CellNotFound {
+                    cell_name: child_cell_name,
+                });
+            };
+            return CellsCache::get(child, cell_name, f);
+        }
+
+        self.handle_cgroup_does_not_exist(cell_name)?;
+
+        let Some(cell) = self.cache.get(cell_name) else {
+            return Err(CellsError::CgroupIsNotACell {
+                cell_name: cell_name.clone(),
+            });
+        };
+
+        let res = f(cell);
+
+        if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
+            let _ = self.cache.remove(cell_name);
+        }
+
+        res
+    }
+
+    pub(crate) fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
     where
         F: Fn(&Cell) -> Result<R>,
     {
@@ -155,27 +189,6 @@ impl Cells {
             .collect())
     }
 
-    fn get_mut<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
-    where
-        F: FnOnce(&mut Cell) -> Result<R>,
-    {
-        self.handle_cgroup_does_not_exist(cell_name)?;
-
-        let Some(cell) = self.cache.get_mut(cell_name) else {
-            return Err(CellsError::CgroupIsNotACell {
-                cell_name: cell_name.clone(),
-            });
-        };
-
-        let res = f(cell);
-
-        if matches!(res, Err(CellsError::CellNotAllocated { .. })) {
-            let _ = self.cache.remove(cell_name);
-        }
-
-        res
-    }
-
     fn handle_cgroup_does_not_exist(
         &mut self,
         cell_name: &CellName,
@@ -195,23 +208,31 @@ impl Cells {
         Err(CellsError::CgroupNotFound { cell_name: cell_name.clone() })
     }
 
-    fn broadcast_free(&mut self) {
-        let freed_cells = self.do_broadcast(|cell| cell.free());
+    /// Free all cells concurrently, allowing each to perform its own netlink + process-reap work        
+    pub(crate) async fn broadcast_free(&mut self) {
+        let results =
+            futures::future::join_all(self.cache.values_mut().map(|cell| {
+                let name = cell.name().clone();
+                async move { (name, cell.free().await.is_ok()) }
+            }))
+            .await;
 
-        for cell_name in freed_cells {
-            let _ = self.cache.remove(&cell_name);
+        for (cell_name, freed) in results {
+            if freed {
+                let _ = self.cache.remove(&cell_name);
+            }
         }
     }
 
-    fn broadcast_kill(&mut self) {
-        let killed_cells = self.do_broadcast(|cell| cell.kill());
+    pub(crate) fn broadcast_kill(&mut self) {
+        let killed_cells = self.do_broadcast_sync(|cell| cell.kill());
 
         for cell_name in killed_cells {
             let _ = self.cache.remove(&cell_name);
         }
     }
 
-    fn do_broadcast<F>(&mut self, f: F) -> Vec<CellName>
+    fn do_broadcast_sync<F>(&mut self, f: F) -> Vec<CellName>
     where
         F: Fn(&mut Cell) -> Result<()>,
     {
@@ -220,11 +241,13 @@ impl Cells {
             .flat_map(|cell| {
                 f(cell)?;
 
-                // We clone here because we need a way to reference the cell for the loop
-                // to remove it from the cache. Instead of cloning, we could make [Cell::state]
-                // `pub(crate)` and check the state of the cell, removing the ones in the
-                // [CellState::Freed] state, but that would expose internal functionality of the cell.
-                // We could also create and `is_freed` fn on the cell.
+                // We clone here because we need a way to reference the cell
+                // for the loop to remove it from the cache. Instead of
+                // cloning, we could make [Cell::state] `pub(crate)` and
+                // check the state of the cell, removing the ones in the
+                // [CellState::Freed] state, but that would expose internal
+                // functionality of the cell. We could also create an
+                // `is_freed` fn on the cell.
                 Ok::<_, CellsError>(cell.name().clone())
             })
             .collect()
@@ -232,38 +255,30 @@ impl Cells {
 }
 
 impl CellsCache for Cells {
-    fn allocate(
+    async fn allocate(
         &mut self,
         cell_name: CellName,
         cell_spec: CellSpec,
     ) -> Result<&Cell> {
-        self.allocate(cell_name, cell_spec)
+        Cells::allocate(self, cell_name, cell_spec).await
     }
 
-    fn free(&mut self, cell_name: &CellName) -> Result<()> {
-        self.free(cell_name)
+    async fn free(&mut self, cell_name: &CellName) -> Result<()> {
+        Cells::free(self, cell_name).await
     }
 
     fn get<F, R>(&mut self, cell_name: &CellName, f: F) -> Result<R>
     where
         F: Fn(&Cell) -> Result<R>,
     {
-        self.get(cell_name, f)
+        Cells::get(self, cell_name, f)
     }
 
     fn get_all<F, R>(&self, f: F) -> Result<Vec<Result<R>>>
     where
         F: Fn(&Cell) -> Result<R>,
     {
-        self.get_all(f)
-    }
-
-    fn broadcast_free(&mut self) {
-        self.broadcast_free()
-    }
-
-    fn broadcast_kill(&mut self) {
-        self.broadcast_kill()
+        Cells::get_all(self, f)
     }
 }
 
@@ -273,8 +288,8 @@ mod tests {
     use crate::{AURAED_RUNTIME, AuraedRuntime};
     use test_helpers::*;
 
-    #[test]
-    fn test_allocate() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_allocate() {
         skip_if_not_root!("test_allocate");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_cant_unfree");
@@ -287,12 +302,13 @@ mod tests {
         let cell_name = CellName::random_for_tests();
         let cell = CellSpec::new_for_tests();
 
-        let _ = cells.allocate(cell_name.clone(), cell).expect("allocate");
+        let _ =
+            cells.allocate(cell_name.clone(), cell).await.expect("allocate");
         assert!(cells.cache.contains_key(&cell_name));
     }
 
-    #[test]
-    fn test_duplicate_allocate_is_error() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_duplicate_allocate_is_error() {
         skip_if_not_root!("test_duplicate_allocate_is_error");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_cant_unfree");
@@ -307,17 +323,18 @@ mod tests {
         let cell_a = CellSpec::new_for_tests();
         let _ = cells
             .allocate(cell_name_in.clone(), cell_a)
+            .await
             .expect("failed on first allocate");
 
         let cell_b = CellSpec::new_for_tests();
         assert!(matches!(
-            cells.allocate(cell_name_in.clone(), cell_b),
+            cells.allocate(cell_name_in.clone(), cell_b).await,
             Err(CellsError::CellExists { cell_name }) if cell_name == cell_name_in
         ));
     }
 
-    #[test]
-    fn test_get() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_get() {
         skip_if_not_root!("test_get");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_get");
@@ -331,6 +348,7 @@ mod tests {
         let cell = CellSpec::new_for_tests();
         let _ = cells
             .allocate(cell_name.clone(), cell)
+            .await
             .expect("failed to allocate");
 
         cells.get(&cell_name, |_cell| Ok(())).expect("failed to get");
@@ -349,8 +367,8 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn test_free() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_free() {
         skip_if_not_root!("test_free");
         // Docker's seccomp security profile (https://docs.docker.com/engine/security/seccomp/) blocks clone
         skip_if_seccomp!("test_free");
@@ -364,21 +382,22 @@ mod tests {
         let cell = CellSpec::new_for_tests();
         let _ = cells
             .allocate(cell_name.clone(), cell)
+            .await
             .expect("failed to allocate");
 
-        cells.free(&cell_name).expect("failed to free");
+        cells.free(&cell_name).await.expect("failed to free");
         assert!(cells.cache.is_empty());
     }
 
-    #[test]
-    fn test_free_missing_is_error() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_free_missing_is_error() {
         let mut cells = Cells::default();
         assert!(cells.cache.is_empty());
 
         let cell_name_in = CellName::random_for_tests();
 
         assert!(matches!(
-            cells.free(&cell_name_in),
+            cells.free(&cell_name_in).await,
             Err(CellsError::CellNotFound { cell_name }) if cell_name == cell_name_in
         ));
     }
@@ -388,8 +407,8 @@ mod tests {
         children: Vec<Self>,
     }
 
-    #[test]
-    fn test_cell_graph_triple_nested() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_cell_graph_triple_nested() {
         skip_if_not_root!("test_cell_graph_triple_nested");
         skip_if_seccomp!("test_cell_graph_triple_nested");
 
@@ -403,6 +422,7 @@ mod tests {
         let grandparent_cell = CellSpec::new_for_tests();
         let _ = cells
             .allocate(grandparent_cell_name.clone(), grandparent_cell)
+            .await
             .expect("failed to allocate");
 
         // Create parent cell
@@ -411,6 +431,7 @@ mod tests {
         let parent_cell = CellSpec::new_for_tests();
         let _ = cells
             .allocate(parent_cell_name.clone(), parent_cell)
+            .await
             .expect("failed to allocate");
 
         // Create child cell
@@ -419,6 +440,7 @@ mod tests {
         let child_cell = CellSpec::new_for_tests();
         let _ = cells
             .allocate(child_cell_name.clone(), child_cell)
+            .await
             .expect("failed to allocate");
 
         fn cell_fn(cell: &Cell) -> Result<Graph> {
