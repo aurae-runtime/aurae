@@ -38,6 +38,11 @@ impl ChildGuard {
     pub fn new(child: std::process::Child) -> Self {
         Self { child: Some(child) }
     }
+
+    #[allow(dead_code)]
+    pub fn child_mut(&mut self) -> Option<&mut std::process::Child> {
+        self.child.as_mut()
+    }
 }
 
 impl Drop for ChildGuard {
