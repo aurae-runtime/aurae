@@ -20,6 +20,7 @@ use crate::AURAED_RUNTIME;
 use crate::init::{
     BANNER, logging, system_runtimes::create_unix_socket_stream,
 };
+use crate::logging::log_channel::LogChannel;
 use tonic::async_trait;
 use tracing::info;
 
@@ -31,9 +32,10 @@ impl SystemRuntime for ContainerSystemRuntime {
         self,
         verbose: bool,
         socket_address: Option<String>,
+        log_channel: LogChannel,
     ) -> Result<SocketStream, SystemRuntimeError> {
         println!("{BANNER}");
-        logging::init(verbose, true)?;
+        logging::init(verbose, true, log_channel)?;
         info!("Running as a container.");
         create_unix_socket_stream(
             socket_address.map(PathBuf::from).unwrap_or_else(|| {

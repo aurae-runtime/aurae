@@ -121,6 +121,13 @@ pub trait PerfBufferReader<T: Clone + Send + 'static> {
                         }
                     };
 
+                    // Clear cached readiness after an empty read so the next
+                    // call to `readable_mut` waits for more events.
+                    if events.read == 0 && events.lost == 0 {
+                        guard.clear_ready();
+                        continue;
+                    }
+
                     if events.lost > 0 {
                         error!(
                             "buffer full, dropped {} perf events - this should never happen!",

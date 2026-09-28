@@ -21,6 +21,7 @@ use crate::init::{
     BANNER, logging,
     system_runtimes::{create_tcp_socket_stream, create_unix_socket_stream},
 };
+use crate::logging::log_channel::LogChannel;
 use tonic::async_trait;
 use tracing::{info, trace};
 
@@ -32,9 +33,10 @@ impl SystemRuntime for DaemonSystemRuntime {
         self,
         verbose: bool,
         socket_address: Option<String>,
+        log_channel: LogChannel,
     ) -> Result<SocketStream, SystemRuntimeError> {
         println!("{BANNER}");
-        logging::init(verbose, false)?;
+        logging::init(verbose, false, log_channel)?;
         info!("Running as a daemon.");
 
         // Running as a daemon supports both TCP and Unix sockets for listening, depending on the

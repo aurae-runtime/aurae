@@ -13,7 +13,10 @@
  * SPDX-License-Identifier: Apache-2.0                                        *
 \* -------------------------------------------------------------------------- */
 
-use crate::{VmService, cells::CellService, discovery::DiscoveryService};
+use crate::{
+    VmService, cells::CellService, discovery::DiscoveryService,
+    observe::ObserveService,
+};
 use proto::{
     cells::cell_service_server::CellServiceServer,
     discovery::discovery_service_server::DiscoveryServiceServer,
@@ -31,6 +34,7 @@ pub(crate) struct GracefulShutdown {
     health_reporter: HealthReporter,
     cell_service: CellService,
     vm_service: VmService,
+    observe_service: ObserveService,
     shutdown_broadcaster: Sender<()>,
 }
 
@@ -39,12 +43,14 @@ impl GracefulShutdown {
         health_reporter: HealthReporter,
         cell_service: CellService,
         vm_service: VmService,
+        observe_service: ObserveService,
     ) -> Self {
         let (tx, _) = channel(());
         Self {
             health_reporter,
             cell_service,
             vm_service,
+            observe_service,
             shutdown_broadcaster: tx,
         }
     }
@@ -82,6 +88,7 @@ impl GracefulShutdown {
 
         // health_reporter.set_not_serving::<PodServiceServer<PodService>>().await;
 
+        self.observe_service.shutdown_log_streams();
         self.shutdown_broadcaster.send_replace(());
         // wait for all subscribers to drop
         self.shutdown_broadcaster.closed().await;

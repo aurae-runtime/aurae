@@ -28,6 +28,7 @@ use tonic::async_trait;
 use tracing::{info, trace};
 
 use super::{fs::FsError, logging::LoggingError, network::NetworkError};
+use crate::logging::log_channel::LogChannel;
 
 mod cell_system_runtime;
 mod container_system_runtime;
@@ -66,6 +67,7 @@ pub(crate) trait SystemRuntime {
         self,
         verbose: bool,
         socket_address: Option<String>,
+        log_channel: LogChannel,
     ) -> Result<SocketStream, SystemRuntimeError>;
 }
 

@@ -23,6 +23,7 @@ use self::system_runtimes::{
     CellSystemRuntime, ContainerSystemRuntime, DaemonSystemRuntime,
     Pid1SystemRuntime, SystemRuntime, SystemRuntimeError,
 };
+use crate::logging::log_channel::LogChannel;
 use std::fs::File;
 use std::io::{BufReader, Read};
 mod fileio;
@@ -79,12 +80,14 @@ pub async fn init(
     verbose: bool,
     nested: bool,
     socket_address: Option<String>,
+    log_channel: LogChannel,
 ) -> (Context, SocketStream) {
     let context = Context::get(nested);
     let init_result = init_with_runtimes(
         context,
         verbose,
         socket_address,
+        log_channel,
         Pid1SystemRuntime {},
         CellSystemRuntime {},
         ContainerSystemRuntime {},
@@ -98,10 +101,12 @@ pub async fn init(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn init_with_runtimes<RPid1, RCell, RContainer, RDaemon>(
     context: Context,
     verbose: bool,
     socket_address: Option<String>,
+    log_channel: LogChannel,
     pid1_runtime: RPid1,
     cell_runtime: RCell,
     container_runtime: RContainer,
@@ -114,12 +119,18 @@ where
     RDaemon: SystemRuntime,
 {
     match context {
-        Context::Pid1 => pid1_runtime.init(verbose, socket_address).await,
-        Context::Cell => cell_runtime.init(verbose, socket_address).await,
-        Context::Container => {
-            container_runtime.init(verbose, socket_address).await
+        Context::Pid1 => {
+            pid1_runtime.init(verbose, socket_address, log_channel).await
         }
-        Context::Daemon => daemon_runtime.init(verbose, socket_address).await,
+        Context::Cell => {
+            cell_runtime.init(verbose, socket_address, log_channel).await
+        }
+        Context::Container => {
+            container_runtime.init(verbose, socket_address, log_channel).await
+        }
+        Context::Daemon => {
+            daemon_runtime.init(verbose, socket_address, log_channel).await
+        }
     }
 }
 
@@ -337,6 +348,7 @@ mod tests {
             self,
             _verbose: bool,
             _socket_address: Option<String>,
+            _log_channel: LogChannel,
         ) -> Result<SocketStream, SystemRuntimeError> {
             let _ = self.calls.fetch_add(1, Ordering::SeqCst);
             Err(SystemRuntimeError::Other(anyhow!(self.label)))
@@ -382,6 +394,7 @@ mod tests {
                     ctx,
                     false,
                     None,
+                    LogChannel::new("test"),
                     pid1.clone(),
                     cell.clone(),
                     container.clone(),

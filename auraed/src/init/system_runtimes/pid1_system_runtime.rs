@@ -21,6 +21,7 @@ use crate::init::{
     power::spawn_thread_power_button_listener,
     system_runtimes::create_tcp_socket_stream,
 };
+use crate::logging::log_channel::LogChannel;
 use nix::{
     mount::MsFlags,
     unistd::{mkdir, symlinkat},
@@ -61,11 +62,12 @@ impl SystemRuntime for Pid1SystemRuntime {
         self,
         verbose: bool,
         socket_address: Option<String>,
+        log_channel: LogChannel,
     ) -> Result<SocketStream, SystemRuntimeError> {
         println!("{BANNER}");
 
         // Initialize the PID 1 logger
-        logging::init(verbose, false)?;
+        logging::init(verbose, false, log_channel)?;
         info!("Running as pid 1");
         trace!("Configure filesystem");
 

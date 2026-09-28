@@ -171,6 +171,7 @@ pub async fn run(
         runtime: &AuraedRuntime,
         context: AuraeContext,
         socket_stream: T,
+        log_channel: LogChannel,
     ) -> Result<(), Box<dyn std::error::Error>>
     where
         T: tokio_stream::Stream<Item = Result<IO, IE>> + Send + 'static,
@@ -245,10 +246,7 @@ pub async fn run(
         let (health_reporter, health_service) =
             tonic_health::server::health_reporter();
 
-        let observe_service = ObserveService::new(
-            LogChannel::new(String::from("auraed")),
-            perf_events,
-        );
+        let observe_service = ObserveService::new(log_channel, perf_events);
         let observe_service_server =
             ObserveServiceServer::new(observe_service.clone());
 
@@ -285,6 +283,7 @@ pub async fn run(
             health_reporter,
             cell_service,
             vm_service,
+            observe_service,
         );
         let graceful_shutdown_signal = graceful_shutdown.subscribe();
 
@@ -339,11 +338,17 @@ pub async fn run(
     }
 
     let runtime = AURAED_RUNTIME.get_or_init(|| runtime);
+    let log_channel = LogChannel::new(String::from("auraed"));
 
-    let (context, stream) = init::init(verbose, nested, socket).await;
+    let (context, stream) =
+        init::init(verbose, nested, socket, log_channel.clone()).await;
     match stream {
-        SocketStream::Tcp(stream) => inner(runtime, context, stream).await,
-        SocketStream::Unix(stream) => inner(runtime, context, stream).await,
+        SocketStream::Tcp(stream) => {
+            inner(runtime, context, stream, log_channel).await
+        }
+        SocketStream::Unix(stream) => {
+            inner(runtime, context, stream, log_channel).await
+        }
     }
 }
 

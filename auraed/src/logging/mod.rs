@@ -22,8 +22,8 @@ use std::time::SystemTime;
 /// LogChannel provides channels between Log producers and log consumers
 pub mod log_channel;
 
-/// Implements Log trait. Used to add grpc API to log targets for rust internal logging
-pub mod stream_logger;
+/// `MakeWriter` adapter that pipes formatted `tracing` events into a `LogChannel` broadcast.
+pub mod broadcast_writer;
 
 /// Get UNIX timestamp in seconds for logging
 pub fn get_timestamp_sec() -> i64 {
