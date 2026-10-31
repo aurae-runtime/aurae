@@ -92,7 +92,7 @@ pub(crate) fn ops_generator(input: TokenStream) -> TokenStream {
 
                     // Magic OpState from deno (https://github.com/denoland/deno/blob/b6ac54815c1bcfa44a45b3f2c1c982829482477f/ops/lib.rs#L295)
                     quote! {
-                        #[::deno_core::op2(async)]
+                        #[::deno_core::op2]
                         #[serde]
                         pub(crate) async fn #op_ident(
                             op_state: Rc<RefCell<OpState>>, // Auto filled by deno macro, call from typescript ignoring this parameter

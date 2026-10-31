@@ -71,7 +71,7 @@ pub(crate) struct AuraeScriptConfig(pub AuraeConfig);
 impl Resource for AuraeScriptConfig {} // Blank impl
 
 // Create a `Client` with given `AuraeConfig`
-#[op2(async)]
+#[op2]
 #[smi]
 pub(crate) async fn as__client_new(
     op_state: Rc<RefCell<OpState>>,
